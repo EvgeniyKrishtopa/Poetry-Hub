@@ -140,6 +140,8 @@ Matcher: `/((?!_next/static|_next/image|favicon.ico|.*\..*).*)`. The `.*\..*` pa
 
 *Alternative considered:* `headers()` in `next.config.ts`. It works for static headers, but you asked for a proxy, and the proxy is where request-aware logic (auth, i18n, CSP nonces) will go later.
 
+*Matcher test (decided during group 6):* the matcher is tested with Next's own `unstable_doesMiddlewareMatch` from `next/experimental/testing/server` (renamed `unstable_doesProxyMatch` in later releases), so the test runs Next's real matcher compiler. *Alternative considered:* compiling the pattern with `new RegExp` in the test. It's stable, but it only approximates Next's path-to-regexp handling. The cost is an experimental import that a Next upgrade may rename. Tests live in `src/tests/proxy.test.ts`.
+
 ### D9 — Env documentation
 
 `.env.example` (committed) lists `CONTENTFUL_SPACE_ID`, `CONTENTFUL_ACCESS_TOKEN` and `CONTENTFUL_REVALIDATE_SECRET` with empty values, and `CONTENTFUL_ENVIRONMENT=master`: the one non-secret default, shown explicitly. The create-next-app `.gitignore` ignores `.env*`, so a `!.env.example` exception is added.
