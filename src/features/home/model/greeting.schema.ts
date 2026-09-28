@@ -1,10 +1,12 @@
 import { z } from "zod";
 
-// Structure only; the trim().min(1) validation rules land in task 4.1.
+// implements FR-4 of add-contentful-home-greeting: every field non-empty after trimming; trimmed values reach the page
+const nonBlankString = z.string().trim().min(1);
+
 export const greetingSchema = z.object({
-  key: z.string(),
-  title: z.string(),
-  message: z.string(),
+  key: nonBlankString,
+  title: nonBlankString,
+  message: nonBlankString,
 });
 
 export const greetingCollectionResponseSchema = z.object({

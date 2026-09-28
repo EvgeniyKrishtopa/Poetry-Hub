@@ -3,7 +3,7 @@ import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { usePoemsUiStore } from "../../model/poems-ui.store";
-import { PoemList } from "./PoemList";
+import { PoemList } from "../../components/PoemList/PoemList";
 
 function renderWithQueryClient() {
   const queryClient = new QueryClient({

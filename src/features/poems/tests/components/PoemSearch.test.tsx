@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { usePoemsUiStore } from "../../model/poems-ui.store";
-import { PoemSearch } from "./PoemSearch";
+import { PoemSearch } from "../../components/PoemSearch/PoemSearch";
 
 describe("PoemSearch", () => {
   beforeEach(() => {
