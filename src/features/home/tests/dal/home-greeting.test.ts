@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ContentfulError, type ContentfulErrorKind, contentfulQuery } from "@/shared/lib/contentful";
 
-import { getHomeGreeting } from "./home-greeting";
+import { getHomeGreeting } from "../../dal/home-greeting";
 
 vi.mock("@/shared/lib/contentful", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/lib/contentful")>()),

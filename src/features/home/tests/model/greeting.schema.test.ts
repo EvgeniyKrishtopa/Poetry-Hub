@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { greetingCollectionResponseSchema } from "./greeting.schema";
+import { greetingCollectionResponseSchema } from "../../model/greeting.schema";
 
 function responseWith(item: Record<string, unknown>) {
   return { greetingCollection: { items: [item] } };

@@ -28,7 +28,7 @@ npm run test:coverage  # single run with coverage (80% statements/lines/function
 
 Validate with `npm run typecheck && npm run lint && npm run test:coverage && npm run build` before finishing a task.
 
-Tests: Vitest + Testing Library (jsdom), colocated as `*.test.ts(x)` next to the code. Test pure `model/` logic directly; test components through user-visible behavior (roles, labels). `src/app/**` is excluded from coverage — route composition and async Server Components are verified by browser QA (`web-qa`) instead.
+Tests: Vitest + Testing Library (jsdom), as `*.test.ts(x)` in a `tests/` folder at the root of each feature or shared module, mirroring its structure (`features/home/tests/model/…`, `features/home/tests/components/HomeGreeting.test.tsx`, `shared/lib/contentful/tests/…`) — never mixed in with source files (`docs/decisions/0002-tests-folder-per-module.md`). Test pure `model/` logic directly; test components through user-visible behavior (roles, labels). `src/app/**` is excluded from coverage — route composition and async Server Components are verified by browser QA (`web-qa`) instead.
 
 ## Shell
 
@@ -50,6 +50,7 @@ src/
 │       ├── dal/              # Server-only data access for Server Components (no role suffix)
 │       ├── model/            # Types, Zustand stores (*.store.ts), pure domain logic
 │       ├── components/       # Feature UI, one folder per component (+ .module.css)
+│       ├── tests/            # Tests, mirroring the feature (tests/model/…, tests/components/<Name>.test.tsx)
 │       └── index.ts          # Public API of the feature
 └── shared/                   # Feature-agnostic code only
     ├── ui/                   # Reusable UI primitives (Button, …) + index.ts

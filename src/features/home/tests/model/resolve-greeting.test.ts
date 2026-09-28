@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { siteConfig } from "@/shared/config/site";
 
-import type { GreetingFailureReason } from "./greeting.types";
-import { resolveGreeting } from "./resolve-greeting";
+import type { GreetingFailureReason } from "../../model/greeting.types";
+import { resolveGreeting } from "../../model/resolve-greeting";
 
 describe("resolveGreeting", () => {
   // implements FR-6 of add-contentful-home-greeting

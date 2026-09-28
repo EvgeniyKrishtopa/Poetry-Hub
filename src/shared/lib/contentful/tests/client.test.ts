@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CONTENTFUL_CACHE_TAG, contentfulQuery } from "./client";
-import { ContentfulError } from "./errors";
+import { CONTENTFUL_CACHE_TAG, contentfulQuery } from "../client";
+import { ContentfulError } from "../errors";
 
 const SPACE_ID = "abc123space";
 const TOKEN = "known-token-string-XYZ";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getQueryClient } from "./query-client";
+import { getQueryClient } from "../query-client";
 
 describe("getQueryClient (browser)", () => {
   it("returns the same client on every call", () => {

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getHomeGreeting } from "./home-greeting";
+import { getHomeGreeting } from "../../dal/home-greeting";
 
 // Real config loader and client (no module mocks): only `fetch` and the env are stubbed.
 describe("getHomeGreeting with the real Contentful client", () => {

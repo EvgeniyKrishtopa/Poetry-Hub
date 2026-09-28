@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { HomeGreeting } from "./HomeGreeting";
+import { HomeGreeting } from "../../components/HomeGreeting/HomeGreeting";
 
 function renderGreeting(message: string, title = "Welcome to Poetry Hub") {
   return render(<HomeGreeting greeting={{ title, message }} />);
