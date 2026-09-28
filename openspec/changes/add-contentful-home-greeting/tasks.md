@@ -7,8 +7,8 @@
 
 ## 2. Test and env setup <!-- isolated -->
 
-- [ ] 2.1 (FR-1) Add a `server-only` alias in `vitest.config.mts` pointing to an empty stub module; verify with a throwaway import in a test that `npm run test` still passes
-- [ ] 2.2 (FR-2, NFR-1) Add `.env.example` with `CONTENTFUL_SPACE_ID=` and `CONTENTFUL_ACCESS_TOKEN=` (empty) and `CONTENTFUL_ENVIRONMENT=master` (the only variable with a value, showing the default), and a `!.env.example` exception in `.gitignore`; verify `git check-ignore .env.example` prints nothing and `git check-ignore .env.local` still matches
+- [x] 2.1 (FR-1) Add a `server-only` alias in `vitest.config.mts` pointing to an empty stub module; verify with a throwaway import in a test that `npm run test` still passes
+- [x] 2.2 (FR-2, NFR-1) Add `.env.example` with `CONTENTFUL_SPACE_ID=` and `CONTENTFUL_ACCESS_TOKEN=` (empty) and `CONTENTFUL_ENVIRONMENT=master` (the only variable with a value, showing the default), and a `!.env.example` exception in `.gitignore`; verify `git check-ignore .env.example` prints nothing and `git check-ignore .env.local` still matches
 
 ## 3. Contentful client (`src/shared/lib/contentful/`) <!-- judgement-heavy -->
 
