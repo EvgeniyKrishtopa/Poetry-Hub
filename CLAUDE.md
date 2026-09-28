@@ -48,6 +48,7 @@ src/
 └── shared/                   # Feature-agnostic code only
     ├── ui/                   # Reusable UI primitives (Button, …) + index.ts
     ├── lib/                  # Infrastructure helpers (query-client, …)
+    │   └── contentful/       # Server-only Contentful GraphQL client (every module: import "server-only")
     └── config/               # App-wide constants
 ```
 
@@ -58,7 +59,7 @@ src/
 - Features must not import from other features' internals. If two features need the same thing, move it to `shared/` or compose them in `app/`.
 - `shared/` never imports from `features/` or `app/`.
 - Inside a feature, use relative imports; across layers, use the `@/` alias.
-- Don't create a `shared/` abstraction until a second feature actually needs it.
+- Don't create a `shared/` abstraction until a second feature actually needs it. Exception: an infrastructure client for an external service (e.g. `shared/lib/contentful`) may live in `shared/lib` from its first consumer.
 
 ## State management
 
@@ -90,6 +91,12 @@ src/
 - Both read the same design tokens defined in `src/app/globals.css` — Tailwind via `@theme` (`bg-surface`, `text-accent`), CSS Modules via `var(--color-surface)`. Add new colors as tokens there; don't hard-code hex values in components.
 - Combining both on one element is fine: `className={\`${styles.card} flex gap-3 p-6\`}`.
 - Do not use `@apply` in CSS Modules; use plain CSS.
+
+## Environment variables
+
+- `.env.example` (committed) lists every variable **by name only** — never put a value in it. Real values live in `.env.local` (git-ignored) and on the hosting platform.
+- Contentful: `CONTENTFUL_SPACE_ID`, `CONTENTFUL_ACCESS_TOKEN` (Content Delivery API token), optional `CONTENTFUL_ENVIRONMENT` (defaults to `master`). Server-only: never prefix them with `NEXT_PUBLIC_`.
+- They are validated lazily on each call; a missing or malformed value fails as a `config` error naming the variable, never its value.
 
 ## Conventions
 
