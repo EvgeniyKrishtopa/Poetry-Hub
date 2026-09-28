@@ -44,15 +44,15 @@ src/
     ├── model/greeting.schema.ts        Zod schemas (fields `trim().min(1)`) + `Greeting` type (z.infer)
     ├── model/greeting.types.ts         `GreetingResult`, `GreetingContent` = Pick<Greeting, "title" | "message"> (type-only imports)
     ├── model/resolve-greeting.ts       result → GreetingContent (applies static fallback, which has no `key`), pure
-    ├── api/home-greeting.dal.ts        getHomeGreeting() → GreetingResult   ("server-only")
+    ├── dal/home-greeting.ts            getHomeGreeting() → GreetingResult   ("server-only")
     ├── components/HomeGreeting/HomeGreeting.tsx   presentational heading + message
     └── index.ts
 ```
 
 - `shared/lib/contentful` knows nothing about greetings: it validates config, executes a query, and returns the GraphQL `data` as `unknown`. **Why:** that keeps it reusable, and it forces every caller to validate with its own schema (FR-4), so no call site can skip validation.
 - **Exception to "no `shared/` until a second consumer":** content-agnostic infrastructure clients (like `shared/lib/query-client.ts`) belong in `shared/lib` from their first consumer; the rule targets domain abstractions. The CLAUDE.md update records this.
-- Dependency direction inside the feature is `api/ → model/`, never the reverse. `Greeting` and `GreetingResult` live in `model/`; `model/` imports from `shared/lib/contentful` only with `import type`, so it stays pure and has no server-only runtime dependency.
-- The DAL lives in the feature (`api/*.dal.ts`), next to the schema it validates against. **This deliberately deviates from the TanStack Query convention:** the greeting is server-only data rendered only by a Server Component, and a client refetch would need the token. The rule recorded in CLAUDE.md: *server-only data consumed only by Server Components goes through a `*.dal.ts` DAL (starting with `import "server-only"`), never `queryOptions` or client hooks.*
+- Dependency direction inside the feature is `dal/ → model/`, never the reverse. `Greeting` and `GreetingResult` live in `model/`; `model/` imports from `shared/lib/contentful` only with `import type`, so it stays pure and has no server-only runtime dependency.
+- The DAL lives in the feature's own `dal/` folder (`dal/home-greeting.ts`, no role suffix — see `docs/decisions/0001-feature-dal-folder.md`), next to the schema it validates against. **This deliberately deviates from the TanStack Query convention:** the greeting is server-only data rendered only by a Server Component, and a client refetch would need the token. The rule recorded in CLAUDE.md: *server-only data consumed only by Server Components goes through a module in the feature's `dal/` folder (starting with `import "server-only"`), never `queryOptions` or client hooks.*
 - `HomeGreeting` is a synchronous presentational component; `page.tsx` awaits the DAL and passes the resolved greeting down. **Why:** Vitest can't render async Server Components, so this keeps the component unit-testable and leaves the page as thin composition.
 - *Alternative considered:* a generic `features/content` or `shared/lib/cms` DAL for all content types. Rejected (YAGNI): there's one content type; extract when a second one lands.
 
@@ -197,7 +197,7 @@ sequenceDiagram
     participant B as Browser
     participant P as proxy.ts
     participant Pg as app/page.tsx (RSC)
-    participant D as home-greeting.dal
+    participant D as dal/home-greeting
     participant C as contentful/client
     participant Cfg as contentful/config
     participant CF as Contentful GraphQL API
@@ -282,7 +282,7 @@ sequenceDiagram
 | `src/features/home/model/greeting.schema.ts` | Zod structure of the greeting and the collection response | `greetingSchema`, `greetingCollectionResponseSchema`, `Greeting` |
 | `src/features/home/model/greeting.types.ts` | Retrieval result and display shape | `GreetingResult`, `GreetingFailureReason`, `GreetingContent` |
 | `src/features/home/model/resolve-greeting.ts` | Result → displayed content (static fallback on failure), pure | `resolveGreeting` |
-| `src/features/home/api/home-greeting.dal.ts` | Server-only DAL for the `home` greeting | `getHomeGreeting` |
+| `src/features/home/dal/home-greeting.ts` | Server-only DAL for the `home` greeting | `getHomeGreeting` |
 | `src/features/home/components/HomeGreeting/HomeGreeting.tsx` | Presentational heading + plain-text message | `HomeGreeting` |
 | `src/features/home/index.ts` | Public API of the home feature (server-only via the DAL) | `getHomeGreeting`, `resolveGreeting`, `HomeGreeting`, `Greeting` |
 | `src/proxy.ts` | Security headers on page responses (scaffold passes through) | `proxy`, `SECURITY_HEADERS`, `config` |

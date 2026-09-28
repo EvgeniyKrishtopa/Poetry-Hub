@@ -46,7 +46,8 @@ src/
 │   └── globals.css           # Tailwind import + design tokens
 ├── features/                 # One folder per business feature
 │   └── poems/
-│       ├── api/              # Fetchers (*.api.ts) + query keys/options/hooks (*.queries.ts) or server-only DAL (*.dal.ts)
+│       ├── api/              # Fetchers (*.api.ts) + query keys/options/hooks (*.queries.ts)
+│       ├── dal/              # Server-only data access for Server Components (no role suffix)
 │       ├── model/            # Types, Zustand stores (*.store.ts), pure domain logic
 │       ├── components/       # Feature UI, one folder per component (+ .module.css)
 │       └── index.ts          # Public API of the feature
@@ -71,7 +72,7 @@ src/
 | Kind of state | Where it lives |
 | --- | --- |
 | Server data (anything fetched) | TanStack Query — never copy it into Zustand |
-| Server-only data rendered only by Server Components (CMS content, anything needing a secret) | A `*.dal.ts` DAL — see below |
+| Server-only data rendered only by Server Components (CMS content, anything needing a secret) | The feature's `dal/` folder — see below |
 | Client UI state (filters, search, toggles, modals) | Zustand store in `features/<name>/model/<name>-ui.store.ts` |
 | Local component state | `useState` |
 | Form state | local state (add a form library only when needed) |
@@ -86,7 +87,7 @@ src/
 
 ### Server-only data (DAL)
 
-- Data that needs a secret and is consumed only by Server Components goes through `features/<name>/api/<name>.dal.ts`: starts with `import "server-only"`, validates the response with a Zod schema from `model/`, and returns a typed result. Never wrap it in `queryOptions` or client hooks — a client refetch would need the secret.
+- Data that needs a secret and is consumed only by Server Components goes through a module in `features/<name>/dal/` (e.g. `dal/home-greeting.ts` — the folder names the role, so no `.dal.ts` suffix): starts with `import "server-only"`, validates the response with a Zod schema from `model/`, and returns a typed result. Never wrap it in `queryOptions` or client hooks — a client refetch would need the secret.
 - The page awaits the DAL and passes plain values to synchronous presentational components (Vitest can't render async Server Components).
 
 ### Zustand conventions
@@ -112,14 +113,14 @@ src/
 ## Conventions
 
 - Components: `PascalCase` folder + file (`PoemCard/PoemCard.tsx`, `PoemCard.module.css`), named exports only (except Next.js route files, which need default exports).
-- Non-component files: `kebab-case` with a role suffix (`poems.api.ts`, `poems.queries.ts`, `home-greeting.dal.ts`, `poems-ui.store.ts`, `poem.types.ts`).
+- Non-component files: `kebab-case` with a role suffix (`poems.api.ts`, `poems.queries.ts`, `poems-ui.store.ts`, `poem.types.ts`). Exception: modules in a feature's `dal/` folder take no suffix (`dal/home-greeting.ts`).
 - Add `"use client"` only to components that need hooks, state, or browser APIs; keep pages as Server Components.
 - Keep domain logic in pure functions under `model/` so it's testable without React.
 
 ## Adding a new feature
 
 1. Create `src/features/<name>/{api,model,components}` and `index.ts`.
-2. Types in `model/<name>.types.ts`; fetchers in `api/<name>.api.ts`; keys + `queryOptions` + hooks in `api/<name>.queries.ts`.
+2. Types in `model/<name>.types.ts`; fetchers in `api/<name>.api.ts`; keys + `queryOptions` + hooks in `api/<name>.queries.ts`. Server-only data for Server Components goes in `dal/<name>.ts` instead (see `docs/decisions/0001-feature-dal-folder.md`).
 3. UI state (if any) in `model/<name>-ui.store.ts`.
 4. Export only what `app/` needs from `index.ts`.
 5. Wire it up in a route under `src/app/`.
