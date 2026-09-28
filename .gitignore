@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.example lists variable names only, never values
+# (implements FR-2 of add-contentful-home-greeting; implements NFR-1 of add-contentful-home-greeting)
 !.env.example
 
 # vercel
