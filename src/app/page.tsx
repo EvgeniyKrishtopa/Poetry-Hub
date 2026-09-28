@@ -4,7 +4,9 @@ import { HomeGreeting, getHomeGreeting, resolveGreeting } from "@/features/home"
 import { PoemList, PoemSearch, poemsListQueryOptions } from "@/features/poems";
 import { getQueryClient } from "@/shared/lib/query-client";
 
-// implements NFR-2 of add-contentful-home-greeting: ISR safety net — the page re-renders at most every 60 s
+// implements NFR-2 of add-contentful-home-greeting: ISR safety net — the page re-renders at most every 60 s.
+// Must stay a literal: Next.js reads segment config statically and fails the build on a named constant.
+// Mirrors the Contentful client's DEFAULT_REVALIDATE_SECONDS so the page and its fetch expire together.
 export const revalidate = 60;
 
 export default async function HomePage() {
