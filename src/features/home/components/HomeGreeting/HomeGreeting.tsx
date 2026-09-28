@@ -1,7 +1,7 @@
-import type { Greeting } from "../../model/greeting.schema";
+import type { GreetingContent } from "../../model/greeting.types";
 
 interface HomeGreetingProps {
-  greeting: Pick<Greeting, "title" | "message">;
+  greeting: GreetingContent;
 }
 
 /** Title as the page heading; message as plain-text paragraphs (line breaks kept). */

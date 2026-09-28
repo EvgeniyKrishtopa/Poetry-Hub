@@ -42,8 +42,8 @@ src/
 │   └── index.ts         public surface of the lib (+ CONTENTFUL_CACHE_TAG, ContentfulErrorKind)
 └── features/home/                          # the home greeting feature
     ├── model/greeting.schema.ts        Zod schemas (fields `trim().min(1)`) + `Greeting` type (z.infer)
-    ├── model/greeting.types.ts         `GreetingResult` (type-only imports, no runtime deps)
-    ├── model/resolve-greeting.ts       result → Greeting (applies static fallback), pure
+    ├── model/greeting.types.ts         `GreetingResult`, `GreetingContent` = Pick<Greeting, "title" | "message"> (type-only imports)
+    ├── model/resolve-greeting.ts       result → GreetingContent (applies static fallback, which has no `key`), pure
     ├── api/home-greeting.dal.ts        getHomeGreeting() → GreetingResult   ("server-only")
     ├── components/HomeGreeting/HomeGreeting.tsx   presentational heading + message
     └── index.ts
@@ -269,3 +269,21 @@ sequenceDiagram
 4. Deploy.
 5. After deploy, create the Contentful webhook (D10) pointing at the deployed URL, then check its activity log shows a 200 after publishing an entry.
 6. Rollback = revert the change and disable the webhook; the static copy returns, and nothing else depends on Contentful.
+
+## Scaffold map
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/shared/lib/contentful/errors.ts` | Typed Contentful failures, discriminated by `kind` | `ContentfulError`, `ContentfulErrorKind` |
+| `src/shared/lib/contentful/config.ts` | Lazy env/token validation (internal: not re-exported, because it exposes the raw token) | `getContentfulConfig`, `ContentfulConfig` |
+| `src/shared/lib/contentful/client.ts` | GraphQL request, cache defaults + enforced tag, error mapping | `contentfulQuery`, `ContentfulCacheOptions`, `CONTENTFUL_CACHE_TAG` |
+| `src/shared/lib/contentful/webhook.ts` | Constant-time webhook secret check, fail-closed | `verifyWebhookSecret`, `WebhookVerification` |
+| `src/shared/lib/contentful/index.ts` | Public surface of the lib (server-only) | `contentfulQuery`, `ContentfulCacheOptions`, `CONTENTFUL_CACHE_TAG`, `ContentfulError`, `ContentfulErrorKind`, `verifyWebhookSecret`, `WebhookVerification` |
+| `src/features/home/model/greeting.schema.ts` | Zod structure of the greeting and the collection response | `greetingSchema`, `greetingCollectionResponseSchema`, `Greeting` |
+| `src/features/home/model/greeting.types.ts` | Retrieval result and display shape | `GreetingResult`, `GreetingFailureReason`, `GreetingContent` |
+| `src/features/home/model/resolve-greeting.ts` | Result → displayed content (static fallback on failure), pure | `resolveGreeting` |
+| `src/features/home/api/home-greeting.dal.ts` | Server-only DAL for the `home` greeting | `getHomeGreeting` |
+| `src/features/home/components/HomeGreeting/HomeGreeting.tsx` | Presentational heading + plain-text message | `HomeGreeting` |
+| `src/features/home/index.ts` | Public API of the home feature (server-only via the DAL) | `getHomeGreeting`, `resolveGreeting`, `HomeGreeting`, `Greeting` |
+| `src/proxy.ts` | Security headers on page responses (scaffold passes through) | `proxy`, `SECURITY_HEADERS`, `config` |
+| `src/app/api/revalidate/route.ts` | Contentful publish webhook endpoint | `POST` |
