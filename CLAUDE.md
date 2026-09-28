@@ -30,6 +30,11 @@ Validate with `npm run typecheck && npm run lint && npm run test:coverage && npm
 
 Tests: Vitest + Testing Library (jsdom), colocated as `*.test.ts(x)` next to the code. Test pure `model/` logic directly; test components through user-visible behavior (roles, labels). `src/app/**` is excluded from coverage — route composition and async Server Components are verified by browser QA (`web-qa`) instead.
 
+## Shell
+
+- The session cwd is already the repo root. Never prefix Bash commands with `cd <repo>` — a compound `cd … && <write>` always forces a manual permission prompt. Use relative paths.
+- Put throwaway probes, scripts, and outputs in the session scratchpad, not in `src/` or anywhere else in the repo.
+
 ## Project structure (feature-first)
 
 ```
