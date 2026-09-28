@@ -33,7 +33,7 @@
 
 ## 6. Security headers proxy (`src/proxy.ts`) <!-- judgement-heavy -->
 
-- [ ] 6.1 (FR-8) Implement `src/proxy.ts` (exported `SECURITY_HEADERS` constant, `proxy` returning `NextResponse.next()` with them, `config.matcher` = `/((?!_next/static|_next/image|favicon.ico|.*\..*).*)`); verify with a unit test (node environment) that the response carries all four headers with exact values, and a matcher test that `/` and `/poems/some-poem` match while `/_next/static/x.js`, `/_next/image`, `/favicon.ico`, `/robots.txt`, and `/poems/mr.smith` don't
+- [x] 6.1 (FR-8) Implement `src/proxy.ts` (exported `SECURITY_HEADERS` constant, `proxy` returning `NextResponse.next()` with them, `config.matcher` = `/((?!_next/static|_next/image|favicon.ico|.*\..*).*)`); verify with a unit test (node environment) that the response carries all four headers with exact values, and a matcher test that `/` and `/poems/some-poem` match while `/_next/static/x.js`, `/_next/image`, `/favicon.ico`, `/robots.txt`, and `/poems/mr.smith` don't
 
 ## 7. Publish webhook (`POST /api/revalidate`) <!-- judgement-heavy -->
 

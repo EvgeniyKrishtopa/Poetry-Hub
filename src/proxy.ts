@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+// implements FR-8 of add-contentful-home-greeting
+import { NextResponse } from "next/server";
 
 export const SECURITY_HEADERS = {
   "X-Content-Type-Options": "nosniff",
@@ -7,12 +8,13 @@ export const SECURITY_HEADERS = {
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
 } as const;
 
-/**
- * Sets SECURITY_HEADERS on page responses.
- * Scaffold: passes through instead of throwing, because the proxy runs on every request.
- */
-export function proxy(request: NextRequest): NextResponse {
-  return NextResponse.next();
+/** Sets SECURITY_HEADERS on every response the matcher lets through. */
+export function proxy(): NextResponse {
+  const response = NextResponse.next();
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(name, value);
+  }
+  return response;
 }
 
 export const config = {
