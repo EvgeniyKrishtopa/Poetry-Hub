@@ -1,0 +1,2 @@
+full
+# multi-module: yes (shared/lib/contentful, DAL, app/, proxy.ts); data schema: yes (new Contentful content type); contract: yes (new CMS service contract + env vars)

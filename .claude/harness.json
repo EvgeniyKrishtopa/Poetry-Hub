@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "forge": "other",
+  "forge": "github",
   "framework": "nextjs",
   "packageManager": "npm",
   "runCmd": "npm run",
@@ -55,14 +55,14 @@
     "enabled": false
   },
   "models": {
-    "architecture": "claude-opus-5",
-    "spec": "claude-sonnet-5",
+    "architecture": "claude-opus-5-5",
+    "spec": "claude-opus-5-5",
     "webQa": "claude-haiku-4-5",
     "code": "claude-sonnet-5",
-    "deep": "claude-opus-5",
+    "deep": "claude-opus-5-5",
     "harness": "claude-haiku-4-5",
     "testAuthor": "claude-sonnet-5",
-    "clarify": "claude-sonnet-5",
+    "clarify": "claude-opus-5-5",
     "default": "claude-sonnet-5"
   },
   "harnessVersion": "0.10.0",
