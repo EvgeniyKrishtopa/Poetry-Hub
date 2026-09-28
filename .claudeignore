@@ -1,0 +1,9 @@
+# Read/context noise reduction — NOT a security boundary.
+# Secrets and destructive commands are blocked via permissions.deny in
+# .claude/settings.json (see .claude/docs/review-gates.md), not here.
+node_modules
+.next
+coverage
+.git
+*.log
+package-lock.json

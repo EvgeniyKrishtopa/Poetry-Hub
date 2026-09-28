@@ -22,9 +22,13 @@ npm run dev        # dev server (http://localhost:3000)
 npm run build      # production build
 npm run lint       # ESLint
 npm run typecheck  # route type generation + tsc --noEmit
+npm test               # Vitest in watch mode
+npm run test:coverage  # single run with coverage (80% statements/lines/functions)
 ```
 
-Validate with `npm run typecheck && npm run lint && npm run build` before finishing a task. No test runner is set up yet — when the first real behavior lands, add Vitest + Testing Library and a `test` script (pure `model/` functions are the first candidates).
+Validate with `npm run typecheck && npm run lint && npm run test:coverage && npm run build` before finishing a task.
+
+Tests: Vitest + Testing Library (jsdom), colocated as `*.test.ts(x)` next to the code. Test pure `model/` logic directly; test components through user-visible behavior (roles, labels). `src/app/**` is excluded from coverage — route composition and async Server Components are verified by browser QA (`web-qa`) instead.
 
 ## Project structure (feature-first)
 
@@ -101,3 +105,32 @@ src/
 3. UI state (if any) in `model/<name>-ui.store.ts`.
 4. Export only what `app/` needs from `index.ts`.
 5. Wire it up in a route under `src/app/`.
+
+## Harness (sdd-harness-web-ykryshtopa)
+
+- @.claude/docs/git-conventions.md — branch/commit conventions. This is
+  also the documented authorization for `opsx-apply-git` to commit
+  automatically at task-group and archive boundaries (its §3/§5.3) —
+  without this reference, that override isn't discoverable and shouldn't
+  be assumed.
+- @.claude/docs/review-gates.md — the seven automated review gates and
+  their order.
+- @.claude/docs/laziness-ladder.md — priority order to check before
+  writing new code; does not apply to trust-boundary validation,
+  data loss, security, or accessibility.
+- @CONTEXT.md — this project's glossary of domain terms. `spec-reviewer`
+  checks every spec against it; without this reference it never loads into
+  a session and the check has nothing to read.
+- @.claude/harness.json — detected stack (framework, package manager,
+  test runner, coverage threshold). Every skill and hook in this harness
+  reads from here; do not re-detect any of it.
+- PROGRESS.md — current change, status, and next steps as of the last
+  stop. `SessionStart` already prints its in-progress/blocked line and
+  Next steps section at the start of every session; read the file itself
+  for anything beyond that digest (the Done list, clock-in/out history). Not
+  `@`-imported — the hook already surfaces it, so importing it too would
+  load the same content twice.
+- docs/decisions/ — one ADR-format file per architectural decision that
+  outlives a single change; see `docs/decisions/NNNN-*.md` if the
+  directory exists yet. Not auto-loaded — read the relevant file when a
+  past decision might be in play.
