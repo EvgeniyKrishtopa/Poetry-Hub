@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "forge": "other",
+  "framework": "nextjs",
+  "packageManager": "npm",
+  "runCmd": "npm run",
+  "testRunner": "vitest",
+  "buildDir": ".next",
+  "lockfile": "package-lock.json",
+  "coverageThreshold": 80,
+  "scripts": {
+    "dev": "dev",
+    "typecheck": "typecheck",
+    "lint": "lint",
+    "testCoverage": "test:coverage"
+  },
+  "devServerUrl": "http://localhost:3000",
+  "webQaScenariosDir": "tests/web-qa-scenarios",
+  "trivialDiffThreshold": 10,
+  "trivialDiffPaths": [
+    "*.md",
+    "*.css",
+    "*.svg",
+    "public/**"
+  ],
+  "maxFixAttempts": 2,
+  "openspec": {
+    "profile": "custom",
+    "workflows": [
+      "propose",
+      "explore",
+      "new",
+      "continue",
+      "apply",
+      "update",
+      "ff",
+      "sync",
+      "archive",
+      "bulk-archive",
+      "verify",
+      "onboard"
+    ]
+  },
+  "disabledRules": [],
+  "sizeRouting": {
+    "enabled": true
+  },
+  "scaffold": {
+    "enabled": true
+  },
+  "makerChecker": {
+    "enabled": false
+  },
+  "designSystem": {
+    "enabled": false
+  },
+  "models": {
+    "architecture": "claude-opus-5",
+    "spec": "claude-sonnet-5",
+    "webQa": "claude-haiku-4-5",
+    "code": "claude-sonnet-5",
+    "deep": "claude-opus-5",
+    "harness": "claude-haiku-4-5",
+    "testAuthor": "claude-sonnet-5",
+    "clarify": "claude-sonnet-5",
+    "default": "claude-sonnet-5"
+  },
+  "harnessVersion": "0.10.0",
+  "toolchainVerifiedAt": "2026-09-28T10:52:19Z"
+}

@@ -1,0 +1,59 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
+
+context: |
+  Next.js 16 (App Router, Turbopack) + React 19 + TypeScript (strict); npm;
+  Vitest for tests; builds to .next/; dev server on http://localhost:3000.
+  Server state in TanStack Query v5, client UI state in Zustand v5.
+  Tailwind CSS v4 for layout/basic styling, CSS Modules for custom element styles.
+  Feature-first layout: src/app/ (routing only), src/features/<name>/
+  {api,model,components,index.ts} (public API via index.ts), src/shared/
+  {ui,lib,config}. Conventions in CLAUDE.md.
+  Reviewed by the sdd-harness-web-ykryshtopa harness — see
+  .claude/docs/review-gates.md for the gates and their order.
+  Poetry Hub is a web app where readers discover, read, and collect poems.
+  Key nouns: Poem (title, author, lines), Author, Collection (a reader's
+  saved poems), Reader. Currently a learning/portfolio project; no auth or
+  backend yet (mock data).
+
+rules:
+  proposal:
+    - Give every requirement a stable identifier — FR-1, FR-2 for functional
+      requirements, NFR-1, NFR-2 for non-functional ones. Unique within the
+      change. Never renumber an identifier once it is written.
+    - State every acceptance criterion as Given/When/Then — the state it
+      assumes, the action taken, the observable result.
+  tasks:
+    - Every task states the requirement identifier it implements.
+    - Verification belongs in the task list as its own task, not left as a
+      manual check after the fact.
