@@ -29,7 +29,7 @@
 
 ## 5. Home page wiring (`src/app/page.tsx`) <!-- isolated -->
 
-- [ ] 5.1 (FR-6, FR-7, NFR-2) Update `page.tsx`: await `getHomeGreeting()`, pass `resolveGreeting(result)` to `HomeGreeting` in place of the `siteConfig` heading/description, export `revalidate = 60`, keep the poems prefetch unchanged; verify `npm run typecheck` passes and `npm run build` shows `/` as revalidated (ISR, 1m) instead of static
+- [x] 5.1 (FR-6, FR-7, NFR-2) Update `page.tsx`: await `getHomeGreeting()`, pass `resolveGreeting(result)` to `HomeGreeting` in place of the `siteConfig` heading/description, export `revalidate = 60`, keep the poems prefetch unchanged; verify `npm run typecheck` passes and `npm run build` shows `/` as revalidated (ISR, 1m) instead of static
 
 ## 6. Security headers proxy (`src/proxy.ts`) <!-- judgement-heavy -->
 
