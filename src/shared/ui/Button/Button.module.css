@@ -1,0 +1,39 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.primary {
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+}
+
+.primary:hover {
+  background: color-mix(in srgb, var(--color-accent) 85%, black);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--color-foreground);
+}
+
+.ghost:hover {
+  background: var(--color-surface);
+}
