@@ -37,9 +37,9 @@
 
 ## 7. Publish webhook (`POST /api/revalidate`) <!-- judgement-heavy -->
 
-- [ ] 7.1 (FR-9, NFR-1) Implement `shared/lib/contentful/webhook.ts` (`verifyWebhookSecret`: lazy env read; unset or empty → `not-configured`; SHA-256 + `timingSafeEqual` → `ok` or `unauthorized`; `import "server-only"`) and export it from `index.ts`; verify with unit tests using `vi.stubEnv`: match → `ok`, wrong value, missing header, a different-length value → `unauthorized`, unset secret and empty secret with an empty header → `not-configured`
-- [ ] 7.2 (FR-9, NFR-1, NFR-2) Implement `src/app/api/revalidate/route.ts` exporting only `POST`: `ok` → `revalidateTag(CONTENTFUL_CACHE_TAG, { expire: 0 })` + 200 `{ revalidated: true }`; `unauthorized` → 401; `not-configured` → 503 + server log; verify with unit tests (node environment, `next/cache` mocked) that `revalidateTag` is called exactly once with `("contentful", { expire: 0 })` only on `ok`, and that no response body or log call contains the secret
-- [ ] 7.3 (FR-9, NFR-1) Add `CONTENTFUL_REVALIDATE_SECRET=` (empty) to `.env.example`, and document in CLAUDE.md the webhook endpoint and its manual Contentful setup (link to design D10); verify the `.env.example` line exists and CLAUDE.md stays under 200 lines
+- [x] 7.1 (FR-9, NFR-1) Implement `shared/lib/contentful/webhook.ts` (`verifyWebhookSecret`: lazy env read; unset or empty → `not-configured`; SHA-256 + `timingSafeEqual` → `ok` or `unauthorized`; `import "server-only"`) and export it from `index.ts`; verify with unit tests using `vi.stubEnv`: match → `ok`, wrong value, missing header, a different-length value → `unauthorized`, unset secret and empty secret with an empty header → `not-configured`
+- [x] 7.2 (FR-9, NFR-1, NFR-2) Implement `src/app/api/revalidate/route.ts` exporting only `POST`: `ok` → `revalidateTag(CONTENTFUL_CACHE_TAG, { expire: 0 })` + 200 `{ revalidated: true }`; `unauthorized` → 401; `not-configured` → 503 + server log; verify with unit tests (node environment, `next/cache` mocked) that `revalidateTag` is called exactly once with `("contentful", { expire: 0 })` only on `ok`, and that no response body or log call contains the secret
+- [x] 7.3 (FR-9, NFR-1) Add `CONTENTFUL_REVALIDATE_SECRET=` (empty) to `.env.example`, and document in CLAUDE.md the webhook endpoint and its manual Contentful setup (link to design D10); verify the `.env.example` line exists and CLAUDE.md stays under 200 lines
 
 ## 8. Automated verification <!-- isolated -->
 
