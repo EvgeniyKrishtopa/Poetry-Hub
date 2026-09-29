@@ -3,21 +3,21 @@
 ## Current change
 
 - Change: add-ci-pipeline (`openspec/changes/add-ci-pipeline/`), parent branch `feature/add-ci-pipeline`
-- Last run: group 1 on `feature/add-ci-pipeline-prerequisites`, PR #13 (https://github.com/EvgeniyKrishtopa/Poetry-Hub/pull/13) into `feature/add-ci-pipeline` (open)
-- Last commit: cfcdbd5 chore: log this run's checks
+- Last run: group 2 on `feature/add-ci-pipeline-isolated`, PR #14 (https://github.com/EvgeniyKrishtopa/Poetry-Hub/pull/14) into `feature/add-ci-pipeline` (open)
+- Last commit: a65ab0c chore: log this run's checks
 
 ## Status
 
-- Done: group 1 (knip + npm-check-updates devDependencies, installed by the user)
+- Done: group 1 (knip + npm-check-updates, PR #13 merged), group 2 (local check scripts, `.nvmrc`, outdated hold list; PR #14 open)
 - In progress: none
 - Blocked: none (open deferred items are tracked in `docs/deferred.md`)
-- Pending: groups 2 (isolated), 3–7 (judgement-heavy)
+- Pending: groups 3–7 (all judgement-heavy)
 
 ## Next steps
 
-1. Review and merge PR #13 into `feature/add-ci-pipeline`.
-2. Run `opsx-apply-git add-ci-pipeline` for group 2 (local check scripts and configs, isolated). Group 3 (knip triage) is judgement-heavy, so the batch ends after group 2.
-3. Group 4 needs the user to run `npx ncu -u --target minor && npm install` and pin every major-only range to a full `^x.y.z` floor (tasks.md 4.1).
+1. Review and merge PR #14 into `feature/add-ci-pipeline`.
+2. Run `opsx-apply-git add-ci-pipeline` for group 3 (knip config + first-run triage, judgement-heavy: each finding is a remove-or-ignore decision with the user).
+3. Group 4 needs the user to run `npx ncu -u --target minor && npm install` and pin every major-only range to a full `^x.y.z` floor (tasks.md 4.1). `npm run deps:outdated` stays red until then (expected).
 4. At deploy (deferred by the user, design.md rollout steps 3 and 5 of the archived add-contentful-home-greeting): create the Contentful webhook for the deployed URL, set CONTENTFUL_REVALIDATE_SECRET on the hosting platform, and close `docs/deferred.md`'s 9.5 item.
 5. Optional: install `@playwright/test` as a devDependency to record Gate 3 scenarios; gitignore `.playwright-mcp/` (QA browser output, currently untracked).
 
@@ -32,3 +32,4 @@
 - Clock-in: 2026-09-29T14:00:00Z (approx.) — Clock-out: 2026-09-29T14:35:00Z
 - Clock-in: 2026-09-29T14:50:00Z (approx.) — Clock-out: 2026-09-29T14:56:00Z
 - Clock-in: 2026-09-29T15:10:00Z (approx.) — Clock-out: 2026-09-29T16:01:35Z
+- Clock-in: 2026-09-29T16:10:00Z (approx.) — Clock-out: 2026-09-29T16:32:46Z
