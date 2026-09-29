@@ -38,6 +38,7 @@ Validate with `npm run typecheck && npm run lint && npm run test:coverage && npm
 - Server data lives in TanStack Query or a feature's server-only `dal/`; never copy it into Zustand. Never store derived values.
 - Tests live in a `tests/` folder at the feature/module root, never next to source.
 - Name numeric and string constants; no magic values. Exception: Next.js route segment config (`revalidate`, …) must be a literal — comment why.
+- At the end of every task group, before its commit, record each task that ends blocked, skipped by decision, or obsolete in `docs/deferred.md`, and add `<!-- deferred: docs/deferred.md -->` to its line. Keep the line and any `blocked` marker in `tasks.md`, because `opsx-apply-git` reads them.
 
 ## Read when relevant
 
@@ -50,6 +51,7 @@ Not auto-loaded — open the file before doing the matching kind of work.
 | `docs/styling.md` | writing or changing component styles |
 | `docs/testing.md` | writing or moving tests, coverage questions |
 | `docs/environment.md` | adding or reading an environment variable |
+| `docs/deferred.md` | finishing a task group, proposing a new change, preparing a deploy |
 
 ## Harness (sdd-harness-web-ykryshtopa)
 
