@@ -9,13 +9,13 @@
 ## Status
 
 - Done: 1 (manual prerequisites), 2 (test and env setup), 3 (Contentful client), 4 (home greeting feature), 5 (home page wiring), 6 (security headers proxy), 7 (publish webhook), 8 (automated verification — PR #8 merged)
-- In progress: 9 (manual integration verification) — 9.1–9.4 done, PR #9 open
-- Blocked: 9.5 — live publish step unverified: after a Contentful publish, the Delivery API still served the old entry (publishedAt 2026-09-28, v10), so "next load shows the new title" couldn't be observed; user skipped. Its 200/401/405/503 checks all passed.
+- In progress: 9 (manual integration verification) — all tasks checked, PR #9 open. 9.5's live publish step was skipped by user decision (block cleared 2026-09-29); its 200/401/405/503 checks passed.
+- Blocked: none
 
 ## Next steps
 
 1. Review and merge PR #9 (https://github.com/EvgeniyKrishtopa/Poetry-Hub/pull/9) into feature/add-cms-layer. It includes the NFR-3 spec amendment (zod allowed as a direct dependency), which resolves the earlier zod question from 8.2.
-2. Unblock 9.5: in Contentful, change the `home` title and confirm it's **Published** in the same space/environment as `.env.local` (Delivery API `sys.publishedVersion` should go above 10). Then POST the webhook on a production server and confirm the next `/` load shows the new title. Restore the title afterwards. Remove the blocked marker and check 9.5, then run opsx-apply-git; with no tasks left it archives the change.
+2. After PR #9 merges, run opsx-apply-git: no tasks remain, so it archives the change via its own PR into feature/add-cms-layer.
 3. Still open: reword test-plan row 22 ("called with a request for `/`") — `proxy()` takes no parameter since group 6. Not done this run.
 4. At deploy (deferred by the user, design.md rollout steps 3 and 5): create the Contentful webhook for the deployed URL, set CONTENTFUL_REVALIDATE_SECRET on the hosting platform, and confirm Publish → Activity log shows 200.
 5. After this change is archived, propose a separate chore change adding a CI workflow (typecheck, lint, test:coverage, build) — Gate 6 finding, deferred by the user.
