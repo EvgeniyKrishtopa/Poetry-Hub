@@ -10,12 +10,15 @@ import { getQueryClient } from "@/shared/lib/query-client";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  // implements FR-6, FR-7 of add-contentful-home-greeting: CMS greeting, falling back to siteConfig on any failure
-  const greetingResult = await getHomeGreeting();
-
-  // Prefetch on the server; the client list hydrates from this cache instead of refetching.
   const queryClient = getQueryClient();
-  await queryClient.prefetchQuery(poemsListQueryOptions);
+
+  // The two fetches are independent, so run them in parallel.
+  // implements FR-6, FR-7 of add-contentful-home-greeting: CMS greeting, falling back to siteConfig on any failure
+  // Prefetch on the server; the client list hydrates from this cache instead of refetching.
+  const [greetingResult] = await Promise.all([
+    getHomeGreeting(),
+    queryClient.prefetchQuery(poemsListQueryOptions),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-16">
