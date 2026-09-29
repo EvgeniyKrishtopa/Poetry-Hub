@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { filterPoems } from "./filter-poems";
-import type { Poem } from "./poem.types";
+import { filterPoems } from "../../model/filter-poems";
+import type { Poem } from "../../model/poem.types";
 
 const poems: readonly Poem[] = [
   { id: "1", title: "The Road Not Taken", author: "Robert Frost", lines: [] },
