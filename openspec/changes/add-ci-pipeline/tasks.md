@@ -2,7 +2,7 @@
 
 ## 1. Manual prerequisites (user) <!-- judgement-heavy -->
 
-- [ ] 1.1 (FR-6, FR-8) User runs `npm install -D knip npm-check-updates` (the harness denies agent installs); verify both appear in `package.json` `devDependencies` and `package-lock.json` is updated
+- [x] 1.1 (FR-6, FR-8) User runs `npm install -D knip npm-check-updates` (the harness denies agent installs); verify both appear in `package.json` `devDependencies` and `package-lock.json` is updated
 
 ## 2. Local check scripts and configs <!-- isolated -->
 
