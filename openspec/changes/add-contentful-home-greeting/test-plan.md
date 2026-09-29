@@ -30,5 +30,5 @@ One row per acceptance-criterion outcome (a **Then**) in `proposal.md`. Levels:
 | FR-9 (GET → 405, nothing expired) | Against the running app, `curl -X GET /api/revalidate` returns 405 (task 9.5) | end-to-end |
 | NFR-1 (client bundles contain neither the token nor the webhook secret) | After `next build` with real credentials, searching `.next/static` finds neither the access token, the webhook secret value, nor `graphql.contentful.com` (task 9.1) | end-to-end |
 | NFR-1 (logged failures contain neither secret) | DAL log spy: no logged argument contains the token string. Route handler log and response spies: neither contains the webhook secret. Config error messages contain no configured value | unit |
-| NFR-3 (only `server-only` added as a runtime dependency) | Comparing `package.json` `dependencies` with the base branch shows `server-only` as the only addition (task 8.2) | integration |
+| NFR-3 (only `server-only` and `zod` added as runtime dependencies) | Comparing `package.json` `dependencies` with the base branch shows `server-only` and `zod` (promoted from transitive) as the only additions (task 8.2) | integration |
 | NFR-2 (first request after an accepted webhook shows the new title) | Against the running app, publish a new title, POST the webhook with the secret, and the very next `/` request shows the new title (task 9.5) | end-to-end |
