@@ -1,0 +1,2 @@
+no
+# new module: no (.github/ is repo config, not a module at the src/features level); new boundary crossing: no (no route handler, endpoint, or external-service client in app code)

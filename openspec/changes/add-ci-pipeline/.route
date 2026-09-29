@@ -1,0 +1,2 @@
+full
+# more-than-one-module: yes (new .github/ workflows + package.json scripts/deps + knip config + docs); schema change: no; contract change: yes (new npm scripts other tooling calls: CI, pre-push, harness)
