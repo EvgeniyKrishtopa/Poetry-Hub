@@ -34,6 +34,8 @@ When a later change delivers the point, or the risk is formally accepted, set **
 
 ## add-contentful-home-greeting
 
+Archived at `openspec/changes/archive/2026-09-29-add-contentful-home-greeting/`.
+
 ### add-contentful-home-greeting · 9.5 — live publish → fresh title
 
 - **State:** skipped
