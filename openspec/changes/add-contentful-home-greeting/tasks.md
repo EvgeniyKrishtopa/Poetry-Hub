@@ -44,7 +44,7 @@
 ## 8. Automated verification <!-- isolated -->
 
 - [x] 8.1 (FR-1) Verify the server-only guard: temporarily add a Client Component (`"use client"`) that imports `@/features/home`, run `npm run build`, and confirm it fails with a server-only import error; then remove the temporary file and confirm `npm run build` passes again
-- [x] 8.2 (FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, NFR-1, NFR-2, NFR-3) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build`; verify all pass with coverage ≥ 80% on statements, lines, and functions, and that `package.json` gained no runtime dependency other than `server-only`
+- [x] 8.2 (FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, NFR-1, NFR-2, NFR-3) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build`; verify all pass with coverage ≥ 80% on statements, lines, and functions, and that `package.json` gained no runtime dependency other than `server-only` and `zod` (promoted from transitive)
 
 ## 9. Manual integration verification (real credentials) <!-- judgement-heavy -->
 

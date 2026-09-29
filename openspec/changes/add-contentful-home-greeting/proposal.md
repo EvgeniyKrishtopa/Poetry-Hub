@@ -27,7 +27,7 @@ Poetry Hub's home greeting is hard-coded in `src/shared/config/site.ts`, so ever
 - **FR-9**: `POST /api/revalidate` SHALL expire all cached Contentful content immediately when the request's `x-contentful-webhook-secret` header matches `CONTENTFUL_REVALIDATE_SECRET` (constant-time comparison); it SHALL respond 401 on a missing or wrong secret, 503 when the secret isn't configured, and 405 for non-POST methods, expiring nothing in those cases.
 - **NFR-1**: No Contentful token, webhook secret, or other secret SHALL appear in client bundles, logs, error messages, responses, or rendered HTML.
 - **NFR-2**: A published greeting change SHALL be visible on the first request for `/` made more than 60 seconds after publishing (hard deadline), delivered by the publish webhook (FR-9). The deadline holds under these conditions, which are the design's accepted trade-offs: the notification is delivered and accepted, the app runs as a single instance, and Contentful's delivery API already serves the published version when the notification is processed. Greeting responses SHALL also be cached with 60-second time-based revalidation, tagged `contentful`, as a best-effort safety net for missed webhooks; that path may serve one stale response while refreshing.
-- **NFR-3**: No new runtime dependency beyond `server-only`; the GraphQL client uses the platform `fetch`.
+- **NFR-3**: No new runtime dependency beyond `server-only` and `zod` (already in the lockfile as a transitive dependency, promoted to a direct one because the code imports it); the GraphQL client uses the platform `fetch`.
 
 ## Acceptance Criteria
 
@@ -46,7 +46,7 @@ Poetry Hub's home greeting is hard-coded in `src/shared/config/site.ts`, so ever
 - **FR-9** — Given `CONTENTFUL_REVALIDATE_SECRET` is unset or empty, When a POST to `/api/revalidate` arrives with any header value, Then it responds 503 and expires nothing.
 - **FR-9** — Given the application is running, When a GET request is sent to `/api/revalidate`, Then it responds 405 and expires nothing.
 - **NFR-1** — Given the application is built with real credentials, When the client bundles in `.next/static` are searched, Then neither the access token nor the webhook secret appears; and When any Contentful failure is logged, Then the log entry contains neither.
-- **NFR-3** — Given the change is complete, When `package.json` dependencies are compared with before the change, Then the only added runtime dependency is `server-only`.
+- **NFR-3** — Given the change is complete, When `package.json` dependencies are compared with before the change, Then the only added runtime dependencies are `server-only` and `zod` (promoted from transitive).
 - **NFR-2** — Given `/` is cached with title "Welcome to Poetry Hub" and the title is changed to "Hello, reader" and published, When the webhook notification is accepted and `/` is requested, Then that first request shows "Hello, reader".
 
 ## Capabilities
@@ -65,6 +65,6 @@ Poetry Hub's home greeting is hard-coded in `src/shared/config/site.ts`, so ever
 - **New code**: `src/shared/lib/contentful/` (client, config, errors, webhook secret check), `src/features/home/` (DAL, Zod schema, greeting component, public `index.ts`), `src/app/api/revalidate/route.ts`, `src/proxy.ts`, `.env.example`.
 - **New endpoint**: `POST /api/revalidate`, publicly reachable and secret-authenticated. This is security-relevant: it lets anyone holding the secret force cache misses, which in turn drive Contentful API calls.
 - **Changed code**: `src/app/page.tsx` (renders the CMS greeting instead of `siteConfig` copy; the page moves from fully static to ISR with a 60-second revalidate); `vitest.config.mts` (alias `server-only` for tests); `CLAUDE.md` (Contentful, DAL and env conventions).
-- **Dependencies**: adds `server-only`. The harness denies installs, so the user runs `npm install server-only` before implementation. Zod is already installed.
+- **Dependencies**: adds `server-only`. The harness denies installs, so the user runs `npm install server-only` before implementation. Zod 4 was already in the lockfile transitively; it is added to `dependencies` directly because the code imports it.
 - **External systems**: Contentful space (content type `greeting` plus the `home` entry, created manually, and a webhook on Entry publish/unpublish pointing at the deployed `/api/revalidate`, configured manually); the Delivery API token and the webhook secret live in `.env.local` (never committed). Contentful can't reach `localhost`, so locally the endpoint is exercised with `curl`.
 - **Build/runtime**: `next build` needs the Contentful variables present; without them the home page renders the fallback and logs a configuration error (see design for why the build doesn't fail).

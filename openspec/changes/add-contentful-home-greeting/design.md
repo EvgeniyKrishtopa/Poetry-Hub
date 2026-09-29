@@ -8,7 +8,7 @@ Current state:
 - `src/app/page.tsx` is an async Server Component that renders `siteConfig.name` / `siteConfig.description` as the heading and prefetches poems into TanStack Query. The route is fully static (`○` in `next build`).
 - No server-only code or external services exist yet. `features/poems/api/poems.api.ts` returns in-memory mock data.
 - Next.js 16: `middleware.ts` is renamed `proxy.ts` (export `proxy`); with the `src/` layout it lives at `src/proxy.ts`. `cacheComponents` is **not** enabled, so `fetch(…, { next: { revalidate, tags } })` is the caching mechanism.
-- Zod 4 is installed. The harness denies package installs, so `server-only` is installed by the user.
+- Zod 4 is in the lockfile (transitively) and is declared as a direct dependency by this change, since the code imports it. The harness denies package installs, so `server-only` is installed by the user.
 - Architecture rules (CLAUDE.md): `app/` stays thin; features are imported only through `index.ts` (enforced by ESLint); `shared/` never imports from `features/`.
 
 ## Goals / Non-Goals
