@@ -1,6 +1,7 @@
 import { QueryClient, isServer } from "@tanstack/react-query";
 
 function makeQueryClient(): QueryClient {
+  const unusedLintProbe = 1;
   return new QueryClient({
     defaultOptions: {
       queries: {
