@@ -6,10 +6,10 @@
 
 ## 2. Local check scripts and configs <!-- isolated -->
 
-- [ ] 2.1 (NFR-2) Add `.nvmrc` containing `24` (design D7); verify `cat .nvmrc` prints `24` and `node -v` locally reports a 24.x version
-- [ ] 2.2 (FR-3, NFR-3) Change the `lint` script to `eslint --max-warnings 0` (design D3); verify `npm run lint` passes on the current tree, and fails when a throwaway file with one unused variable (a warning) is added, then remove the file
-- [ ] 2.3 (FR-7, NFR-3) Add `"deps:audit": "npm audit --audit-level=high"` and switch `.husky/pre-push` to `npm run test:coverage && npm run deps:audit` (design D6); verify `npm run deps:audit` exits 0 and `.husky/pre-push` no longer contains the inline `npm audit` command
-- [ ] 2.4 (FR-8, NFR-3) Add `.ncurc.cjs` with `HELD_TO_CURRENT_MAJOR` (`@types/node` only for now, with its reason comment; `typescript` and `eslint` are added in 4.2) and a `target` function, and add `"deps:outdated": "ncu --errorLevel 2"` (design D5), after confirming ncu's `target` signature and `--errorLevel` behavior in its docs via context7; verify that `npm run deps:outdated` lists the outdated packages and exits non-zero (expected until group 4), that `@types/node` is not reported for 26.x, and that temporarily lowering `@types/node`'s floor to an older 24.x version makes it reported (revert afterwards)
+- [x] 2.1 (NFR-2) Add `.nvmrc` containing `24` (design D7); verify `cat .nvmrc` prints `24` and `node -v` locally reports a 24.x version
+- [x] 2.2 (FR-3, NFR-3) Change the `lint` script to `eslint --max-warnings 0` (design D3); verify `npm run lint` passes on the current tree, and fails when a throwaway file with one unused variable (a warning) is added, then remove the file
+- [x] 2.3 (FR-7, NFR-3) Add `"deps:audit": "npm audit --audit-level=high"` and switch `.husky/pre-push` to `npm run test:coverage && npm run deps:audit` (design D6); verify `npm run deps:audit` exits 0 and `.husky/pre-push` no longer contains the inline `npm audit` command
+- [x] 2.4 (FR-8, NFR-3) Add `.ncurc.cjs` with `HELD_TO_CURRENT_MAJOR` (`@types/node` only for now, with its reason comment; `typescript` and `eslint` are added in 4.2) and a `target` function, and add `"deps:outdated": "ncu --errorLevel 2"` (design D5), after confirming ncu's `target` signature and `--errorLevel` behavior in its docs via context7; verify that `npm run deps:outdated` lists the outdated packages and exits non-zero (expected until group 4), that `@types/node` is not reported for 26.x, and that temporarily lowering `@types/node`'s floor to an older 24.x version makes it reported (revert afterwards)
 
 ## 3. Dead-code analysis (knip) <!-- judgement-heavy -->
 

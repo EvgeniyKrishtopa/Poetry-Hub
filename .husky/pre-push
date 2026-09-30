@@ -1,1 +1,2 @@
-npm run test:coverage && npm audit --audit-level=high
+# implements FR-7 of add-ci-pipeline: the audit threshold lives only in the deps:audit script, shared with CI
+npm run test:coverage && npm run deps:audit
