@@ -45,3 +45,25 @@ Archived at `openspec/changes/archive/2026-09-29-add-contentful-home-greeting/`.
 - **Verified instead:** production server: correct secret → 200 `{"revalidated":true}`; wrong or missing secret → 401; `GET` → 405; secret unset → 503 plus a server log line. Unit tests assert `revalidateTag("contentful", { expire: 0 })` is called only on a valid secret.
 - **Decision:** user, 2026-09-29: skip the live step.
 - **Status:** open. Natural place to close it is the deploy step (design.md rollout steps 3 and 5): after setting up the real Contentful webhook, publish once and confirm the page updates.
+
+## add-ci-pipeline
+
+### add-ci-pipeline · 4.2 — TypeScript 7 upgrade held
+
+- **State:** skipped
+- **Requirement:** FR-8
+- **What is missing:** the upgrade to the latest `typescript` major (7.x). `deps-outdated` passes only because `.ncurc.cjs` holds `typescript` to major 5.
+- **Why:** `typescript-eslint` (pulled in by `eslint-config-next/typescript`) declares `typescript >=4.8.4 <6.1.0` as of 2026-09-29 (unchanged on 2026-09-30, `typescript-eslint@8.71.0`). 6.0.x would fit, but the user chose to stay on 5 rather than take a partial step.
+- **Verified instead:** `npm view typescript-eslint peerDependencies`; `npm run deps:outdated` exits 0 with the hold in place.
+- **Decision:** user, 2026-09-29 (design.md D8).
+- **Status:** open. Retry path (D8): once `npm view typescript-eslint peerDependencies` allows TS 7, delete the `typescript` hold line in `.ncurc.cjs`; `deps-outdated` then goes red and the upgrade happens as its own change. Never `--force`, `--legacy-peer-deps`, or an `.npmrc` override.
+
+### add-ci-pipeline · 4.2 — ESLint 10 upgrade held
+
+- **State:** skipped
+- **Requirement:** FR-8
+- **What is missing:** the upgrade to the latest `eslint` major (10.x). `deps-outdated` passes only because `.ncurc.cjs` holds `eslint` to major 9.
+- **Why:** `eslint-plugin-react@7.37.5`, `eslint-plugin-import@2.32.0`, and `eslint-plugin-jsx-a11y@6.10.2` (pulled in by `eslint-config-next`) declare ESLint 9 at most as of 2026-09-29 (unchanged on 2026-09-30; all three are still their latest releases).
+- **Verified instead:** `npm view <plugin> peerDependencies` for each plugin; `npm run deps:outdated` exits 0 with the hold in place.
+- **Decision:** user, 2026-09-29 (design.md D8).
+- **Status:** open. Retry path (D8): once all three plugins' `peerDependencies` allow ESLint 10, delete the `eslint` hold line in `.ncurc.cjs`; `deps-outdated` then goes red and the upgrade happens as its own change. Never `--force`, `--legacy-peer-deps`, or an `.npmrc` override.

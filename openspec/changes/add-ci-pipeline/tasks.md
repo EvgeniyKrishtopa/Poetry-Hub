@@ -18,9 +18,9 @@
 
 ## 4. Dependency upgrades and held majors <!-- judgement-heavy -->
 
-- [ ] 4.1 (FR-8) User runs `npx ncu -u --target minor` followed by `npm install` (design D8), which bumps `next` and `eslint-config-next` to 16.3.7, `react` and `react-dom` to 19.3.0, and every caret floor to its latest in-range version. The user also rewrites each major-only range (`@types/react`, `@types/react-dom`, `tailwindcss`, `@tailwindcss/postcss`, `typescript`, `eslint`) to a full `^x.y.z` floor at the installed version. No `--force` or `--legacy-peer-deps`. Verify `package.json` shows the new versions and no major-only range remains
-- [ ] 4.2 (FR-8) Add `typescript` and `eslint` to `HELD_TO_CURRENT_MAJOR` in `.ncurc.cjs`, each with a reason comment naming its blocking peer (design D5/D8), and add a `docs/deferred.md` entry for each (state `skipped`, requirement FR-8, the blocking peer range as of 2026-09-29, retry path from D8); verify `npm run deps:outdated` exits 0
-- [ ] 4.3 (FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8) Verify the upgraded tree: `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip && npm run deps:audit && npm run deps:outdated` all pass, and `npm ls` reports no invalid or unmet peer dependency
+- [x] 4.1 (FR-8) User runs `npx ncu -u --target minor` followed by `npm install` (design D8), which bumps `next` and `eslint-config-next` to 16.3.7, `react` and `react-dom` to 19.3.0, and every caret floor to its latest in-range version. The user also rewrites each major-only range (`@types/react`, `@types/react-dom`, `tailwindcss`, `@tailwindcss/postcss`, `typescript`, `eslint`) to a full `^x.y.z` floor at the installed version. No `--force` or `--legacy-peer-deps`. Verify `package.json` shows the new versions and no major-only range remains
+- [x] 4.2 (FR-8) Add `typescript` and `eslint` to `HELD_TO_CURRENT_MAJOR` in `.ncurc.cjs`, each with a reason comment naming its blocking peer (design D5/D8), and add a `docs/deferred.md` entry for each (state `skipped`, requirement FR-8, the blocking peer range as of 2026-09-29, retry path from D8); verify `npm run deps:outdated` exits 0 <!-- deferred: docs/deferred.md -->
+- [x] 4.3 (FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8) Verify the upgraded tree: `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip && npm run deps:audit && npm run deps:outdated` all pass, and `npm ls` reports no invalid or unmet peer dependency
 
 ## 5. CI workflow <!-- judgement-heavy -->
 
