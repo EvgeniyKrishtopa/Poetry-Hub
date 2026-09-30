@@ -29,7 +29,7 @@ npm run deps:outdated  # ncu, fails on any available upgrade; held majors and wh
 
 Validate with `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip` before finishing a task.
 
-CI (`.github/workflows/ci.yml`) runs all seven checks on every PR as separate status checks and blocks merges into `main`.
+CI (`.github/workflows/ci.yml`) runs all seven checks on every PR as separate status checks; merges into `main` are blocked on them once branch protection is on (add-ci-pipeline group 7).
 
 `.nvmrc` pins Node 24; bumping it means bumping `@types/node` too (held to its major in `.ncurc.cjs`).
 
