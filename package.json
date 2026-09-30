@@ -12,7 +12,8 @@
     "test:coverage": "vitest run --coverage",
     "deps:audit": "npm audit --audit-level=high",
     "deps:outdated": "ncu --errorLevel 2",
-    "prepare": "husky"
+    "prepare": "husky",
+    "knip": "knip"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.0",

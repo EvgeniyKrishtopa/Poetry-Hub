@@ -2,7 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { fetchPoems } from "./poems.api";
 
-export const poemsKeys = {
+const poemsKeys = {
   all: ["poems"] as const,
   list: () => [...poemsKeys.all, "list"] as const,
 };
