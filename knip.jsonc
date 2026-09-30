@@ -1,0 +1,12 @@
+// implements FR-6 of add-ci-pipeline: every default issue type stays on; each ignore below carries its reason.
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "ignore": [
+    // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
+    ".ncurc.cjs"
+  ],
+  "ignoreDependencies": [
+    // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
+    "@fission-ai/openspec"
+  ]
+}
