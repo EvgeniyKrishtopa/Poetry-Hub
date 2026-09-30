@@ -1,0 +1,27 @@
+# implements FR-8, NFR-1, NFR-2, NFR-3, NFR-5 of add-ci-pipeline
+# Runs on a schedule, not on PRs: its result depends on upstream releases, not on a PR's changes (design D10).
+# Keep the action SHAs in sync with ci.yml.
+name: Outdated dependencies
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+# Read-only token; no secrets are referenced anywhere in this workflow (NFR-1).
+permissions:
+  contents: read
+
+jobs:
+  deps-outdated:
+    name: deps-outdated
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run deps:outdated

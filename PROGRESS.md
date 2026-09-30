@@ -3,21 +3,21 @@
 ## Current change
 
 - Change: add-ci-pipeline (`openspec/changes/add-ci-pipeline/`), parent branch `feature/add-ci-pipeline`
-- Last run: group 4 on `feature/add-ci-pipeline-deps-upgrade`, PR #16 (https://github.com/EvgeniyKrishtopa/Poetry-Hub/pull/16) into `feature/add-ci-pipeline` (open)
-- Last commit: 5efbb38 chore: log this run's checks
+- Last run: group 5 (+ spec revision D10) on `feature/add-ci-pipeline-workflow`, PR #17 (https://github.com/EvgeniyKrishtopa/Poetry-Hub/pull/17) into `feature/add-ci-pipeline` (open, CI green)
+- Last commit: 349ef0c chore: log this run's checks
 
 ## Status
 
-- Done: group 1 (PR #13 merged), group 2 (PR #14 merged), group 3 (knip config + triage; PR #15 merged), group 4 (in-major upgrades, TS/ESLint majors held; PR #16 open)
+- Done: groups 1–4 (PRs #13–#16 merged), group 5 (ci.yml with six PR checks + scheduled deps-outdated.yml, CLAUDE.md; PR #17 open)
 - In progress: none
-- Blocked: none (open deferred items are tracked in `docs/deferred.md`, including the held TS 7 / ESLint 10 majors)
-- Pending: groups 5–7 (all judgement-heavy)
+- Blocked: none (open deferred items are tracked in `docs/deferred.md`)
+- Pending: groups 6 (CI verification on GitHub), 7 (branch protection), 8 (scheduled deps-outdated on main; waits for the first Monday 06:00 UTC cron run after merge) — all judgement-heavy
 
 ## Next steps
 
-1. Review and merge PR #16 into `feature/add-ci-pipeline`.
-2. Run `opsx-apply-git add-ci-pipeline` for group 5 (`.github/workflows/ci.yml` with SHA-pinned actions, and the CLAUDE.md Commands update in 5.2, which also covers Gate 6's note on `knip`/`deps:audit`/`deps:outdated` and lint-on-warnings).
-3. Optional cleanup when group 5 touches package.json anyway: restore its trailing newline (Gate 4 PLAUSIBLE note on PR #16).
+1. Review and merge PR #17 into `feature/add-ci-pipeline`.
+2. Run `opsx-apply-git add-ci-pipeline` for group 6 (6.1 formal check of the six PR statuses, 6.2 throwaway PR: lint-only failure + cancel-in-progress, 6.3 local coverage-threshold probe).
+3. Before group 8: bump knip to 6.39.0 (`npx ncu -u knip && npm install`, user) so the first dispatched/scheduled deps-outdated run on main is green.
 4. At deploy (deferred by the user, design.md rollout steps 3 and 5 of the archived add-contentful-home-greeting): create the Contentful webhook for the deployed URL, set CONTENTFUL_REVALIDATE_SECRET on the hosting platform, and close `docs/deferred.md`'s 9.5 item.
 5. Optional: install `@playwright/test` as a devDependency to record Gate 3 scenarios; gitignore `.playwright-mcp/` (QA browser output, currently untracked).
 
@@ -35,3 +35,4 @@
 - Clock-in: 2026-09-29T16:10:00Z (approx.) — Clock-out: 2026-09-29T16:32:46Z
 - Clock-in: 2026-09-30T10:50:00Z (approx.) — Clock-out: 2026-09-30T11:19:59Z
 - Clock-in: 2026-09-30T12:05:00Z (approx.) — Clock-out: 2026-09-30T12:28:03Z
+- Clock-in: 2026-09-30T12:40:00Z (approx.) — Clock-out: 2026-09-30T15:33:21Z

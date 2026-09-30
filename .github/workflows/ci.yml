@@ -1,0 +1,42 @@
+# implements FR-1, FR-9, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5 of add-ci-pipeline
+# deps-outdated is not a PR check; it runs on a schedule in deps-outdated.yml (design D10).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Read-only token; no secrets are referenced anywhere in this workflow (NFR-1).
+permissions:
+  contents: read
+
+# A new push cancels the in-progress run for the same PR or branch (NFR-4).
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    # Each matrix entry reports as its own status check (FR-9).
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: typecheck, script: typecheck }
+          - { name: lint, script: lint }
+          - { name: test, script: "test:coverage" }
+          - { name: build, script: build }
+          - { name: knip, script: knip }
+          - { name: deps-audit, script: "deps:audit" }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run ${{ matrix.script }}

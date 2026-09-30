@@ -12,7 +12,7 @@
 ## Goals / Non-Goals
 
 **Goals:**
-- One workflow file, where each check is one npm script and one status check.
+- One PR workflow file, where each check is one npm script and one status check, plus one small scheduled workflow for the outdated check (D10).
 - Checks behave identically in CI and locally (NFR-3).
 - The first CI run on the implementation PR is green.
 
@@ -36,13 +36,14 @@
 | `build` | `build` |
 | `knip` | `knip` |
 | `deps-audit` | `deps:audit` |
-| `deps-outdated` | `deps:outdated` |
+
+`deps-outdated` is not in this matrix; it runs in its own scheduled workflow (D10).
 
 Every matrix job runs the same steps: checkout, `setup-node` (from `.nvmrc`, with the built-in npm cache), `npm ci`, then `npm run ${{ matrix.script }}`.
 
 - **Alternative: one job, sequential steps.** Rejected: the first failing step hides every later result (violates FR-9) unless every step uses `continue-on-error`, and then the job's own status is misleading.
-- **Alternative: seven hand-written jobs.** Rejected: the same five steps repeated seven times. The matrix states the only thing that differs.
-- **Cost:** seven `npm ci` runs per CI run. The npm cache makes each one short, and Actions minutes are free for a public repository.
+- **Alternative: six hand-written jobs.** Rejected: the same four steps repeated six times. The matrix states the only thing that differs.
+- **Cost:** six `npm ci` runs per CI run. The npm cache makes each one short, and Actions minutes are free for a public repository.
 
 ### D2 — Workflow-level settings
 
@@ -112,7 +113,17 @@ One group, starting with a manual `npm install` by the user:
 
 ### D9 — Branch protection (manual)
 
-After the implementation PR merges, the user adds a rule for `main` (GitHub → Settings → Branches, or a ruleset) with these settings: require a pull request before merging, with zero required approvals (a solo developer can't approve their own PR); require every one of the seven status checks to pass, with "require branches to be up to date" left off; and no bypass for anyone. On a ruleset that means an empty bypass list. On classic branch protection it means "Do not allow bypassing the above settings" is on. The developer merges PRs into `main` by hand. No workflow or agent merges there (the user's decision, 2026-09-29). This is manual because the workflow token is read-only by design (NFR-1), and a token with admin scope isn't justified for a one-time setting.
+After the implementation PR merges, the user adds a rule for `main` (GitHub → Settings → Branches, or a ruleset) with these settings: require a pull request before merging, with zero required approvals (a solo developer can't approve their own PR); require every one of the six PR status checks from `ci.yml` to pass (not `deps-outdated`, which is not a PR check, D10), with "require branches to be up to date" left off; and no bypass for anyone. On a ruleset that means an empty bypass list. On classic branch protection it means "Do not allow bypassing the above settings" is on. The developer merges PRs into `main` by hand. No workflow or agent merges there (the user's decision, 2026-09-29). This is manual because the workflow token is read-only by design (NFR-1), and a token with admin scope isn't justified for a one-time setting.
+
+### D10 — Outdated check on a schedule, not on pull requests
+
+`.github/workflows/deps-outdated.yml` runs `npm run deps:outdated` in one job named `deps-outdated`, on `schedule` (`cron: "0 6 * * 1"`, Mondays 06:00 UTC) and `workflow_dispatch`. It uses the same settings as `ci.yml` (D2): `permissions: contents: read`, no secrets, the same SHA-pinned actions, `.nvmrc`, `npm ci`, and `timeout-minutes: 10`. No `concurrency` block is needed, since runs are a week apart.
+
+- **Why:** the check's result depends on npm releases, not on the pull request's changes. On a PR it turned every open PR red whenever any unheld package shipped a release, which happened on the very first live run (`knip` 6.39.0, 2026-09-30). A red check that is often unrelated to the PR trains people to ignore red. The user chose this on 2026-09-30, reversing the earlier "blocking on PRs" choice.
+- **How a failure surfaces:** GitHub marks the scheduled run failed and notifies the user by email. The fix is the same as before: bump the package, or add a hold with a reason (D5).
+- **Only on the default branch:** GitHub runs `schedule` and `workflow_dispatch` only for a workflow file on the default branch, so the live check of this workflow happens after the implementation reaches `main` (tasks group 8).
+- **Alternative: keep it on PRs but not required by branch protection.** Rejected: the PR still shows a red check that says nothing about the PR.
+- **Alternative: run on PRs only when `package.json` or the lockfile changes (`paths` filter).** Rejected: a path-filtered required check stays pending on PRs that skip it. Also, a PR that touches only one dependency still fails on unrelated releases.
 
 ### Sequence — pull request check run (boundary crossing: GitHub → runner → npm registry)
 
@@ -120,7 +131,7 @@ After the implementation PR merges, the user adds a rule for `main` (GitHub → 
 sequenceDiagram
   actor Dev as Developer
   participant GH as GitHub
-  participant R as Actions runner (×7 matrix jobs)
+  participant R as Actions runner (×6 matrix jobs)
   participant NPM as npm registry
   participant BP as Branch protection (main)
 
@@ -133,9 +144,6 @@ sequenceDiagram
   alt deps-audit
     R->>NPM: audit advisories request
     NPM-->>R: advisories (fail on high+)
-  else deps-outdated
-    R->>NPM: latest versions per package
-    NPM-->>R: versions (fail if newer, held → minor only)
   else typecheck / lint / test / build / knip
     R->>R: npm run <script> (offline)
   end
@@ -144,22 +152,45 @@ sequenceDiagram
   end
   R-->>GH: status check result (one per job)
   GH->>BP: PR into main?
-  BP-->>Dev: merge allowed only when all 7 are green
+  BP-->>Dev: merge allowed only when all 6 are green
+```
+
+### Sequence — scheduled outdated check (D10)
+
+```mermaid
+sequenceDiagram
+  participant GH as GitHub (default branch)
+  participant R as Actions runner
+  participant NPM as npm registry
+  actor Dev as Developer
+
+  GH->>R: cron Monday 06:00 UTC, or manual workflow_dispatch
+  R->>R: checkout @SHA, setup-node from .nvmrc
+  R->>NPM: npm ci (lockfile only)
+  R->>NPM: latest versions per direct dependency
+  NPM-->>R: versions (fail if newer, held → in-major only)
+  alt outdated package, registry/npm ci error, or job > 10 min
+    R-->>GH: run failed
+    GH-->>Dev: failure notification (email)
+  else all current
+    R-->>GH: run passed
+  end
 ```
 
 ## Risks / Trade-offs
 
-- [A new upstream release of any unheld package turns every open PR red, even if the PR didn't touch dependencies] → The user accepted this (blocking chosen over informational). The fix is a one-line bump, or a hold with a reason. The failing job's output names the package.
-- [The two network-dependent checks (`deps-audit`, `deps-outdated`) can fail on a registry outage, not a code problem] → They are separate status checks, so the cause is visible. Re-run the job.
+- [An outdated package is noticed up to a week late, and nothing blocks a merge meanwhile] → Accepted (D10): being outdated is a maintenance signal, not a defect in the PR. The failed scheduled run emails the user, and `npm run deps:outdated` is available locally at any time.
+- [The network-dependent checks (`deps-audit` on PRs, `deps-outdated` on schedule) can fail on a registry outage, not a code problem] → Each is its own job, so the cause is visible. Re-run it.
 - [TypeScript and ESLint fall a major behind while held] → Each hold names its blocking peer and has a `docs/deferred.md` entry. Their in-major releases are still enforced. Retrying is deleting one line (D8).
 - [A held package's peer blocker clears and nobody notices] → Accepted: nothing polls for it. `docs/deferred.md` is read before every new change is proposed (CLAUDE.md), which surfaces the entries.
 - [`--max-warnings 0` in pre-commit blocks commits over a warning] → Intended (NFR-3). Baseline is 0 warnings.
-- [SHA-pinned actions don't pick up security fixes automatically] → Accepted for a portfolio project without Dependabot. The version comment beside each SHA makes a manual bump easy to review.
+- [SHA-pinned actions don't pick up security fixes automatically] → Accepted for a portfolio project without Dependabot. The version comment beside each SHA makes a manual bump easy to review. `ci.yml` and `deps-outdated.yml` carry the same pins, so bump them in both files together.
+- [GitHub disables scheduled workflows in a public repository after 60 days without repository activity, so the outdated check stops silently] → Accepted. GitHub emails a warning before it disables the workflow. Re-enable it from the Actions tab.
 - [knip false positives on framework conventions (Next.js route files, config files)] → Its Next.js plugin knows the App Router entry points. The rest are ignored with a documented reason (D4).
-- [Seven parallel `npm ci` runs] → Cheap on public-repo runners. It's the price of independent status checks (FR-9).
+- [Six parallel `npm ci` runs per PR] → Cheap on public-repo runners. It's the price of independent status checks (FR-9).
 
 ## Migration Plan
 
-1. The implementation PR itself carries the workflow, so its own run is the first proof. All seven checks must be green before merge.
-2. After it merges, the user configures branch protection on `main` (D9) and confirms that a throwaway PR with a failing check is blocked with no bypass and that a direct push is rejected (tasks group 7).
-3. Rollback: delete `.github/workflows/ci.yml` and the branch protection rule. Scripts, configs, and upgrades are independent and can stay.
+1. The implementation PR itself carries the workflow, so its own run is the first proof. All six PR checks must be green before merge.
+2. After it merges, the scheduled workflow is dispatched once by hand to prove it runs (D10), and the user configures branch protection on `main` (D9) and confirms that a throwaway PR with a failing check is blocked with no bypass and that a direct push is rejected (tasks groups 7 and 8).
+3. Rollback: delete `.github/workflows/ci.yml`, `.github/workflows/deps-outdated.yml`, and the branch protection rule. Scripts, configs, and upgrades are independent and can stay.
