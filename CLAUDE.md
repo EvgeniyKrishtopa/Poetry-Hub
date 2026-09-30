@@ -18,13 +18,20 @@ Next.js 16 differs from older versions — check `node_modules/next/dist/docs/` 
 ```bash
 npm run dev            # dev server (http://localhost:3000)
 npm run build          # production build
-npm run lint           # ESLint
+npm run lint           # ESLint; fails on any warning (--max-warnings 0)
 npm run typecheck      # route type generation + tsc --noEmit
 npm test               # Vitest in watch mode
 npm run test:coverage  # single run with coverage (80% statements/lines/functions)
+npm run knip           # dead code: unused files, exports, dependencies (ignores need a reason comment in knip.jsonc)
+npm run deps:audit     # npm audit, fails on high/critical advisories
+npm run deps:outdated  # ncu, fails on any available upgrade; held majors and why live in .ncurc.cjs
 ```
 
-Validate with `npm run typecheck && npm run lint && npm run test:coverage && npm run build` before finishing a task.
+Validate with `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip` before finishing a task.
+
+CI (`.github/workflows/ci.yml`) runs all seven checks on every PR as separate status checks and blocks merges into `main`.
+
+`.nvmrc` pins Node 24; bumping it means bumping `@types/node` too (held to its major in `.ncurc.cjs`).
 
 ## Shell
 
