@@ -3,7 +3,7 @@ import { z } from "zod";
 // implements FR-4 of add-contentful-home-greeting: every field non-empty after trimming; trimmed values reach the page
 const nonBlankString = z.string().trim().min(1);
 
-export const greetingSchema = z.object({
+const greetingSchema = z.object({
   key: nonBlankString,
   title: nonBlankString,
   message: nonBlankString,

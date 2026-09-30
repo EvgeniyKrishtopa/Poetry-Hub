@@ -13,8 +13,8 @@
 
 ## 3. Dead-code analysis (knip) <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-6, NFR-3) Add `knip.jsonc` and `"knip": "knip"` (design D4); run `npm run knip` with every default issue type on (no `rules`/`exclude` filter, FR-6) and triage every finding, including unused exported types, duplicate exports, and enum/class members: remove code or dependencies that are truly unused, and ignore the rest in `knip.jsonc` with a reason comment above each entry; verify `npm run knip` exits 0, each ignore entry has a reason comment, and `npm run typecheck && npm run lint && npm run test:coverage && npm run build` still pass
-- [ ] 3.2 (FR-6) Verify knip catches new dead code: temporarily add an exported function that nothing imports to a module under `src/shared/lib/`, run `npm run knip`, and confirm it fails and names the export; then remove it and confirm `npm run knip` exits 0
+- [x] 3.1 (FR-6, NFR-3) Add `knip.jsonc` and `"knip": "knip"` (design D4); run `npm run knip` with every default issue type on (no `rules`/`exclude` filter, FR-6) and triage every finding, including unused exported types, duplicate exports, and enum/class members: remove code or dependencies that are truly unused, and ignore the rest in `knip.jsonc` with a reason comment above each entry; verify `npm run knip` exits 0, each ignore entry has a reason comment, and `npm run typecheck && npm run lint && npm run test:coverage && npm run build` still pass
+- [x] 3.2 (FR-6) Verify knip catches new dead code: temporarily add an exported function that nothing imports to a module under `src/shared/lib/`, run `npm run knip`, and confirm it fails and names the export; then remove it and confirm `npm run knip` exits 0
 
 ## 4. Dependency upgrades and held majors <!-- judgement-heavy -->
 
