@@ -11,3 +11,7 @@ describe("getQueryClient (browser)", () => {
     expect(getQueryClient().getDefaultOptions().queries?.staleTime).toBe(60_000);
   });
 });
+
+it("CI probe: deliberately failing test (add-ci-pipeline 6.2, never merged)", () => {
+  expect(1).toBe(2);
+});
