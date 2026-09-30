@@ -1,3 +1,4 @@
+// CI probe: third push to supersede the in-flight run (NFR-4).
 import { QueryClient, isServer } from "@tanstack/react-query";
 
 function makeQueryClient(): QueryClient {
