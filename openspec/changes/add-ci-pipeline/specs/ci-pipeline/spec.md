@@ -77,26 +77,31 @@ The `deps-audit` check SHALL fail when the dependency audit reports a vulnerabil
 - **WHEN** CI runs
 - **THEN** the `deps-audit` check passes
 
-### Requirement: Outdated dependencies block (FR-8)
-The `deps-outdated` check SHALL fail when any direct dependency or devDependency in `package.json` has a published release newer than the version its `package.json` entry declares (the lowest version its range allows). A package on the committed hold list SHALL be held to its current major version: only newer releases within that major SHALL count as outdated for it. Every hold list entry SHALL carry a written reason.
+### Requirement: Scheduled outdated-dependency check (FR-8)
+A scheduled workflow, run weekly and on manual dispatch, SHALL run a `deps-outdated` job that fails when any direct dependency or devDependency in `package.json` has a release on the npm `latest` dist-tag newer than the version its `package.json` entry declares (the lowest version its range allows; prereleases and other dist-tags, such as canary or beta, do not count). A package on the committed hold list SHALL be held to its current major version: only newer releases within that major SHALL count as outdated for it. Every hold list entry SHALL carry a written reason. The check SHALL NOT run on pull requests and SHALL NOT be required by branch protection, because its result depends on upstream releases rather than on a pull request's changes.
 
 #### Scenario: Unheld package behind latest
 - **GIVEN** a direct dependency not on the hold list declares a version older than its latest release
-- **WHEN** CI runs
-- **THEN** the `deps-outdated` check fails and its output names the package
+- **WHEN** the scheduled workflow runs, or is dispatched manually
+- **THEN** the `deps-outdated` job fails and its output names the package
 
 #### Scenario: Held package with only a newer major
 - **GIVEN** a package on the hold list whose only newer release is a new major version
-- **WHEN** CI runs
-- **THEN** the `deps-outdated` check does not fail because of that package
+- **WHEN** the scheduled workflow runs, or is dispatched manually
+- **THEN** the `deps-outdated` job does not fail because of that package
 
 #### Scenario: Held package behind within its major
 - **GIVEN** a package on the hold list with a newer release inside its held major version
-- **WHEN** CI runs
-- **THEN** the `deps-outdated` check fails and names the package
+- **WHEN** the scheduled workflow runs, or is dispatched manually
+- **THEN** the `deps-outdated` job fails and names the package
+
+#### Scenario: Not a pull request check
+- **GIVEN** any pull request
+- **WHEN** CI runs on it
+- **THEN** no `deps-outdated` status check appears on it, and branch protection does not require one
 
 ### Requirement: Independent check reporting (FR-9)
-Each check SHALL report as its own GitHub status check. A failure in one check SHALL NOT cancel, skip, or hide the result of any other check in the same run.
+Each pull request check SHALL report as its own GitHub status check. A failure in one check SHALL NOT cancel, skip, or hide the result of any other check in the same run.
 
 #### Scenario: Only lint is broken
 - **GIVEN** a branch that breaks lint and nothing else
@@ -104,10 +109,10 @@ Each check SHALL report as its own GitHub status check. A failure in one check S
 - **THEN** `lint` fails and every other check runs to completion and reports its own result
 
 ### Requirement: Merge is blocked on red checks (FR-10)
-Changes SHALL reach `main` only through a pull request, and that pull request SHALL be merged by the developer. No workflow or agent merges into `main`: this part is a process rule, not something branch protection enforces, because a merge made with the developer's own credentials looks the same either way. A pull request into `main` SHALL NOT be mergeable while any CI check is failing or still pending, and no one, repository admins included, SHALL be able to bypass this.
+Changes SHALL reach `main` only through a pull request, and that pull request SHALL be merged by the developer. No workflow or agent merges into `main`: this part is a process rule, not something branch protection enforces, because a merge made with the developer's own credentials looks the same either way. A pull request into `main` SHALL NOT be mergeable while any pull request check is failing or still pending, and no one, repository admins included, SHALL be able to bypass this.
 
 #### Scenario: Failing check on a PR into main
-- **GIVEN** branch protection on `main` requires every CI check, with no bypass
+- **GIVEN** branch protection on `main` requires every pull request check, with no bypass
 - **WHEN** a pull request into `main` has a failing check
 - **THEN** GitHub blocks the merge for every user, admins included, and offers no "merge without waiting for requirements" option
 
@@ -117,26 +122,26 @@ Changes SHALL reach `main` only through a pull request, and that pull request SH
 - **THEN** GitHub rejects the push
 
 ### Requirement: Least privilege (NFR-1)
-The pipeline SHALL run with a repository token limited to reading repository contents, and SHALL reference no repository secrets.
+Every workflow SHALL run with a repository token limited to reading repository contents, and SHALL reference no repository secrets.
 
 #### Scenario: Pipeline permissions
-- **GIVEN** the pipeline definition
+- **GIVEN** each workflow definition
 - **WHEN** its token permissions and secret references are inspected
 - **THEN** the token grants read access to contents only and no secret is referenced
 
 ### Requirement: Reproducible installs and pinned actions (NFR-2)
-The pipeline SHALL install dependencies strictly from the committed lockfile, SHALL use the Node version declared in the repository's version file, and SHALL pin every third-party action to a full commit SHA.
+Every workflow SHALL install dependencies strictly from the committed lockfile, SHALL use the Node version declared in the repository's version file, and SHALL pin every third-party action to a full commit SHA.
 
 #### Scenario: Pipeline definition audit
-- **GIVEN** the pipeline definition
+- **GIVEN** each workflow definition
 - **WHEN** every action reference and install step is inspected
 - **THEN** each third-party action is pinned to a 40-character commit SHA, Node comes from the version file, and installs use the lockfile-only install command
 
 ### Requirement: Checks are local commands (NFR-3)
-Every check SHALL be performed by exactly one step that invokes a script defined in `package.json`, so a developer can run any check locally with the same command and no check logic exists only in the pipeline definition. Setup steps (checkout, Node setup, and the lockfile-only dependency install `npm ci`) are not checks and are exempt.
+Every check SHALL be performed by exactly one step that invokes a script defined in `package.json`, so a developer can run any check locally with the same command and no check logic exists only in a workflow definition. Setup steps (checkout, Node setup, and the lockfile-only dependency install `npm ci`) are not checks and are exempt.
 
 #### Scenario: Check steps call package scripts
-- **GIVEN** the pipeline definition
+- **GIVEN** each workflow definition
 - **WHEN** every `run:` step is inspected
 - **THEN** each one is either `npm ci` or `npm run <script>` for a script defined in `package.json`, and each check has exactly one `npm run <script>` step
 
@@ -149,9 +154,9 @@ A new push to a branch or pull request SHALL cancel any in-progress CI run for t
 - **THEN** the earlier run is cancelled and a new run starts
 
 ### Requirement: Job time limit (NFR-5)
-Every CI job SHALL be stopped and marked failed if it runs longer than 10 minutes.
+Every job in every workflow SHALL be stopped and marked failed if it runs longer than 10 minutes.
 
 #### Scenario: Job timeout declared
-- **GIVEN** the pipeline definition
+- **GIVEN** each workflow definition
 - **WHEN** every job is inspected
 - **THEN** each declares a 10-minute timeout
