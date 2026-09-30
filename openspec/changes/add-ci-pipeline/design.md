@@ -192,5 +192,5 @@ sequenceDiagram
 ## Migration Plan
 
 1. The implementation PR itself carries the workflow, so its own run is the first proof. All six PR checks must be green before merge.
-2. After it merges, the scheduled workflow is dispatched once by hand to prove it runs (D10), and the user configures branch protection on `main` (D9) and confirms that a throwaway PR with a failing check is blocked with no bypass and that a direct push is rejected (tasks group 8).
+2. After it merges, the scheduled workflow is dispatched once by hand to prove it runs (D10), and the user configures branch protection on `main` (D9) and confirms that a throwaway PR with a failing check is blocked with no bypass and that a direct push is rejected (tasks groups 7 and 8).
 3. Rollback: delete `.github/workflows/ci.yml`, `.github/workflows/deps-outdated.yml`, and the branch protection rule. Scripts, configs, and upgrades are independent and can stay.
