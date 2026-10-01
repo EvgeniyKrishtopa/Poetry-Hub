@@ -42,3 +42,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright (Gate 3 recorded scenarios + Playwright MCP QA output)
+/test-results/
+/playwright-report/
+/.playwright-mcp/

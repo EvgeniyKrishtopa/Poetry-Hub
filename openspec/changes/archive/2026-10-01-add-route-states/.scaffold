@@ -1,0 +1,2 @@
+no
+# new module: no (route groups are routing folders inside src/app/, not modules at the src/features level); new boundary crossing: no (no route handler, endpoint, or external-service client)
