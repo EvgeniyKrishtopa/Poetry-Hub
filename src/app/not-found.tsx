@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 // implements FR-1 of add-route-states: rendered with HTTP 404 for unmatched URLs and notFound() calls.
-// implements NFR-1, NFR-3 of add-route-states: token utilities only; stays a Server Component.
+// implements NFR-1 of add-route-states: design-token utilities only.
+// implements NFR-3 of add-route-states: stays a Server Component.
 export default function NotFound() {
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-6 py-16">
