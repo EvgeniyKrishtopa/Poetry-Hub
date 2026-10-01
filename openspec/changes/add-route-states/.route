@@ -1,0 +1,2 @@
+short
+# more-than-one-module: no (only src/app/ route files, route-group folders, their tests, and docs/architecture.md); schema change: no; contract change: no (file conventions + a file move with unchanged URL; no exported function, type, or endpoint other code calls)
