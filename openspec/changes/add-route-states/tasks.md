@@ -14,8 +14,8 @@
 
 ## 3. Error boundary (`src/app/error.tsx`) <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-2, FR-3, FR-4, FR-5, NFR-1, NFR-3) Implement `src/app/error.tsx` per design D2–D4: `"use client"`, explicit props `{ error: Error & { digest?: string }; retry: () => void }`, `useEffect(() => console.error(error), [error])`, `h1` "Something went wrong", fixed generic explanation, "Error reference: <digest>" only when `digest` is present, and the shared `Button` labelled "Try again" with `onClick={() => retry()}`; never render `error.message`. Verify with `src/app/tests/error.test.tsx` (spy on `console.error`): heading and explanation render; message "secret internal detail" is absent and "Error reference: abc123" is present for digest "abc123"; no "Error reference" text without a digest; one click calls `retry` once; `console.error` is called once with the error, and once more with the new error after `rerender` with a different error
-- [ ] 3.2 (FR-2) Add `error.tsx` to the `src/app/` tree in `docs/architecture.md`. Verify `npm run typecheck && npm run lint && npm run test:coverage` pass
+- [x] 3.1 (FR-2, FR-3, FR-4, FR-5, NFR-1, NFR-3) Implement `src/app/error.tsx` per design D2–D4: `"use client"`, explicit props `{ error: Error & { digest?: string }; retry: () => void }`, `useEffect(() => console.error(error), [error])`, `h1` "Something went wrong", fixed generic explanation, "Error reference: <digest>" only when `digest` is present, and the shared `Button` labelled "Try again" with `onClick={() => retry()}`; never render `error.message`. Verify with `src/app/tests/error.test.tsx` (spy on `console.error`): heading and explanation render; message "secret internal detail" is absent and "Error reference: abc123" is present for digest "abc123"; no "Error reference" text without a digest; one click calls `retry` once; `console.error` is called once with the error, and once more with the new error after `rerender` with a different error
+- [x] 3.2 (FR-2) Add `error.tsx` to the `src/app/` tree in `docs/architecture.md`. Verify `npm run typecheck && npm run lint && npm run test:coverage` pass
 
 ## 4. Integration verification <!-- isolated -->
 
