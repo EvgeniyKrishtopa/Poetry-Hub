@@ -3,24 +3,25 @@
 ## Current change
 
 - Change: add-ci-pipeline (`openspec/changes/add-ci-pipeline/`), parent branch `feature/add-ci-pipeline`
-- Last run: group 7 on `feature/add-ci-pipeline-branch-protection`, PR #23 (https://github.com/EvgeniyKrishtopa/Poetry-Hub/pull/23) into `feature/add-ci-pipeline` (open)
-- Last commit: 46a54ff chore: log this run's checks
+- Last run: group 8 on `feature/add-ci-pipeline-scheduled-outdated`, PR #25 (https://github.com/EvgeniyKrishtopa/Poetry-Hub/pull/25) into `feature/add-ci-pipeline` (open)
+- Last commit: a3b3750 chore: log this run's checks
 
 ## Status
 
-- Done: groups 1–6 (PRs #13–#18, #20 merged; implementation in main via PR #21), group 7 (main ruleset verified; PR #23 open)
+- Done: groups 1–7 (all merged; implementation and branch protection in main via PRs #21, #24)
 - In progress: none
-- Blocked: none (open deferred items are tracked in `docs/deferred.md`)
-- Pending: group 8 (8.1: dispatch deps-outdated.yml on main, then wait for the first Monday 06:00 UTC `schedule` run) — judgement-heavy
+- Blocked: 8.1 — waiting for the first schedule-event deps-outdated run (Mon 2026-10-05 06:00 UTC); manual dispatch already verified (run 36845027421). See docs/deferred.md.
+- Pending: nothing else; archive follows 8.1
 
 ## Next steps
 
-1. Review and merge PR #23 into `feature/add-ci-pipeline`; then bring the parent's group 6–7 commits to `main` through a PR (main is protected: PR + six green checks).
-2. Run `opsx-apply-git add-ci-pipeline` for group 8: `gh workflow run deps-outdated.yml --ref main`, compare with local `npm run deps:outdated`; 8.1 stays open until a `schedule`-event run exists (first Monday 06:00 UTC after the merge, i.e. 2026-10-05).
-3. After 8.1: archive the change (`opsx-apply-git` §5).
-4. Optional tidy-up: remove the duplicate `deps-audit` (any-source) entry from ruleset 24259984 (GitHub reports "7 of 7 required checks").
-5. At deploy (deferred by the user, design.md rollout steps 3 and 5 of the archived add-contentful-home-greeting): create the Contentful webhook for the deployed URL, set CONTENTFUL_REVALIDATE_SECRET on the hosting platform, and close `docs/deferred.md`'s 9.5 item.
-6. Optional: install `@playwright/test` as a devDependency to record Gate 3 scenarios; gitignore `.playwright-mcp/` (QA browser output, currently untracked).
+1. Review and merge PR #25 into `feature/add-ci-pipeline`.
+2. Optional, any time: bump `next`/`eslint-config-next` to 16.3.8 and `@fission-ai/openspec` to ^1.14.0 (`npx ncu -u --target minor && npm install`, user) so the first scheduled run is green; the run proves the trigger either way.
+3. After Mon 2026-10-05 06:00 UTC: `gh run list --workflow deps-outdated.yml --event schedule`; if a run exists, remove 8.1's blocked marker (only a human or an explicit instruction clears it), tick 8.1, resolve the deferred entry, and run `opsx-apply-git add-ci-pipeline` to archive. If no run appeared, check that the workflow is still `active`.
+4. Then bring the parent to `main` through a PR (six green checks; the user merges).
+5. Optional tidy-up: remove the duplicate `deps-audit` (any-source) entry from ruleset 24259984.
+6. At deploy (deferred by the user, design.md rollout steps 3 and 5 of the archived add-contentful-home-greeting): create the Contentful webhook for the deployed URL, set CONTENTFUL_REVALIDATE_SECRET on the hosting platform, and close `docs/deferred.md`'s 9.5 item.
+7. Optional: install `@playwright/test` as a devDependency to record Gate 3 scenarios; gitignore `.playwright-mcp/` (QA browser output, currently untracked).
 
 ## Session log
 
@@ -39,3 +40,4 @@
 - Clock-in: 2026-09-30T12:40:00Z (approx.) — Clock-out: 2026-09-30T15:33:21Z
 - Clock-in: 2026-09-30T15:35:00Z (approx.) — Clock-out: 2026-09-30T16:01:19Z
 - Clock-in: 2026-09-30T16:10:00Z (approx.) — Clock-out: 2026-09-30T18:26:01Z
+- Clock-in: 2026-10-01 (approx., session start) — Clock-out: 2026-10-01T09:50:20Z
