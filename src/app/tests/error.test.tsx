@@ -32,9 +32,10 @@ describe("RootError", () => {
 
   // implements FR-3 of add-route-states
   it("never shows the error message, but shows the digest as a reference", () => {
-    render(<RootError error={errorWith(SECRET_MESSAGE, DIGEST)} retry={vi.fn()} />);
+    const { container } = render(<RootError error={errorWith(SECRET_MESSAGE, DIGEST)} retry={vi.fn()} />);
 
-    expect(screen.queryByText(SECRET_MESSAGE, { exact: false })).not.toBeInTheDocument();
+    // innerHTML, not just text nodes: the message must not leak through attributes either.
+    expect(container.innerHTML).not.toContain(SECRET_MESSAGE);
     expect(screen.getByText(`Error reference: ${DIGEST}`)).toBeInTheDocument();
   });
 
