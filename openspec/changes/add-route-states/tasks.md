@@ -8,9 +8,9 @@
 
 ## 2. Not-found and loading screens (`src/app/`) <!-- isolated -->
 
-- [ ] 2.1 (FR-1, NFR-1, NFR-3) Implement `src/app/not-found.tsx` as a Server Component per design D1/D5: `main` with the home page's container classes, `h1` "Page not found", a one-sentence explanation in `text-muted`, and a `next/link` `Link` to `/` styled with token utilities only. Verify with `src/app/tests/not-found.test.tsx` (Testing Library): the heading renders and the link's `href` is `/`
-- [ ] 2.2 (FR-6, NFR-1, NFR-2, NFR-3) Implement `src/app/loading.tsx` as a Server Component per design D6: a `role="status"` element containing visually hidden (`sr-only`) "Loading…" text, plus neutral skeleton blocks (a heading bar and three text bars; `bg-surface`, `animate-pulse motion-reduce:animate-none`, `aria-hidden="true"`). Verify with `src/app/tests/loading.test.tsx`: `getByRole("status")` has accessible text "Loading…", and every skeleton block carries `aria-hidden="true"`, `animate-pulse`, and `motion-reduce:animate-none`
-- [ ] 2.3 (FR-1, FR-6) Add `not-found.tsx` and `loading.tsx` to the `src/app/` tree in `docs/architecture.md`. Verify `npm run typecheck && npm run lint && npm run test:coverage` pass
+- [x] 2.1 (FR-1, NFR-1, NFR-3) Implement `src/app/not-found.tsx` as a Server Component per design D1/D5: `main` with the home page's container classes, `h1` "Page not found", a one-sentence explanation in `text-muted`, and a `next/link` `Link` to `/` styled with token utilities only. Verify with `src/app/tests/not-found.test.tsx` (Testing Library): the heading renders and the link's `href` is `/`
+- [x] 2.2 (FR-6, NFR-1, NFR-2, NFR-3) Implement `src/app/loading.tsx` as a Server Component per design D6: a `role="status"` element containing visually hidden (`sr-only`) "Loading…" text, plus neutral skeleton blocks (a heading bar and three text bars; `bg-surface`, `animate-pulse motion-reduce:animate-none`, `aria-hidden="true"`). Verify with `src/app/tests/loading.test.tsx`: `getByRole("status")` has accessible text "Loading…", and every skeleton block carries `aria-hidden="true"`, `animate-pulse`, and `motion-reduce:animate-none`
+- [x] 2.3 (FR-1, FR-6) Add `not-found.tsx` and `loading.tsx` to the `src/app/` tree in `docs/architecture.md`. Verify `npm run typecheck && npm run lint && npm run test:coverage` pass
 
 ## 3. Error boundary (`src/app/error.tsx`) <!-- judgement-heavy -->
 
