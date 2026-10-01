@@ -77,4 +77,3 @@ Archived at `openspec/changes/archive/2026-09-29-add-contentful-home-greeting/`.
 - **Verified instead:** the workflow file is on `main` and the workflow is `active`. Manual dispatch run 36845027421 (`workflow_dispatch`) ran one `deps-outdated` job, which failed and named `next` and `eslint-config-next` 16.3.7 → 16.3.8 and `@fission-ai/openspec` ^1.13.2 → ^1.14.0. That matches the local `npm run deps:outdated` on the same tree exactly.
 - **Decision:** user, 2026-09-30 (spec-clarify, reading B).
 - **Status:** open. Close it with `gh run list --workflow deps-outdated.yml --event schedule` after 2026-10-05 06:00 UTC, then tick 8.1, remove its `blocked` marker, and archive the change.
-
