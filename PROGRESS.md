@@ -3,15 +3,15 @@
 ## Current change
 
 - Change: add-route-states (`openspec/changes/add-route-states/`), parent branch `feature/add-route-states`
-- Last run: group 3 (judgement-heavy) on `feature/add-route-states-error-boundary`, PR #30 (https://github.com/EvgeniyKrishtopa/Poetry-Hub/pull/30) into `feature/add-route-states` (open)
-- Last commit: acbc8b5 chore: log this run's checks
+- Last run: group 4 (isolated, last) on `feature/add-route-states-isolated-verify`, PR #31 (https://github.com/EvgeniyKrishtopa/Poetry-Hub/pull/31) into `feature/add-route-states` (open)
+- Last commit: 2dda114 chore: log this run's checks
 
 ## Status
 
-- Done: group 1 — route groups (PR #28 merged); group 2 — root not-found + loading (PR #29 merged); group 3 — root error boundary (PR #30 open)
+- Done: all 4 groups, 10/10 tasks — route groups (PR #28), not-found + loading (PR #29), error boundary (PR #30) merged; integration verification + recorded Gate 3 scenarios (PR #31 open)
 - In progress: none
 - Blocked: none
-- Pending: group 4 (integration verification + Gate 3 web-qa, isolated) — the last group
+- Pending: archive, waiting on PR #31's merge
 
 ## Other open change (running in parallel by user choice)
 
@@ -19,13 +19,12 @@
 
 ## Next steps
 
-1. Review and merge PR #30 into `feature/add-route-states`.
-2. Run `opsx-apply-git add-route-states` → group 4 (isolated, last): static checks, full validation chain, Gate 3 web-qa (dev server), Gate 6 precondition; then archive once its PR merges.
-3. After group 4 (the last), bring `feature/add-route-states` to `main` through a PR (six green checks; the user merges), then archive.
+1. Review and merge PR #31 into `feature/add-route-states`.
+2. Resume archiving: check out `feature/add-route-states-isolated-verify` (this run's own branch) and re-invoke `opsx-apply-git add-route-states` — it lands on §5 (archive branch off the parent, `openspec archive add-route-states`, archive PR into the parent).
+3. Then bring `feature/add-route-states` to `main` through a PR (six green checks; the user merges).
 4. add-ci-pipeline, after Mon 2026-10-05 06:00 UTC: `gh run list --workflow deps-outdated.yml --event schedule`; if a run exists, remove 8.1's blocked marker (only a human or an explicit instruction clears it), tick 8.1, resolve the deferred entry, and run `opsx-apply-git add-ci-pipeline` to archive. If no run appeared, check that the workflow is still `active`.
 5. Optional tidy-up: remove the duplicate `deps-audit` (any-source) entry from ruleset 24259984.
 6. At deploy (deferred by the user, design.md rollout steps 3 and 5 of the archived add-contentful-home-greeting): create the Contentful webhook for the deployed URL, set CONTENTFUL_REVALIDATE_SECRET on the hosting platform, and close `docs/deferred.md`'s 9.5 item.
-7. Optional: install `@playwright/test` as a devDependency to record Gate 3 scenarios; gitignore `.playwright-mcp/` (QA browser output, currently untracked).
 
 ## Session log
 
@@ -48,3 +47,4 @@
 - Clock-in: 2026-10-01T10:00:00Z (approx.) — Clock-out: 2026-10-01T10:28:17Z
 - Clock-in: 2026-10-01T10:40:00Z (approx.) — Clock-out: 2026-10-01T10:33:58Z
 - Clock-in: 2026-10-01T11:00:00Z (approx.) — Clock-out: 2026-10-01T10:39:45Z
+- Clock-in: 2026-10-01T11:20:00Z (approx.) — Clock-out: 2026-10-01T11:01:28Z
