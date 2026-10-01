@@ -39,7 +39,7 @@ Poetry Hub has no route-level fallbacks yet. An unknown URL shows Next.js's unst
 - **FR-7** — Given the change is complete, When `npm run build` runs, Then its route list shows `/` as revalidated every 1m (ISR) and the set of routes is identical to the build on `main` before the change.
 - **FR-7** — Given the app is running, When a browser requests `/`, Then the home greeting heading and the poem list render as before the change.
 - **FR-8** — Given either group layout, When it renders a child element, Then the output is exactly that child, with no added wrapper element.
-- **NFR-1** — Given the change is complete, When the three new screen files are searched for hex color literals (`#[0-9a-fA-F]{3,8}`), `rgb(`/`hsl(` calls, and Tailwind arbitrary color values (`-[#`, `-[rgb`, `-[hsl`), and `package.json` is diffed, Then there are no matches and no dependency changes.
+- **NFR-1** — Given the change is complete, When the three new screen files are searched for hex color literals (`#[0-9a-fA-F]{3,8}`), `rgb(`/`hsl(` calls, and Tailwind arbitrary color values (`-[#`, `-[rgb`, `-[hsl`), and `package.json` `dependencies` are diffed, Then there are no matches and no runtime dependency changes. (Note, Gate 3: `@playwright/test` was added as a devDependency by user decision to record the passed browser flows as scenarios; it is test tooling, not a dependency of the screens.)
 - **NFR-2** — Given the loading state renders, When its skeleton blocks are inspected, Then each carries both `animate-pulse` and `motion-reduce:animate-none`.
 - **NFR-3** — Given the change is complete, When the first statement of each new route file (the three screens and two group layouts) is read, Then only `error.tsx` starts with `"use client"`.
 
