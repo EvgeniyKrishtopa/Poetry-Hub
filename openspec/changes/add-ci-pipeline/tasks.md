@@ -37,7 +37,7 @@
 
 ## 7. Branch protection (after the implementation PR merges) <!-- judgement-heavy -->
 
-- [ ] 7.1 (FR-1, FR-10) Verify the merge of the implementation PR started a CI run on `main` (Actions tab, `push` event). Then, after the implementation PR merges, the user adds branch protection (or a ruleset) on `main` per design D9 (PR required, all six PR checks from `ci.yml` required and `deps-outdated` not required, no bypass including admins); verify that a throwaway PR into `main` with a failing check is blocked for the admin account with no bypass option offered, and that a direct `git push` of a throwaway commit to `main` is rejected; then close the PR and delete its branch; finally remove the "once branch protection is on (add-ci-pipeline group 7)" qualifier from `CLAUDE.md`'s CI line
+- [x] 7.1 (FR-1, FR-10) Verify the merge of the implementation PR started a CI run on `main` (Actions tab, `push` event). Then, after the implementation PR merges, the user adds branch protection (or a ruleset) on `main` per design D9 (PR required, all six PR checks from `ci.yml` required and `deps-outdated` not required, no bypass including admins); verify that a throwaway PR into `main` with a failing check is blocked for the admin account with no bypass option offered, and that a direct `git push` of a throwaway commit to `main` is rejected; then close the PR and delete its branch; finally remove the "once branch protection is on (add-ci-pipeline group 7)" qualifier from `CLAUDE.md`'s CI line
 
 ## 8. Scheduled outdated check on main (after the implementation PR merges) <!-- judgement-heavy -->
 
