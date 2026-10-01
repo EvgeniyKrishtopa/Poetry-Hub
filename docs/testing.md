@@ -6,3 +6,4 @@ Read before writing or moving a test.
 - Test pure `model/` logic directly; test components through user-visible behavior (roles, labels).
 - `src/app/**` is excluded from coverage — route composition and async Server Components are verified by browser QA (`web-qa`) instead.
 - Coverage threshold: 80% statements/lines/functions (`npm run test:coverage`).
+- Browser QA flows a human chose to keep are recorded as `@playwright/test` scenarios in `tests/web-qa-scenarios/` (`npx playwright test`; `playwright.config.ts` starts the dev server). Gate 3 replays them before every manual pass. Not part of `npm test` or CI.

@@ -77,8 +77,8 @@ The three screens SHALL use only existing design tokens and Tailwind utilities, 
 
 #### Scenario: No hard-coded colors or new dependencies
 - **GIVEN** the change is complete
-- **WHEN** the three screen files are searched for hex color literals, `rgb(`/`hsl(` calls, and Tailwind arbitrary color values, and `package.json` is diffed
-- **THEN** there are no matches and no dependency changes
+- **WHEN** the three screen files are searched for hex color literals, `rgb(`/`hsl(` calls, and Tailwind arbitrary color values, and `package.json` `dependencies` are diffed
+- **THEN** there are no matches and no runtime dependency changes
 
 ### Requirement: Reduced motion (NFR-2)
 The loading skeleton's pulse animation SHALL be disabled when the reader prefers reduced motion.
