@@ -9,5 +9,6 @@ test("home page renders the greeting heading and the poem list", async ({ page }
 
   expect(response?.status()).toBe(HTTP_OK);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.getByRole("list").first()).toBeVisible();
+  // At least one poem rendered inside the page content, not just any list (e.g. a future nav).
+  await expect(page.getByRole("main").getByRole("listitem").first()).toBeVisible();
 });
