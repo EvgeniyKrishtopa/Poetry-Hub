@@ -3,9 +3,14 @@ import { describe, expect, it } from "vitest";
 
 import Loading from "../loading";
 
+/** One heading bar plus three text bars. */
+const EXPECTED_SKELETON_BLOCKS = 4;
+
 function renderSkeletonBlocks(): HTMLElement[] {
   const { container } = render(<Loading />);
-  return Array.from(container.querySelectorAll<HTMLElement>("[data-skeleton]"));
+  const blocks = Array.from(container.querySelectorAll<HTMLElement>("[data-skeleton]"));
+  expect(blocks).toHaveLength(EXPECTED_SKELETON_BLOCKS);
+  return blocks;
 }
 
 // implements FR-6 of add-route-states
@@ -17,10 +22,7 @@ describe("Loading", () => {
   });
 
   it("hides every skeleton block from assistive technology", () => {
-    const blocks = renderSkeletonBlocks();
-
-    expect(blocks.length).toBeGreaterThan(0);
-    for (const block of blocks) expect(block).toHaveAttribute("aria-hidden", "true");
+    for (const block of renderSkeletonBlocks()) expect(block).toHaveAttribute("aria-hidden", "true");
   });
 
   // implements NFR-2 of add-route-states
