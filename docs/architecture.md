@@ -8,6 +8,8 @@ Read before adding a feature, adding a file to `shared/`, or importing across fe
 src/
 ├── app/                      # Routing only: pages, layouts, route handlers, providers
 │   ├── layout.tsx            # Root shell: html/body/Providers
+│   ├── not-found.tsx         # 404 screen for unmatched URLs (covers both groups)
+│   ├── loading.tsx           # Neutral loading state for any segment (covers both groups)
 │   ├── (public)/             # Route group (no URL segment): pages anyone can read
 │   │   ├── layout.tsx        # Pass-through
 │   │   └── page.tsx          # / (home)

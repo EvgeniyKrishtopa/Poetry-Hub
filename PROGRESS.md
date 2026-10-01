@@ -3,15 +3,15 @@
 ## Current change
 
 - Change: add-route-states (`openspec/changes/add-route-states/`), parent branch `feature/add-route-states`
-- Last run: group 1 (judgement-heavy) on `feature/add-route-states-route-groups`, PR #28 (https://github.com/EvgeniyKrishtopa/Poetry-Hub/pull/28) into `feature/add-route-states` (open)
-- Last commit: 3753fb2 chore: log this run's checks
+- Last run: group 2 (isolated batch) on `feature/add-route-states-isolated`, PR #29 (https://github.com/EvgeniyKrishtopa/Poetry-Hub/pull/29) into `feature/add-route-states` (open)
+- Last commit: 5e55e04 chore: log this run's checks
 
 ## Status
 
-- Done: group 1 — route groups (`(public)` holds `/`, `(authorized)` pass-through placeholder); awaiting merge of PR #28
+- Done: group 1 — route groups (PR #28 merged); group 2 — root not-found + loading screens (PR #29 open)
 - In progress: none
 - Blocked: none
-- Pending: group 2 (not-found + loading, isolated), group 3 (error boundary, judgement-heavy), group 4 (integration verification + Gate 3 web-qa, isolated)
+- Pending: group 3 (error boundary, judgement-heavy), group 4 (integration verification + Gate 3 web-qa, isolated)
 
 ## Other open change (running in parallel by user choice)
 
@@ -19,8 +19,8 @@
 
 ## Next steps
 
-1. Review and merge PR #28 into `feature/add-route-states`.
-2. Run `opsx-apply-git add-route-states` → group 2 (isolated). Group 3 is judgement-heavy and gets its own run after that.
+1. Review and merge PR #29 into `feature/add-route-states`.
+2. Run `opsx-apply-git add-route-states` → group 3 (judgement-heavy, human in the loop). Group 4 (isolated, last) gets its own run after that and includes Gate 3 web-qa and Gate 6's precondition.
 3. After group 4 (the last), bring `feature/add-route-states` to `main` through a PR (six green checks; the user merges), then archive.
 4. add-ci-pipeline, after Mon 2026-10-05 06:00 UTC: `gh run list --workflow deps-outdated.yml --event schedule`; if a run exists, remove 8.1's blocked marker (only a human or an explicit instruction clears it), tick 8.1, resolve the deferred entry, and run `opsx-apply-git add-ci-pipeline` to archive. If no run appeared, check that the workflow is still `active`.
 5. Optional tidy-up: remove the duplicate `deps-audit` (any-source) entry from ruleset 24259984.
@@ -46,3 +46,4 @@
 - Clock-in: 2026-09-30T16:10:00Z (approx.) — Clock-out: 2026-09-30T18:26:01Z
 - Clock-in: 2026-10-01 (approx., session start) — Clock-out: 2026-10-01T09:50:20Z
 - Clock-in: 2026-10-01T10:00:00Z (approx.) — Clock-out: 2026-10-01T10:28:17Z
+- Clock-in: 2026-10-01T10:40:00Z (approx.) — Clock-out: 2026-10-01T10:33:58Z
