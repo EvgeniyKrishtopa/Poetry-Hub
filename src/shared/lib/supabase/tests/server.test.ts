@@ -77,6 +77,16 @@ describe("createSupabaseServerClient", () => {
     expect(() => cookieMethods().setAll([SESSION_COOKIE], {})).not.toThrow();
   });
 
+  it("propagates any other cookie-write failure", async () => {
+    const failure = new TypeError("option expires is invalid");
+    cookieStore.set.mockImplementationOnce(() => {
+      throw failure;
+    });
+    await createSupabaseServerClient();
+
+    expect(() => cookieMethods().setAll([SESSION_COOKIE], {})).toThrow(failure);
+  });
+
   it("rejects with a config error and creates no client", async () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", undefined);
 
