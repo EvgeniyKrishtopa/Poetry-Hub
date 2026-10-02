@@ -32,9 +32,10 @@ schema: spec-driven
 #         - Summarize the archive outcome before finishing
 
 context: |
-  Next.js 16 (App Router, Turbopack) + React 19 + TypeScript (strict); npm;
+  Next.js 16 (App Router, Turbopack, Cache Components, React Compiler) + React 19 + TypeScript (strict); npm;
   Vitest for tests; builds to .next/; dev server on http://localhost:3000.
   Server state in TanStack Query v5, client UI state in Zustand v5.
+  Server caching uses "use cache" + cacheLife + cacheTag (see docs/state-management.md).
   Tailwind CSS v4 for layout/basic styling, CSS Modules for custom element styles.
   Feature-first layout: src/app/ (routing only), src/features/<name>/
   {api,model,components,index.ts} (public API via index.ts), src/shared/
