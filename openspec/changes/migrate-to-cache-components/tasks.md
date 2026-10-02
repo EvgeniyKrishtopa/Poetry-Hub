@@ -6,7 +6,7 @@
 
 ## 2. Contentful client caching <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-2, FR-3) Refactor `src/shared/lib/contentful/client.ts` per design D1:
+- [x] 2.1 (FR-2, FR-3) Refactor `src/shared/lib/contentful/client.ts` per design D1:
   - add a `ContentfulOutcome` discriminated union;
   - add an inner `cachedContentfulRequest` (`"use cache"`, `cacheLife({ revalidate, expire: CONTENTFUL_CACHE_EXPIRE_SECONDS })` with the named constant `CONTENTFUL_CACHE_EXPIRE_SECONDS = 3600`, `cacheTag(...tags)`) that returns every failure instead of throwing;
   - keep `contentfulQuery` uncached, rebuilding the `ContentfulError` from a failed outcome;
