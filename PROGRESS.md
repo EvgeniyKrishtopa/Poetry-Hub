@@ -24,6 +24,11 @@
 4. At deploy (deferred by the user, design.md rollout steps 3 and 5 of the archived add-contentful-home-greeting): create the Contentful webhook for the deployed URL, set CONTENTFUL_REVALIDATE_SECRET on the hosting platform, and close `docs/deferred.md`'s 9.5 item.
 5. Optional follow-up from add-route-states: a `global-error.tsx` for errors thrown by the root layout itself (deliberately out of scope there).
 
+## Paused changes
+
+- add-ci-pipeline — paused 2026-10-02: only 8.1 left, blocked on the first scheduled deps-outdated run (Mon 2026-10-05 06:00 UTC); starting the Supabase auth change meanwhile.
+- add-supabase-auth — paused 2026-10-02: artifacts drafted and Gate 1 passed after two rounds (Server Actions + next-safe-action rework, all findings fixed); waits for a separate Cache Components change (cacheComponents/reactCompiler in next.config.ts, `/` off `revalidate = 60`) to merge first. Resume with: spec-clarify (full re-sweep; earlier findings 1-4 already folded in) → spec-review (Gate 2) → test-plan → ui-plan → opsx-scaffold.
+
 ## Session log
 
 - Clock-in: 2026-09-28T10:50:03Z — Clock-out: 2026-09-28T15:55:00Z

@@ -1,0 +1,2 @@
+full
+# multi-module: yes (next.config.ts, shared/lib/contentful, app/(public)/page.tsx); schema: no; contract: yes (contentfulQuery caching contract and route-groups FR-7 change)
