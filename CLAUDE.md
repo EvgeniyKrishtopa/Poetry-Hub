@@ -8,6 +8,7 @@ Web app for discovering, reading, and collecting poems.
 
 - **Next.js 16** (App Router, Turbopack, `src/` dir, Cache Components, React Compiler) + **React 19** + **TypeScript** (strict)
 - **TanStack Query v5** (server state), **Zustand v5** (client UI state)
+- **Supabase** (`@supabase/supabase-js`, `@supabase/ssr`): auth and session; user-editable content later. Contentful holds editorial content.
 - **Tailwind CSS v4** (layout, basic styling) + **CSS Modules** (custom element styles)
 - npm as package manager
 

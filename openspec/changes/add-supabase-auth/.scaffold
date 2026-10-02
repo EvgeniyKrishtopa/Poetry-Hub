@@ -1,0 +1,2 @@
+yes
+# new module: yes (src/features/auth, src/shared/lib/supabase); new boundary crossing: yes (Supabase Auth client, /auth/confirm route handler)
