@@ -6,7 +6,7 @@ Web app for discovering, reading, and collecting poems.
 
 ## Stack
 
-- **Next.js 16** (App Router, Turbopack, `src/` dir) + **React 19** + **TypeScript** (strict)
+- **Next.js 16** (App Router, Turbopack, `src/` dir, Cache Components, React Compiler) + **React 19** + **TypeScript** (strict)
 - **TanStack Query v5** (server state), **Zustand v5** (client UI state)
 - **Tailwind CSS v4** (layout, basic styling) + **CSS Modules** (custom element styles)
 - npm as package manager
