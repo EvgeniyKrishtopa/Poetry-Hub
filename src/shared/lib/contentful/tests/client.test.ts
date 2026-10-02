@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { cacheLife, cacheTag } from "next/cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CONTENTFUL_CACHE_TAG, contentfulQuery } from "../client";
@@ -8,6 +9,7 @@ const SPACE_ID = "abc123space";
 const TOKEN = "known-token-string-XYZ";
 const QUERY = "query HomeGreeting($key: String!) { greetingCollection { total } }";
 const VARIABLES = { key: "home" };
+const EXPIRE_SECONDS = 3600;
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -41,6 +43,8 @@ describe("contentfulQuery", () => {
 
   afterEach(() => {
     fetchMock.mockReset();
+    vi.mocked(cacheLife).mockClear();
+    vi.mocked(cacheTag).mockClear();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
@@ -87,13 +91,15 @@ describe("contentfulQuery", () => {
   });
 
   // implements NFR-2 of add-contentful-home-greeting
-  describe("cache options", () => {
+  // implements FR-2 of migrate-to-cache-components
+  describe("cache scope", () => {
     it("defaults to 60 s and the contentful tag", async () => {
       respondJson({ data: {} });
 
       await contentfulQuery(QUERY, VARIABLES);
 
-      expect(lastInit().next).toEqual({ revalidate: 60, tags: [CONTENTFUL_CACHE_TAG] });
+      expect(cacheLife).toHaveBeenCalledWith({ revalidate: 60, expire: EXPIRE_SECONDS });
+      expect(cacheTag).toHaveBeenCalledWith(CONTENTFUL_CACHE_TAG);
     });
 
     it("keeps the enforced tag next to caller-supplied settings", async () => {
@@ -101,7 +107,8 @@ describe("contentfulQuery", () => {
 
       await contentfulQuery(QUERY, VARIABLES, { revalidate: 300, tags: ["poems"] });
 
-      expect(lastInit().next).toEqual({ revalidate: 300, tags: ["poems", "contentful"] });
+      expect(cacheLife).toHaveBeenCalledWith({ revalidate: 300, expire: EXPIRE_SECONDS });
+      expect(cacheTag).toHaveBeenCalledWith("poems", "contentful");
     });
 
     it("does not duplicate the contentful tag", async () => {
@@ -109,19 +116,29 @@ describe("contentfulQuery", () => {
 
       await contentfulQuery(QUERY, VARIABLES, { tags: ["contentful"] });
 
-      expect(lastInit().next).toEqual({ revalidate: 60, tags: ["contentful"] });
+      expect(cacheTag).toHaveBeenCalledWith("contentful");
+    });
+
+    it("sends no fetch-level cache options", async () => {
+      respondJson({ data: {} });
+
+      await contentfulQuery(QUERY, VARIABLES);
+
+      expect(lastInit()).not.toHaveProperty("next");
     });
   });
 
   // implements FR-3 of add-contentful-home-greeting
+  // implements FR-3 of migrate-to-cache-components: each kind survives the outcome round trip
   describe("failure mapping", () => {
-    it("maps a rejected fetch to network", async () => {
+    it("maps a rejected fetch to network, without a cause", async () => {
       fetchMock.mockRejectedValueOnce(new TypeError("fetch failed"));
 
       const error = await captureError();
 
       expect(error.kind).toBe("network");
-      expect(error.cause).toBeInstanceOf(TypeError);
+      expect(error.cause).toBeUndefined();
+      expect(error.message).not.toContain(TOKEN);
     });
 
     it.each([401, 403])("maps HTTP %i to auth without leaking the token", async (status) => {
