@@ -63,8 +63,10 @@ describe("refreshSession", () => {
       return { data: { claims: {} }, error: null };
     });
 
-    const response = await refreshSession(makeRequest(`${COOKIE_NAME}=stale`));
+    const request = makeRequest(`${COOKIE_NAME}=stale`);
+    const response = await refreshSession(request);
 
+    expect(request.cookies.get(COOKIE_NAME)?.value).toBe("fresh");
     expect(response.cookies.get(COOKIE_NAME)?.value).toBe("fresh");
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     expect(response.headers.get("Pragma")).toBe("no-cache");
@@ -102,6 +104,17 @@ describe("refreshSession", () => {
     const response = await refreshSession(makeRequest());
 
     expect(response.headers.get("set-cookie")).toBeNull();
+    expect(response.headers.get("Cache-Control")).toBeNull();
+  });
+
+  it("adds no Cache-Control override when setAll writes no cookie", async () => {
+    mockClient(async (cookies) => {
+      cookies.setAll([], {});
+      return { data: null, error: null };
+    });
+
+    const response = await refreshSession(makeRequest());
+
     expect(response.headers.get("Cache-Control")).toBeNull();
   });
 

@@ -53,7 +53,13 @@ describe("getSupabaseConfig", () => {
     expect(error.cause).toBeUndefined();
   });
 
-  it.each(["http://example.com", "ftp://abc.supabase.co", "not a url"])(
+  it.each([
+    "http://example.com",
+    "ftp://abc.supabase.co",
+    "not a url",
+    "http://localhost.evil.com",
+    "http://localhost@evil.com",
+  ])(
     "rejects %s, naming only the URL variable",
     (url) => {
       vi.stubEnv(URL_VAR, url);
