@@ -25,11 +25,11 @@
 
 ## 3. Home page <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-1, FR-4) In `src/app/(public)/page.tsx`, remove `export const revalidate = 60` and its comment block. Add `"use cache"`, `cacheLife("minutes")`, and `cacheTag(CONTENTFUL_CACHE_TAG)` at the top of the page body per design D2, with a short comment explaining why. Keep the body unchanged otherwise. Verify:
+- [x] 3.1 (FR-1, FR-4) In `src/app/(public)/page.tsx`, remove `export const revalidate = 60` and its comment block. Add `"use cache"`, `cacheLife("minutes")`, and `cacheTag(CONTENTFUL_CACHE_TAG)` at the top of the page body per design D2, with a short comment explaining why. Keep the body unchanged otherwise. Verify:
   - `npm run build` exits 0;
   - its route table lists `/` with revalidate `1m`;
   - `grep -rnE 'export const (revalidate|dynamic|fetchCache|dynamicParams)' src/app` prints nothing.
-- [ ] 3.2 (FR-5, FR-4) With valid Contentful config, check expiry on the production server (`npm run build && npm run start`):
+- [x] 3.2 (FR-5, FR-4) With valid Contentful config, check expiry on the production server (`npm run build && npm run start`):
   1. Request `/` twice and confirm the second response is served from the cache. The Contentful fetch is not repeated within 60 seconds, which shows in the server log or `x-nextjs-cache`.
   2. `curl -X POST` `/api/revalidate` with the correct secret, and confirm `200 {"revalidated":true}`.
   3. Confirm the next `/` request re-renders: a fresh Contentful fetch, or a changed title if one was published.
