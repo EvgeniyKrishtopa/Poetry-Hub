@@ -2,7 +2,7 @@
 
 ## 1. Config and React Compiler <!-- judgement-heavy -->
 
-- [ ] 1.1 (FR-1, NFR-1) Ask the user to run `! npm install -D babel-plugin-react-compiler`; agents can't install packages. Then commit `next.config.ts` with `reactStrictMode: true`, `cacheComponents: true`, and `reactCompiler: true`, carrying only this change's hunks (design Risks: mixed working tree). Verify that `package.json` vs `main` adds only `babel-plugin-react-compiler` under `devDependencies`, and that `npm run typecheck` passes.
+- [x] 1.1 (FR-1, NFR-1) Ask the user to run `! npm install -D babel-plugin-react-compiler`; agents can't install packages. Then commit `next.config.ts` with `reactStrictMode: true`, `cacheComponents: true`, and `reactCompiler: true`, carrying only this change's hunks (design Risks: mixed working tree). Verify that `package.json` vs `main` adds only `babel-plugin-react-compiler` under `devDependencies`, and that `npm run typecheck` passes.
 
 ## 2. Contentful client caching <!-- judgement-heavy -->
 
