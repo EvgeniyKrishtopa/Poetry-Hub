@@ -44,7 +44,7 @@ CI (`.github/workflows/ci.yml`) runs six checks (all of the above except `deps:o
 - Import a feature only through its public API (`@/features/poems`), never its internals — lint enforces it.
 - Server data lives in TanStack Query or a feature's server-only `dal/`; never copy it into Zustand. Never store derived values.
 - Tests live in a `tests/` folder at the feature/module root, never next to source.
-- Name numeric and string constants; no magic values. Exception: Next.js route segment config (`revalidate`, …) must be a literal — comment why.
+- Name numeric and string constants; no magic values. Exception: Next.js route segment config (`maxDuration`, …) must be a literal — comment why. Page cache lifetimes use a named `cacheLife` profile (`cacheLife("minutes")`), not a `revalidate` export (rejected under Cache Components) or a magic number.
 - At the end of every task group, before its commit, record each task that ends blocked, skipped by decision, or obsolete in `docs/deferred.md`, and add `<!-- deferred: docs/deferred.md -->` to its line. Keep the line and any `blocked` marker in `tasks.md`, because `opsx-apply-git` reads them.
 
 ## Read when relevant
