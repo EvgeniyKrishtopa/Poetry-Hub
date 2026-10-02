@@ -1,15 +1,21 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
+import { cacheLife, cacheTag } from "next/cache";
 
 import { HomeGreeting, getHomeGreeting, resolveGreeting } from "@/features/home";
 import { PoemList, PoemSearch, poemsListQueryOptions } from "@/features/poems";
+import { CONTENTFUL_CACHE_TAG } from "@/shared/lib/contentful";
 import { getQueryClient } from "@/shared/lib/query-client";
 
-// implements NFR-2 of add-contentful-home-greeting: ISR safety net — the page re-renders at most every 60 s.
-// Must stay a literal: Next.js reads segment config statically and fails the build on a named constant.
-// Mirrors the Contentful client's DEFAULT_REVALIDATE_SECONDS so the page and its fetch expire together.
-export const revalidate = 60;
-
 export default async function HomePage() {
+  "use cache";
+  // implements FR-4 of migrate-to-cache-components: Cache Components rejects the `revalidate` segment
+  // config, so the page body is its own cache scope (prefetch/dehydrate read Date.now(), which needs one).
+  // "minutes" revalidates every 60 s, matching the Contentful client's default.
+  cacheLife("minutes");
+  // implements FR-5 of migrate-to-cache-components: tag the page itself so the publish webhook's
+  // revalidateTag expires it directly, without relying on nested-tag propagation.
+  cacheTag(CONTENTFUL_CACHE_TAG);
+
   const queryClient = getQueryClient();
 
   // The two fetches are independent, so run them in parallel.
