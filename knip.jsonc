@@ -3,10 +3,16 @@
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignore": [
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
-    ".ncurc.cjs"
+    ".ncurc.cjs",
+    // Temporary: the client-safe Supabase index has no consumer until add-supabase-auth group 3
+    // (actions + auth.api). Task 3.3 removes this entry.
+    "src/shared/lib/supabase/index.ts"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
-    "@fission-ai/openspec"
+    "@fission-ai/openspec",
+    // Temporary: added with add-supabase-auth group 1, first imported by its action client in group 3.
+    // Task 3.3 removes this entry.
+    "next-safe-action"
   ]
 }
