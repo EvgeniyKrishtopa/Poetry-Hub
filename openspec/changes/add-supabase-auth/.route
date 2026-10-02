@@ -1,0 +1,2 @@
+full
+# multi-module: yes (shared/lib/supabase, features/auth, app, proxy); schema: no (Supabase-managed auth.users only); contract: yes (Server Actions, /auth/confirm, proxy behavior, env vars)
