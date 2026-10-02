@@ -35,11 +35,11 @@ Prerequisite: the Cache Components change is merged into `main` (design Migratio
 
 ## 2. Proxy integration (`src/proxy.ts`)
 
-- [ ] 2.1 (FR-6, FR-8) Refactor `src/proxy.ts` per design D4.
+- [x] 2.1 (FR-6, FR-8) Refactor `src/proxy.ts` per design D4.
   - Extract `applySecurityHeaders(response)`, keeping the same `SECURITY_HEADERS` and matcher.
   - `proxy(request)` becomes `async` and returns `applySecurityHeaders(await refreshSession(request))`.
   - Update `src/tests/proxy.test.ts`: the existing header test targets `applySecurityHeaders`. New tests mock `refreshSession` and assert all four headers on a response that carries a cookie and on a plain `NextResponse.next()`. The matcher tests are unchanged.
-- [ ] 2.2 (FR-6, NFR-2) Verify `npm run typecheck && npm run lint && npm run test:coverage && npm run build` pass, and that the build route table reports the same mode for `/` as before the group.
+- [x] 2.2 (FR-6, NFR-2) Verify `npm run typecheck && npm run lint && npm run test:coverage && npm run build` pass, and that the build route table reports the same mode for `/` as before the group.
 
 ## 3. Auth model and Server Actions (`src/features/auth/model`, `actions`, `api`)
 
