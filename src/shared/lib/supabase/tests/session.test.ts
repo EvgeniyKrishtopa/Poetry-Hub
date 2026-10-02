@@ -3,11 +3,18 @@ import { createServerClient } from "@supabase/ssr";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { getSupabaseConfig } from "../config";
 import { refreshSession } from "../session";
 
 vi.mock("@supabase/ssr", () => ({
   createServerClient: vi.fn(),
 }));
+
+// The real config by default; a single test swaps in an unexpected (non-config) failure.
+vi.mock("../config", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../config")>();
+  return { getSupabaseConfig: vi.fn(actual.getSupabaseConfig) };
+});
 
 type CookieToSet = { name: string; value: string; options: Record<string, unknown> };
 type CookieMethods = {
@@ -130,6 +137,16 @@ describe("refreshSession", () => {
     expect(createServerClient).not.toHaveBeenCalled();
     expect(getClaims).not.toHaveBeenCalled();
     expect(response.headers.get("set-cookie")).toBeNull();
+  });
+
+  it("rethrows a config failure that is not a SupabaseConfigError", async () => {
+    const unexpected = new TypeError("unexpected");
+    vi.mocked(getSupabaseConfig).mockImplementationOnce(() => {
+      throw unexpected;
+    });
+
+    await expect(refreshSession(makeRequest())).rejects.toBe(unexpected);
+    expect(createServerClient).not.toHaveBeenCalled();
   });
 
   it("returns the un-refreshed response, without logging, when getClaims throws", async () => {
