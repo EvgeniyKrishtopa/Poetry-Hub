@@ -10,7 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "deps:audit": "npm audit --audit-level=high",
+    "deps:audit": "node scripts/deps-audit.mjs",
     "deps:outdated": "ncu --errorLevel 2",
     "prepare": "husky",
     "knip": "knip"
