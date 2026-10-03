@@ -27,6 +27,7 @@ interface SignInFormProps {
 // implements FR-1 of add-supabase-auth
 // implements FR-2 of add-supabase-auth
 // implements NFR-3 of add-supabase-auth
+// implements NFR-4 of add-supabase-auth: token utilities only, no color literals
 export function SignInForm({ initialError }: SignInFormProps) {
   const [state, formAction, pending] = useActionState(submitSignIn, INITIAL_STATE);
 

@@ -22,6 +22,7 @@ async function submitSignUp(_previous: SignUpFormState, formData: FormData): Pro
 // implements FR-3 of add-supabase-auth
 // implements FR-4 of add-supabase-auth
 // implements NFR-3 of add-supabase-auth
+// implements NFR-4 of add-supabase-auth: token utilities only, no color literals
 export function SignUpForm() {
   const [state, formAction, pending] = useActionState(submitSignUp, INITIAL_STATE);
 

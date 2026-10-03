@@ -11,6 +11,7 @@ interface AuthFieldProps {
 
 /** A labelled, uncontrolled input with its error wired up for assistive tech (NFR-3). */
 // implements NFR-3 of add-supabase-auth
+// implements NFR-4 of add-supabase-auth: token utilities only, no color literals
 export function AuthField({ label, error, ...inputProps }: AuthFieldProps) {
   const id = useId();
   const errorId = `${id}-error`;
