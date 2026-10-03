@@ -79,18 +79,18 @@ Prerequisite: the Cache Components change is merged into `main` (design Migratio
 
 ## 4. Sign-in and sign-up forms + pages
 
-- [ ] 4.1 (FR-1, FR-2, NFR-1, NFR-3, NFR-4) Implement `components/AuthField/AuthField.tsx` and `components/SignInForm/SignInForm.tsx` per design D7.
+- [x] 4.1 (FR-1, FR-2, NFR-1, NFR-3, NFR-4) Implement `components/AuthField/AuthField.tsx` and `components/SignInForm/SignInForm.tsx` per design D7.
   - `SignInForm` is a `"use client"` component using `useActionState`, whose `submit` awaits `signInAction` (not `useAction`).
   - The `<form>` has `noValidate`. Inputs are uncontrolled, with `type="email"`/`"password"` and `autocomplete="email"`/`"current-password"`. After a failure the email keeps its value through `defaultValue`.
   - The result mapping follows D7.
   - It takes an optional `initialError` prop for the FR-5 confirm-failed message.
   - Verify with `tests/components/SignInForm.test.tsx` (mock `../../actions/auth.actions`): every FR-1/FR-2 form-level criterion and the NFR-3 wiring.
-- [ ] 4.2 (FR-3, FR-4, NFR-1, NFR-3, NFR-4) Implement `components/SignUpForm/SignUpForm.tsx` the same way.
+- [x] 4.2 (FR-3, FR-4, NFR-1, NFR-3, NFR-4) Implement `components/SignUpForm/SignUpForm.tsx` the same way.
   - It uses `autocomplete="new-password"`.
   - `weak-password` becomes a password field error.
   - The check-email state replaces the form.
   - Verify with `tests/components/SignUpForm.test.tsx`: every FR-3/FR-4 form-level criterion and the NFR-3 wiring.
-- [ ] 4.3 (FR-1, FR-3, FR-5) Add the two pages and export the forms from `src/features/auth/index.ts`.
+- [x] 4.3 (FR-1, FR-3, FR-5) Add the two pages and export the forms from `src/features/auth/index.ts`.
   - `src/app/(public)/login/page.tsx` reads `searchParams.error` inside the `<Suspense>` boundary Cache Components requires (design D5), and passes the confirm-failed text to `SignInForm` when the value is `confirm-failed`.
   - `src/app/(public)/signup/page.tsx` renders `SignUpForm`.
   - Verify `npm run typecheck && npm run lint && npm run test:coverage && npm run build` pass, and that `/login` and `/signup` appear in the build route table.

@@ -10,6 +10,16 @@ import type {
 
 type SharedFormState = Exclude<SignInFormState, { status: "idle" }>;
 
+function readField(formData: FormData, name: string): string {
+  const value = formData.get(name);
+  return typeof value === "string" ? value : "";
+}
+
+/** The submitted credentials, read only to pass straight to the action (NFR-1: never stored). */
+export function readCredentials(formData: FormData): { readonly email: string; readonly password: string } {
+  return { email: readField(formData, "email"), password: readField(formData, "password") };
+}
+
 function firstFieldErrors(
   fieldErrors: NonNullable<AuthActionResult<unknown>["validationErrors"]>["fieldErrors"],
 ): FieldErrors {
