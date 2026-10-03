@@ -56,6 +56,8 @@ export function AuthStatus() {
         setSignOutFailed(true);
         return;
       }
+      // A read started before sign-out could land afterwards and restore the old email.
+      await queryClient.cancelQueries({ queryKey: authKeys.session() });
       queryClient.setQueryData(authKeys.session(), null);
       router.refresh();
     });

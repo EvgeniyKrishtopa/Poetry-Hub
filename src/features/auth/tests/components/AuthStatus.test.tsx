@@ -123,7 +123,49 @@ describe("AuthStatus", () => {
     await userEvent.setup().click(await screen.findByRole("button", { name: "Sign out" }));
 
     expect(await screen.findByRole("link", { name: "Sign in" })).toBeInTheDocument();
+    expect(signOutAction).toHaveBeenCalledTimes(1);
     expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops a session read still in flight when sign-out succeeds", async () => {
+    vi.mocked(usePathname).mockReturnValue("/login");
+    vi.mocked(getSignedInEmail).mockResolvedValueOnce(EMAIL);
+    vi.mocked(signOutAction).mockResolvedValue({ data: { ok: true } } as SignOutResult);
+    const { rerender } = renderWidget();
+    const signOutButton = await screen.findByRole("button", { name: "Sign out" });
+
+    // A navigation starts a read just before the reader signs out.
+    const inFlight = deferred<string | null>();
+    vi.mocked(getSignedInEmail).mockReturnValueOnce(inFlight.promise);
+    vi.mocked(usePathname).mockReturnValue("/");
+    rerender(<AuthStatus />);
+    await vi.waitFor(() => expect(getSignedInEmail).toHaveBeenCalledTimes(2));
+
+    await userEvent.setup().click(signOutButton);
+    expect(await screen.findByRole("link", { name: "Sign in" })).toBeInTheDocument();
+
+    await act(async () => inFlight.resolve(EMAIL));
+    await new Promise((settle) => setTimeout(settle, 0));
+
+    expect(screen.getByRole("link", { name: "Sign in" })).toBeInTheDocument();
+    expect(screen.queryByText(EMAIL)).not.toBeInTheDocument();
+  });
+
+  it("clears the sign-out alert when a retry succeeds", async () => {
+    vi.mocked(getSignedInEmail).mockResolvedValue(EMAIL);
+    vi.mocked(signOutAction)
+      .mockResolvedValueOnce({ data: { ok: false } } as SignOutResult)
+      .mockResolvedValueOnce({ data: { ok: true } } as SignOutResult);
+    renderWidget();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Sign out" }));
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(await screen.findByRole("link", { name: "Sign in" })).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it.each<[string, () => void]>([
