@@ -12,7 +12,7 @@ export const CONFIRM_FAILED_MESSAGE =
 export const SIGN_OUT_FAILED_MESSAGE = "Couldn't sign out. Try again.";
 
 /** The `error` value `/auth/confirm` puts on `/login` when a link fails (FR-5). */
-const CONFIRM_FAILED_ERROR = "confirm-failed";
+export const CONFIRM_FAILED_ERROR = "confirm-failed";
 
 export const CHECK_EMAIL_TITLE = "Check your email";
 

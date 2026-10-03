@@ -128,7 +128,8 @@ Next.js's built-in Server Action origin check covers CSRF. No action accepts a r
   - It sits outside both route groups, next to `api/`, so the email-template path is `/auth/confirm`.
 - `confirmSignUp` handles the verification:
   - It parses `{ token_hash, type }` with `confirmParamsSchema` from `model/` (ADR 0001: `dal/` validates with a schema from `model/`; Gate 1 P6). A parse failure returns `"failed"` without calling Supabase. It stays in `dal/` and must never move to `actions/`: a `"use server"` export would be a publicly callable endpoint.
-  - It catches `SupabaseConfigError` and returns `"failed"`.
+  - It catches `SupabaseConfigError` and returns `"failed"`. Any other thrown error (a network failure in `verifyOtp`, a failing `cookies()`) also returns `"failed"`, after logging only the error's `name` (user decision 2026-10-03, group 5).
+    - Unlike the actions, the route doesn't let an unexpected error through: a reader who clicked an email link should land on `/login` with a next step, not a bare 500. The log line keeps an outage distinguishable from a bad link.
   - On `verifyOtp` success, `createSupabaseServerClient`'s `setAll` writes the session cookies through `cookies()`.
 - `createSupabaseServerClient` wraps `setAll` in try/catch, the documented `@supabase/ssr` pattern for Server Component callers. In this change only actions and the route handler call it, and both can write cookies.
 

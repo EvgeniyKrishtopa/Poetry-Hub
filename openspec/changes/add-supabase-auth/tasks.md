@@ -97,14 +97,15 @@ Prerequisite: the Cache Components change is merged into `main` (design Migratio
 
 ## 5. Email confirmation route
 
-- [ ] 5.1 (FR-5, FR-8) Implement `dal/confirm-sign-up.ts` per design D3, and export it from `index.ts`.
-  - The module starts with `import "server-only"`. `confirmSignUp(tokenHash, type)` returns `"confirmed" | "failed"`. It parses its input with `confirmParamsSchema` before calling `verifyOtp`, and catches `SupabaseConfigError`.
+- [x] 5.1 (FR-5, FR-8) Implement `dal/confirm-sign-up.ts` per design D3, and export it from `index.ts`.
+  - The module starts with `import "server-only"`. `confirmSignUp(tokenHash, type)` returns `"confirmed" | "failed"`. It parses its input with `confirmParamsSchema` before calling `verifyOtp`, and catches `SupabaseConfigError` and any other thrown error (logging only its `name`; design D3).
   - Verify with `tests/dal/confirm-sign-up.test.ts`:
     - success → `"confirmed"`;
     - missing hash, or `type=recovery` → `"failed"`, with `verifyOtp` not called;
     - `verifyOtp` error → `"failed"`;
-    - config error → `"failed"`.
-- [ ] 5.2 (FR-5) Implement `src/app/auth/confirm/route.ts`.
+    - config error → `"failed"`;
+    - a thrown `verifyOtp` → `"failed"`, with only the error name logged.
+- [x] 5.2 (FR-5) Implement `src/app/auth/confirm/route.ts`.
   - GET only. It reads only `token_hash` and `type`, and answers with a 303 to `/` or to `/login?error=confirm-failed`.
   - Verify with `src/app/auth/confirm/tests/route.test.ts`: every FR-5 route scenario, including `next=https://evil.example` → `Location` is `/`.
 
