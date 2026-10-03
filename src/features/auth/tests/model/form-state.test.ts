@@ -8,7 +8,7 @@ import type {
   SignUpFormState,
   SignUpResult,
 } from "../../model/auth.types";
-import { toSignInFormState, toSignUpFormState } from "../../model/form-state";
+import { readCredentials, toSignInFormState, toSignUpFormState } from "../../model/form-state";
 
 const EMAIL = "reader@example.com";
 const PASSWORD = "secret-password-1";
@@ -82,5 +82,23 @@ describe("toSignUpFormState", () => {
 
     expect(state).toEqual(expected);
     expectNoPassword(state);
+  });
+});
+
+describe("readCredentials", () => {
+  // implements NFR-1 of add-supabase-auth
+  it("reads email and password from the form data", () => {
+    const formData = new FormData();
+    formData.set("email", EMAIL);
+    formData.set("password", PASSWORD);
+
+    expect(readCredentials(formData)).toEqual({ email: EMAIL, password: PASSWORD });
+  });
+
+  it("reads missing or non-string fields as empty strings", () => {
+    const formData = new FormData();
+    formData.set("password", new Blob(["x"]));
+
+    expect(readCredentials(formData)).toEqual({ email: "", password: "" });
   });
 });

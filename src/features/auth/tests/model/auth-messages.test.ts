@@ -4,6 +4,7 @@ import {
   CONFIRM_FAILED_MESSAGE,
   GENERIC_SERVER_ERROR,
   getFailureMessage,
+  getLoginErrorMessage,
   SIGN_OUT_FAILED_MESSAGE,
 } from "../../model/auth-messages";
 import type { AuthFailure, AuthFlow } from "../../model/auth.types";
@@ -46,4 +47,18 @@ describe("standalone messages", () => {
     );
     expect(SIGN_OUT_FAILED_MESSAGE).toBe("Couldn't sign out. Try again.");
   });
+});
+
+describe("getLoginErrorMessage", () => {
+  // implements FR-5 of add-supabase-auth
+  it("maps confirm-failed to the confirm-failed text", () => {
+    expect(getLoginErrorMessage("confirm-failed")).toBe(CONFIRM_FAILED_MESSAGE);
+  });
+
+  it.each([["missing", undefined], ["another value", "oops"], ["a repeated param", ["confirm-failed", "x"]]])(
+    "shows nothing for %s",
+    (_label, error) => {
+      expect(getLoginErrorMessage(error)).toBeUndefined();
+    },
+  );
 });
