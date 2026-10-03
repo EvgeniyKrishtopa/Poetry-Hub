@@ -20,12 +20,14 @@ src/
 │   │   └── layout.tsx        # Pass-through placement marker; enforces nothing yet
 │   ├── api/                  # Route handlers, outside both groups
 │   ├── auth/confirm/route.ts # Sign-up email link: verifies the token, 303 to / or /login?error=confirm-failed
+│   │                         # (reached only once the Supabase "Confirm sign up" template links here; see the change's Migration Plan)
 │   ├── providers.tsx         # QueryClientProvider (+ devtools)
 │   └── globals.css           # Tailwind import + design tokens
 ├── features/                 # One folder per business feature
 │   ├── auth/                 # Sign-up, sign-in, sign-out, header session widget
-│   └── poems/
-│       ├── actions/          # Server Actions ("use server", *.actions.ts) + the feature's action client
+│   │   ├── actions/          # Server Actions ("use server", *.actions.ts) + the feature's action client
+│   │   └── …                 # api/, dal/, model/, components/, tests/, index.ts (roles as below)
+│   └── poems/                # The folder roles every feature can use:
 │       ├── api/              # Fetchers (*.api.ts) + query keys/options/hooks (*.queries.ts)
 │       ├── dal/              # Server-only data access for Server Components (no role suffix)
 │       ├── model/            # Types, Zustand stores (*.store.ts), pure domain logic
@@ -49,7 +51,7 @@ src/
 - `shared/` never imports from `features/` or `app/`.
 - Inside a feature, use relative imports; across layers, use the `@/` alias.
 - Don't create a `shared/` abstraction until a second feature actually needs it. Exception: an infrastructure client for an external service (e.g. `shared/lib/contentful`, `shared/lib/supabase`) may live in `shared/lib` from its first consumer.
-- `shared/lib/supabase/index.ts` stays client-safe. Its server-only modules start with `import "server-only"` and are imported by subpath: `@/shared/lib/supabase/server` (actions, route handlers, `dal/`) and `@/shared/lib/supabase/session` (the proxy only). Identity and reader content live in Supabase, editorial pages in Contentful (`docs/decisions/0003-supabase-auth-and-content-split.md`).
+- `shared/lib/supabase/index.ts` stays client-safe. Its server-only modules start with `import "server-only"` and are imported by subpath: `@/shared/lib/supabase/server` (actions and `dal/`; route handlers reach it through a `dal/` module) and `@/shared/lib/supabase/session` (the proxy only). Identity and reader content live in Supabase, editorial pages in Contentful (`docs/decisions/0003-supabase-auth-and-content-split.md`).
 - A feature index that exports a server-only module (e.g. `features/auth` exports `confirmSignUp`) is imported only by Server Components and route handlers. The feature's own Client Components import their siblings by relative path, including its `"use server"` actions.
 
 ## Naming
