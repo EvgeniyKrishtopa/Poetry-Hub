@@ -1,0 +1,8 @@
+[
+  {
+    "id": "GHSA-vfj7-8cjw-p6xm",
+    "package": "braces",
+    "reason": "Stack-exhaustion DoS on deeply nested glob patterns. Every braces release (<=3.0.3, latest) is affected, so no upgrade exists. Reached only through dev tooling (@fission-ai/openspec, eslint-config-next via fast-glob/micromatch), which never globs untrusted input; nothing ships to the browser or server bundle.",
+    "expires": "2026-11-02"
+  }
+]

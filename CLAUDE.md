@@ -24,7 +24,7 @@ npm run typecheck      # route type generation + tsc --noEmit
 npm test               # Vitest in watch mode
 npm run test:coverage  # single run with coverage (80% statements/lines/functions)
 npm run knip           # dead code: unused files, exports, dependencies (ignores need a reason comment in knip.jsonc)
-npm run deps:audit     # npm audit, fails on high/critical advisories
+npm run deps:audit     # npm audit, fails on high/critical advisories not in scripts/audit-allowlist.json (each entry needs a reason + expiry)
 npm run deps:outdated  # ncu, fails on any available upgrade; held majors and why live in .ncurc.cjs
 ```
 

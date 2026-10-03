@@ -62,7 +62,9 @@ change as a whole — not any one of them in isolation:
    in the same command as the rest has no second link and needs none. The audit is blocking, not informational: an install command can't
    add a vulnerable package in the first place (`permissions.deny` blocks
    every package manager's install commands), so this is the check for what
-   was already in the lockfile, including transitively.
+   was already in the lockfile, including transitively. The only exceptions
+   are entries in `scripts/audit-allowlist.json`, each with a reason and an
+   expiry date; an expired entry blocks again.
 3. **System** — Gate 3 (`web-qa`), a real-browser pass over the change's
    whole diff, run once on the last task group before Gate 4 *if the change
    touched user-facing UI*; not applicable to a change that didn't (e.g.
