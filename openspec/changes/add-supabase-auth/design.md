@@ -157,6 +157,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
 The root layout gains a `<header>` with `AuthStatus`. `AuthStatus` is a Client Component that reads the session only after mount, through the browser client. So the server HTML is identical for every reader, and neither the layout nor `/` calls `cookies()`. Whatever `/`'s mode is when this change starts (after the Cache Components change), the build reports the same mode for `/` afterwards (NFR-2).
 
+**`/` is a shared cache scope.** After the Cache Components change, `/`'s page body runs inside `"use cache"` (`cacheLife("minutes")`, tagged for the Contentful webhook), and its output is shared by every reader. Nothing inside that scope may read cookies, the session, or Supabase user data: per-user data would either break the build or, worse, be cached and served to other readers. User-specific UI must sit outside the scope, as `AuthStatus` does: it lives in the root layout's header, renders nothing user-specific on the server, and reads the session only in the browser after mount (D6).
+
 `/login` and `/signup` are Server Component pages that render the client forms. `/login` reads `searchParams.error` (FR-5). Under Cache Components a `searchParams` read is request-time data. The page therefore wraps the part that reads it in `<Suspense>`, as Cache Components requires. The implementer follows the build's guidance, and `npm run build` is the arbiter.
 
 ### D6 — `AuthStatus`: a TanStack query, invalidated on every navigation (user decision 2026-10-02; Gate 1 P5)
