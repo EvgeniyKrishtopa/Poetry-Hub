@@ -111,7 +111,7 @@ Prerequisite: the Cache Components change is merged into `main` (design Migratio
 
 ## 6. Auth status in the header
 
-- [ ] 6.1 (FR-7, FR-8, NFR-4) Implement `components/AuthStatus/AuthStatus.tsx` per design D6, and export it from `index.ts`.
+- [x] 6.1 (FR-7, FR-8, NFR-4) Implement `components/AuthStatus/AuthStatus.tsx` per design D6, and export it from `index.ts`.
   - It is a `"use client"` component that reads `useQuery(sessionQueryOptions)`: `isPending` → nothing visible; `null` → "Sign in"; an email → the email + "Sign out".
   - A `useEffect` keyed on `usePathname()` invalidates `authKeys.session()` on every pathname change after the first render. TanStack cancels the superseded fetch and keeps the previous data while refetching. There is no hand-written stale-read guard.
   - Sign out:
@@ -120,7 +120,7 @@ Prerequisite: the Cache Components change is merged into `main` (design Migratio
     - otherwise → it stays signed in and shows the `role="alert"` sign-out-failed text;
     - the button is disabled while pending.
   - Verify with `tests/components/AuthStatus.test.tsx` (mock `../../api/auth.api`, `../../actions/auth.actions`, and `next/navigation`; render inside a fresh `QueryClientProvider` with `retry: false`): every FR-7 acceptance criterion, including the re-read on a pathname change and the stale read, plus the FR-8 widget criterion.
-- [ ] 6.2 (FR-7, NFR-2) Add the `<header>` to `src/app/layout.tsx`.
+- [x] 6.2 (FR-7, NFR-2) Add the `<header>` to `src/app/layout.tsx`.
   - It holds a `next/link` to `/` with `siteConfig.name`, and `AuthStatus`, rendered inside `<Providers>` so the query client is available. Style it with token utilities only.
   - Verify that `npm run build` reports the same mode for `/` as before the change, and that `npm run typecheck && npm run lint && npm run test:coverage` pass.
 
