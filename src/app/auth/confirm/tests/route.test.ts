@@ -33,6 +33,14 @@ describe("GET /auth/confirm", () => {
     expect(confirmSignUp).toHaveBeenCalledWith("abc", "email");
   });
 
+  it.each([["confirmed"], ["failed"]] as const)("marks the %s redirect private, no-store", async (result) => {
+    vi.mocked(confirmSignUp).mockResolvedValue(result);
+
+    const response = await GET(get("?token_hash=abc&type=email"));
+
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+  });
+
   it.each([
     ["no token_hash", "?type=email", null, "email"],
     ["type=recovery", "?token_hash=abc&type=recovery", "abc", "recovery"],
