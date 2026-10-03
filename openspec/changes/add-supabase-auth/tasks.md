@@ -126,7 +126,7 @@ Prerequisite: the Cache Components change is merged into `main` (design Migratio
 
 ## 7. Docs and verification
 
-- [ ] 7.1 (FR-6, FR-7) Update `docs/architecture.md` and write the ADR.
+- [x] 7.1 (FR-6, FR-7) Update `docs/architecture.md` and write the ADR.
   - `docs/architecture.md`:
     - the `src/` tree gains `features/auth/` (including `actions/`), `shared/lib/supabase/`, `app/auth/confirm/`, `(public)/login`, and `(public)/signup`;
     - add the `actions/` role (`"use server"` modules with the `.actions.ts` suffix, plus the feature's action client) to the folder list and the naming rules;
@@ -137,13 +137,13 @@ Prerequisite: the Cache Components change is merged into `main` (design Migratio
     - all readers share Supabase's per-IP sign-in/sign-up budget; the limit is raised in the dashboard instead of using a secret key with IP forwarding (user decision 2026-10-02), to be revisited before real public traffic;
     - CSP is a recorded follow-up.
   - Verify `npm run lint` passes.
-- [ ] 7.2 (NFR-1, NFR-4) Verify statically:
+- [x] 7.2 (NFR-1, NFR-4) Verify statically:
   - `grep -rnE 'service_role|SERVICE_ROLE|SUPABASE_SECRET' src` prints nothing;
   - no `console.*` call in `src/features/auth` or `src/shared/lib/supabase` references a password;
   - `grep -rn "useAction" src/features/auth` prints nothing;
   - `package.json` `dependencies` vs `main` add exactly the three named packages;
   - the color-literal grep over the new component files and `src/app/layout.tsx` prints nothing.
-- [ ] 7.3 (FR-1–FR-8, NFR-2) Run the full chain and Gate 3.
+- [x] 7.3 (FR-1–FR-8, NFR-2) Run the full chain and Gate 3.
   - Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`; all must pass. Compare the route table with `main` (NFR-2).
   - With the user's Supabase project configured per design's Migration Plan, run Gate 3 (`web-qa`) against the dev server:
     1. sign up → "Check your email";
