@@ -43,11 +43,11 @@ Prerequisite: the Cache Components change is merged into `main` (design Migratio
 
 ## 3. Auth model and Server Actions (`src/features/auth/model`, `actions`, `api`)
 
-- [ ] 3.1 (FR-2, FR-4, FR-5, NFR-1) Implement `model/auth.types.ts`, `model/credentials.schema.ts`, and `model/confirm-params.schema.ts`.
+- [x] 3.1 (FR-2, FR-4, FR-5, NFR-1) Implement `model/auth.types.ts`, `model/credentials.schema.ts`, and `model/confirm-params.schema.ts`.
   - `credentials.schema.ts` holds `signInSchema` (valid email, non-empty password) and `signUpSchema` (valid email, at least `MIN_PASSWORD_LENGTH = 8` characters). Validation messages come from `auth-messages.ts`.
   - `confirm-params.schema.ts` holds `confirmParamsSchema`: a non-empty `token_hash` and `type` equal to `"email"` (design D3).
   - Verify with `tests/model/` unit tests: each schema rule, the 7- vs 8-character boundary, and `confirmParamsSchema` rejecting a missing hash and `type=recovery`.
-- [ ] 3.2 (FR-2, FR-4, FR-5, FR-7) Implement `model/classify-auth-error.ts` and `model/auth-messages.ts` per design D7.
+- [x] 3.2 (FR-2, FR-4, FR-5, FR-7) Implement `model/classify-auth-error.ts` and `model/auth-messages.ts` per design D7.
   - `classifyAuthError(error: unknown): AuthFailure` is pure. It checks `code` first, then status 429. `SupabaseConfigError` maps to `unavailable`; anything else maps to `unknown`.
   - `auth-messages.ts` holds the flow × failure texts, the field validation texts, and the exported FR-5 confirm-failed and FR-7 sign-out-failed texts.
   - Implement `model/form-state.ts`: pure `toSignInFormState(result, email)` and `toSignUpFormState(result, email)`, which share one helper for the common branches (design D7).
@@ -56,7 +56,7 @@ Prerequisite: the Cache Components change is merged into `main` (design Migratio
     - every code in D7, the 429 fallback, a config error, and an unknown value → the expected `AuthFailure`;
     - every flow × failure pair → its exact text;
     - the three unlisted pairs → "Something went wrong. Try again."
-- [ ] 3.3 (FR-2, FR-4, FR-7, FR-8, NFR-1) Implement `actions/action-client.ts` and `actions/auth.actions.ts` per design D2.
+- [x] 3.3 (FR-2, FR-4, FR-7, FR-8, NFR-1) Implement `actions/action-client.ts` and `actions/auth.actions.ts` per design D2.
   - `action-client.ts` starts with `import "server-only"`. It creates `authActionClient` with `handleServerError`, which returns the generic text and logs only the error `name`, plus `defaultValidationErrorsShape: "flattened"`.
   - `auth.actions.ts` is a `"use server"` module with three actions:
     - `signInAction`: `.inputSchema(signInSchema)`; `redirect("/")` on success.
@@ -72,7 +72,7 @@ Prerequisite: the Cache Components change is merged into `main` (design Migratio
     - sign-out passes `scope: "local"`, and a failure gives `ok: false`;
     - config error → `unavailable`;
     - a throwing body → a `serverError` equal to the generic text, with no part of the input.
-- [ ] 3.4 (FR-7, FR-8) Implement `api/auth.api.ts` and `api/auth.queries.ts`.
+- [x] 3.4 (FR-7, FR-8) Implement `api/auth.api.ts` and `api/auth.queries.ts`.
   - `getSignedInEmail()` reads the `email` claim via the browser client's `getClaims()`. It returns `null` on no claims, on any error, or on `SupabaseConfigError`, and never throws.
   - `auth.queries.ts` holds `authKeys.session()` = `["auth","session"]` and `sessionQueryOptions` (design D6).
   - Verify with `tests/api/` (mock `@/shared/lib/supabase`): the email/null mapping, and the query key.
