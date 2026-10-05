@@ -17,12 +17,7 @@
   "devServerUrl": "http://localhost:3000",
   "webQaScenariosDir": "tests/web-qa-scenarios",
   "trivialDiffThreshold": 10,
-  "trivialDiffPaths": [
-    "*.md",
-    "*.css",
-    "*.svg",
-    "public/**"
-  ],
+  "trivialDiffPaths": ["*.md", "*.css", "*.svg", "public/**"],
   "maxFixAttempts": 2,
   "openspec": {
     "profile": "custom",
@@ -58,12 +53,12 @@
     "architecture": "claude-opus-5-5",
     "spec": "claude-opus-5-5",
     "webQa": "claude-haiku-4-5",
-    "code": "claude-sonnet-5",
+    "code": "claude-sonnet-5-5",
     "deep": "claude-opus-5-5",
     "harness": "claude-haiku-4-5",
-    "testAuthor": "claude-sonnet-5",
+    "testAuthor": "claude-sonnet-5-5",
     "clarify": "claude-opus-5-5",
-    "default": "claude-sonnet-5"
+    "default": "claude-sonnet-5-5"
   },
   "harnessVersion": "0.10.0",
   "toolchainVerifiedAt": "2026-09-28T10:52:19Z"
