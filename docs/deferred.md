@@ -70,10 +70,10 @@ Archived at `openspec/changes/archive/2026-09-29-add-contentful-home-greeting/`.
 
 ### add-ci-pipeline · 8.1 — first scheduled deps-outdated run
 
-- **State:** blocked
+- **State:** resolved (2026-10-05)
 - **Requirement:** FR-8, NFR-5
-- **What is missing:** proof that the weekly cron actually fires, meaning a `deps-outdated` run with event `schedule` in the Actions tab.
+- **What was missing:** proof that the weekly cron actually fires, meaning a `deps-outdated` run with event `schedule` in the Actions tab.
 - **Why:** the first possible cron run is Monday 2026-10-05 06:00 UTC. The user chose (spec-clarify, 2026-09-30) to wait for a real `schedule`-event run rather than accept the workflow's registration as proof.
 - **Verified instead:** the workflow file is on `main` and the workflow is `active`. Manual dispatch run 36845027421 (`workflow_dispatch`) ran one `deps-outdated` job, which failed and named `next` and `eslint-config-next` 16.3.7 → 16.3.8 and `@fission-ai/openspec` ^1.13.2 → ^1.14.0. That matches the local `npm run deps:outdated` on the same tree exactly.
 - **Decision:** user, 2026-09-30 (spec-clarify, reading B).
-- **Status:** open. Close it with `gh run list --workflow deps-outdated.yml --event schedule` after 2026-10-05 06:00 UTC, then tick 8.1, remove its `blocked` marker, and archive the change.
+- **Status:** resolved 2026-10-05. `gh run list --workflow deps-outdated.yml --event schedule` shows run 37319694071 (event `schedule`, branch `main`, one `deps-outdated` job, started 13:48 UTC; GitHub delayed the 06:00 cron). It failed naming five patch upgrades (`@tanstack/react-query`, `@tanstack/react-query-devtools`, `@types/node`, `@vitejs/plugin-react`, `jsdom`), exactly matching `npm run deps:outdated` run locally on `main` the same day. The user cleared the block; 8.1 is ticked and the change archived.
