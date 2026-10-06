@@ -9,12 +9,13 @@
 - In progress: none
 - Blocked: none.
 - `supabase/config.toml` is on `main` (PR #58), aligned with the auth design. No local confirmation template.
+- npm `overrides` pin seroval/seroval-plugins ^1.6.8 (PR #59): solid-js, used only by the dev-only React Query Devtools, still pins ~1.5.4.
 - Audit exception: `scripts/audit-allowlist.json` allows GHSA-vfj7-8cjw-p6xm (braces, no upstream fix) until 2026-11-02 (PR #45 into `main`, synced into `feature/add-auth-flow` by PR #47).
 
 ## Recently completed
 
 - add-ci-pipeline: all tasks done; 8.1 closed by PR #55 after the first scheduled deps-outdated run (37319694071); archived to `openspec/changes/archive/2026-10-06-add-ci-pipeline/` (main spec `ci-pipeline`); archive PR into `main` open.
-- Chores merged into `main`: PR #56 (five patch upgrades), PR #57 (README), PR #58 (supabase config, sonnet-5-5 for every sonnet role, PROGRESS).
+- Chores merged into `main`: PR #56 (five patch upgrades), PR #57 (README), PR #58 (supabase config, sonnet-5-5 for every sonnet role, PROGRESS), PR #59 (seroval critical + source-map-js advisories: seroval via npm `overrides`, source-map-js via lockfile).
 - add-supabase-auth: 20/20 tasks; group PRs #43, #44, #48, #49, #50, #51, #52 merged into `feature/add-auth-flow`; Gate 3 passed against the real Supabase project; archived to `openspec/changes/archive/2026-10-05-add-supabase-auth/` (main spec `auth`); archive PR #53 merged; parent → `main` PR #54 merged.
 - audit-allowlist-braces (chore, outside OpenSpec): `deps:audit` runs `scripts/deps-audit.mjs` with an expiring allowlist; PR #45 merged into `main`, PR #47 merged into `feature/add-auth-flow`.
 - migrate-to-cache-components: 6/6 tasks; archived to `openspec/changes/archive/2026-10-02-migrate-to-cache-components/`; archive PR #41 merged; parent → `main` PR #42 merged.
@@ -26,10 +27,11 @@
 2. Before deploying auth (the user's checklist): custom SMTP on a verified domain; the "Confirm sign up" template link `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`; Site URL and Redirect URLs per environment (consider separate dev and prod projects); "Confirm email" on; a smoke test with a real address.
 3. Optional: add `npm run deps:audit` to the weekly `deps-outdated.yml` so a new advisory surfaces without waiting for a PR or push.
 4. By 2026-11-02: check whether braces has shipped a fix for GHSA-vfj7-8cjw-p6xm. If so, upgrade and remove the allowlist entry; otherwise review the entry again and extend its expiry with a reason.
-5. For the future poems change: once accounts hold user data, revisit login-CSRF through a crafted `/auth/confirm` link (add-supabase-auth deep reviews); mitigations are a POST confirm step, or confirming without signing in.
-6. Optional tidy-up: remove the duplicate `deps-audit` (any-source) entry from ruleset 24259984.
-7. At deploy (deferred by the user; design.md rollout steps 3 and 5 of the archived add-contentful-home-greeting): create the Contentful webhook for the deployed URL, set CONTENTFUL_REVALIDATE_SECRET on the hosting platform, and close the 9.5 item in `docs/deferred.md`.
-8. Optional follow-up from add-route-states: a `global-error.tsx` for errors thrown by the root layout itself (deliberately out of scope there).
+5. When solid-js allows seroval 1.6 (check with `npm view solid-js@latest dependencies`), remove the `overrides` block from package.json (PR #59).
+6. For the future poems change: once accounts hold user data, revisit login-CSRF through a crafted `/auth/confirm` link (add-supabase-auth deep reviews); mitigations are a POST confirm step, or confirming without signing in.
+7. Optional tidy-up: remove the duplicate `deps-audit` (any-source) entry from ruleset 24259984.
+8. At deploy (deferred by the user; design.md rollout steps 3 and 5 of the archived add-contentful-home-greeting): create the Contentful webhook for the deployed URL, set CONTENTFUL_REVALIDATE_SECRET on the hosting platform, and close the 9.5 item in `docs/deferred.md`.
+9. Optional follow-up from add-route-states: a `global-error.tsx` for errors thrown by the root layout itself (deliberately out of scope there).
 
 ## Paused changes
 
