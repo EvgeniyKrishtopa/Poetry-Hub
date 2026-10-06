@@ -100,7 +100,7 @@ Tests live in a `tests/` folder at each feature or module root, not next to sour
 
 ## Development workflow
 
-Changes are spec-driven with [OpenSpec](https://github.com/Fission-AI/OpenSpec): each change gets a proposal, design, specs, and tasks under `openspec/changes/`, goes through automated review gates, and is archived into `openspec/specs/` once merged. Current capability specs: `auth`, `content-revalidation`, `contentful-client`, `home-greeting`, `route-groups`, `route-states`, `security-headers`.
+Changes are spec-driven with [OpenSpec](https://github.com/Fission-AI/OpenSpec): each change gets a proposal, design, specs, and tasks under `openspec/changes/`, goes through automated review gates, and is archived into `openspec/specs/` once merged. Current capability specs: `auth`, `ci-pipeline`, `content-revalidation`, `contentful-client`, `home-greeting`, `route-groups`, `route-states`, `security-headers`.
 
 `PROGRESS.md` tracks the change in progress and next steps; `docs/deferred.md` tracks blocked or deferred work.
 
