@@ -55,5 +55,9 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": "eslint --fix"
+  },
+  "overrides": {
+    "seroval": "^1.6.8",
+    "seroval-plugins": "^1.6.8"
   }
 }
