@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { Button } from "@/shared/ui";
+import { Alert, Button } from "@/shared/ui";
 
 import { signUpAction } from "../../actions/auth.actions";
 import { CHECK_EMAIL_TITLE, getFailureMessage } from "../../model/auth-messages";
@@ -29,13 +29,14 @@ export function SignUpForm() {
   if (state.status === "check-email") {
     // The same message whether or not the address was already registered (FR-4).
     return (
-      <div role="status" className="flex flex-col gap-2">
+      // implements FR-6 of add-feedback-color-tokens: foreground body (muted on surface fails AA)
+      <Alert tone="success" className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">{CHECK_EMAIL_TITLE}</h2>
-        <p className="text-muted">
-          We sent a confirmation link to <strong className="text-foreground">{state.email}</strong>. Open it to
-          finish creating your account.
+        <p className="font-normal">
+          We sent a confirmation link to <strong>{state.email}</strong>. Open it to finish creating your
+          account.
         </p>
-      </div>
+      </Alert>
     );
   }
 
@@ -46,9 +47,8 @@ export function SignUpForm() {
     // noValidate: the server-side schema is the only validation, so its errors are what the reader sees.
     <form action={formAction} noValidate className="flex w-full flex-col gap-4">
       {formError && (
-        <p role="alert" className="rounded-md bg-surface px-3 py-2 text-sm font-medium">
-          {formError}
-        </p>
+        // implements FR-4 of add-feedback-color-tokens
+        <Alert tone="danger">{formError}</Alert>
       )}
       <AuthField
         label="Email"

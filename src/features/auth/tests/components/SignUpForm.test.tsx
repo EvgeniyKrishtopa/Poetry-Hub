@@ -25,6 +25,39 @@ async function submit(email = EMAIL, password = PASSWORD) {
   await user.click(screen.getByRole("button", { name: "Create account" }));
 }
 
+describe("SignUpForm feedback tones", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // implements FR-4 of add-feedback-color-tokens
+  it("shows a sign-up failure inside the danger alert", async () => {
+    mockResult({ data: { status: "failed", failure: "rate-limited" } });
+    render(<SignUpForm />);
+
+    await submit();
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Too many attempts. Try again in a few minutes.");
+    expect(alert).toHaveClass("border-danger", "border-l-4");
+  });
+
+  // implements FR-6 of add-feedback-color-tokens
+  it("shows check-email inside the success alert, with foreground text", async () => {
+    mockResult({ data: { status: "check-email", email: EMAIL } });
+    render(<SignUpForm />);
+
+    await submit();
+
+    const status = await screen.findByRole("status");
+    expect(status).toHaveClass("border-success", "border-l-4");
+    expect(status).toHaveTextContent("Check your email");
+    expect(status).toHaveTextContent(EMAIL);
+    // muted on surface is about 4.4:1 in light, below AA, so the body paragraph inherits foreground.
+    expect(status.querySelector(".text-muted")).toBeNull();
+  });
+});
+
 describe("SignUpForm", () => {
   afterEach(() => {
     vi.clearAllMocks();

@@ -1,0 +1,162 @@
+# Spec Delta
+
+## Purpose
+
+Defines the `danger` and `success` design tokens, the shared `Alert` primitive, and how every
+error and success message in the app uses them, so feedback is distinguishable from links and
+consistent across features.
+
+## ADDED Requirements
+
+### Requirement: Feedback tokens (FR-1)
+`src/app/globals.css` SHALL define `--danger` and `--success` for the light and dark themes and
+map them in `@theme inline` to `--color-danger` and `--color-success`.
+- Light: danger `#dc2626`, success `#15803d`.
+- Dark: danger `#f87171`, success `#4ade80`.
+
+#### Scenario: Token utilities resolve to the theme's value
+- **GIVEN** the app is running in the light colour scheme
+- **WHEN** an element uses `text-danger` or `text-success`
+- **THEN** its computed colour is `#dc2626` or `#15803d`
+- **AND** in the dark colour scheme it is `#f87171` or `#4ade80`
+- **AND** this is checked in a real browser (Gate 3, `getComputedStyle` under colour-scheme
+  emulation), since jsdom does not compute CSS colours
+
+### Requirement: Field errors in danger (FR-2)
+`AuthField` SHALL render its error text with `text-danger` and, when invalid, give its input
+the `aria-invalid:border-danger` and `aria-invalid:focus:border-danger` utilities, so an invalid
+field stays `danger` while focused. A valid field SHALL keep `focus:border-accent`.
+
+#### Scenario: Invalid field
+- **GIVEN** `AuthField` receives `error="Enter a valid email address."`
+- **WHEN** it renders
+- **THEN** the error paragraph has `text-danger` and the text "Enter a valid email address."
+- **AND** the input has `aria-invalid="true"`, the `aria-invalid:border-danger` utility, and
+  `aria-describedby` pointing at the error paragraph
+
+### Requirement: Alert primitive (FR-3)
+`src/shared/ui` SHALL export `Alert`, which takes `tone: "danger" | "success"`, `children`,
+and an optional `className`.
+- A `danger` alert SHALL render `role="alert"`; a `success` alert SHALL render `role="status"`.
+- Both SHALL have a 4px left border in the tone colour, the `surface` background, and body
+  text in `foreground`.
+- `Alert` SHALL use no hooks and no `"use client"` directive.
+
+#### Scenario: Danger alert
+- **GIVEN** `<Alert tone="danger">Boom</Alert>`
+- **WHEN** it renders
+- **THEN** exactly one `role="alert"` element contains "Boom"
+- **AND** it has the `border-l-4`, `border-danger`, `bg-surface`, and `text-foreground` utilities
+
+#### Scenario: Success alert
+- **GIVEN** `<Alert tone="success">Done</Alert>`
+- **WHEN** it renders
+- **THEN** exactly one `role="status"` element contains "Done"
+- **AND** it has the `border-l-4` and `border-success` utilities
+
+#### Scenario: Extra layout classes
+- **GIVEN** `<Alert tone="success" className="flex flex-col gap-2">`
+- **WHEN** it renders
+- **THEN** the element has `flex flex-col gap-2` in addition to the tone classes
+
+### Requirement: Form and list errors use the danger alert (FR-4)
+The form-level errors of `SignInForm` and `SignUpForm`, and the load error of `PoemList`, SHALL
+render inside `<Alert tone="danger">` with their current texts.
+
+#### Scenario: Wrong credentials
+- **GIVEN** `signInAction` returns the `invalid-credentials` failure
+- **WHEN** the sign-in form is submitted
+- **THEN** a `role="alert"` element with the `border-danger` utility reads "Incorrect email or
+  password."
+
+#### Scenario: Sign-up failure
+- **GIVEN** `signUpAction` returns the `rate-limited` failure
+- **WHEN** the sign-up form is submitted
+- **THEN** a `role="alert"` element with the `border-danger` utility reads "Too many attempts.
+  Try again in a few minutes."
+
+#### Scenario: Poems fail to load
+- **GIVEN** the poems query errors
+- **WHEN** `PoemList` renders
+- **THEN** a `role="alert"` element with the `border-danger` utility reads "Could not load
+  poems."
+
+### Requirement: Inline sign-out failure in danger (FR-5)
+The header's sign-out failure SHALL stay an inline `role="alert"` paragraph with `text-danger`.
+
+#### Scenario: Sign-out fails
+- **GIVEN** the reader is signed in and `signOutAction` returns `{ ok: false }`
+- **WHEN** the reader clicks "Sign out"
+- **THEN** a `role="alert"` element with `text-danger` reads "Couldn't sign out. Try again."
+
+### Requirement: Check-email success state (FR-6)
+The sign-up check-email state SHALL render inside `<Alert tone="success">`, keeping its heading
+"Check your email" and the text naming the address. All text inside the Alert, the paragraph
+included, SHALL be `foreground`: the paragraph SHALL NOT keep `text-muted`.
+
+#### Scenario: Sign-up succeeds
+- **GIVEN** `signUpAction` returns `{ status: "check-email", email: "reader@example.com" }`
+- **WHEN** the sign-up form is submitted
+- **THEN** a `role="status"` element with the `border-success` utility contains "Check your
+  email" and "reader@example.com"
+
+### Requirement: Design-system record refreshed (FR-7)
+After the implementation, `docs/design-system.md` SHALL be regenerated by the `design-system`
+skill from the code.
+- Its `danger` and `success` rows SHALL hold the FR-1 values and names.
+- `Alert` SHALL appear in the primitives table.
+- Its `Commit` line SHALL be the short hash of HEAD at the time the skill runs (the last
+  implementation commit, before the docs commit). Its `Source` line SHALL stay
+  `non-machine — skipped connecting a tool`.
+
+#### Scenario: Document reflects the tokens
+- **GIVEN** the implementation is complete
+- **WHEN** `docs/design-system.md` is read
+- **THEN** the `danger` row reads `#dc2626` / `#f87171` with `--danger` → `danger`
+- **AND** the `success` row reads `#15803d` / `#4ade80` with `--success` → `success`
+- **AND** `Alert` is listed with its path `src/shared/ui/Alert/Alert.tsx`
+
+### Requirement: Contrast (NFR-1)
+Feedback colours SHALL meet WCAG 2.1 AA.
+- `danger` and `success` text on `background`: at least 4.5:1 in both themes.
+- Alert body (`foreground` on `surface`): at least 4.5:1.
+- The alert's tone border against `surface`: at least 3:1.
+- `danger` text SHALL NOT be placed on `surface`.
+
+#### Scenario: Pairs meet their thresholds
+- **GIVEN** the token values in `src/app/globals.css`
+- **WHEN** contrast is computed with the WCAG relative-luminance formula
+- **THEN** `danger` and `success` text on `background` are at least 4.5:1 in both themes
+- **AND** `foreground` on `surface` is at least 4.5:1
+- **AND** the `danger` and `success` borders on `surface` are at least 3:1
+- **AND** the test asserts these thresholds only; the measured values in design D1 (e.g. 4.83 /
+  7.16 for danger text) are reference, not assertions
+
+### Requirement: Token-only colours (NFR-2)
+No component SHALL contain colour literals or Tailwind arbitrary colour values. Colours SHALL
+come only from token utilities.
+
+#### Scenario: Literal search
+- **GIVEN** the change is complete
+- **WHEN** production source in `src/`, excluding `src/app/globals.css` and every `tests/`
+  folder, is searched for hex, `rgb(`, or `hsl(` literals and `[#…]`-style arbitrary colour
+  values (tests may assert the expected hex values from FR-1)
+- **THEN** there are no matches
+
+### Requirement: Behaviour unchanged (NFR-3)
+Message texts, ARIA roles, and the `aria-invalid` / `aria-describedby` wiring SHALL be
+unchanged. Existing behavioural assertions SHALL keep passing.
+
+#### Scenario: Existing tests
+- **GIVEN** the change is complete
+- **WHEN** `npm run test:coverage` runs
+- **THEN** every pre-existing assertion on texts, roles, and ARIA wiring passes without being
+  edited
+
+### Requirement: Rendering modes unchanged (NFR-4)
+`npm run build` SHALL report the same route table as `main`.
+
+#### Scenario: Build route table
+- **GIVEN** the change is complete
+- **WHEN** `npm run build` runs
+- **THEN** `/` is static (1m/1h) and every other route keeps its mode

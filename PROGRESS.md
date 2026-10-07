@@ -2,7 +2,7 @@
 
 ## Current change
 
-- None in progress. add-ci-pipeline is complete and archived (archive PR open into `main`, branch `chore/archive-add-ci-pipeline`).
+- None in progress. add-feedback-color-tokens is complete and archived (archive PR into `feature/feedback-color-tokens` open, branch `chore/archive-add-feedback-color-tokens`); the parent then goes to `main`.
 
 ## Status
 
@@ -14,7 +14,8 @@
 
 ## Recently completed
 
-- add-ci-pipeline: all tasks done; 8.1 closed by PR #55 after the first scheduled deps-outdated run (37319694071); archived to `openspec/changes/archive/2026-10-06-add-ci-pipeline/` (main spec `ci-pipeline`); archive PR into `main` open.
+- add-feedback-color-tokens: 10/10 tasks; PRs #64 (groups 1–2) and #65 (group 3) merged into `feature/feedback-color-tokens`; Gate 3 passed in light and dark; archived to `openspec/changes/archive/2026-10-07-add-feedback-color-tokens/` (main spec `feedback-tones`); `docs/design-system.md` refreshed (Commit 724dc3f).
+- add-ci-pipeline: all tasks done; 8.1 closed by PR #55 after the first scheduled deps-outdated run (37319694071); archived to `openspec/changes/archive/2026-10-06-add-ci-pipeline/` (main spec `ci-pipeline`); archive PR #60 merged into `main`.
 - Chores merged into `main`: PR #56 (five patch upgrades), PR #57 (README), PR #58 (supabase config, sonnet-5-5 for every sonnet role, PROGRESS), PR #59 (seroval critical + source-map-js advisories: seroval via npm `overrides`, source-map-js via lockfile).
 - add-supabase-auth: 20/20 tasks; group PRs #43, #44, #48, #49, #50, #51, #52 merged into `feature/add-auth-flow`; Gate 3 passed against the real Supabase project; archived to `openspec/changes/archive/2026-10-05-add-supabase-auth/` (main spec `auth`); archive PR #53 merged; parent → `main` PR #54 merged.
 - audit-allowlist-braces (chore, outside OpenSpec): `deps:audit` runs `scripts/deps-audit.mjs` with an expiring allowlist; PR #45 merged into `main`, PR #47 merged into `feature/add-auth-flow`.
@@ -23,15 +24,16 @@
 
 ## Next steps
 
-1. Merge the add-ci-pipeline archive PR into `main`.
-2. Before deploying auth (the user's checklist): custom SMTP on a verified domain; the "Confirm sign up" template link `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`; Site URL and Redirect URLs per environment (consider separate dev and prod projects); "Confirm email" on; a smoke test with a real address.
-3. Optional: add `npm run deps:audit` to the weekly `deps-outdated.yml` so a new advisory surfaces without waiting for a PR or push.
-4. By 2026-11-02: check whether braces has shipped a fix for GHSA-vfj7-8cjw-p6xm. If so, upgrade and remove the allowlist entry; otherwise review the entry again and extend its expiry with a reason.
-5. When solid-js allows seroval 1.6 (check with `npm view solid-js@latest dependencies`), remove the `overrides` block from package.json (PR #59).
-6. For the future poems change: once accounts hold user data, revisit login-CSRF through a crafted `/auth/confirm` link (add-supabase-auth deep reviews); mitigations are a POST confirm step, or confirming without signing in.
-7. Optional tidy-up: remove the duplicate `deps-audit` (any-source) entry from ruleset 24259984.
-8. At deploy (deferred by the user; design.md rollout steps 3 and 5 of the archived add-contentful-home-greeting): create the Contentful webhook for the deployed URL, set CONTENTFUL_REVALIDATE_SECRET on the hosting platform, and close the 9.5 item in `docs/deferred.md`.
-9. Optional follow-up from add-route-states: a `global-error.tsx` for errors thrown by the root layout itself (deliberately out of scope there).
+1. Merge the add-feedback-color-tokens archive PR into `feature/feedback-color-tokens`, then open the PR `feature/feedback-color-tokens` → `main`.
+2. Remaining design-system discrepancies (each its own UI change, ideally via a Claude Design brief): two input styles, four link styles, two page-heading scales, no radius token, three loading patterns, offline handling.
+3. Before deploying auth (the user's checklist): custom SMTP on a verified domain; the "Confirm sign up" template link `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`; Site URL and Redirect URLs per environment (consider separate dev and prod projects); "Confirm email" on; a smoke test with a real address.
+4. Optional: add `npm run deps:audit` to the weekly `deps-outdated.yml` so a new advisory surfaces without waiting for a PR or push.
+5. By 2026-11-02: check whether braces has shipped a fix for GHSA-vfj7-8cjw-p6xm. If so, upgrade and remove the allowlist entry; otherwise review the entry again and extend its expiry with a reason.
+6. When solid-js allows seroval 1.6 (check with `npm view solid-js@latest dependencies`), remove the `overrides` block from package.json (PR #59).
+7. For the future poems change: once accounts hold user data, revisit login-CSRF through a crafted `/auth/confirm` link (add-supabase-auth deep reviews); mitigations are a POST confirm step, or confirming without signing in.
+8. Optional tidy-up: remove the duplicate `deps-audit` (any-source) entry from ruleset 24259984.
+9. At deploy (deferred by the user; design.md rollout steps 3 and 5 of the archived add-contentful-home-greeting): create the Contentful webhook for the deployed URL, set CONTENTFUL_REVALIDATE_SECRET on the hosting platform, and close the 9.5 item in `docs/deferred.md`.
+10. Optional follow-up from add-route-states: a `global-error.tsx` for errors thrown by the root layout itself (deliberately out of scope there).
 
 ## Paused changes
 
@@ -73,3 +75,5 @@
 - Clock-in: 2026-10-03T12:50:00Z (approx.) — Clock-out: 2026-10-03T14:02:30Z
 - Clock-in: 2026-10-05 (approx., session resumed) — Clock-out: 2026-10-05T15:50:20Z
 - Clock-in: 2026-10-06 (approx., session resumed) — Clock-out: 2026-10-06T15:32:53Z
+- Clock-in: 2026-10-07 (approx., session resumed) — Clock-out: 2026-10-07T11:37:33Z
+- Clock-in: 2026-10-07 (approx., session resumed) — Clock-out: 2026-10-07T11:50:02Z
