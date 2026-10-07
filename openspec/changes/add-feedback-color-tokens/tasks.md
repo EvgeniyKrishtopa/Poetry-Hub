@@ -2,17 +2,17 @@
 
 ## 1. Tokens and the `Alert` primitive (`src/app/globals.css`, `src/shared/ui/`) <!-- isolated -->
 
-- [ ] 1.1 (FR-1, NFR-1, NFR-2) Add `--danger` and `--success` to `:root` and to the
+- [x] 1.1 (FR-1, NFR-1, NFR-2) Add `--danger` and `--success` to `:root` and to the
   `prefers-color-scheme: dark` block in `src/app/globals.css` with the design D1 values, and map
   them in `@theme inline` as `--color-danger` and `--color-success`.
   - Verify `npm run build` compiles and the generated CSS contains the `text-danger` and
     `border-success` utilities once used.
-- [ ] 1.2 (FR-3, NFR-2) Implement `src/shared/ui/Alert/Alert.tsx` per design D2/D3 and export
+- [x] 1.2 (FR-3, NFR-2) Implement `src/shared/ui/Alert/Alert.tsx` per design D2/D3 and export
   it from `src/shared/ui/index.ts`.
   - The tone-to-border map is a named constant. There are no hooks and no `"use client"`.
   - Verify with `src/shared/ui/tests/Alert.test.tsx`: the danger, success, and extra-class
     scenarios of FR-3 (role, text, and utilities).
-- [ ] 1.3 (NFR-1) Record the contrast check.
+- [x] 1.3 (NFR-1) Record the contrast check.
   - In `src/shared/ui/tests/feedback-contrast.test.ts`, add a test-local `contrastRatio(hexA,
     hexB)` with the WCAG formula. No production module: nothing in the app computes contrast.
   - Read the token values by parsing `src/app/globals.css` (`--name: #hex;` in `:root` and in
