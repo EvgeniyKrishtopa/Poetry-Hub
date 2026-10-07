@@ -72,8 +72,8 @@ For any change with user-facing screens, mockups come from Claude Design before 
    `ui-plan` needs `designSystem.enabled: true` in `.claude/harness.json`.
 4. Gate 3 checks the implementation against every state shown in the mockups.
 
-**Design-system updates from Claude Design.** A link with changed tokens or primitives is a UI
-change, not a docs edit:
+**Design-system updates from Claude Design.** A Claude Design artifact link with changed tokens or
+primitives is a UI change, not a docs edit:
 - open an OpenSpec change with a before → after token table (light and dark) and the link;
 - implement it in `globals.css` and the affected components;
 - then re-run `design-system` to refresh `docs/design-system.md` from the code.
