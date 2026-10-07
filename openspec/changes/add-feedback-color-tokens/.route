@@ -1,0 +1,2 @@
+full
+# multi-module: yes (app/globals.css, shared/ui, features/auth, features/poems); schema: no; contract: no
