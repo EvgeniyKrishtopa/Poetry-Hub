@@ -10,7 +10,7 @@ inventing one. Read this before planning UI (`ui-plan`) or writing component sty
 Own primitives, no ready-made component library. Styling is Tailwind CSS v4 utilities plus
 CSS Modules for custom effects. Both read the same CSS variables defined in
 `src/app/globals.css`, which has a light and a dark (`prefers-color-scheme: dark`) set. The
-only shared primitive so far is `Button` in `src/shared/ui`.
+shared primitives so far are `Button` and `Alert` in `src/shared/ui`.
 
 ## 2. Design tokens
 
@@ -52,7 +52,7 @@ light theme, below WCAG AA for text. Inside an `Alert` the tone colours only the
 
 | State | Name in this project | What it looks like |
 | --- | --- | --- |
-| loading | `Loading` (`src/app/loading.tsx`, route level) | skeleton blocks (`bg-surface animate-pulse`, off under reduced motion) plus a screen-reader-only "Loading…" status. Inside components there is no shared pattern; see the discrepancies |
+| loading | `Loading` (`src/app/loading.tsx`, route level) | skeleton blocks (`bg-surface animate-pulse`, off under reduced motion) plus a screen-reader-only "Loading…" status. Inside components there is no shared pattern (`PoemList` shows the text "Loading poems…"; the header renders an empty placeholder) |
 | error | `RootError` (`src/app/error.tsx`, route level) | heading "Something went wrong", muted explanation, optional error digest in mono, and a "Try again" `Button`. Inside components, a danger `Alert` (form-level and list errors) or an inline `text-danger` paragraph (field errors, the header's sign-out failure) |
 | empty | no named component | muted text, e.g. "No poems match your search." in `PoemList` |
 | offline | none | not handled |
