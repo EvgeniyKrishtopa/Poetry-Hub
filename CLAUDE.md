@@ -81,6 +81,7 @@ Not auto-loaded — open the file before doing the matching kind of work.
 | `docs/architecture.md` | adding a feature or file, naming files, touching `shared/`, cross-feature imports |
 | `docs/state-management.md` | fetching data, adding a store, DAL work, server → client data flow |
 | `docs/styling.md` | writing or changing component styles |
+| `docs/design-system.md` | planning UI (`ui-plan`, a Claude Design brief) or picking tokens and primitives for a component |
 | `docs/testing.md` | writing or moving tests, coverage questions |
 | `docs/environment.md` | adding or reading an environment variable |
 | `docs/deferred.md` | finishing a task group, proposing a new change, preparing a deploy |
