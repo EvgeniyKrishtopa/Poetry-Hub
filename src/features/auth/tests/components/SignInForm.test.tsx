@@ -134,3 +134,36 @@ describe("SignInForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Incorrect email or password.");
   });
 });
+
+describe("SignInForm feedback tones", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // implements FR-2 of add-feedback-color-tokens
+  it("shows field errors in danger, with a danger border kept while focused", async () => {
+    mockResult({
+      validationErrors: { formErrors: [], fieldErrors: { email: ["Enter a valid email address."] } },
+    });
+    render(<SignInForm />);
+
+    await submit("not-an-email", "");
+
+    const email = await screen.findByLabelText("Email");
+    expect(email).toHaveAttribute("aria-invalid", "true");
+    expect(email).toHaveClass("aria-invalid:border-danger", "aria-invalid:focus:border-danger", "focus:border-accent");
+    expect(screen.getByText("Enter a valid email address.")).toHaveClass("text-danger");
+  });
+
+  // implements FR-4 of add-feedback-color-tokens
+  it("shows the wrong-credentials message inside the danger alert", async () => {
+    mockResult({ data: { status: "failed", failure: "invalid-credentials" } });
+    render(<SignInForm />);
+
+    await submit();
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Incorrect email or password.");
+    expect(alert).toHaveClass("border-danger", "border-l-4");
+  });
+});
