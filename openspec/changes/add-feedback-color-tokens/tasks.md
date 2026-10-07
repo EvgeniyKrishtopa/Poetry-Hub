@@ -25,24 +25,24 @@
 
 ## 2. Apply the tones (`src/features/auth`, `src/features/poems`) <!-- isolated -->
 
-- [ ] 2.1 (FR-2, NFR-3) `AuthField`: error text `text-accent` → `text-danger`, input
+- [x] 2.1 (FR-2, NFR-3) `AuthField`: error text `text-accent` → `text-danger`, input
   `aria-invalid:border-accent` → `aria-invalid:border-danger`, plus
   `aria-invalid:focus:border-danger`; a valid field keeps `focus:border-accent`.
   - Verify with `AuthField`/form tests: the FR-2 scenario, with the existing ARIA assertions
     unchanged.
-- [ ] 2.2 (FR-4, FR-6, NFR-3) `SignInForm` and `SignUpForm`: the form error renders through
+- [x] 2.2 (FR-4, FR-6, NFR-3) `SignInForm` and `SignUpForm`: the form error renders through
   `<Alert tone="danger">`, and the check-email state through
   `<Alert tone="success" className="flex flex-col gap-2">`, with texts unchanged.
   - Verify with `SignInForm.test.tsx` / `SignUpForm.test.tsx`: the FR-4 wrong-credentials and
     sign-up-failure scenarios, and the FR-6 scenario.
-- [ ] 2.3 (FR-5, NFR-3) `AuthStatus`: the sign-out failure paragraph `text-accent` →
+- [x] 2.3 (FR-5, NFR-3) `AuthStatus`: the sign-out failure paragraph `text-accent` →
   `text-danger`, still inline with `role="alert"`.
   - Verify with `AuthStatus.test.tsx`: the FR-5 scenario.
-- [ ] 2.4 (FR-4, NFR-3) `PoemList`: the load error renders through `<Alert tone="danger">` with
+- [x] 2.4 (FR-4, NFR-3) `PoemList`: the load error renders through `<Alert tone="danger">` with
   "Could not load poems.".
   - Verify with `PoemList.test.tsx`: the FR-4 poems scenario, mocking the query into its
     error state.
-- [ ] 2.5 (NFR-2, NFR-3, NFR-4) Verify statically and run the chain.
+- [x] 2.5 (NFR-2, NFR-3, NFR-4) Verify statically and run the chain.
   - The NFR-2 literal search prints nothing.
   - `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`
     all pass.

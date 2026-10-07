@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { Button } from "@/shared/ui";
+import { Alert, Button } from "@/shared/ui";
 
 import { signInAction } from "../../actions/auth.actions";
 import { getFailureMessage } from "../../model/auth-messages";
@@ -43,9 +43,8 @@ export function SignInForm({ initialError }: SignInFormProps) {
     // noValidate: the server-side schema is the only validation, so its errors are what the reader sees.
     <form action={formAction} noValidate className="flex w-full flex-col gap-4">
       {formError && (
-        <p role="alert" className="rounded-md bg-surface px-3 py-2 text-sm font-medium">
-          {formError}
-        </p>
+        // implements FR-4 of add-feedback-color-tokens
+        <Alert tone="danger">{formError}</Alert>
       )}
       <AuthField
         label="Email"

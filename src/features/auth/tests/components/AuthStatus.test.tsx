@@ -207,3 +207,28 @@ describe("AuthStatus", () => {
     expect(await screen.findByRole("link", { name: "Sign in" })).toBeInTheDocument();
   });
 });
+
+describe("AuthStatus feedback tones", () => {
+  beforeEach(() => {
+    vi.mocked(usePathname).mockReturnValue("/");
+    vi.mocked(useRouter).mockReturnValue({ refresh } as unknown as ReturnType<typeof useRouter>);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // implements FR-5 of add-feedback-color-tokens
+  it("shows the sign-out failure inline in danger", async () => {
+    vi.mocked(getSignedInEmail).mockResolvedValue(EMAIL);
+    vi.mocked(signOutAction).mockResolvedValue({ data: { ok: false } } as SignOutResult);
+    renderWidget();
+
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Sign out" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Couldn't sign out. Try again.");
+    expect(alert).toHaveClass("text-danger");
+    expect(alert.tagName).toBe("P");
+  });
+});

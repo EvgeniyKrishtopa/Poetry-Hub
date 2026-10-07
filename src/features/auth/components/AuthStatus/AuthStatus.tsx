@@ -76,7 +76,8 @@ export function AuthStatus() {
   return (
     <div className="flex items-center gap-3 text-sm">
       {signOutFailed && (
-        <p role="alert" className="font-medium text-accent">
+        // implements FR-5 of add-feedback-color-tokens: inline, a boxed Alert would break the header row
+        <p role="alert" className="font-medium text-danger">
           {SIGN_OUT_FAILED_MESSAGE}
         </p>
       )}

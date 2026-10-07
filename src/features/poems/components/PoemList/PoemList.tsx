@@ -1,5 +1,7 @@
 "use client";
 
+import { Alert } from "@/shared/ui";
+
 import { usePoemsQuery } from "../../api/poems.queries";
 import { filterPoems } from "../../model/filter-poems";
 import { usePoemsUiStore } from "../../model/poems-ui.store";
@@ -10,7 +12,8 @@ export function PoemList() {
   const searchQuery = usePoemsUiStore((state) => state.searchQuery);
 
   if (isPending) return <p className="text-muted">Loading poems…</p>;
-  if (isError) return <p role="alert">Could not load poems.</p>;
+  // implements FR-4 of add-feedback-color-tokens
+  if (isError) return <Alert tone="danger">Could not load poems.</Alert>;
 
   // Derived on render, not stored: server data + UI state -> visible list.
   const visiblePoems = filterPoems(poems, searchQuery);
