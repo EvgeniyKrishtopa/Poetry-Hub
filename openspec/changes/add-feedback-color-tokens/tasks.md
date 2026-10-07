@@ -50,11 +50,11 @@
 
 ## 3. Design-system record and browser check <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-7) Re-run the `design-system` skill (extract from code) and commit the refreshed
+- [x] 3.1 (FR-7) Re-run the `design-system` skill (extract from code) and commit the refreshed
   `docs/design-system.md`.
   - Verify the FR-7 scenario: the danger and success rows, `Alert` in the primitives table, and
     the `Commit` line set to the last implementation commit (HEAD when the skill ran).
-- [ ] 3.2 (FR-1, FR-2, FR-4, FR-6, NFR-1) Gate 3 (`web-qa`) in both colour schemes
+- [x] 3.2 (FR-1, FR-2, FR-4, FR-6, NFR-1) Gate 3 (`web-qa`) in both colour schemes
   (switched with Playwright's colour-scheme emulation):
   - FR-1: read `getComputedStyle` on a field error (`color`) and an alert's left border
     (`border-left-color`); they equal the FR-1 hex values in each scheme;
