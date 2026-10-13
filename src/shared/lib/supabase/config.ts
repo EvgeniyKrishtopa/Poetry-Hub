@@ -1,4 +1,5 @@
-// Not server-only: the browser client needs the same values, and both are public by design.
+// The Supabase URL and publishable key, read by the server client and the proxy's session refresh.
+// Both values are public by design.
 import { z } from "zod";
 
 import { SupabaseConfigError } from "./errors";

@@ -1,0 +1,33 @@
+import "server-only";
+
+import { connection } from "next/server";
+
+import { SupabaseConfigError } from "@/shared/lib/supabase";
+import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
+
+/**
+ * Whether the request carries a valid session, for the header (design D1). Returns a boolean,
+ * never claims, so no reader data enters the render tree. Never throws: every failure reads
+ * as signed out.
+ */
+// implements FR-3 of remove-browser-session-read
+// implements FR-8 of add-supabase-auth: invalid config reads as signed out
+export async function isSignedIn(): Promise<boolean> {
+  // First and outside the try: without it, a build with no Supabase env would throw the config
+  // error before `cookies()`, resolve `false` during prerender, and bake "Sign in" into the shell.
+  await connection();
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.getClaims();
+    // An error result (an expired or bad token) is routine, so it isn't logged.
+    return !error && data?.claims != null;
+  } catch (error) {
+    // The proxy already logs a missing config on every request. Anything else is an outage,
+    // logged by name only.
+    if (!(error instanceof SupabaseConfigError)) {
+      console.error(`[auth] session check failed: ${error instanceof Error ? error.name : typeof error}`);
+    }
+    return false;
+  }
+}
