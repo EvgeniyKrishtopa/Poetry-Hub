@@ -44,8 +44,9 @@ context: |
   .claude/docs/review-gates.md for the gates and their order.
   Poetry Hub is a web app where readers discover, read, and collect poems.
   Key nouns: Poem (title, author, lines), Author, Collection (a reader's
-  saved poems), Reader. Currently a learning/portfolio project; no auth or
-  backend yet (mock data).
+  saved poems), Reader. Learning/portfolio project. Auth and session use
+  Supabase (@supabase/ssr: login, signup, auth/confirm routes); editorial
+  content comes from Contentful; user-editable content comes later.
 
 rules:
   proposal:
