@@ -52,7 +52,7 @@ commit leaves an orphan export for `knip` or a header without a session part (de
 
 ## 2. Docs and the decision record (`docs/`, `README.md`) <!-- isolated -->
 
-- [ ] 2.1 (FR-7) Update `docs/architecture.md` (layout line: header = site link + server-read
+- [x] 2.1 (FR-7) Update `docs/architecture.md` (layout line: header = site link + server-read
   session part; auth feature line; `supabase/` line: lists only what the folder holds now,
   without mentioning the removed client — negations count, FR-7), `docs/environment.md`,
   `docs/state-management.md` if it mentions the session query, and `README.md` so none
@@ -60,11 +60,11 @@ commit leaves an orphan export for `knip` or a header without a session part (de
   - Verify by reading each file, then
     `grep -rn -i "browser client\|getSignedInEmail\|sessionQueryOptions\|signed-in email" docs README.md src --exclude-dir=tests`
     matches only `docs/decisions/` and `docs/design-system.md` (fixed by 2.2).
-- [ ] 2.2 (FR-7) After group 1 is committed, re-run the `design-system` skill (extract from code)
+- [x] 2.2 (FR-7) After group 1 is committed, re-run the `design-system` skill (extract from code)
   so `docs/design-system.md` describes the header as it now is.
   - Verify the same grep finds nothing in `docs/design-system.md` and its `Commit` line is the
     short hash of this change's last implementation commit.
-- [ ] 2.3 (FR-7) Write `docs/decisions/0004-*.md` with `record-decision` per design D7: the
+- [x] 2.3 (FR-7) Write `docs/decisions/0004-*.md` with `record-decision` per design D7: the
   server-side read, no browser client, partial prerendering; it names ADR 0003's "Session
   freshness and the header" bullet as superseded and covers the three D7 points. ADR 0003 is
   not edited.
