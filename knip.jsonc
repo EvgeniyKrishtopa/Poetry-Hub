@@ -7,6 +7,8 @@
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
-    "@fission-ai/openspec"
+    "@fission-ai/openspec",
+    // Supabase CLI for the local stack (`npx supabase start`, reads supabase/config.toml), never imported or referenced in a script.
+    "supabase"
   ]
 }

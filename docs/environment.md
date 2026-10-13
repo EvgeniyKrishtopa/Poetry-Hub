@@ -11,6 +11,7 @@ Read before adding, renaming, or reading an environment variable.
   - Only the publishable key is ever used. Never add a secret or service-role key; nothing in `src/` may read one.
   - URL rule: `https://` with any host, or `http://` only for `localhost` / `127.0.0.1` (a local Supabase CLI instance).
   - Validated lazily on each client creation by `getSupabaseConfig()` in `src/shared/lib/supabase/config.ts`; a bad value raises `SupabaseConfigError` naming the variable, never its value.
+  - Local stack: `npx supabase start` (needs Docker; reads `supabase/config.toml`; the CLI is a pinned devDependency). `npx supabase status` prints the local API URL and publishable key to copy into `.env.local`; never commit them.
 - Supabase dashboard setup (manual; see the Migration Plan in `openspec/changes/add-supabase-auth/design.md`, or its archived copy):
   1. Authentication → URL Configuration: Site URL `http://localhost:3000` for dev (the deployed URL at deploy time); add both to Redirect URLs.
   2. Authentication → Emails → "Confirm sign up": the link `href` becomes `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`.
