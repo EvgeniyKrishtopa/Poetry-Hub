@@ -18,11 +18,15 @@ describe("SignOutButton", () => {
 
   // implements FR-4 of remove-browser-session-read
   it("calls the action and shows no alert when sign-out succeeds", async () => {
-    vi.mocked(signOutAction).mockResolvedValue({ data: { ok: true } } as SignOutResult);
+    let settle: (result: SignOutResult) => void = () => {};
+    vi.mocked(signOutAction).mockReturnValue(new Promise((resolve) => (settle = resolve)));
     render(<SignOutButton />);
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Sign out" }));
+    expect(screen.getByRole("button", { name: "Sign out" })).toBeDisabled();
+    settle({ data: { ok: true } } as SignOutResult);
 
+    // Enabled again means the transition has settled, so a failure alert would already show.
     await vi.waitFor(() => expect(screen.getByRole("button", { name: "Sign out" })).toBeEnabled());
     expect(signOutAction).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
