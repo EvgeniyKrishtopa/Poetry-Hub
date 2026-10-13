@@ -1,2 +1,15 @@
+# pre-push: a push that changes only the harness log is not tested
+only_log=yes
+while read -r _ local_sha _ remote_sha; do
+  case "$local_sha" in *[!0]*) ;; *) continue ;; esac
+  case "$remote_sha" in *[!0]*) ;; *) only_log=no; break ;; esac
+  changed=$(git diff --name-only "$remote_sha" "$local_sha" 2>/dev/null) || { only_log=no; break; }
+  if [ -n "$(printf '%s\n' "$changed" | grep -vxE '\.claude/harness-log(\.jsonl|/[^/]+\.jsonl)')" ]; then only_log=no; break; fi
+done
+if [ "$only_log" = yes ]; then
+  echo "pre-push: only the harness log changed — tests skipped"
+  exit 0
+fi
+
 # implements FR-7 of add-ci-pipeline: the audit threshold lives only in the deps:audit script, shared with CI
 npm run test:coverage && npm run deps:audit

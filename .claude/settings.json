@@ -34,7 +34,9 @@
       "Bash(git log:*)",
       "Bash(gh pr create:*)",
       "Edit(./.claude/docs/**)",
-      "Edit(./.claude/harness.json)"
+      "Edit(./.claude/harness.json)",
+      "Bash(npx vitest run:*)",
+      "Bash(npx playwright test:*)"
     ],
     "deny": [
       "Read(**/.env)",
