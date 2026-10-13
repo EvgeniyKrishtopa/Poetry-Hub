@@ -35,8 +35,10 @@ by design (see below).
   own `deep-review` name: a security and architecture-as-built pass on top
   of Gates 4/5, spawned only when a second 0-token prefilter finds a risk
   signal in the diff (auth, permissions, payments, migrations, config,
-  secrets, uploads). Most runs skip it, and the skip is logged too. It is
-  not a seventh gate — it pauses on a CONFIRMED finding exactly like Gate 4.
+  secrets, uploads, CI/CD configuration — `.github/workflows/`,
+  `Dockerfile`, `vercel.json` and the like). Most runs skip it, and the skip
+  is logged too. It is not a seventh gate — it pauses on a CONFIRMED
+  finding exactly like Gate 4.
 - **Gate 6 — harness-review**, on the run's last group with pending tasks,
   before its commit — but only when a 0-token precondition check finds this
   run actually touched something it could review (`CLAUDE.md`/`AGENTS.md`,
@@ -58,8 +60,12 @@ change as a whole — not any one of them in isolation:
    dependency-vulnerability audit — `npm audit` or its
    equivalent, blocking on a high-or-above severity finding). Runs on every
    push. The integration link exists only when `.claude/harness.json` has an
-   optional `scripts.testIntegration`; a project whose integration tests run
-   in the same command as the rest has no second link and needs none. The audit is blocking, not informational: an install command can't
+   optional `tests.integration.script`; a project whose integration tests run
+   in the same command as the rest has no second link and needs none. With
+   `tests.integration.healthCheck` set, the services are checked right before
+   that link, and a stopped stack blocks the push with one line naming the
+   command that starts it. A push that changes only the harness log is let
+   through untested. The audit is blocking, not informational: an install command can't
    add a vulnerable package in the first place (`permissions.deny` blocks
    every package manager's install commands), so this is the check for what
    was already in the lockfile, including transitively. The only exceptions
@@ -71,8 +77,12 @@ change as a whole — not any one of them in isolation:
    backend/API-only), in which case Static and Runtime are the whole
    contract for that change. Like the first two layers, it now leaves files
    behind: a passed flow the human agreed to keep is saved as a
-   `@playwright/test` scenario under `webQaScenariosDir`, and every later
-   Gate 3 run replays the accumulated set before its own click pass.
+   `@playwright/test` scenario under `tests.e2e.dir` (default
+   `tests/web-qa-scenarios`), and every later
+   Gate 3 run replays the accumulated set before its own click pass. Those
+   scenarios are also replayed before push, not only in the next browser
+   pass: a change's own on each of its runs, and on its last run every
+   older one whose pages the change touched.
 
 **Tests come from a different actor than the code, when this project opts
 in.** With `makerChecker.enabled` in `.claude/harness.json`, a task group's
@@ -123,9 +133,8 @@ for this — just don't invoke it for the trial window) or downgrade one
 gate's model via `.claude/harness.json`'s `models.*`, run the normal flow of
 changes for that stretch,
 then compare the `harness-review` skill's stats summary (the
-`${CLAUDE_PLUGIN_ROOT}/skills/harness-review/references/harness-stats.md`
-procedure, reading this repo's own
-`.claude/harness-log.jsonl`) from before and after. If nothing measurable
+`references/harness-stats.md` procedure inside that skill, reading this repo's own
+log under `.claude/harness-log/`) from before and after. If nothing measurable
 changed — verdict distribution, escalation count, `reviewConfidence: low`
 share, `tokensTotal` sum/median (a cheaper-per-step model can still cost
 more if it needs several times the steps; `durationMs` alone won't show

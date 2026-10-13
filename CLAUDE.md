@@ -97,7 +97,8 @@ Not auto-loaded — open the file before doing the matching kind of work.
 
 - @.claude/docs/git-conventions.md — branch/commit conventions. This is
   also the documented authorization for `opsx-apply-git` to commit
-  automatically at task-group and archive boundaries (its §3/§5.3) —
+  automatically at task-group and archive boundaries (its §3/§5.3) and
+  at the end of a chore run (`references/chore-run.md`) —
   without this reference, that override isn't discoverable and shouldn't
   be assumed.
 - @.claude/docs/review-gates.md — the seven automated review gates and
@@ -121,3 +122,4 @@ Not auto-loaded — open the file before doing the matching kind of work.
   outlives a single change; see `docs/decisions/NNNN-*.md` if the
   directory exists yet. Not auto-loaded — read the relevant file when a
   past decision might be in play.
+- docs/deferred.md — spec points a group left blocked/skipped/obsolete; absent until the first one.
