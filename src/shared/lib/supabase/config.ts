@@ -29,7 +29,7 @@ const supabaseEnvSchema = z.object({
  * Throws `SupabaseConfigError` naming the offending variables, never their values.
  */
 export function getSupabaseConfig(): SupabaseConfig {
-  // Literal `process.env.NEXT_PUBLIC_*` accesses: Next inlines only these into the browser bundle.
+  // Literal `process.env.NEXT_PUBLIC_*` accesses: Next inlines only literal accesses, never dynamic lookups.
   const parsed = supabaseEnvSchema.safeParse({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
