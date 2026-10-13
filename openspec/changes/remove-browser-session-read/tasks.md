@@ -73,20 +73,20 @@ commit leaves an orphan export for `knip` or a header without a session part (de
 
 ## 3. Verification <!-- judgement-heavy -->
 
-- [ ] 3.1 (NFR-1) Run `npm run build` on the branch and on its merge-base with `main`
+- [x] 3.1 (NFR-1) Run `npm run build` on the branch and on its merge-base with `main`
   (`git merge-base HEAD origin/main`, built in a scratch worktree) and compare: the same routes;
   `/`, `/login`, `/signup`, `/_not-found` are `◐`; `/api/revalidate` and `/auth/confirm` stay
   `ƒ`; `/` shows Revalidate 1m and Expire 1h.
-- [ ] 3.2 (NFR-2, NFR-3) `git diff main -- package.json` shows no dependency change;
+- [x] 3.2 (NFR-2, NFR-3) `git diff main -- package.json` shows no dependency change;
   `npm run knip` reports nothing; `npm run test:coverage` meets 80%.
-- [ ] 3.3 (FR-1, FR-2, FR-4) Gate 3 (`web-qa`), on each of `/`, `/login`, and `/signup`
+- [x] 3.3 (FR-1, FR-2, FR-4) Gate 3 (`web-qa`), on each of `/`, `/login`, and `/signup`
   separately: signed out, the header shows "Sign in" (→ `/login`) and no "Sign out"; signed in
   (visit the page after signing in), it shows "Sign out", no "Sign in", and no email; clicking
   "Sign out" on that page turns the header back into "Sign in" without a full reload. Record a `@playwright/test` scenario `header-sign-in-link` (tagged
   `@remove-browser-session-read`) asserting the signed-out header's "Sign in" link on `/`.
   "Any page" and the invalid-config scenario are closed by the shared layout plus the unit
   tests of 1.1 and 1.3, not by a run with broken env values.
-- [ ] 3.4 (FR-6) `npx openspec validate remove-browser-session-read --strict` passes, and once
+- [x] 3.4 (FR-6) `npx openspec validate remove-browser-session-read --strict` passes, and once
   archived the `auth` spec has no browser-client or browser-session-read wording,
   `feedback-tones` FR-5 is unchanged, and `feedback-tones` NFR-4 no longer requires `/` to be
   static (it defers to `auth` NFR-2).
