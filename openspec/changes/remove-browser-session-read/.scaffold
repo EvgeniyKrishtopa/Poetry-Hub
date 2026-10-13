@@ -1,0 +1,2 @@
+no
+# new module: no (dal/ and components/ already exist in features/auth); new boundary crossing: no (reuses the existing server client and Server Action; no new route handler, endpoint, or external client)
