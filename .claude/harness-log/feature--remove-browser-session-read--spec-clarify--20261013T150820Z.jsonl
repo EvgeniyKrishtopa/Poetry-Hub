@@ -1,0 +1,5 @@
+{"ts":"2026-10-13T15:08:20Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"feedback-tones NFR-3 scope: all text/role assertions vs feedback messages only","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-13T15:08:20Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"SignOutButton: keep disabled-while-pending and clear-alert-on-retry or not","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-13T15:08:20Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"FR-7: does a negation like 'no browser client' count as describing it","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-13T15:08:20Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"isSignedIn: log a getClaims error result or not","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-13T15:08:20Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"Gate 3 signed-in and sign-out checks: on all three pages or only /","outcome":"fixed","ruleNumber":""}

@@ -7,7 +7,7 @@ Read before adding a feature, adding a file to `shared/`, or importing across fe
 ```
 src/
 ├── app/                      # Routing only: pages, layouts, route handlers, providers
-│   ├── layout.tsx            # Root shell: html/body/Providers + header (site link, AuthStatus)
+│   ├── layout.tsx            # Root shell: html/body/Providers + header (site link + session part read on the server inside <Suspense>)
 │   ├── error.tsx             # Client error boundary: generic copy + digest, retry() (covers both groups)
 │   ├── not-found.tsx         # 404 screen for unmatched URLs (covers both groups)
 │   ├── loading.tsx           # Neutral loading state for any segment (covers both groups)
@@ -24,9 +24,9 @@ src/
 │   ├── providers.tsx         # QueryClientProvider (+ devtools)
 │   └── globals.css           # Tailwind import + design tokens
 ├── features/                 # One folder per business feature
-│   ├── auth/                 # Sign-up, sign-in, sign-out, header session widget
+│   ├── auth/                 # Sign-up, sign-in, sign-out, the header's "Sign in" / "Sign out" part
 │   │   ├── actions/          # Server Actions ("use server", *.actions.ts) + the feature's action client
-│   │   └── …                 # api/, dal/, model/, components/, tests/, index.ts (roles as below)
+│   │   └── …                 # dal/ (confirmSignUp, isSignedIn), model/, components/, tests/, index.ts (roles as below)
 │   └── poems/                # The folder roles every feature can use:
 │       ├── api/              # Fetchers (*.api.ts) + query keys/options/hooks (*.queries.ts)
 │       ├── dal/              # Server-only data access for Server Components (no role suffix)
@@ -38,7 +38,7 @@ src/
     ├── ui/                   # Reusable UI primitives (Button, …) + index.ts
     ├── lib/                  # Infrastructure helpers (query-client, …)
     │   ├── contentful/       # Server-only Contentful GraphQL client, cached with "use cache" (every module: import "server-only")
-    │   └── supabase/         # Supabase clients: index.ts client-safe (browser client, SupabaseConfigError); server.ts and session.ts server-only
+    │   └── supabase/         # Supabase: index.ts client-safe (SupabaseConfigError); server.ts (server client) and session.ts (proxy refresh) server-only
     └── config/               # App-wide constants
 ```
 

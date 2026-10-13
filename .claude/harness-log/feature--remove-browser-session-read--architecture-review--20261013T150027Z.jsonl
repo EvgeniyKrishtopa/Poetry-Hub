@@ -1,0 +1,1 @@
+{"ts":"2026-10-13T15:00:27Z","change":"remove-browser-session-read","group":"full","gate":"architecture-review","verdict":"plausible","skipReason":"","durationMs":86237,"tokensTotal":61482,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}

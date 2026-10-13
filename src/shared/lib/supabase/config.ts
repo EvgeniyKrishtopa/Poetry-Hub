@@ -1,4 +1,5 @@
-// Not server-only: the browser client needs the same values, and both are public by design.
+// The Supabase URL and publishable key, read by the server client and the proxy's session refresh.
+// Both values are public by design.
 import { z } from "zod";
 
 import { SupabaseConfigError } from "./errors";
@@ -28,7 +29,7 @@ const supabaseEnvSchema = z.object({
  * Throws `SupabaseConfigError` naming the offending variables, never their values.
  */
 export function getSupabaseConfig(): SupabaseConfig {
-  // Literal `process.env.NEXT_PUBLIC_*` accesses: Next inlines only these into the browser bundle.
+  // Literal `process.env.NEXT_PUBLIC_*` accesses: Next inlines only literal accesses, never dynamic lookups.
   const parsed = supabaseEnvSchema.safeParse({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,

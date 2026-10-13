@@ -1,0 +1,2 @@
+full
+# more than one module: yes (features/auth, shared/lib/supabase, app/layout); schema change: no; contract change: yes (removes exported getSupabaseBrowserClient; AuthStatus becomes a Server Component; auth spec header and rendering-mode requirements change)

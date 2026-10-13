@@ -1,0 +1,7 @@
+{"ts":"2026-10-13T14:35:36Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"FR-5 docs scope: grep-clean vs no doc describes the removed widget/sign-out","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-13T14:35:36Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"FR-1 'no Client Component in the header' vs next/link","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-13T14:35:36Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"feedback-tones NFR-3 'assertions pass unedited' vs deleting sign-out assertions","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-13T14:35:36Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"traceability markers: keep FR-7 of add-supabase-auth vs mark FR-1 of this change","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-13T14:35:36Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"auth FR-7 'reads no session on the server' vs proxy refresh (FR-6)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-13T14:35:36Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"evidence for header 'any page' and invalid-config scenarios","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-13T14:35:36Z","change":"remove-browser-session-read","kind":"finding","gate":"spec-clarify","finding":"NFR-1 route table 'equals' and its baseline","outcome":"fixed","ruleNumber":""}

@@ -1,6 +1,7 @@
 "use server";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { SupabaseConfigError } from "@/shared/lib/supabase";
@@ -63,11 +64,16 @@ export const signUpAction = authActionClient
   });
 
 // implements FR-7 of add-supabase-auth
+// implements FR-4 of remove-browser-session-read
 export const signOutAction = authActionClient.action(async (): Promise<SignOutResult> => {
   const client = await createClientOrFailure();
   if ("failure" in client) return { ok: false };
 
   // `local` ends this device's session only; the default `global` would sign out everywhere.
   const { error } = await client.supabase.auth.signOut({ scope: "local" });
-  return { ok: !error };
+  if (error) return { ok: false };
+
+  // Re-renders the server tree with the cleared cookies, so the header shows "Sign in" (design D4).
+  refresh();
+  return { ok: true };
 });
