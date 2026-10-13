@@ -9,7 +9,7 @@ Web app for discovering, reading, and collecting poems.
 - **On-demand revalidation** — `POST /api/revalidate` is a Contentful publish webhook that expires all Contentful-cached fetches immediately. It is authenticated by a shared secret and fails closed when the secret is unset.
 - **Route groups** — `(public)` holds the home page; `(authorized)` is an empty layout reserved for future signed-in routes. URLs are unaffected.
 - **Route states** — branded root-level not-found (404), error, and loading screens.
-- **Authentication** (Supabase Auth, email and password) — `/signup`, `/login`, email confirmation through `GET /auth/confirm`, and sign-out from the header. Credentials go through Server Actions built with `next-safe-action`, validated with Zod on the server. The header shows the signed-in email; it reads the session in the browser only, so `/` stays cached and identical for every reader. See [ADR 0003](docs/decisions/0003-supabase-auth-and-content-split.md).
+- **Authentication** (Supabase Auth, email and password) — `/signup`, `/login`, email confirmation through `GET /auth/confirm`, and sign-out from the header. Credentials go through Server Actions built with `next-safe-action`, validated with Zod on the server. The header shows "Sign in" or "Sign out": it reads the session on the server, per request, inside a Suspense boundary, while the rest of each page (including `/`'s cached body) stays in the prerendered shell. See [ADR 0003](docs/decisions/0003-supabase-auth-and-content-split.md) and [ADR 0004](docs/decisions/0004-server-side-header-session.md).
 - **Session refresh + security headers** — `src/proxy.ts` refreshes the Supabase session on every page request, then adds `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`, and a restrictive `Permissions-Policy`.
 
 Not yet built: route protection, password reset, a real poems backend (Supabase tables), poem detail pages, and collections.
@@ -45,7 +45,7 @@ npm run dev                  # http://localhost:3000
 | `NEXT_PUBLIC_SUPABASE_URL` | for auth | Project URL, exactly `https://<project-ref>.supabase.co` (plain `http://` only for `localhost`/`127.0.0.1`) |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | for auth | The `sb_publishable_…` key. Never a secret or service-role key |
 
-The Contentful variables are server-only — never prefix them with `NEXT_PUBLIC_`. The two Supabase values are public by design (the browser client needs them). Without Contentful credentials the home page still renders, using the static greeting; without valid Supabase values the header shows "Sign in" and the auth forms report that sign-in is unavailable. Webhook setup, secret rotation, and the Supabase dashboard setup (confirmation email template, URL configuration, rate limits) are described in [`docs/environment.md`](docs/environment.md).
+The Contentful variables are server-only — never prefix them with `NEXT_PUBLIC_`. The two Supabase values are public by design (the publishable key is meant to be exposed). Without Contentful credentials the home page still renders, using the static greeting; without valid Supabase values the header shows "Sign in" and the auth forms report that sign-in is unavailable. Webhook setup, secret rotation, and the Supabase dashboard setup (confirmation email template, URL configuration, rate limits) are described in [`docs/environment.md`](docs/environment.md).
 
 ## Scripts
 
@@ -81,11 +81,11 @@ src/
     api/revalidate/
     auth/confirm/ sign-up email link handler
   features/       business features, each imported only through its index.ts
-    auth/         sign-up, sign-in, sign-out: actions/ (Server Actions), api/, dal/, model/, components/
+    auth/         sign-up, sign-in, sign-out: actions/ (Server Actions), dal/, model/, components/
     home/         CMS greeting: dal/ (server-only), model/, components/
     poems/        poems list and search: api/, model/, components/
   shared/         feature-agnostic code; never imports from features/ or app/
-    config/  lib/ (Contentful client, Supabase clients, query client)  ui/
+    config/  lib/ (Contentful client, Supabase server client, query client)  ui/
   proxy.ts        session refresh + security headers
 ```
 
