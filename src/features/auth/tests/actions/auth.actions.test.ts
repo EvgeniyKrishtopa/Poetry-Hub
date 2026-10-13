@@ -1,5 +1,6 @@
 // @vitest-environment node
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -13,6 +14,8 @@ import type { AuthActionResult, SignInResult, SignOutResult, SignUpResult } from
 vi.mock("@/shared/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(),
 }));
+
+vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
 /** Shaped like Next's real redirect error, which next-safe-action recognizes and rethrows. */
 const REDIRECT_DIGEST = "NEXT_REDIRECT;replace;/;307;";
@@ -178,24 +181,27 @@ describe("auth actions", () => {
 
   describe("signOutAction", () => {
     // implements FR-7 of add-supabase-auth
-    it("signs out this device only and returns ok", async () => {
+    // implements FR-4 of remove-browser-session-read
+    it("signs out this device only, refreshes the server tree, and returns ok", async () => {
       auth.signOut.mockResolvedValue({ error: null });
 
       const result: AuthActionResult<SignOutResult> = await signOutAction();
 
       expect(auth.signOut).toHaveBeenCalledWith({ scope: "local" });
+      expect(refresh).toHaveBeenCalledTimes(1);
       expect(result.data).toEqual({ ok: true });
     });
 
-    it("returns ok: false when Supabase fails to sign out", async () => {
+    it("returns ok: false without refreshing when Supabase fails to sign out", async () => {
       auth.signOut.mockResolvedValue({ error: authError("unexpected_failure", 500) });
 
       const result = await signOutAction();
 
       expect(result.data).toEqual({ ok: false });
+      expect(refresh).not.toHaveBeenCalled();
     });
 
-    it("returns ok: false when the config is invalid", async () => {
+    it("returns ok: false without refreshing when the config is invalid", async () => {
       vi.mocked(createSupabaseServerClient).mockRejectedValue(
         new SupabaseConfigError(["NEXT_PUBLIC_SUPABASE_URL"]),
       );
@@ -204,6 +210,7 @@ describe("auth actions", () => {
 
       expect(result.data).toEqual({ ok: false });
       expect(auth.signOut).not.toHaveBeenCalled();
+      expect(refresh).not.toHaveBeenCalled();
     });
   });
 });

@@ -5,7 +5,7 @@
 One group on purpose: the browser read path and its replacement swap in the same commit, so no
 commit leaves an orphan export for `knip` or a header without a session part (design D5).
 
-- [ ] 1.1 (FR-3) Add `src/features/auth/dal/is-signed-in.ts` with
+- [x] 1.1 (FR-3) Add `src/features/auth/dal/is-signed-in.ts` with
   `isSignedIn(): Promise<boolean>` per design D1 (`server-only`, `await connection()` first and
   outside any `try`, `getClaims` through `createSupabaseServerClient`, never throws, non-config
   errors logged by name only); export it from `src/features/auth/index.ts`.
@@ -13,12 +13,12 @@ commit leaves an orphan export for `knip` or a header without a session part (de
     before the server client is created, also when the config is invalid; claims → `true`; no
     claims, an error result, a thrown `SupabaseConfigError`, and another throw → `false`; the
     error result and the config error are not logged, and the other throw logs only its name.
-- [ ] 1.2 (FR-4) In `signOutAction`, call `refresh()` from `next/cache` after a successful
+- [x] 1.2 (FR-4) In `signOutAction`, call `refresh()` from `next/cache` after a successful
   `signOut({ scope: "local" })`, before returning `{ ok: true }` (design D4).
   - Verify in `tests/actions/auth.actions.test.ts`: success → `signOut` called with
     `scope: "local"` and `refresh` called once; Supabase error and config error →
     `{ ok: false }` and `refresh` not called. Sign-in and sign-up action tests stay unedited.
-- [ ] 1.3 (FR-1, FR-2, FR-4) Rewrite `components/AuthStatus/AuthStatus.tsx` as a synchronous
+- [x] 1.3 (FR-1, FR-2, FR-4) Rewrite `components/AuthStatus/AuthStatus.tsx` as a synchronous
   presentational component with a `signedIn: boolean` prop (no `"use client"`, no DAL call)
   and add `components/SignOutButton/SignOutButton.tsx` (`"use client"`) per design D2. Remove `useSessionRefreshOnNavigation`, the query client, and `router.refresh()`.
   Replace the `FR-7 of add-supabase-auth` markers in these files with this change's FR markers
@@ -30,7 +30,7 @@ commit leaves an orphan export for `knip` or a header without a session part (de
     alert; `{ ok: false }`, a `serverError`, and a rejected call → "Sign out" still shown and a
     `role="alert"` element with `text-danger` reading "Couldn't sign out. Try again."; the
     button is disabled while the action is pending; a retry that succeeds clears the alert.
-- [ ] 1.4 (FR-1, FR-3) In `src/app/layout.tsx`, add the async `HeaderSession` wrapper
+- [x] 1.4 (FR-1, FR-3) In `src/app/layout.tsx`, add the async `HeaderSession` wrapper
   (`<AuthStatus signedIn={await isSignedIn()} />`) and render it inside
   `<Suspense fallback={<div aria-hidden="true" className="min-w-24" />}>` (design D3), and
   rewrite the header comment: the session part is read on the server inside the boundary
@@ -39,7 +39,7 @@ commit leaves an orphan export for `knip` or a header without a session part (de
   - Verify `npm run typecheck` passes and `npm run build` succeeds both with and without the
     Supabase env (because `isSignedIn` calls `connection()` first, a header outside the
     boundary would fail either build), and `/` shows `◐` in both.
-- [ ] 1.5 (FR-5, FR-7) Delete `src/features/auth/api/` (`auth.api.ts`, `auth.queries.ts`) and
+- [x] 1.5 (FR-5, FR-7) Delete `src/features/auth/api/` (`auth.api.ts`, `auth.queries.ts`) and
   `tests/api/auth.api.test.ts`; delete `src/shared/lib/supabase/browser.ts` and
   `tests/browser.test.ts`; `src/shared/lib/supabase/index.ts` exports only
   `SupabaseConfigError` (update its header comment); rewrite the first-line comment of
