@@ -6,10 +6,11 @@ import type { AuthorAboutProps } from "./AuthorAbout.types";
 
 /** About rendered from Markdown by an element allowlist, raw HTML skipped (NFR-1). */
 export function AuthorAbout({ markdown, align }: AuthorAboutProps) {
-  const alignment = align === "left" ? "" : styles.inlineLists;
+  const listMarkerClass = align === "left" ? undefined : styles.inlineLists;
+  const className = [styles.about, listMarkerClass, ALIGN_CLASSES[align]].filter(Boolean).join(" ");
 
   return (
-    <div className={`${styles.about} ${alignment} ${ALIGN_CLASSES[align]}`}>
+    <div className={className}>
       {/* skipHtml drops raw HTML outright; unwrapDisallowed keeps a link's or heading's text. */}
       <Markdown skipHtml allowedElements={ABOUT_ALLOWED_ELEMENTS} unwrapDisallowed components={ABOUT_COMPONENTS}>
         {markdown}
