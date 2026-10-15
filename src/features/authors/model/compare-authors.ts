@@ -5,11 +5,12 @@ import type { PublicAuthor } from "./author.types";
  * orders a character outside the BMP before U+E000–U+FFFF.
  */
 function compareByCodePoint(a: string, b: string): number {
-  const left = [...a];
-  const right = [...b];
+  // Spreading a string yields one non-empty string per code point, so `codePointAt(0)` is always set.
+  const left = [...a].map((char) => char.codePointAt(0) as number);
+  const right = [...b].map((char) => char.codePointAt(0) as number);
   const length = Math.min(left.length, right.length);
   for (let index = 0; index < length; index += 1) {
-    const difference = (left[index].codePointAt(0) ?? 0) - (right[index].codePointAt(0) ?? 0);
+    const difference = left[index] - right[index];
     if (difference !== 0) return difference;
   }
   return left.length - right.length;
