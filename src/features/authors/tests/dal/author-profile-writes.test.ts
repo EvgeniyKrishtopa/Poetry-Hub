@@ -163,10 +163,10 @@ describe("author profile writes", () => {
       const result = await replacePhoto(file, "png");
 
       expect(result.ok).toBe(true);
-      const [path, body, options] = supabase.bucket.upload.mock.calls[0] as unknown as [string, File, object];
+      const [path, body, options] = supabase.bucket.upload.mock.calls[0] as unknown as [string, Blob, object];
       expect(path).toMatch(NEW_PATH_PATTERN);
       expect(path.endsWith(".png")).toBe(true);
-      expect(body).toBe(file);
+      expect(new Uint8Array(await body.arrayBuffer())).toEqual(new Uint8Array(await file.arrayBuffer()));
       expect(options).toEqual({ contentType: "image/png", upsert: false });
       expect(supabase.queries[0]).toContainEqual(["select", ["photo_path"]]);
       expect(supabase.queries[1]).toContainEqual(["update", [{ photo_path: path }]]);
@@ -179,12 +179,16 @@ describe("author profile writes", () => {
       givenOwnRow(null);
       supabase.queueQuery(okResponse(ROW));
 
-      await replacePhoto(photoFile(), "jpeg");
+      const file = photoFile();
+      await replacePhoto(file, "jpeg");
 
-      const [path, , options] = supabase.bucket.upload.mock.calls[0] as unknown as [string, File, object];
+      const [path, body, options] = supabase.bucket.upload.mock.calls[0] as unknown as [string, Blob, object];
       expect(path).toMatch(NEW_PATH_PATTERN);
       expect(path.endsWith(".jpg")).toBe(true);
       expect(options).toEqual({ contentType: "image/jpeg", upsert: false });
+      // Storage stores a File/Blob body's own type, so the client's File must not be the body.
+      expect(body).not.toBe(file);
+      expect(body.type).toBe("image/jpeg");
     });
 
     it("removes nothing when there was no previous photo", async () => {

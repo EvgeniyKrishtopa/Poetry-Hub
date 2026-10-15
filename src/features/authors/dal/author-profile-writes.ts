@@ -105,7 +105,9 @@ export async function replacePhoto(file: File, type: ImageType): Promise<Profile
     //    content type come from the sniffed type, never from the browser-supplied `file.type` (FR-8).
     const { extension, contentType } = PHOTO_FORMATS[type];
     const path = `${own.id}/${crypto.randomUUID()}.${extension}`;
-    const upload = await supabase.storage.from(AUTHOR_PHOTOS_BUCKET).upload(path, file, { contentType, upsert: false });
+    // Re-wrapped: for a File/Blob body Storage stores the body's own type and ignores `contentType`.
+    const body = new Blob([file], { type: contentType });
+    const upload = await supabase.storage.from(AUTHOR_PHOTOS_BUCKET).upload(path, body, { contentType, upsert: false });
     if (upload.error) return { ok: false, failure: toProfileFailure(REPLACE_PHOTO_OPERATION, upload.error) };
 
     // 3. Point the row at it; on failure, remove the upload so nothing references a lost file.
