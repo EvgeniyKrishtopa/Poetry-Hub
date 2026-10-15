@@ -34,6 +34,13 @@ describe("isSignedIn", () => {
     await expect(isSignedIn()).resolves.toBe(true);
   });
 
+  it("returns false without logging when the result carries no data at all", async () => {
+    getClaims.mockResolvedValue({ data: undefined, error: null });
+
+    await expect(isSignedIn()).resolves.toBe(false);
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
   it("calls connection before creating the server client", async () => {
     getClaims.mockResolvedValue({ data: null, error: null });
 
