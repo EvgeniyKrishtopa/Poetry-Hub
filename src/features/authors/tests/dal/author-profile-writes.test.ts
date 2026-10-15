@@ -214,6 +214,15 @@ describe("author profile writes", () => {
       expect(supabase.bucket.upload).not.toHaveBeenCalled();
     });
 
+    it("returns unknown and uploads nothing when the row is gone right after it was ensured", async () => {
+      supabase.onRpc("ensure_my_author_profile", okResponse(PROFILE_ID));
+      supabase.queueQuery(okResponse(null));
+
+      await expect(replacePhoto(photoFile(), "png")).resolves.toEqual({ ok: false, failure: "unknown" });
+      expect(supabase.queries[0]).toContainEqual(["maybeSingle", []]);
+      expect(supabase.bucket.upload).not.toHaveBeenCalled();
+    });
+
     it("returns unknown for a malformed photo path row", async () => {
       supabase.onRpc("ensure_my_author_profile", okResponse(PROFILE_ID));
       supabase.queueQuery(okResponse({ photo_path: 7 }));
@@ -298,6 +307,16 @@ describe("author profile writes", () => {
 
       await expect(removePhoto()).resolves.toEqual({ ok: true, profile: null });
       expect(supabase.queries).toHaveLength(0);
+      expect(supabase.bucket.remove).not.toHaveBeenCalled();
+    });
+
+    it("returns saved with no profile and touches nothing when the row went away after its id was read", async () => {
+      supabase.onRpc("my_author_profile_id", okResponse(PROFILE_ID));
+      supabase.queueQuery(okResponse(null));
+
+      await expect(removePhoto()).resolves.toEqual({ ok: true, profile: null });
+      expect(supabase.queries).toHaveLength(1);
+      expect(supabase.queries[0]).toContainEqual(["maybeSingle", []]);
       expect(supabase.bucket.remove).not.toHaveBeenCalled();
     });
 

@@ -16,10 +16,11 @@ import { ensureOwnProfileId, findOwnProfileId, toMyProfileResult } from "./profi
 
 const TABLE = "author_profiles";
 
-const photoPathSchema = z.object({ photo_path: z.string().nullable() });
+const photoPathRowSchema = z.object({ photo_path: z.string().nullable() }).nullable();
 
+/** `row: null`: the row went away after its id was read (a stale editor in a second tab). */
 type PhotoPathResult =
-  | { readonly ok: true; readonly path: string | null }
+  | { readonly ok: true; readonly row: { readonly photo_path: string | null } | null }
   | { readonly ok: false; readonly failure: ProfileFailure };
 
 /** Runs a write with a fresh cookie client; a config error or an unexpected throw becomes a failure. */
@@ -34,14 +35,14 @@ async function withServerClient(
   }
 }
 
-/** The row's current photo path, read by id. */
+/** The row's current photo path, read by id; `.maybeSingle()`, as the row may be gone (design D3 N5). */
 async function readPhotoPath(supabase: SupabaseClient, id: string, operation: string): Promise<PhotoPathResult> {
-  const { data, error, status } = await supabase.from(TABLE).select("photo_path").eq("id", id).single();
+  const { data, error, status } = await supabase.from(TABLE).select("photo_path").eq("id", id).maybeSingle();
   if (error) return { ok: false, failure: toProfileFailure(operation, withStatus(error, status)) };
 
-  const row = photoPathSchema.safeParse(data);
+  const row = photoPathRowSchema.safeParse(data);
   if (!row.success) return { ok: false, failure: toProfileFailure(operation, row.error) };
-  return { ok: true, path: row.data.photo_path };
+  return { ok: true, row: row.data };
 }
 
 /** Removes a stored photo without failing the caller: an orphaned file is a known risk (design Risks). */
@@ -100,6 +101,11 @@ export async function replacePhoto(file: File, type: ImageType): Promise<Profile
     if (!own.ok) return own;
     const previous = await readPhotoPath(supabase, own.id, REPLACE_PHOTO_OPERATION);
     if (!previous.ok) return previous;
+    // Gone right after it was ensured (the account was deleted meanwhile): nothing to upload into.
+    if (previous.row === null) {
+      return { ok: false, failure: toProfileFailure(REPLACE_PHOTO_OPERATION, new Error("profile row gone")) };
+    }
+    const previousPath = previous.row.photo_path;
 
     // 2. A fresh name per upload, so a cached public URL never shows a stale image. The extension and
     //    content type come from the sniffed type, never from the browser-supplied `file.type` (FR-8).
@@ -124,7 +130,7 @@ export async function replacePhoto(file: File, type: ImageType): Promise<Profile
     }
 
     // 4. The reader's photo did change, so a failed cleanup is only logged.
-    if (previous.path !== null) await removePhotoBestEffort(supabase, previous.path, REPLACE_PHOTO_OPERATION);
+    if (previousPath !== null) await removePhotoBestEffort(supabase, previousPath, REPLACE_PHOTO_OPERATION);
     return result;
   });
 }
@@ -140,6 +146,9 @@ export async function removePhoto(): Promise<ProfileWriteResult> {
 
     const previous = await readPhotoPath(supabase, own.id, REMOVE_PHOTO_OPERATION);
     if (!previous.ok) return previous;
+    // The row went away since its id was read: there is no photo left to delete (design D3 N5).
+    if (previous.row === null) return { ok: true, profile: null };
+    const previousPath = previous.row.photo_path;
 
     // The row is cleared before the file goes, so a failure never leaves a profile pointing at a
     // missing file (Gate 1 C4).
@@ -150,8 +159,8 @@ export async function removePhoto(): Promise<ProfileWriteResult> {
       .select(OWNER_PROFILE_COLUMNS)
       .single();
     const result = toMyProfileResult(supabase, REMOVE_PHOTO_OPERATION, response);
-    if (result.ok && previous.path !== null) {
-      await removePhotoBestEffort(supabase, previous.path, REMOVE_PHOTO_OPERATION);
+    if (result.ok && previousPath !== null) {
+      await removePhotoBestEffort(supabase, previousPath, REMOVE_PHOTO_OPERATION);
     }
     return result;
   });
