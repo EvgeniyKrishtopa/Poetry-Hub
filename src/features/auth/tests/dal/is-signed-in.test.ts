@@ -67,6 +67,13 @@ describe("isSignedIn", () => {
     await expect(isSignedIn()).resolves.toBe(false);
   });
 
+  // implements FR-1, NFR-2 of add-author-profiles
+  it("returns false when the claims carry no sub", async () => {
+    getClaims.mockResolvedValue({ data: { claims: { role: "authenticated" } }, error: null });
+
+    await expect(isSignedIn()).resolves.toBe(false);
+  });
+
   it("returns false without logging when getClaims returns an error", async () => {
     getClaims.mockResolvedValue({ data: null, error: { name: "AuthApiError", status: 401 } });
 
