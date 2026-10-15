@@ -47,9 +47,17 @@ describe("createSupabasePublicClient", () => {
   it("throws a config error naming the variable, not its value, and creates no client", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "ftp://not-allowed.example");
 
-    expect(() => createSupabasePublicClient()).toThrow(SupabaseConfigError);
-    expect(() => createSupabasePublicClient()).toThrow(/NEXT_PUBLIC_SUPABASE_URL/);
-    expect(() => createSupabasePublicClient()).not.toThrow(/not-allowed/);
+    let thrown: unknown;
+    try {
+      createSupabasePublicClient();
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(SupabaseConfigError);
+    const { message } = thrown as SupabaseConfigError;
+    expect(message).toContain("NEXT_PUBLIC_SUPABASE_URL");
+    expect(message).not.toContain("not-allowed");
     expect(createClient).not.toHaveBeenCalled();
   });
 });
