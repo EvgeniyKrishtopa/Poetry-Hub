@@ -17,6 +17,10 @@ export const PHOTO_FORMATS: Readonly<Record<ImageType, { readonly extension: str
 
 /** Explicit column lists: under the column grants, `*` fails with 42501 (design D2). */
 export const OWNER_PROFILE_COLUMNS = "id, first_name, last_name, about, about_align, photo_path";
+/**
+ * The same list today; a separate name so the public reads can narrow it without touching the owner's.
+ * @alias
+ */
 export const PUBLIC_AUTHOR_COLUMNS = OWNER_PROFILE_COLUMNS;
 
 export const PHOTO_WIDTH = 300;
