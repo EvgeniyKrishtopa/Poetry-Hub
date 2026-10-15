@@ -86,7 +86,7 @@ create table public.author_profiles (
   -- A photo path must live in this profile's own folder, so no one can point at another author's file.
   -- The exact format, not just the first segment: `<id>/../<other>/…` would pass a prefix check and
   -- resolve to another author's file in the public URL (Gate 1 N2).
-  photo_path  text check (photo_path is null or photo_path ~ ('^' || id::text || '/[0-9a-f-]{36}\.(png|jpg)$')),
+  photo_path  text check (photo_path is null or photo_path ~ ('^' || id::text || '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$')),
   created_at  timestamptz not null default now()
 );
 
@@ -134,7 +134,7 @@ grant update (first_name, last_name, about, about_align, photo_path) on public.a
           where p.id::text = (storage.foldername(name))[1] and p.user_id = (select auth.uid()))
   ```
 
-  The insert policy also requires `name ~ ('^' || p.id::text || '/[0-9a-f-]{36}\.(png|jpg)$')`, the `photo_path` format, so the public bucket can't host arbitrary objects (code-review fix, 2026-10-15). The subquery runs with the caller's own privileges, so `authenticated` needs its `select (id, user_id)` grant above. Public reading goes through the public-bucket URL, which needs no `select` policy for `anon`.
+  The insert policy also requires `name ~ ('^' || p.id::text || '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$')`, the `photo_path` format, so the public bucket can't host arbitrary objects (code-review fix, 2026-10-15). The subquery runs with the caller's own privileges, so `authenticated` needs its `select (id, user_id)` grant above. Public reading goes through the public-bucket URL, which needs no `select` policy for `anon`.
 - **Object path:** `<profile_id>/<random uuid>.<png|jpg>`. Using the profile id rather than the user id keeps the auth id out of public URLs (P5). A fresh name per upload means a cached public URL never shows a stale image after replacement, so no cache-busting query string is needed.
 - *Alternative rejected:* a `profile_id` FK to a separate `profiles` table keyed by user. YAGNI: one author profile per user is the only reader-owned row so far.
 

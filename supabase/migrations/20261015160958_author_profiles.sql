@@ -28,7 +28,8 @@ create table public.author_profiles (
   -- A table check, because it reads `id`. It pins the whole format, not just the first segment:
   -- `<id>/../<other id>/…` would pass a prefix check and resolve to another author's file (Gate 1 N2).
   constraint author_profiles_photo_path_in_own_folder check (
-    photo_path is null or photo_path ~ ('^' || id::text || '/[0-9a-f-]{36}\.(png|jpg)$')
+    photo_path is null
+    or photo_path ~ ('^' || id::text || '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$')
   )
 );
 
@@ -79,7 +80,7 @@ create policy "owners upload author photos" on storage.objects
     and exists (
       select 1 from public.author_profiles p
       where p.id::text = (storage.foldername(name))[1] and p.user_id = (select auth.uid())
-        and name ~ ('^' || p.id::text || '/[0-9a-f-]{36}\.(png|jpg)$')
+        and name ~ ('^' || p.id::text || '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$')
     )
   );
 

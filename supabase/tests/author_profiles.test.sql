@@ -5,7 +5,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(41);
+select plan(43);
 
 -- Fixtures, written as the superuser (bypasses RLS). A owns a non-public profile, B a public one.
 insert into auth.users (id, email) values
@@ -128,6 +128,14 @@ select throws_ok(
   'a photo file name that is not a uuid is rejected'
 );
 
+select throws_ok(
+  $$update public.author_profiles
+    set photo_path = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/------------------------------------.png'
+    where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  '23514', null,
+  'a 36-character file name that is not in uuid form is rejected'
+);
+
 -- Content checks.
 select throws_ok(
   $$update public.author_profiles set first_name = '' where user_id = '11111111-1111-4111-8111-111111111111'$$,
@@ -245,6 +253,13 @@ select throws_ok(
     values ('author-photos', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/sub/ffffffff-ffff-4fff-8fff-ffffffffffff.png')$$,
   '42501', null,
   'an upload into a subfolder is rejected'
+);
+
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name)
+    values ('author-photos', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/------------------------------------.png')$$,
+  '42501', null,
+  'an upload whose 36-character name is not in uuid form is rejected'
 );
 
 select isnt_empty(
