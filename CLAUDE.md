@@ -57,7 +57,7 @@ Not auto-loaded — open the file before doing the matching kind of work.
 | --- | --- |
 | `docs/architecture.md` | adding a feature or file, naming files, touching `shared/`, cross-feature imports |
 | `docs/state-management.md` | fetching data, adding a store, DAL work, server → client data flow |
-| `docs/code-style.md` | writing a component, helper, type, constant, or comment; deciding what gets its own file |
+| `docs/code-style.md` | writing a component, route file, helper, type, constant, or comment; deciding what gets its own file |
 | `docs/styling.md` | writing or changing component styles |
 | `docs/design-system.md` | planning UI (`ui-plan`, a Claude Design brief) or picking tokens and primitives for a component |
 | `docs/claude-design.md` | starting a change with user-facing screens, or applying a Claude Design link |

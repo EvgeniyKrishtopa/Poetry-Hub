@@ -19,6 +19,10 @@ const eslintConfig = defineConfig([
           ],
         },
       ],
+      // Explicit over terse (docs/code-style.md): write the `if`, not `??=` / `||=` / `&&=`.
+      "logical-assignment-operators": ["error", "never"],
+      "no-nested-ternary": "error",
+      eqeqeq: "error",
     },
   },
   // Override default ignores of eslint-config-next.

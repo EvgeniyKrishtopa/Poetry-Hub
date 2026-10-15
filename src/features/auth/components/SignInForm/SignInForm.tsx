@@ -5,10 +5,10 @@ import { useActionState } from "react";
 
 import { Alert, Button } from "@/shared/ui";
 
-import { getFailureMessage } from "../../model/auth-messages";
 import type { SignInFormState } from "../../model/auth.types";
 import { AuthField } from "../AuthField/AuthField";
 
+import { getFormError } from "./get-form-error";
 import type { SignInFormProps } from "./SignInForm.types";
 import { submitSignIn } from "./submit-sign-in";
 
@@ -19,12 +19,7 @@ export function SignInForm({ initialError }: SignInFormProps) {
   const [state, formAction, pending] = useActionState(submitSignIn, INITIAL_STATE);
 
   const fieldErrors = state.status === "invalid" ? state.fieldErrors : {};
-  const formError =
-    state.status === "failed"
-      ? getFailureMessage("sign-in", state.failure)
-      : state.status === "idle"
-        ? initialError
-        : undefined;
+  const formError = getFormError(state, initialError);
 
   return (
     // noValidate: the server-side schema is the only validation, so its errors are what the reader sees.

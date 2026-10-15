@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
-import { Suspense } from "react";
 
 import { HeaderSession } from "@/features/auth";
 import { siteConfig } from "@/shared/config/site";
@@ -32,16 +31,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col">
         <Providers>
-          {/* The session part is read on the server inside the Suspense boundary; the site link and
-              the page stay in the static shell. The fallback keeps the header's width and shows
-              neither link. */}
           <header className="mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-4">
             <Link href="/" className="text-lg font-semibold">
               {siteConfig.name}
             </Link>
-            <Suspense fallback={<div aria-hidden="true" className="min-w-24" />}>
-              <HeaderSession />
-            </Suspense>
+            <HeaderSession />
           </header>
           {children}
         </Providers>

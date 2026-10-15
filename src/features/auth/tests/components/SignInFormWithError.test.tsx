@@ -8,7 +8,7 @@ import { CONFIRM_FAILED_MESSAGE } from "../../model/auth-messages";
 vi.mock("../../actions/auth.actions", () => ({ signInAction: vi.fn() }));
 
 async function renderWithError(error?: string) {
-  render(await SignInFormWithError({ searchParams: Promise.resolve({ error }) }));
+  render(await SignInFormWithError({ error: Promise.resolve(error) }));
 }
 
 describe("SignInFormWithError", () => {
