@@ -3,8 +3,33 @@
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignore": [
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
-    ".ncurc.cjs"
+    ".ncurc.cjs",
+    // TEMPORARY (add-author-profiles): scaffold stubs that groups 6-7 wire into routes. Each group deletes the
+    // lines for the components it connects; the block is gone by the end of group 7 (task 8.1 runs knip clean).
+    // Group 6:
+    "src/features/authors/components/AccountAuthorLinks/**",
+    // Group 7:
+    "src/features/authors/components/AuthorEditorLoader/**",
+    "src/features/authors/components/AuthorProfileEditor/**",
+    "src/features/authors/components/NameFieldEditor/**",
+    "src/features/authors/components/AboutFieldEditor/**",
+    "src/features/authors/components/MarkdownToolbar/**",
+    "src/features/authors/components/PhotoFieldEditor/**",
+    "src/features/authors/components/SaveNotice/**",
+    "src/features/authors/components/FieldErrorText/**"
   ],
+  "ignoreIssues": {
+    // TEMPORARY (add-author-profiles), same removal rule as above: exports the scaffold declared for the
+    // account page (group 6) and the editor (group 7) before any route imports them. Only `exports` is
+    // ignored here, so every other check still runs on these files.
+    "src/features/auth/index.ts": ["exports"],
+    "src/features/authors/index.ts": ["exports"],
+    "src/features/authors/components/AccountAuthorSection/AccountAuthorSection.tsx": ["exports"],
+    "src/features/authors/components/AuthorEditorPanel/AuthorEditorPanel.tsx": ["exports"],
+    "src/features/authors/model/author-messages.ts": ["exports"],
+    "src/shared/ui/index.ts": ["exports"],
+    "src/shared/ui/TextField/TextField.tsx": ["exports"]
+  },
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
     "@fission-ai/openspec",
