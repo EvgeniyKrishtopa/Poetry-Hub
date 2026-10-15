@@ -44,6 +44,15 @@ describe("AuthorAbout", () => {
     expect(container).toHaveTextContent("portrait");
   });
 
+  // implements NFR-1 of add-author-profiles
+  it("renders nothing for an image with empty alt text", () => {
+    const { container } = render(<AuthorAbout markdown={"before ![](https://evil.example/x.png) after"} align="left" />);
+
+    expect(container.querySelector("img")).toBeNull();
+    expect(container).toHaveTextContent("before after");
+    expect(container.innerHTML).not.toContain("evil.example");
+  });
+
   it("keeps a level-1 heading's text without the element", () => {
     render(<AuthorAbout markdown="# Title" align="left" />);
 
