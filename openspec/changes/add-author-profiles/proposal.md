@@ -42,7 +42,7 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
     - a write to the profile's id, owner, or creation time;
     - a photo path outside the profile's own folder;
     - a name or about that is empty or whitespace-only.
-  - **Identifiers.** The profile's public identifier SHALL be its own UUID. The auth user id SHALL NOT appear in public pages, photo URLs, or anonymous API reads.
+  - **Identifiers.** The profile's public identifier SHALL be its own UUID. The auth user id SHALL NOT appear in public pages, photo URLs, or any API read, anonymous or signed in (code-review CR-01, user decision 2026-10-15).
 
 ### Editor behavior
 
@@ -181,7 +181,6 @@ Each FR/NFR above is accepted by the scenarios in `specs/*/spec.md`, all written
 - Moderation, reporting, or admin editing of profiles.
 - Deleting the whole profile in one action (each field is deleted on its own).
 - Cleaning up Storage files when an auth user is deleted, and orphaned files from a failed cleanup step.
-- Hiding public authors' auth ids from signed-in API callers. Anonymous callers and public URLs never see them (FR-5).
 - Links and images inside about.
 - HttpOnly session cookies (a separate follow-up).
 

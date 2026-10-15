@@ -53,6 +53,11 @@ Each user SHALL own at most one profile. Only its owner SHALL create or change i
 - **WHEN** an anonymous caller requests its owner column through the database API
 - **THEN** the request is rejected
 
+#### Scenario: Signed-in API reads hide the owner (FR-5, added by defect fix)
+- **GIVEN** a public profile and a signed-in user, who may be its owner
+- **WHEN** the user requests the owner column of any profile through the database API
+- **THEN** the request is rejected; the user reaches their own profile only through functions that resolve them from the session and return the profile id
+
 ### Requirement: Database integrity under direct writes (FR-5, NFR-2)
 The database SHALL enforce the profile rules even when the application is bypassed and its API is called with the publishable key and the owner's own session. It SHALL reject writes to a profile's id, owner, or creation time, a photo path outside the profile's own folder, and a name or about that is empty or whitespace-only.
 

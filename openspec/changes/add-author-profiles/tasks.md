@@ -7,25 +7,27 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 - [x] 1.1 (FR-4, FR-5, FR-8, NFR-2) Add `supabase/migrations/<timestamp>_author_profiles.sql` per design D2.
   - Include:
     - the table with its checks: blank-pattern name and about checks (whitespace as JS `trim()` defines it), and the `photo_path` format pinned to `<id>/<uuid>.png|jpg`. No ordering index: the directory sorts in the DAL;
-    - RLS enabled, with the four policies;
-    - the column grants (anon without `user_id`; insert and update limited to the listed columns).
-  - Add the `author-photos` bucket (public, 5242880 bytes, png/jpeg) and the `storage.objects` insert/select/delete policies scoped to a folder naming a profile the caller owns.
+    - RLS enabled, with the select (public, owner) and update policies; no insert or delete policy;
+    - the column grants (no client role selects or writes `user_id`; no insert grant; update limited to the content columns);
+    - the security definer functions `ensure_my_author_profile()`, `my_author_profile_id()`, `owns_author_profile(folder)` (code-review CR-01).
+  - Add the `author-photos` bucket (public, 5242880 bytes, png/jpeg) and the `storage.objects` insert/select/delete policies scoped to a folder naming a profile the caller owns; uploads pinned to `<uuid>/<uuid>.png|jpg`.
   - Put the documented down-migration SQL in the file's header comment.
   - Mirror the bucket in `supabase/config.toml` (`[storage.buckets.author-photos]`).
   - Verify `npx supabase db reset` applies the migration with no error.
 - [x] 1.2 (FR-4, FR-5, NFR-2) Add pgTAP tests in `supabase/tests/author_profiles.test.sql` covering:
-  - anon selects only rows with both names, and selecting `user_id` as anon is denied;
+  - anon selects only rows with both names, and selecting `user_id` as anon or as a signed-in user is denied;
+  - the three functions: own id, null without a profile, idempotent create, anon denied;
   - an authenticated user reads their own non-public row;
   - user B cannot insert a row for A, or update or read A's non-public row;
   - the owner cannot update `id`, `user_id`, or `created_at`;
   - `photo_path` outside the profile's folder is rejected, including a `<own id>/../<other id>/…` path and a non-uuid file name;
-  - a real save runs through the grants: `insert … on conflict do nothing`, then `update … returning` with the explicit column list, as `authenticated`;
+  - a real save runs through the grants: `ensure_my_author_profile()`, then `update … where id … returning` with the explicit column list, as `authenticated`;
   - these values are rejected by checks:
     - an empty-string or whitespace-only name;
     - a 61-character name;
     - a 1001-character about;
     - `about_align = 'justify'`;
-  - a second row for the same `user_id` violates the unique constraint;
+  - a direct insert is denied, so one row per user comes from `ensure_my_author_profile()` (plus the `unique (user_id)` constraint);
   - Storage: user B cannot insert into, or delete from, `<A's profile id>/…` in `author-photos`.
 
   Verify `npx supabase test db` passes. Document the command in `docs/testing.md` (local-only, not in CI) and the migration workflow (`db reset` locally, `db push` at deploy) in `docs/environment.md`.
@@ -70,7 +72,7 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 
 ## 4. Authors data access and actions <!-- judgement-heavy -->
 
-- [ ] 4.1 (FR-1, FR-2, FR-15) Implement `dal/my-author-profile.ts` `getMyAuthorProfile(userId)`: cookie client, select own row with `OWNER_PROFILE_COLUMNS`, Zod-parse, return `AuthorProfile | null` (`null` also for a row with no content) or a failure; never throws for an expected failure. Verify with `tests/dal/my-author-profile.test.ts` (mock the server client): row, no row, empty row → `null`, Supabase error, config error, malformed row, and the select string is the explicit column list.
+- [ ] 4.1 (FR-1, FR-2, FR-15) Implement `dal/my-author-profile.ts` `getMyAuthorProfile()`: cookie client, `rpc("my_author_profile_id")` (`null` → no profile), then select that row by `id` with `OWNER_PROFILE_COLUMNS` (design D3, CR-01), Zod-parse, return `AuthorProfile | null` (`null` also for a row with no content) or a failure; never throws for an expected failure. Verify with `tests/dal/my-author-profile.test.ts` (mock the server client): row, no row, empty row → `null`, Supabase error, config error, malformed row, and the select string is the explicit column list.
 - [ ] 4.2 (FR-13, FR-14, FR-17, NFR-7) Implement `dal/public-authors.ts` per design D5:
   - `listPublicAuthors()` (tag `authors`) and `getPublicAuthor(id)` (tag `author:<id>`), each with an inner `"use cache"`;
   - `cacheLife` chosen by result: `hours` for ok, `minutes` for not-found, `seconds` for unavailable (NFR-7);
@@ -88,16 +90,16 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 
   Add the "Supabase public reads" subsection to `docs/state-management.md` per design D12: the cookie-less client, the feature-DAL cache scope, result-dependent `cacheLife`, and `updateTag` from actions vs `revalidateTag` from webhooks.
 - [ ] 4.3 (FR-5, FR-10, FR-12) Implement `dal/author-profile-writes.ts` per design D3/D4:
-  - `writeOwnProfile(userId, patch)`: ensure the row exists (`upsert({ user_id }, { ignoreDuplicates: true })`), then `update(patch).eq("user_id", …).select(OWNER_PROFILE_COLUMNS).single()`; no upsert carries a value (design D3, Gate 1 N1);
-  - `clearProfileField(userId, field)` (about also resets align; ends with `.maybeSingle()`, so a missing row → `saved` with no profile, design D3 N5);
-  - `replacePhoto(userId, file, type)`:
-    1. ensure the row exists (upsert `{ user_id }`, ignoring duplicates) and read `id` and `photo_path`;
+  - `writeOwnProfile(patch)`: `rpc("ensure_my_author_profile")` → id, then `update(patch).eq("id", id).select(OWNER_PROFILE_COLUMNS).single()`; the client never sends `user_id` (design D3, Gate 1 N1, CR-01);
+  - `clearProfileField(field)`: `rpc("my_author_profile_id")`, `null` → `saved` with no profile; otherwise update by id (about also resets align; ends with `.maybeSingle()`, design D3 N5);
+  - `replacePhoto(file, type)`:
+    1. `rpc("ensure_my_author_profile")` → id, and read that row's `photo_path`;
     2. upload to `<id>/<uuid>.<ext>`;
     3. update `photo_path`;
     4. remove the old file.
 
     A failed step 3 triggers a compensating remove. A failed old-file removal is logged and still returns `ok`.
-  - `removePhoto(userId)`: read the path, set `photo_path = null`, then remove the file best-effort; a row failure leaves the file untouched (design D3, Gate 1 C4).
+  - `removePhoto()`: find the own id with `rpc("my_author_profile_id")`, read the path, set `photo_path = null`, then remove the file best-effort; a row failure leaves the file untouched (design D3, Gate 1 C4).
 
   Verify with tests for each path, including the compensation and best-effort branches, and that no log line contains the input.
 - [ ] 4.4 (FR-7, FR-8, FR-9, FR-10, FR-17, NFR-2, NFR-3) Implement `actions/action-client.ts` (`authorsActionClient = createActionClient({ logPrefix: "authors", … })`) and `actions/author-profile.actions.ts` with `saveNameAction`, `saveAboutAction`, `savePhotoAction` (`validatePhotoFile` repeated on the server), and `deleteProfileFieldAction`. Each resolves the user via `getCurrentUserId()`, never from input. On success it calls `updateTag(AUTHORS_TAG)` and `updateTag(authorTag(id))`. Verify with `tests/actions/author-profile.actions.test.ts`:
@@ -134,14 +136,14 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
   - link labels and hrefs in order;
   - "Пока нет авторов." and "Список авторов сейчас недоступен.";
   - the root element has `lang="ru"`.
-- [ ] 5.6 (FR-14, FR-15, FR-18, NFR-8) Implement `components/AuthorPage` (Suspense; `notFound()` on not-found, a soft 404; throws on unavailable), the presentational `AuthorProfileView`, and `AuthorOwnerLink` (its own Suspense; `getCurrentUserId` + `getMyAuthorProfile(userId)`; renders only on a match, and nothing on a failed read). Add `app/(public)/authors/[id]/page.tsx`. Verify with tests:
+- [ ] 5.6 (FR-14, FR-15, FR-18, NFR-8) Implement `components/AuthorPage` (Suspense; `notFound()` on not-found, a soft 404; throws on unavailable), the presentational `AuthorProfileView`, and `AuthorOwnerLink` (its own Suspense; `getCurrentUserId` + `getMyAuthorProfile()`; renders only on a match, and nothing on a failed read). Add `app/(public)/authors/[id]/page.tsx`. Verify with tests:
   - the view renders the h1, the photo or placeholder, and about, or omits about when empty;
   - its root element has `lang="ru"`;
   - `AuthorOwnerLinkView` shows "Редактировать профиль" only when `isOwner`, placed before the h1.
 
 ## 6. Account page and header <!-- judgement-heavy -->
 
-- [ ] 6.1 (FR-1, FR-2, FR-18, NFR-8) Implement `components/AccountAuthorSection` (Suspense → `requireUserId` → `getMyAuthorProfile(userId)` → the presentational `AccountAuthorLinks`, or a danger `Alert` on a failed read) and add `app/(authorized)/account/page.tsx`. Update `(authorized)/layout.tsx`'s comment per design D9. Update `docs/architecture.md` (design D12):
+- [ ] 6.1 (FR-1, FR-2, FR-18, NFR-8) Implement `components/AccountAuthorSection` (Suspense → `requireUserId` → `getMyAuthorProfile()` → the presentational `AccountAuthorLinks`, or a danger `Alert` on a failed read) and add `app/(authorized)/account/page.tsx`. Update `(authorized)/layout.tsx`'s comment per design D9. Update `docs/architecture.md` (design D12):
   - the `(authorized)` bullet ("each page calls `requireUserId()`");
   - the project tree gains `features/authors`, `shared/lib/safe-action`, `shared/lib/supabase/public.ts`, and the `(authorized)/account` routes;
   - the rule that a feature may import another feature's public API for server-only accessors (authors → auth).
@@ -202,7 +204,7 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
   - a failed save reverts to the previous photo (or the placeholder) with the error;
   - Удалить shows the placeholder and "Добавить фото";
   - a failed delete shows the previous photo again.
-- [ ] 7.5 (FR-2, FR-18) Implement `components/AuthorEditorPanel` (Suspense → `requireUserId` → `getMyAuthorProfile(userId)` → `AuthorProfileEditor`, or the FR-18 danger `Alert` on a failed read) and add `app/(authorized)/account/author/page.tsx`. Verify `npm run typecheck && npm run lint` and that the editor renders in `npm run dev` for a signed-in user.
+- [ ] 7.5 (FR-2, FR-18) Implement `components/AuthorEditorPanel` (Suspense → `requireUserId` → `getMyAuthorProfile()` → `AuthorProfileEditor`, or the FR-18 danger `Alert` on a failed read) and add `app/(authorized)/account/author/page.tsx`. Verify `npm run typecheck && npm run lint` and that the editor renders in `npm run dev` for a signed-in user.
 - [ ] 7.6 (FR-7, FR-17, NFR-2) Document the editor and record the decision:
   - add the about-editor toolbar and `SaveNotice` to `docs/design-system.md` as feature-local primitives;
   - record ADR `docs/decisions/0005-reader-owned-data-rls-and-per-field-actions.md` via `record-decision`, covering:

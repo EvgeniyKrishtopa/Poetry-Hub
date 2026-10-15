@@ -42,7 +42,7 @@ src/features/authors/
 │   ├── action-client.ts            # authorsActionClient = createActionClient({ logPrefix: "authors", … })
 │   └── author-profile.actions.ts   # "use server": saveName, saveAbout, savePhoto, deleteField
 ├── dal/
-│   ├── my-author-profile.ts        # getMyAuthorProfile(userId) — per request, cookie client, owner's row
+│   ├── my-author-profile.ts        # getMyAuthorProfile() — per request, cookie client, owner's row
 │   ├── public-authors.ts           # getPublicAuthor(id), listPublicAuthors() — "use cache"
 │   └── author-profile-writes.ts    # writeOwnProfile, clearProfileField, replacePhoto, removePhoto
 ├── model/
@@ -97,32 +97,36 @@ create policy "public profiles are readable by anyone" on public.author_profiles
   using (first_name is not null and last_name is not null);
 create policy "owners read their own profile" on public.author_profiles
   for select to authenticated using ((select auth.uid()) = user_id);
-create policy "owners create their own profile" on public.author_profiles
-  for insert to authenticated with check ((select auth.uid()) = user_id);
 create policy "owners update their own profile" on public.author_profiles
   for update to authenticated
   using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+-- No insert policy: rows are created only by ensure_my_author_profile().
 -- No delete policy: the app clears fields, never deletes the row (proposal Out of Scope).
 
--- Column privileges (Gate 1 C3, P5). The policies decide which rows; these decide which columns.
+-- Column privileges (Gate 1 C3, P5; code-review CR-01). The policies decide which rows; these decide
+-- which columns. No client role can select or write user_id; a policy compares it without a privilege.
 revoke all on public.author_profiles from anon, authenticated;
-grant select (id, first_name, last_name, about, about_align, photo_path) on public.author_profiles to anon;
-grant select (id, user_id, first_name, last_name, about, about_align, photo_path) on public.author_profiles to authenticated;
-grant insert (user_id, first_name, last_name, about, about_align) on public.author_profiles to authenticated;
+grant select (id, first_name, last_name, about, about_align, photo_path) on public.author_profiles to anon, authenticated;
 grant update (first_name, last_name, about, about_align, photo_path) on public.author_profiles to authenticated;
+
+-- "My profile" without exposing user_id: security definer, empty search_path, no user-id argument, the
+-- caller from auth.uid() only; execute granted to authenticated alone.
+create function public.ensure_my_author_profile() returns uuid ...;   -- insert … on conflict (user_id) do nothing; return id
+create function public.my_author_profile_id() returns uuid ...;       -- the caller's id, or null
+create function public.owns_author_profile(folder text) returns boolean ...;  -- for the storage policies
 ```
 
 - **Column privileges close two gaps that RLS alone leaves open (Gate 1 C3).**
-  - **Mass assignment.** A signed-in user calling PostgREST directly with the publishable key can update only the five content columns of their own row. They cannot touch `id`, `user_id`, or `created_at`.
+  - **Mass assignment.** A signed-in user calling PostgREST directly with the publishable key can update only the five content columns of their own row. They cannot touch `id`, `user_id`, or `created_at`, and cannot insert at all.
   - **The photo-path rule is a table check, not app logic.** A direct `PATCH` that sets `photo_path` to another profile's file fails the check. The check pins the whole format (`<own id>/<uuid>.png|jpg`), so dot segments can't escape the folder.
 - **Explicit column lists everywhere (Gate 1 N1).** Under column grants, `select=*` and a bare `.select()` (`RETURNING *`) fail with `42501`.
   - `author.constants.ts` holds two lists:
     - `OWNER_PROFILE_COLUMNS = "id, first_name, last_name, about, about_align, photo_path"`;
     - `PUBLIC_AUTHOR_COLUMNS`, the same list.
-  - Every read and every `.select(…)` after a write names one of them. `user_id` is used only in filters (`eq`), never selected.
-  - A pgTAP case and the DAL integration check run a real save through the grants.
-- **Insert never carries `photo_path`.** A photo is attached by an update after the row exists, because its folder is the row's `id` (D4).
-- **`user_id` is hidden from anonymous readers (Gate 1 P5).** The anon column grant leaves it out, and photo paths use the profile id, so public URLs carry no auth id. Authenticated users keep `select (user_id)`, because the owner's own read and upsert filter on it (`eq("user_id", …)`, `onConflict: "user_id"`). The remaining exposure is that a signed-in user can read a *public* author's auth id through the API. That exposure is accepted and recorded in Risks. Hiding it too would need a `security definer` view or RPC for every owner read, which the first reader table doesn't justify.
+  - Every read and every `.select(…)` after a write names one of them. `user_id` is never selected and never sent: the app addresses its own row by `id` (D3).
+  - A pgTAP case runs a real save through the grants (ensure, then update by id).
+- **The row is created only by `ensure_my_author_profile()`,** with an empty content row; a photo is attached by an update after the row exists, because its folder is the row's `id` (D4).
+- **`user_id` never leaves the database (Gate 1 P5; code-review CR-01, user decision 2026-10-15).** Neither client role can select it, and photo paths use the profile id, so public URLs and API reads carry no auth id. The owner reaches their own row through the three security definer functions: `ensure_my_author_profile()` (create if missing, return the id), `my_author_profile_id()` (the id or null), and `owns_author_profile(folder)` for the storage policies. Each resolves the caller from `auth.uid()` and takes no user id, so no client input can name another user. The update policy still compares `user_id`: a policy expression needs no column privilege. *Alternative rejected:* keeping `select (user_id)` for authenticated so the DAL could filter on it; that let any signed-in user read every public author's auth id.
 
 - **A deleted field is stored as `NULL`, never `''`.** The blank-pattern checks make an empty or whitespace-only string impossible, and `char_length(…) ≤ 60/1000` bounds the raw value too. So "public" is exactly `first_name is not null and last_name is not null`, in RLS (FR-4) and in `model/is-public-profile.ts`. The database repeats the 60/1000 limits so a bypassed action still can't store an oversized value.
 - **`about` length is counted by `char_length`.** That is Unicode code points, the same as the `[...value].length` the schema uses. `String.prototype.length` would count UTF-16 units and disagree on emoji.
@@ -130,11 +134,10 @@ grant update (first_name, last_name, about, about_align, photo_path) on public.a
 - **Storage policies:** `insert`, `select` (which `remove` needs), and `delete` on `storage.objects`, all `to authenticated`. All three are scoped to `bucket_id = 'author-photos'` and to a folder that names a profile the caller owns:
 
   ```sql
-  exists (select 1 from public.author_profiles p
-          where p.id::text = (storage.foldername(name))[1] and p.user_id = (select auth.uid()))
+  public.owns_author_profile((storage.foldername(name))[1])
   ```
 
-  The insert policy also requires `name ~ ('^' || p.id::text || '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$')`, the `photo_path` format, so the public bucket can't host arbitrary objects (code-review fix, 2026-10-15). The subquery runs with the caller's own privileges, so `authenticated` needs its `select (id, user_id)` grant above. Public reading goes through the public-bucket URL, which needs no `select` policy for `anon`.
+  The insert policy also requires the whole name to be `<uuid>/<uuid>.png|jpg`, the `photo_path` format, so the public bucket can't host arbitrary objects (code-review fix, 2026-10-15). The ownership check is a security definer function because a policy subquery runs with the caller's privileges, and the caller can no longer read `user_id`. Public reading goes through the public-bucket URL, which needs no `select` policy for `anon`.
 - **Object path:** `<profile_id>/<random uuid>.<png|jpg>`. Using the profile id rather than the user id keeps the auth id out of public URLs (P5). A fresh name per upload means a cached public URL never shows a stale image after replacement, so no cache-busting query string is needed.
 - *Alternative rejected:* a `profile_id` FK to a separate `profiles` table keyed by user. YAGNI: one author profile per user is the only reader-owned row so far.
 
@@ -142,17 +145,18 @@ grant update (first_name, last_name, about, about_align, photo_path) on public.a
 
 Every action:
 1. Runs the Zod schema (next-safe-action `inputSchema`). A violation becomes `validationErrors` → a field error (FR-8).
-2. Resolves `userId` with `getCurrentUserId()`. `null` returns `{ status: "failed", failure: "unauthenticated" }`. The input never carries a user or profile id (NFR-2).
-3. Calls a DAL write with `userId`. The DAL uses the cookie client (`createSupabaseServerClient`), so the request runs as `authenticated` and RLS applies.
+2. Checks the session with `getCurrentUserId()`. `null` returns `{ status: "failed", failure: "unauthenticated" }`. The input never carries a user or profile id (NFR-2).
+3. Calls a DAL write. The DAL uses the cookie client (`createSupabaseServerClient`), so the request runs as `authenticated` with the same session, RLS applies, and the database functions resolve the caller themselves. The owner DAL therefore takes no `userId` argument (CR-01); the action's session check only decides `unauthenticated` before any I/O.
 4. On `ok`, calls `updateTag(AUTHORS_TAG)` (the directory) and `updateTag(authorTag(profileId))` (that author's page) (FR-17), and returns `{ status: "saved", profile }`. Otherwise it returns the failure.
 
-- **Every field write is two steps, through one helper `writeOwnProfile(userId, patch)` (Gate 1 N1):**
-  1. ensure the row exists: `upsert({ user_id }, { onConflict: "user_id", ignoreDuplicates: true })`. That is `INSERT … ON CONFLICT DO NOTHING`, which needs only the insert grant;
-  2. `update(patch).eq("user_id", userId).select(OWNER_PROFILE_COLUMNS).single()`.
+- **Every field write is two steps, through one helper `writeOwnProfile(patch)` (Gate 1 N1; CR-01):**
+  1. ensure the row exists and get its id: `rpc("ensure_my_author_profile")`;
+  2. `update(patch).eq("id", id).select(OWNER_PROFILE_COLUMNS).single()`.
 
-  A plain upsert carrying a value would become `ON CONFLICT DO UPDATE SET user_id = …, …`, which needs an UPDATE grant on `user_id`. FR-5 forbids that grant. The photo flow (D4) uses the same helper for its row step.
+  The photo flow (D4) uses the same step 1.
+- **The owner read** (`getMyAuthorProfile()`) is `rpc("my_author_profile_id")`; `null` → no profile; otherwise `select(OWNER_PROFILE_COLUMNS).eq("id", id).single()`.
 - **An empty row means "no profile" (Gate 1 N4).** Step 1 can leave a row with every content field `NULL`: after a failed photo upload, or after the owner deletes every field. `model/has-profile-content.ts` treats such a row as absent. `getMyAuthorProfile` returns `null` for it, so `/account` shows "Создать кабинет автора" again (FR-1) and the editor shows four add prompts. The row is harmless: it isn't public and holds nothing. "Создать кабинет автора" stays a plain link.
-- **Delete:** `update({ <column>: null }).eq("user_id", userId)`. Deleting about also sets `about_align: "left"` (FR-10). With no row (a stale editor in a second tab), the update affects nothing. The delete path therefore ends with `.select(OWNER_PROFILE_COLUMNS).maybeSingle()`, never `.single()`, and maps `null` to the absent profile → `saved` (Gate 1 N5). `writeOwnProfile` keeps `.single()`, because its step 1 guarantees the row exists.
+- **Delete:** `rpc("my_author_profile_id")`, then `update({ <column>: null }).eq("id", id)`. Deleting about also sets `about_align: "left"` (FR-10). With no row (a stale editor in a second tab), the id is `null` and nothing is updated: the delete maps that to the absent profile → `saved` (Gate 1 N5), and ends with `.select(OWNER_PROFILE_COLUMNS).maybeSingle()`, never `.single()`. `writeOwnProfile` keeps `.single()`, because its step 1 guarantees the row exists.
 - **Delete photo order (Gate 1 C4):**
   1. read the current `photo_path`;
   2. set `photo_path = null`;
@@ -161,7 +165,7 @@ Every action:
   The row is cleared before the file goes, so a failed step leaves either an unchanged profile or an orphaned file, never a profile pointing at a missing file. After success the editor and the public page show the placeholder, the same as before any photo was added (FR-10).
 - **Four actions,** not one generic one: `saveNameAction({ field: "first_name" | "last_name", value })`, `saveAboutAction({ about, align })`, `savePhotoAction({ photo: File })`, and `deleteProfileFieldAction({ field })`. Each has a tight schema. A single `{ field, value: unknown }` action would need a union schema whose errors are harder to attach to one field.
 - **`updateTag`, not `revalidateTag`:** it is Server-Action-only and read-your-own-writes, so the action's own RSC payload already carries the fresh data. `revalidateTag(…, "max")` would serve stale data on the very re-render that follows the save.
-- **The server re-render is the source of truth after a save.** The editor's props come from `getMyAuthorProfile(userId)`. `updateTag` re-renders the route in the same round trip, so the saved value arrives as new props, and the client never copies server data into state (D6).
+- **The server re-render is the source of truth after a save.** The editor's props come from `getMyAuthorProfile()`. `updateTag` re-renders the route in the same round trip, so the saved value arrives as new props, and the client never copies server data into state (D6).
 
 ### D4. Photo upload through a Server Action
 
@@ -173,7 +177,7 @@ Every action:
 - **The server repeats the check.** The client passes the `File` inside the action's argument object, which Server Actions serialize. The schema is `z.instanceof(File)` plus `.refine(size ≤ PHOTO_MAX_BYTES)`. The action then calls the same `validatePhotoFile` (magic bytes `89 50 4E 47 0D 0A 1A 0A` → png, `FF D8 FF` → jpeg). A mismatch is a field error, whatever `photo.type` claims (FR-8). The bucket's `size` and `allowed_mime_types` limits are a third check.
 - **`next.config.ts`: `experimental.serverActions.bodySizeLimit: "6mb"`.** That is 5 MiB plus multipart overhead, per the Next docs. `proxyClientMaxBodySize` defaults to 10 MB, above the payload, so it stays unset. A body over the limit, reachable only by bypassing the browser check, makes the action call reject at the framework level. The field wrapper's `catch` maps that rejection to the generic failure under the field (D6), never to `error.tsx`.
 - **Replace order.** The folder is the profile id, so the row must exist first:
-  1. ensure the row exists (`writeOwnProfile`'s step 1), then select `id, photo_path`;
+  1. ensure the row exists and get its id (`writeOwnProfile`'s step 1), then select its `photo_path` by id;
   2. upload `<id>/<uuid>.<ext>`;
   3. update `photo_path`;
   4. remove the old object.
@@ -200,7 +204,7 @@ Every action:
   - `app/(public)/authors/[id]/page.tsx` renders `<AuthorPage id={params.then((p) => p.id)} />`.
   
   Each feature component holds its own `<Suspense>` (`docs/code-style.md`). The route files contain no `"use cache"`, because the cache lives on the data.
-- **Owner link (FR-15).** `<AuthorOwnerLink profileId={…} />` sits in its own `<Suspense fallback={null}>` outside the cached data. It awaits `getCurrentUserId()` then `getMyAuthorProfile(userId)` and renders "Редактировать профиль" only when the ids match. The cached page body stays identical for every visitor.
+- **Owner link (FR-15).** `<AuthorOwnerLink profileId={…} />` sits in its own `<Suspense fallback={null}>` outside the cached data. It awaits `getCurrentUserId()` then `getMyAuthorProfile()` and renders "Редактировать профиль" only when the ids match. The cached page body stays identical for every visitor.
 - **Unavailable reads.** If Supabase errors during a public read, the DAL logs by name and returns `{ ok: false, reason: "unavailable" }`, cached for seconds as above. The directory then shows "Список авторов сейчас недоступен." The author page throws to the route `error.tsx`, the existing generic error screen.
 - **`notFound()` is a soft 404 (Gate 1 P2).** It is called inside the Suspense boundary after the shell has streamed, so Next renders the `not-found.tsx` UI but the HTTP status is 200. This is the same streaming mechanism D9 accepts for `redirect`. The specs require the 404 page to render, not a 404 status, and Gate 3 checks the UI.
 
@@ -208,7 +212,7 @@ Every action:
 
 ```
 AuthorEditorPanel        (server, exported) Suspense → AuthorEditorLoader
-AuthorEditorLoader       (server) requireUserId(); getMyAuthorProfile(userId); renders AuthorProfileEditor, or a danger Alert on a failed read
+AuthorEditorLoader       (server) requireUserId(); getMyAuthorProfile(); renders AuthorProfileEditor, or a danger Alert on a failed read
 AuthorProfileEditor      ("use client") activeField: useOptimistic<ProfileField | null>(null); "Сохранено" notice; layout
 ├── NameFieldEditor ×2   ("use client") useActionState + useOptimistic, text input
 ├── AboutFieldEditor     ("use client") useActionState + useOptimistic, MarkdownToolbar, Write/Preview, counter
@@ -238,7 +242,7 @@ FieldErrorText           error text wired by id for aria-describedby, for the ab
 - **The optimistic value reverts on its own when the transition ends.** `useOptimistic(savedValueFromProps)` falls back to props. On success, the props already hold the new value (D3), so the field shows it with no flicker. On failure, the props are unchanged, so it reverts to the last saved value (FR-7).
 - **On failure the input keeps its draft.** The form state carries the submitted text back, the way `SignInForm` keeps `email`. The photo input cannot be re-filled programmatically, so it shows the error and the previous photo, or the placeholder when there was none.
 - **The photo field reuses `AuthorPhoto`.** With no photo, including right after a delete, the editor shows the same user-icon placeholder as the public page, plus "Добавить фото" (FR-6, FR-10).
-- **A failed loader read (Gate 1 C5).** When `getMyAuthorProfile(userId)` returns a failure, the loader renders no editor. It shows a danger `Alert` reading "Не удалось загрузить профиль. Попробуйте позже." `AccountAuthorSection` does the same, and `AuthorOwnerLink` renders nothing.
+- **A failed loader read (Gate 1 C5).** When `getMyAuthorProfile()` returns a failure, the loader renders no editor. It shows a danger `Alert` reading "Не удалось загрузить профиль. Попробуйте позже." `AccountAuthorSection` does the same, and `AuthorOwnerLink` renders nothing.
 - **`SaveNotice` stays mounted** with `role="status"`. A live region that exists before its text changes is announced reliably (NFR-5). It does not auto-hide on a timer.
 - **The notice text is optimistic too (Gate 1 N3).** `const [notice, setNotice] = useState("")` holds the committed text. `const [shownNotice, setOptimisticNotice] = useOptimistic(notice)` is what renders.
   - **On start:** `setOptimisticNotice("")` empties the region at once.
@@ -346,8 +350,8 @@ sequenceDiagram
       alt no session
         A-->>F: failed: unauthenticated
       else user
-        A->>D: writeOwnProfile(user_id, { first_name })
-        D->>S: insert { user_id } on conflict do nothing; update … select OWNER_PROFILE_COLUMNS
+        A->>D: writeOwnProfile({ first_name })
+        D->>S: rpc ensure_my_author_profile → id; update … eq(id) select OWNER_PROFILE_COLUMNS
         alt error
           S-->>D: { error }
           D-->>A: { ok: false, failure }
@@ -392,8 +396,8 @@ sequenceDiagram
         alt no session
           A-->>P: failed: unauthenticated; nothing uploaded
         else user
-          A->>D: replacePhoto(userId, file, type)
-          D->>S: upsert { user_id } ignore duplicates; select id, photo_path
+          A->>D: replacePhoto(file, type)
+          D->>S: rpc ensure_my_author_profile → id; select photo_path by id
           alt row read/write fails
             D-->>A: failed
           else row (id, oldPath)
@@ -438,7 +442,7 @@ sequenceDiagram
     alt no session
       A-->>P: failed: unauthenticated
     else user
-      A->>D: removePhoto(userId)
+      A->>D: removePhoto()
       D->>S: select photo_path; update photo_path = null
       alt row write fails
         D-->>A: failed (file untouched)
@@ -485,7 +489,7 @@ sequenceDiagram
   end
   G-->>P: ok → render / not-found → notFound() (soft 404) / unavailable → error.tsx
   P->>O: profileId
-  O->>O: getCurrentUserId(); getMyAuthorProfile(userId)
+  O->>O: getCurrentUserId(); getMyAuthorProfile()
   alt owner
     O-->>V: "Редактировать профиль"
   else not owner / signed out / read failed
@@ -541,7 +545,7 @@ sequenceDiagram
   alt no valid session
     AU-->>R: redirect("/login") (streamed → client redirect); no profile read
   else user id
-    L->>D: getMyAuthorProfile(userId)
+    L->>D: getMyAuthorProfile()
     D->>S: select own row (cookie client)
     alt row or none
       D-->>L: AuthorProfile | null
@@ -558,7 +562,7 @@ sequenceDiagram
 - **[A raised body limit applies to every Server Action]** Next buffers up to 6 MB for any Server Action before Zod or the auth check runs, including the unauthenticated sign-in and sign-up actions. → It is a bounded per-request cost. The default was 1 MB, and the proxy already buffers up to 10 MB. The browser pre-check means legitimate users never send more than 5 MiB. Accepted.
 - **[Orphaned Storage objects]** These come from a failed old-file removal on replace or delete, or from an auth user deleted with files left behind (cascade covers rows, not objects). → Unique object names make orphans harmless to display, and they are never referenced. The cleanup job is out of scope; record it in `docs/deferred.md` if it surfaces in QA.
 - **[RLS or grant misconfiguration exposes or blocks data]** → pgTAP tests under `supabase/tests/` (run with `npx supabase test db` against the local stack) cover:
-  - anon sees only public rows and cannot select `user_id`;
+  - anon sees only public rows, and neither anon nor a signed-in user can select `user_id`;
   - a user cannot insert, update, or read another user's row;
   - a user cannot update `id`, `user_id`, or `created_at`;
   - `photo_path` outside the profile's folder, including a `<own id>/../<other id>/…` path, is rejected;
@@ -567,7 +571,7 @@ sequenceDiagram
   - a user cannot write outside their profile's Storage folder.
 
   Manual validation against the local stack is a task.
-- **[Signed-in users can read public authors' auth ids through the API]** This is the residual exposure from Gate 1 P5. → Anonymous users and public URLs never see auth ids. Knowing another user's auth id grants nothing under these policies. A `security definer` read path can close it later if a requirement appears.
+- **[Security definer functions]** `ensure_my_author_profile`, `my_author_profile_id` and `owns_author_profile` run as the table owner, bypassing RLS. → Each takes no user id, resolves the caller from `auth.uid()` only, sets an empty `search_path`, and is executable by `authenticated` alone; pgTAP covers their results and anon's denied call. (This replaced the earlier residual risk that signed-in users could read public authors' auth ids, closed by code-review CR-01.)
 - **[Photo-only rows]** A photo saved before any name creates a non-public row. → That state is intended (FR-4). It is invisible publicly and editable by its owner.
 - **[Streamed redirect and soft 404]** Signed-out `/account*` gets a client redirect, not a 307, and an unknown author gets the 404 UI with status 200. → Acceptable for UX, with no data rendered first (D5, D9). A proxy redirect is a later additive option.
 - **[`getClaims` per request on account pages and the owner link]** → Same cost profile as the header (ADR 0004). The public page body stays cached; only the small owner link is per request.

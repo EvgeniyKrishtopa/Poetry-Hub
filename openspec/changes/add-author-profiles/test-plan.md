@@ -29,14 +29,14 @@ Levels:
 | FR-4 | Deleting a name hides the profile and keeps the rest | `clearProfileField` clears only that column; `isPublicProfile` false; browser: delete last name → 404 page, other fields still in the editor | unit + end-to-end |
 | FR-4 | Database enforces the rule (anon select of a non-public row) | pgTAP anon select | integration |
 | FR-5, NFR-2 | Another user cannot write or upload into A's folder | pgTAP: B's update of A's row affects 0 rows; B's insert into `<A id>/…` in storage is denied; B's delete from `<A id>/…` is denied | integration |
-| FR-5 | One profile per user | pgTAP: second insert for the same `user_id` violates unique; `writeOwnProfile` uses `ON CONFLICT DO NOTHING` then update | integration + unit |
+| FR-5 | One profile per user | pgTAP: a direct insert is denied; `ensure_my_author_profile()` twice returns the same row and only one row exists; `writeOwnProfile` calls it then updates by id | integration + unit |
 | FR-5 | URL and photo URL use the profile id, not the user id | `getPublicAuthor` builds `photoUrl` from `<profile id>/…`; `AuthorList` hrefs use the profile id | unit |
-| FR-5, NFR-2 | Anonymous API read of `user_id` rejected | pgTAP: `select user_id` as anon → permission denied | integration |
+| FR-5, NFR-2 | API read of `user_id` rejected | pgTAP: `select user_id` as anon and as authenticated → permission denied; anon cannot call `ensure_my_author_profile()` | integration |
 | FR-5, NFR-2 | `photo_path` into another profile's folder rejected | pgTAP check violation | integration |
 | FR-5, NFR-2 | Protected columns (`id`, `user_id`, `created_at`) not updatable | pgTAP: update as authenticated → permission denied | integration |
 | FR-5, NFR-2 | Dot segments in photo path rejected | pgTAP: `<own>/../<other>/<file>.jpg` and a non-uuid name → check violation | integration |
 | FR-5, NFR-2 | Whitespace-only name rejected | pgTAP check violation | integration |
-| FR-5, NFR-2 | A real save runs through the grants | pgTAP: insert-do-nothing + update-returning with the column list as `authenticated` succeeds | integration |
+| FR-5, NFR-2 | A real save runs through the grants | pgTAP: `ensure_my_author_profile()` + update-by-id-returning with the column list as `authenticated` succeeds | integration |
 | FR-5, NFR-2 | Manual two-user check of all of the above via REST | Task 8.2 manual validation (recorded in the commit body) | end-to-end |
 | FR-6 | Empty profile → four add prompts, photo placeholder, no public link | `AuthorProfileEditor` with `profile = null` | unit |
 | FR-6 | Edit opens the input labelled «Имя» with «Сохранить»/«Отмена» | `NameFieldEditor` | unit |
