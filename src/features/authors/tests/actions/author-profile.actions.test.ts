@@ -150,7 +150,18 @@ describe("author profile actions", () => {
 
       expect(result.validationErrors?.fieldErrors.photo).toEqual([VALIDATION_MESSAGES.photoUnsupportedType]);
       expect(replacePhoto).not.toHaveBeenCalled();
-      expect(getCurrentUserId).not.toHaveBeenCalled();
+    });
+
+    it("checks the session before reading the file's bytes", async () => {
+      vi.mocked(getCurrentUserId).mockResolvedValue(null);
+      const photo = file(GIF_BYTES, "photo.png", "image/png");
+      const slice = vi.spyOn(photo, "slice");
+
+      const result = await savePhotoAction({ photo });
+
+      expect(result.data).toEqual({ status: "failed", failure: "unauthenticated" });
+      expect(result.validationErrors).toBeUndefined();
+      expect(slice).not.toHaveBeenCalled();
     });
 
     it("rejects a file over 5 MiB with a field error and no upload", async () => {

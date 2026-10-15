@@ -22,11 +22,15 @@ import { authorsActionClient } from "./action-client";
 // Each action resolves the user from the session, never from input (NFR-2), and on success
 // expires the directory's and the author's cache tags (FR-17).
 
-/** The session check, the DAL write, and on success the cache expiry every action shares (design D3). */
-async function runOwnerWrite(write: () => Promise<ProfileWriteResult>): Promise<ProfileActionResult> {
-  // Decides `unauthenticated` before any I/O; the DAL itself runs as the session's user.
-  if ((await getCurrentUserId()) === null) return { status: "failed", failure: "unauthenticated" };
+const UNAUTHENTICATED = { status: "failed", failure: "unauthenticated" } as const;
 
+/** Decides `unauthenticated` before any I/O; the DAL itself then runs as the session's user. */
+async function isSignedOut(): Promise<boolean> {
+  return (await getCurrentUserId()) === null;
+}
+
+/** The DAL write and, on success, the cache expiry every action shares (design D3). */
+async function writeAndExpire(write: () => Promise<ProfileWriteResult>): Promise<ProfileActionResult> {
   const result = await write();
   if (!result.ok) return { status: "failed", failure: result.failure };
 
@@ -36,6 +40,10 @@ async function runOwnerWrite(write: () => Promise<ProfileWriteResult>): Promise<
   // before this write either (one write clears one field), so it had no public page to expire.
   if (result.profile !== null) updateTag(authorTag(result.profile.id));
   return { status: "saved", profile: result.profile };
+}
+
+async function runOwnerWrite(write: () => Promise<ProfileWriteResult>): Promise<ProfileActionResult> {
+  return (await isSignedOut()) ? UNAUTHENTICATED : writeAndExpire(write);
 }
 
 export const saveNameAction = authorsActionClient
@@ -53,13 +61,16 @@ export const saveAboutAction = authorsActionClient
 export const savePhotoAction = authorsActionClient
   .inputSchema(savePhotoSchema)
   .action(async ({ parsedInput: { photo } }): Promise<ProfileActionResult> => {
+    // The session first, so a signed-out caller never makes the server read the file.
+    if (await isSignedOut()) return UNAUTHENTICATED;
+
     // The browser ran the same check, but an action is a public endpoint (design D4). The stored
     // type comes from the file's bytes, whatever `photo.type` claims (FR-8).
     const check = await validatePhotoFile(photo);
     if (!check.ok) {
       return returnValidationErrors(savePhotoSchema, { photo: { _errors: [PHOTO_FILE_ERROR_MESSAGES[check.error]] } });
     }
-    return runOwnerWrite(() => replacePhoto(photo, check.type));
+    return writeAndExpire(() => replacePhoto(photo, check.type));
   });
 
 export const deleteProfileFieldAction = authorsActionClient

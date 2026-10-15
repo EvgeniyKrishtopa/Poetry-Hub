@@ -388,14 +388,15 @@ sequenceDiagram
     alt body over 6 MB (browser check bypassed) / network
       A--xP: rejection → catch → unknown failure under field
     else action runs
-      A->>A: Zod: File, size; validatePhotoFile
-      alt invalid
-        A-->>P: validationErrors → field error; nothing uploaded
-      else valid
-        A->>AU: getCurrentUserId()
-        alt no session
-          A-->>P: failed: unauthenticated; nothing uploaded
-        else user
+      A->>A: Zod: File, size
+      A->>AU: getCurrentUserId() (before reading any bytes, code-review CR-01)
+      alt no session
+        A-->>P: failed: unauthenticated; nothing read or uploaded
+      else user
+        A->>A: validatePhotoFile (magic bytes)
+        alt invalid
+          A-->>P: validationErrors → field error; nothing uploaded
+        else valid
           A->>D: replacePhoto(file, type)
           D->>S: rpc ensure_my_author_profile → id; select photo_path by id
           alt row read/write fails
