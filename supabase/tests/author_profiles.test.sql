@@ -5,7 +5,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(54);
+select plan(56);
 
 -- Fixtures, written as the superuser (bypasses RLS). A owns a non-public profile, B a public one.
 insert into auth.users (id, email) values
@@ -226,6 +226,18 @@ select throws_ok(
 select lives_ok(
   $$update public.author_profiles set first_name = E'\tAnna\n' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   'a name with surrounding whitespace and real content is accepted'
+);
+
+select throws_ok(
+  $$update public.author_profiles set first_name = chr(8195) where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
+  '23514', null,
+  'an em space (U+2003) first name is rejected'
+);
+
+-- trim() keeps U+0085 (NEL), so the database counts it as content as well; the two layers agree.
+select lives_ok(
+  $$update public.author_profiles set first_name = chr(133) where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
+  'a NEL (U+0085) first name is content, as it is for trim()'
 );
 
 select lives_ok(

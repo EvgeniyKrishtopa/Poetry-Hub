@@ -79,9 +79,9 @@ create table public.author_profiles (
   user_id     uuid not null unique references auth.users (id) on delete cascade,
   -- A whitespace-only name written straight through PostgREST must not count as a name (FR-4). Blank means
   -- what JS trim() removes; one-argument btrim strips only U+0020 (code-review fix, 2026-10-15).
-  first_name  text check (first_name is null or char_length(first_name) <= 60 and first_name !~ E'^[[:space:]\uFEFF]*$'),
-  last_name   text check (last_name  is null or char_length(last_name)  <= 60 and last_name  !~ E'^[[:space:]\uFEFF]*$'),
-  about       text check (about      is null or char_length(about) <= 1000 and about !~ E'^[[:space:]\uFEFF]*$'),
+  first_name  text check (first_name is null or char_length(first_name) <= 60 and first_name !~ E'^[\t\n\u000B\f\r \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*$'),
+  last_name   text check (last_name  is null or char_length(last_name)  <= 60 and last_name  !~ E'^[\t\n\u000B\f\r \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*$'),
+  about       text check (about      is null or char_length(about) <= 1000 and about !~ E'^[\t\n\u000B\f\r \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*$'),
   about_align text not null default 'left' check (about_align in ('left', 'center', 'right')),
   -- A photo path must live in this profile's own folder, so no one can point at another author's file.
   -- The exact format, not just the first segment: `<id>/../<other>/…` would pass a prefix check and

@@ -21,12 +21,13 @@ create table public.author_profiles (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null unique references auth.users (id) on delete cascade,
   -- A whitespace-only value written straight through PostgREST must not count as content (FR-4). Blank
-  -- means what the app's trim() removes: one-argument btrim strips only U+0020, and [[:space:]] covers
-  -- tab, newlines, NBSP and U+3000 but not the BOM, hence the explicit \uFEFF.
+  -- means exactly what the app's trim() removes (ECMAScript WhiteSpace and LineTerminator), listed
+  -- explicitly: one-argument btrim strips only U+0020, and [[:space:]] depends on the database collation
+  -- (under "C" it misses NBSP and U+3000) and also matches U+0085, which trim() keeps.
   -- char_length counts code points, the same measure as the app's validation (design D2).
-  first_name  text check (first_name is null or (char_length(first_name) <= 60 and first_name !~ E'^[[:space:]\uFEFF]*$')),
-  last_name   text check (last_name  is null or (char_length(last_name)  <= 60 and last_name  !~ E'^[[:space:]\uFEFF]*$')),
-  about       text check (about      is null or (char_length(about) <= 1000 and about !~ E'^[[:space:]\uFEFF]*$')),
+  first_name  text check (first_name is null or (char_length(first_name) <= 60 and first_name !~ E'^[\t\n\u000B\f\r \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*$')),
+  last_name   text check (last_name  is null or (char_length(last_name)  <= 60 and last_name  !~ E'^[\t\n\u000B\f\r \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*$')),
+  about       text check (about      is null or (char_length(about) <= 1000 and about !~ E'^[\t\n\u000B\f\r \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*$')),
   about_align text not null default 'left' check (about_align in ('left', 'center', 'right')),
   photo_path  text,
   created_at  timestamptz not null default now(),
