@@ -76,6 +76,11 @@ The database SHALL enforce the profile rules even when the application is bypass
 - **WHEN** they directly set the first name to "   "
 - **THEN** the write is rejected and the profile does not become public
 
+#### Scenario: Upload name format (FR-5, added by defect fix)
+- **GIVEN** user A owns profile `<idA>`
+- **WHEN** A uploads directly through the storage API an object under `<idA>/` whose name is not `<uuid>.png` or `<uuid>.jpg` (for example `<idA>/page.html`, `<idA>/sub/<uuid>.png`, or a path with `..` segments)
+- **THEN** the upload is rejected, so the public photo bucket holds only files in the same format a profile's photo path allows
+
 ### Requirement: Editor field states (FR-2, FR-6)
 `/account/author` SHALL show four fields: first name, last name, about, and photo. A field without a value SHALL show an add prompt ("Добавить имя", "Добавить фамилию", "Добавить «О себе»", "Добавить фото"); the empty photo field SHALL also show the user-icon placeholder. A field with a value SHALL show it with "Изменить" and "Удалить" buttons. A field being edited SHALL show its input with "Сохранить" and "Отмена" buttons. At most one field SHALL be in edit mode at a time; while one is, the other fields' "Изменить", "Удалить", and add prompts SHALL be disabled. When the profile is public, a "Открыть публичную страницу" link SHALL appear at the top.
 

@@ -6,7 +6,7 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 
 - [x] 1.1 (FR-4, FR-5, FR-8, NFR-2) Add `supabase/migrations/<timestamp>_author_profiles.sql` per design D2.
   - Include:
-    - the table with its checks: `btrim` name and about checks, and the `photo_path` format pinned to `<id>/<uuid>.png|jpg`. No ordering index: the directory sorts in the DAL;
+    - the table with its checks: blank-pattern name and about checks (whitespace as JS `trim()` defines it), and the `photo_path` format pinned to `<id>/<uuid>.png|jpg`. No ordering index: the directory sorts in the DAL;
     - RLS enabled, with the four policies;
     - the column grants (anon without `user_id`; insert and update limited to the listed columns).
   - Add the `author-photos` bucket (public, 5242880 bytes, png/jpeg) and the `storage.objects` insert/select/delete policies scoped to a folder naming a profile the caller owns.

@@ -77,10 +77,11 @@ src/features/authors/
 create table public.author_profiles (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null unique references auth.users (id) on delete cascade,
-  -- btrim: a whitespace-only name written straight through PostgREST must not count as a name (FR-4).
-  first_name  text check (first_name is null or char_length(first_name) <= 60 and char_length(btrim(first_name)) >= 1),
-  last_name   text check (last_name  is null or char_length(last_name)  <= 60 and char_length(btrim(last_name))  >= 1),
-  about       text check (about      is null or char_length(about) <= 1000 and char_length(btrim(about)) >= 1),
+  -- A whitespace-only name written straight through PostgREST must not count as a name (FR-4). Blank means
+  -- what JS trim() removes; one-argument btrim strips only U+0020 (code-review fix, 2026-10-15).
+  first_name  text check (first_name is null or char_length(first_name) <= 60 and first_name !~ E'^[[:space:]\uFEFF]*$'),
+  last_name   text check (last_name  is null or char_length(last_name)  <= 60 and last_name  !~ E'^[[:space:]\uFEFF]*$'),
+  about       text check (about      is null or char_length(about) <= 1000 and about !~ E'^[[:space:]\uFEFF]*$'),
   about_align text not null default 'left' check (about_align in ('left', 'center', 'right')),
   -- A photo path must live in this profile's own folder, so no one can point at another author's file.
   -- The exact format, not just the first segment: `<id>/../<other>/…` would pass a prefix check and
@@ -123,7 +124,7 @@ grant update (first_name, last_name, about, about_align, photo_path) on public.a
 - **Insert never carries `photo_path`.** A photo is attached by an update after the row exists, because its folder is the row's `id` (D4).
 - **`user_id` is hidden from anonymous readers (Gate 1 P5).** The anon column grant leaves it out, and photo paths use the profile id, so public URLs carry no auth id. Authenticated users keep `select (user_id)`, because the owner's own read and upsert filter on it (`eq("user_id", …)`, `onConflict: "user_id"`). The remaining exposure is that a signed-in user can read a *public* author's auth id through the API. That exposure is accepted and recorded in Risks. Hiding it too would need a `security definer` view or RPC for every owner read, which the first reader table doesn't justify.
 
-- **A deleted field is stored as `NULL`, never `''`.** The `char_length(btrim(…)) ≥ 1` checks make an empty or whitespace-only string impossible, and `char_length(…) ≤ 60/1000` bounds the raw value too. So "public" is exactly `first_name is not null and last_name is not null`, in RLS (FR-4) and in `model/is-public-profile.ts`. The database repeats the 60/1000 limits so a bypassed action still can't store an oversized value.
+- **A deleted field is stored as `NULL`, never `''`.** The blank-pattern checks make an empty or whitespace-only string impossible, and `char_length(…) ≤ 60/1000` bounds the raw value too. So "public" is exactly `first_name is not null and last_name is not null`, in RLS (FR-4) and in `model/is-public-profile.ts`. The database repeats the 60/1000 limits so a bypassed action still can't store an oversized value.
 - **`about` length is counted by `char_length`.** That is Unicode code points, the same as the `[...value].length` the schema uses. `String.prototype.length` would count UTF-16 units and disagree on emoji.
 - **Storage bucket `author-photos`:** `public = true`, `file_size_limit = 5242880`, `allowed_mime_types = {image/png, image/jpeg}`. It is created in the same migration (`insert into storage.buckets …`) and mirrored in `supabase/config.toml` `[storage.buckets.author-photos]` for local `db reset`.
 - **Storage policies:** `insert`, `select` (which `remove` needs), and `delete` on `storage.objects`, all `to authenticated`. All three are scoped to `bucket_id = 'author-photos'` and to a folder that names a profile the caller owns:
@@ -133,7 +134,7 @@ grant update (first_name, last_name, about, about_align, photo_path) on public.a
           where p.id::text = (storage.foldername(name))[1] and p.user_id = (select auth.uid()))
   ```
 
-  The subquery runs with the caller's own privileges, so `authenticated` needs its `select (id, user_id)` grant above. Public reading goes through the public-bucket URL, which needs no `select` policy for `anon`.
+  The insert policy also requires `name ~ ('^' || p.id::text || '/[0-9a-f-]{36}\.(png|jpg)$')`, the `photo_path` format, so the public bucket can't host arbitrary objects (code-review fix, 2026-10-15). The subquery runs with the caller's own privileges, so `authenticated` needs its `select (id, user_id)` grant above. Public reading goes through the public-bucket URL, which needs no `select` policy for `anon`.
 - **Object path:** `<profile_id>/<random uuid>.<png|jpg>`. Using the profile id rather than the user id keeps the auth id out of public URLs (P5). A fresh name per upload means a cached public URL never shows a stale image after replacement, so no cache-busting query string is needed.
 - *Alternative rejected:* a `profile_id` FK to a separate `profiles` table keyed by user. YAGNI: one author profile per user is the only reader-owned row so far.
 
