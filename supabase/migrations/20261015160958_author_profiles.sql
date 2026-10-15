@@ -15,11 +15,13 @@
 create table public.author_profiles (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null unique references auth.users (id) on delete cascade,
-  -- btrim: a whitespace-only value written straight through PostgREST must not count as content (FR-4).
+  -- A whitespace-only value written straight through PostgREST must not count as content (FR-4). Blank
+  -- means what the app's trim() removes: one-argument btrim strips only U+0020, and [[:space:]] covers
+  -- tab, newlines, NBSP and U+3000 but not the BOM, hence the explicit \uFEFF.
   -- char_length counts code points, the same measure as the app's validation (design D2).
-  first_name  text check (first_name is null or (char_length(first_name) <= 60 and char_length(btrim(first_name)) >= 1)),
-  last_name   text check (last_name  is null or (char_length(last_name)  <= 60 and char_length(btrim(last_name))  >= 1)),
-  about       text check (about      is null or (char_length(about) <= 1000 and char_length(btrim(about)) >= 1)),
+  first_name  text check (first_name is null or (char_length(first_name) <= 60 and first_name !~ E'^[[:space:]\uFEFF]*$')),
+  last_name   text check (last_name  is null or (char_length(last_name)  <= 60 and last_name  !~ E'^[[:space:]\uFEFF]*$')),
+  about       text check (about      is null or (char_length(about) <= 1000 and about !~ E'^[[:space:]\uFEFF]*$')),
   about_align text not null default 'left' check (about_align in ('left', 'center', 'right')),
   photo_path  text,
   created_at  timestamptz not null default now(),
@@ -68,6 +70,8 @@ on conflict (id) do nothing;
 
 -- Each policy allows only a folder named after a profile the caller owns. The subquery runs with the
 -- caller's privileges, which is why authenticated keeps select (id, user_id) above.
+-- Uploads also pin the whole name to the photo_path format, so the public bucket can't host arbitrary
+-- objects (any name, subfolders, dot segments) that no profile references.
 create policy "owners upload author photos" on storage.objects
   for insert to authenticated
   with check (
@@ -75,6 +79,7 @@ create policy "owners upload author photos" on storage.objects
     and exists (
       select 1 from public.author_profiles p
       where p.id::text = (storage.foldername(name))[1] and p.user_id = (select auth.uid())
+        and name ~ ('^' || p.id::text || '/[0-9a-f-]{36}\.(png|jpg)$')
     )
   );
 

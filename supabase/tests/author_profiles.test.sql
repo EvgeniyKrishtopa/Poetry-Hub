@@ -5,7 +5,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(31);
+select plan(41);
 
 -- Fixtures, written as the superuser (bypasses RLS). A owns a non-public profile, B a public one.
 insert into auth.users (id, email) values
@@ -141,6 +141,47 @@ select throws_ok(
   'a whitespace-only name is rejected'
 );
 
+-- Blank means what the app's trim() removes, not only U+0020: tab, newline, NBSP, ideographic space, BOM.
+select throws_ok(
+  $$update public.author_profiles set first_name = E'\t' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  '23514', null,
+  'a tab-only first name is rejected'
+);
+
+select throws_ok(
+  $$update public.author_profiles set last_name = E'\n \r' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  '23514', null,
+  'a newline-and-space last name is rejected'
+);
+
+select throws_ok(
+  $$update public.author_profiles set first_name = E'\u00A0\u3000' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  '23514', null,
+  'a first name of a no-break space and an ideographic space is rejected'
+);
+
+select throws_ok(
+  $$update public.author_profiles set last_name = E'\uFEFF' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  '23514', null,
+  'a last name of a byte order mark is rejected'
+);
+
+select throws_ok(
+  $$update public.author_profiles set about = E'\n\t\n' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  '23514', null,
+  'an about of newlines and tabs is rejected'
+);
+
+select lives_ok(
+  $$update public.author_profiles set first_name = E'\tAnna\n' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  'a name with surrounding whitespace and real content is accepted'
+);
+
+select lives_ok(
+  $$update public.author_profiles set first_name = 'Anna' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  'restore the first name for the cases below'
+);
+
 select throws_ok(
   $$update public.author_profiles set last_name = repeat('я', 61) where user_id = '11111111-1111-4111-8111-111111111111'$$,
   '23514', null,
@@ -182,6 +223,28 @@ select throws_ok(
     values ('author-photos', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/ffffffff-ffff-4fff-8fff-ffffffffffff.jpg')$$,
   '42501', null,
   'a user cannot upload into another profile''s folder'
+);
+
+-- Uploads follow the same name format as photo_path, so the public bucket holds only profile photos.
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name)
+    values ('author-photos', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/page.html')$$,
+  '42501', null,
+  'an upload whose file name is not <uuid>.png|jpg is rejected'
+);
+
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name)
+    values ('author-photos', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/../bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/ffffffff-ffff-4fff-8fff-ffffffffffff.png')$$,
+  '42501', null,
+  'an upload path with dot segments is rejected'
+);
+
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name)
+    values ('author-photos', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/sub/ffffffff-ffff-4fff-8fff-ffffffffffff.png')$$,
+  '42501', null,
+  'an upload into a subfolder is rejected'
 );
 
 select isnt_empty(
