@@ -34,7 +34,6 @@ async function createClientOrFailure(): Promise<
   }
 }
 
-// implements FR-2 of add-supabase-auth
 export const signInAction = authActionClient
   .inputSchema(signInSchema)
   .action(async ({ parsedInput }): Promise<SignInResult> => {
@@ -49,7 +48,6 @@ export const signInAction = authActionClient
     redirect(HOME_PATH);
   });
 
-// implements FR-4 of add-supabase-auth
 export const signUpAction = authActionClient
   .inputSchema(signUpSchema)
   .action(async ({ parsedInput }): Promise<SignUpResult> => {
@@ -63,8 +61,6 @@ export const signUpAction = authActionClient
     return { status: "check-email", email: parsedInput.email };
   });
 
-// implements FR-7 of add-supabase-auth
-// implements FR-4 of remove-browser-session-read
 export const signOutAction = authActionClient.action(async (): Promise<SignOutResult> => {
   const client = await createClientOrFailure();
   if ("failure" in client) return { ok: false };

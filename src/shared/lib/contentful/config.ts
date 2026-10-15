@@ -13,7 +13,6 @@ export interface ContentfulConfig {
 
 const DEFAULT_ENVIRONMENT = "master";
 
-// implements FR-2 of add-contentful-home-greeting
 const contentfulEnvSchema = z.object({
   CONTENTFUL_SPACE_ID: z.string().regex(/^[a-z0-9]+$/),
   CONTENTFUL_ACCESS_TOKEN: z.string().regex(/^\S+$/),
@@ -37,8 +36,7 @@ export function getContentfulConfig(): ContentfulConfig {
   });
 
   if (!parsed.success) {
-    // Only variable names go into the message; the Zod error is not attached as a cause
-    // (implements NFR-1 of add-contentful-home-greeting).
+    // Only variable names go into the message; the Zod error is not attached as a cause.
     const names = [...new Set(parsed.error.issues.map((issue) => String(issue.path[0])))];
     throw new ContentfulError("config", `Invalid Contentful configuration: ${names.join(", ")}`);
   }

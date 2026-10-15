@@ -3,10 +3,7 @@ const SKELETON_TEXT_LINE_WIDTHS = ["w-full", "w-11/12", "w-3/4"] as const;
 
 const SKELETON_BLOCK = "rounded bg-surface animate-pulse motion-reduce:animate-none";
 
-// implements FR-6 of add-route-states: status region announced to assistive tech; skeleton hidden from it.
-// implements NFR-1 of add-route-states: design-token utilities only.
-// implements NFR-2 of add-route-states: pulse disabled under prefers-reduced-motion.
-// implements NFR-3 of add-route-states: stays a Server Component.
+// implements NFR-1, NFR-3 of add-route-states: design-token utilities only; stays a Server Component.
 export default function Loading() {
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-6 py-16">

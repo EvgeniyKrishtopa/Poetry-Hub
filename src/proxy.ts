@@ -1,4 +1,3 @@
-// implements FR-8 of add-contentful-home-greeting
 import type { NextRequest, NextResponse } from "next/server";
 
 import { refreshSession } from "@/shared/lib/supabase/session";
@@ -22,7 +21,6 @@ export function applySecurityHeaders(response: NextResponse): NextResponse {
  * Refreshes the Supabase session first, then sets the security headers last so every
  * response carries them, refreshed or not (design D4).
  */
-// implements FR-6 of add-supabase-auth
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   return applySecurityHeaders(await refreshSession(request));
 }

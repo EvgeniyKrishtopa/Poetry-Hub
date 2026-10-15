@@ -9,8 +9,6 @@ function digest(value: string): Buffer {
   return createHash("sha256").update(value).digest();
 }
 
-// implements FR-9 of add-contentful-home-greeting
-// implements NFR-1 of add-contentful-home-greeting
 /**
  * Compares the `x-contentful-webhook-secret` header with `CONTENTFUL_REVALIDATE_SECRET`
  * in constant time. Fails closed: an unset or empty secret is `not-configured`.

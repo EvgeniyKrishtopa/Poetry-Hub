@@ -18,7 +18,6 @@ function isAllowedSupabaseUrl(value: string): boolean {
   return protocol === "https:" || (protocol === "http:" && LOCAL_HTTP_HOSTNAMES.has(hostname));
 }
 
-// implements FR-8 of add-supabase-auth
 const supabaseEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().refine(isAllowedSupabaseUrl),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().regex(/^\S+$/),

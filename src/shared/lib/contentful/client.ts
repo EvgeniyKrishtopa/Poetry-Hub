@@ -63,7 +63,7 @@ async function requestContentful(
 ): Promise<object> {
   const { spaceId, accessToken, environment } = getContentfulConfig();
 
-  // implements NFR-1 of add-contentful-home-greeting: the token appears only in this header
+  // The token appears only in this header.
   const { status, ok, body } = await send(
     `https://graphql.contentful.com/content/v1/spaces/${spaceId}/environments/${environment}`,
     {
@@ -118,10 +118,9 @@ async function requestContentful(
 
 /**
  * The cached scope. Failures are returned, not thrown, so they are cached for the same lifetime
- * as a success (implements FR-3 of migrate-to-cache-components). The token is read inside,
+ * as a success. The token is read inside,
  * never passed as an argument, so it never becomes part of the cache key.
  */
-// implements FR-2 of migrate-to-cache-components
 async function cachedContentfulRequest(
   query: string,
   variables: Readonly<Record<string, unknown>>,
@@ -145,15 +144,12 @@ async function cachedContentfulRequest(
  * unvalidated `data` object. Rejects with `ContentfulError` (network → auth → graphql → http),
  * rebuilt outside the cache scope and therefore without a `cause`.
  */
-// implements FR-1 of add-contentful-home-greeting (server-only via the import above)
-// implements FR-3 of add-contentful-home-greeting
-// implements FR-3 of migrate-to-cache-components
 export async function contentfulQuery(
   query: string,
   variables: Readonly<Record<string, unknown>>,
   cache?: ContentfulCacheOptions,
 ): Promise<unknown> {
-  // implements NFR-2 of add-contentful-home-greeting: always cached, always tagged `contentful`
+  // Always cached, always tagged `contentful`.
   const tags = [...new Set([...(cache?.tags ?? []), CONTENTFUL_CACHE_TAG])];
 
   const outcome = await cachedContentfulRequest(

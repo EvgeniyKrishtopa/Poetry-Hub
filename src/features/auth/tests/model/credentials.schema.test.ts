@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { FIELD_MESSAGES } from "../../model/auth-messages";
 import { confirmParamsSchema } from "../../model/confirm-params.schema";
-import { MIN_PASSWORD_LENGTH, signInSchema, signUpSchema } from "../../model/credentials.schema";
+import { MIN_PASSWORD_LENGTH } from "../../model/auth.constants";
+import { signInSchema, signUpSchema } from "../../model/credentials.schema";
 
 const VALID_EMAIL = "reader@example.com";
 

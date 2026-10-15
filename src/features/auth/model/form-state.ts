@@ -15,7 +15,7 @@ function readField(formData: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
-/** The submitted credentials, read only to pass straight to the action (NFR-1: never stored). */
+/** The submitted credentials, read only to pass straight to the action (never stored). */
 export function readCredentials(formData: FormData): { readonly email: string; readonly password: string } {
   return { email: readField(formData, "email"), password: readField(formData, "password") };
 }
@@ -41,12 +41,10 @@ function toFormState<Data, State>(
   return fromData(result.data);
 }
 
-// implements FR-2 of add-supabase-auth
 export function toSignInFormState(result: AuthActionResult<SignInResult>, email: string): SignInFormState {
   return toFormState(result, email, (data) => ({ status: "failed", email, failure: data.failure }));
 }
 
-// implements FR-4 of add-supabase-auth
 export function toSignUpFormState(result: AuthActionResult<SignUpResult>, email: string): SignUpFormState {
   return toFormState(result, email, (data): SignUpFormState => {
     if (data.status === "check-email") return { status: "check-email", email: data.email };

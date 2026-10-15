@@ -1,4 +1,3 @@
-// implements FR-9 of add-contentful-home-greeting
 import { revalidateTag } from "next/cache";
 
 import { CONTENTFUL_CACHE_TAG, verifyWebhookSecret } from "@/shared/lib/contentful";
@@ -15,7 +14,7 @@ export async function POST(request: Request): Promise<Response> {
   const verification = verifyWebhookSecret(request.headers.get(WEBHOOK_SECRET_HEADER));
 
   if (verification === "not-configured") {
-    // No header value or secret in the log (implements NFR-1 of add-contentful-home-greeting).
+    // No header value or secret in the log.
     console.error("[contentful] revalidation secret is not configured");
     return Response.json(
       { revalidated: false, error: verification },
@@ -27,7 +26,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ revalidated: false, error: verification }, { status: HTTP_UNAUTHORIZED });
   }
 
-  // expire: 0, not "max": the next request must block on fresh data (implements NFR-2).
+  // expire: 0, not "max": the next request must block on fresh data.
   revalidateTag(CONTENTFUL_CACHE_TAG, { expire: 0 });
   return Response.json({ revalidated: true });
 }

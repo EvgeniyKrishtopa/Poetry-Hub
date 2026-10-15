@@ -20,7 +20,6 @@ function isReadOnlyCookiesError(error: unknown): boolean {
  * A per-request server client for Server Actions and route handlers, with the session
  * read from and written to `cookies()`. Rejects with `SupabaseConfigError` on invalid config.
  */
-// implements FR-8 of add-supabase-auth
 export async function createSupabaseServerClient(): Promise<SupabaseClient> {
   const { url, publishableKey } = getSupabaseConfig();
   const cookieStore = await cookies();

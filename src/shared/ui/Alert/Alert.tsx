@@ -1,13 +1,4 @@
-import type { ReactNode } from "react";
-
-type AlertTone = "danger" | "success";
-
-interface AlertProps {
-  tone: AlertTone;
-  children: ReactNode;
-  /** Layout utilities only (e.g. `flex flex-col gap-2`); a colour or border class would fight the tone. */
-  className?: string;
-}
+import type { AlertProps, AlertTone } from "./Alert.types";
 
 // Errors interrupt (announced immediately); success is polite.
 const TONE_ROLE = {
@@ -25,7 +16,6 @@ const TONE_BORDER = {
 const BASE_CLASSES = "rounded-md border-l-4 bg-surface px-3 py-2 text-sm font-medium text-foreground";
 
 /** A feedback box for an error or a success message. Safe in Server and Client Components. */
-// implements FR-3 of add-feedback-color-tokens
 // implements NFR-2 of add-feedback-color-tokens: token utilities only
 export function Alert({ tone, children, className }: AlertProps) {
   const classes = [BASE_CLASSES, TONE_BORDER[tone], className].filter(Boolean).join(" ");

@@ -13,8 +13,6 @@ const SESSION_CACHE_CONTROL = "private, no-store";
  * Refreshes the Supabase session for the proxy and returns the response to continue with.
  * Never throws: a Supabase outage or a bad config must not take every page down (design D4).
  */
-// implements FR-6 of add-supabase-auth
-// implements FR-8 of add-supabase-auth
 export async function refreshSession(request: NextRequest): Promise<NextResponse> {
   let config;
   try {

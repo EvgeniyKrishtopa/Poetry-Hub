@@ -12,7 +12,7 @@
   --border: #e4e4e7;
   --accent: #7c3aed;
   --accent-foreground: #ffffff;
-  /* implements FR-1 of add-feedback-color-tokens: feedback tones, AA on --background (design D1) */
+  /* Feedback tones, AA on --background (design D1) */
   --danger: #dc2626;
   --success: #15803d;
 }

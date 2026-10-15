@@ -10,8 +10,6 @@ import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
  * never claims, so no reader data enters the render tree. Never throws: every failure reads
  * as signed out.
  */
-// implements FR-3 of remove-browser-session-read
-// implements FR-8 of add-supabase-auth: invalid config reads as signed out
 export async function isSignedIn(): Promise<boolean> {
   // First and outside the try: without it, a build with no Supabase env would throw the config
   // error before `cookies()`, resolve `false` during prerender, and bake "Sign in" into the shell.

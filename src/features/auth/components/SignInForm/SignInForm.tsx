@@ -5,28 +5,15 @@ import { useActionState } from "react";
 
 import { Alert, Button } from "@/shared/ui";
 
-import { signInAction } from "../../actions/auth.actions";
 import { getFailureMessage } from "../../model/auth-messages";
 import type { SignInFormState } from "../../model/auth.types";
-import { readCredentials, toSignInFormState } from "../../model/form-state";
 import { AuthField } from "../AuthField/AuthField";
+
+import type { SignInFormProps } from "./SignInForm.types";
+import { submitSignIn } from "./submit-sign-in";
 
 const INITIAL_STATE: SignInFormState = { status: "idle", email: "" };
 
-/** Success never returns: the action redirects to `/`. The password is passed on, never kept. */
-async function submitSignIn(_previous: SignInFormState, formData: FormData): Promise<SignInFormState> {
-  const credentials = readCredentials(formData);
-  return toSignInFormState(await signInAction(credentials), credentials.email);
-}
-
-interface SignInFormProps {
-  /** A form-level message shown until the first submission, e.g. FR-5's confirm-failed text. */
-  readonly initialError?: string;
-}
-
-// implements FR-1 of add-supabase-auth
-// implements FR-2 of add-supabase-auth
-// implements NFR-3 of add-supabase-auth
 // implements NFR-4 of add-supabase-auth: token utilities only, no color literals
 export function SignInForm({ initialError }: SignInFormProps) {
   const [state, formAction, pending] = useActionState(submitSignIn, INITIAL_STATE);
@@ -42,10 +29,7 @@ export function SignInForm({ initialError }: SignInFormProps) {
   return (
     // noValidate: the server-side schema is the only validation, so its errors are what the reader sees.
     <form action={formAction} noValidate className="flex w-full flex-col gap-4">
-      {formError && (
-        // implements FR-4 of add-feedback-color-tokens
-        <Alert tone="danger">{formError}</Alert>
-      )}
+      {formError && <Alert tone="danger">{formError}</Alert>}
       <AuthField
         label="Email"
         name="email"

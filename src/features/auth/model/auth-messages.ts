@@ -1,18 +1,12 @@
+import { CONFIRM_FAILED_ERROR } from "./auth.constants";
 import type { AuthFailure, AuthFlow } from "./auth.types";
 
-// implements FR-2 of add-supabase-auth
-// implements FR-4 of add-supabase-auth
-// implements FR-5 of add-supabase-auth
-// implements FR-7 of add-supabase-auth
 export const GENERIC_SERVER_ERROR = "Something went wrong. Try again.";
 
 export const CONFIRM_FAILED_MESSAGE =
   "That confirmation link is invalid or has expired. Sign in, or sign up again to get a new link.";
 
 export const SIGN_OUT_FAILED_MESSAGE = "Couldn't sign out. Try again.";
-
-/** The `error` value `/auth/confirm` puts on `/login` when a link fails (FR-5). */
-export const CONFIRM_FAILED_ERROR = "confirm-failed";
 
 export const CHECK_EMAIL_TITLE = "Check your email";
 

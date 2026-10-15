@@ -12,7 +12,6 @@ export function PoemList() {
   const searchQuery = usePoemsUiStore((state) => state.searchQuery);
 
   if (isPending) return <p className="text-muted">Loading poems…</p>;
-  // implements FR-4 of add-feedback-color-tokens
   if (isError) return <Alert tone="danger">Could not load poems.</Alert>;
 
   // Derived on render, not stored: server data + UI state -> visible list.
