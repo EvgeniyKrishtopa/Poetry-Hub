@@ -1,6 +1,5 @@
 import "server-only";
 
-// implements FR-3 of add-contentful-home-greeting
 export type ContentfulErrorKind = "config" | "network" | "auth" | "graphql" | "http";
 
 interface ContentfulErrorOptions {
@@ -10,8 +9,8 @@ interface ContentfulErrorOptions {
 }
 
 /**
- * Every Contentful failure, discriminated by `kind`. Messages never carry secret values
- * (implements NFR-1 of add-contentful-home-greeting): callers pass only variable names,
+ * Every Contentful failure, discriminated by `kind`. Messages never carry secret values:
+ * callers pass only variable names,
  * statuses and GraphQL messages.
  */
 export class ContentfulError extends Error {

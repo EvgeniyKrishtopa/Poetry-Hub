@@ -1,10 +1,5 @@
-import type { Poem } from "../../model/poem.types";
-
 import styles from "./PoemCard.module.css";
-
-interface PoemCardProps {
-  poem: Poem;
-}
+import type { PoemCardProps } from "./PoemCard.types";
 
 export function PoemCard({ poem }: PoemCardProps) {
   return (

@@ -1,5 +1,3 @@
-// implements FR-2 of add-supabase-auth
-// implements FR-4 of add-supabase-auth
 /** Why an auth call failed, in the terms the forms show (design D7). */
 export type AuthFailure =
   | "invalid-credentials"
@@ -21,7 +19,7 @@ export interface AuthFailedResult {
 /** Sign-in success never returns a value: the action redirects to `/`. */
 export type SignInResult = AuthFailedResult;
 
-/** `check-email` is returned whether or not the address was already registered (FR-4). */
+/** `check-email` is returned whether or not the address was already registered. */
 export type SignUpResult = { readonly status: "check-email"; readonly email: string } | AuthFailedResult;
 
 export type SignOutResult = { readonly ok: true } | { readonly ok: false };
@@ -39,7 +37,7 @@ export interface AuthActionResult<Data> {
   };
 }
 
-/** One message per field; never holds the password itself (NFR-1). */
+/** One message per field; never holds the password itself. */
 export type FieldErrors = Readonly<Partial<Record<CredentialField, string>>>;
 
 interface IdleFormState {

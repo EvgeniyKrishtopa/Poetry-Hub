@@ -1,17 +1,11 @@
 import { useId } from "react";
 
-interface AuthFieldProps {
-  readonly label: string;
-  readonly name: "email" | "password";
-  readonly type: "email" | "password";
-  readonly autoComplete: "email" | "current-password" | "new-password";
-  readonly defaultValue?: string;
-  readonly error?: string;
-}
+import type { AuthFieldProps } from "./AuthField.types";
 
-/** A labelled, uncontrolled input with its error wired up for assistive tech (NFR-3). */
-// implements NFR-3 of add-supabase-auth
-// implements FR-2 of add-feedback-color-tokens: danger error text and border, kept while focused
+/**
+ * A labelled, uncontrolled input with its error wired up for assistive tech.
+ * The danger border stays while the field is focused.
+ */
 // implements NFR-4 of add-supabase-auth: token utilities only, no color literals
 export function AuthField({ label, error, ...inputProps }: AuthFieldProps) {
   const id = useId();

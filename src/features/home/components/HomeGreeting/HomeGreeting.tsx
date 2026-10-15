@@ -1,14 +1,12 @@
-import type { GreetingContent } from "../../model/greeting.types";
-
-interface HomeGreetingProps {
-  greeting: GreetingContent;
-}
+import type { HomeGreetingProps } from "./HomeGreeting.types";
 
 /** One or more blank lines (whitespace-only lines count as blank) separate paragraphs. */
 const PARAGRAPH_SEPARATOR = /\n\s*\n/;
 
-/** Title as the page heading; message as plain-text paragraphs (line breaks kept). */
-// implements FR-6 of add-contentful-home-greeting: plain text only — React escapes it, nothing is parsed as Markdown/HTML
+/**
+ * Title as the page heading; message as plain-text paragraphs (line breaks kept).
+ * Plain text only: React escapes it, nothing is parsed as Markdown or HTML.
+ */
 export function HomeGreeting({ greeting }: HomeGreetingProps) {
   const paragraphs = greeting.message.split(PARAGRAPH_SEPARATOR);
 

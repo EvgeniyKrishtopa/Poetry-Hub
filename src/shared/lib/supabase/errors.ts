@@ -1,6 +1,6 @@
 /**
  * Invalid or missing Supabase env vars. The message and `variables` carry variable names only,
- * never their values (implements FR-8 of add-supabase-auth).
+ * never their values.
  */
 export class SupabaseConfigError extends Error {
   readonly variables: readonly string[];

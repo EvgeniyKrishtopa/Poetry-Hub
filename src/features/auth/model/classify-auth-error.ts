@@ -22,8 +22,6 @@ function readProperty(error: unknown, key: "code" | "status"): unknown {
  * Maps a Supabase auth error (or anything else) to the failure the forms show.
  * The only place a missing config becomes `unavailable` (design D7).
  */
-// implements FR-2 of add-supabase-auth
-// implements FR-4 of add-supabase-auth
 export function classifyAuthError(error: unknown): AuthFailure {
   const code = readProperty(error, "code");
   const byCode = typeof code === "string" ? FAILURE_BY_CODE.get(code) : undefined;

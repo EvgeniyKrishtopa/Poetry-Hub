@@ -13,7 +13,6 @@ const NO_SHARED_CACHE = "private, no-store";
  * Reads only `token_hash` and `type`; the target is one of two fixed paths, never a query
  * parameter, so there is no open redirect.
  */
-// implements FR-5 of add-supabase-auth
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = request.nextUrl;
   const result = await confirmSignUp(searchParams.get("token_hash"), searchParams.get("type"));

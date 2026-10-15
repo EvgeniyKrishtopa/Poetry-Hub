@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// implements FR-4 of add-contentful-home-greeting: every field non-empty after trimming; trimmed values reach the page
+// Every field non-empty after trimming; the trimmed values are what reach the page.
 const nonBlankString = z.string().trim().min(1);
 
 const greetingSchema = z.object({

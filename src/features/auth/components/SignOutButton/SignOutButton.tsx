@@ -11,7 +11,6 @@ import { SIGN_OUT_FAILED_MESSAGE } from "../../model/auth-messages";
  * The header's "Sign out". On success the action refreshes the server tree, which re-renders
  * the header as "Sign in"; this component only keeps the failure state (design D2).
  */
-// implements FR-2, FR-4 of remove-browser-session-read
 // implements NFR-4 of add-supabase-auth: token utilities only, no color literals
 export function SignOutButton() {
   const [signingOut, startSignOut] = useTransition();
@@ -33,7 +32,7 @@ export function SignOutButton() {
   return (
     <div className="flex items-center gap-3 text-sm">
       {signOutFailed && (
-        // implements FR-5 of add-feedback-color-tokens: inline, a boxed Alert would break the header row
+        // Inline text: a boxed Alert would break the header row.
         <p role="alert" className="font-medium text-danger">
           {SIGN_OUT_FAILED_MESSAGE}
         </p>

@@ -11,8 +11,6 @@ import { confirmParamsSchema } from "../model/confirm-params.schema";
  * lands on `/login` with a next step (design D3). Stays in `dal/`, never `actions/`: a
  * `"use server"` export would be a publicly callable endpoint.
  */
-// implements FR-5 of add-supabase-auth
-// implements FR-8 of add-supabase-auth
 export async function confirmSignUp(
   tokenHash: string | null,
   type: string | null,
