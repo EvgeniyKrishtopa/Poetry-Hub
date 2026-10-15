@@ -8,10 +8,12 @@ import { getQueryClient } from "@/shared/lib/query-client";
 
 export default async function HomePage() {
   "use cache";
-  // Cache Components rejects the `revalidate` segment config, so the page body is its own cache scope (prefetch/dehydrate read Date.now(), which needs one).
-  // "minutes" revalidates every 60 s, matching the Contentful client's default.
+  // Cache Components rejects the `revalidate` segment config, so the page body is its own cache
+  // scope (prefetch/dehydrate read Date.now(), which needs one). "minutes" revalidates every 60 s,
+  // matching the Contentful client's default.
   cacheLife("minutes");
-  // Tag the page itself so the publish webhook's revalidateTag expires it directly, without relying on nested-tag propagation.
+  // Tag the page itself so the publish webhook's revalidateTag expires it directly, without relying
+  // on nested-tag propagation.
   cacheTag(CONTENTFUL_CACHE_TAG);
 
   const queryClient = getQueryClient();
