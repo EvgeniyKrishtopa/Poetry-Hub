@@ -4,7 +4,7 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 
 ## 1. Database: table, RLS, bucket, policies <!-- judgement-heavy -->
 
-- [ ] 1.1 (FR-4, FR-5, FR-8, NFR-2) Add `supabase/migrations/<timestamp>_author_profiles.sql` per design D2.
+- [x] 1.1 (FR-4, FR-5, FR-8, NFR-2) Add `supabase/migrations/<timestamp>_author_profiles.sql` per design D2.
   - Include:
     - the table with its checks: `btrim` name and about checks, and the `photo_path` format pinned to `<id>/<uuid>.png|jpg`. No ordering index: the directory sorts in the DAL;
     - RLS enabled, with the four policies;
@@ -13,7 +13,7 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
   - Put the documented down-migration SQL in the file's header comment.
   - Mirror the bucket in `supabase/config.toml` (`[storage.buckets.author-photos]`).
   - Verify `npx supabase db reset` applies the migration with no error.
-- [ ] 1.2 (FR-4, FR-5, NFR-2) Add pgTAP tests in `supabase/tests/author_profiles.test.sql` covering:
+- [x] 1.2 (FR-4, FR-5, NFR-2) Add pgTAP tests in `supabase/tests/author_profiles.test.sql` covering:
   - anon selects only rows with both names, and selecting `user_id` as anon is denied;
   - an authenticated user reads their own non-public row;
   - user B cannot insert a row for A, or update or read A's non-public row;

@@ -125,6 +125,12 @@ file_size_limit = "50MiB"
 # allowed_mime_types = ["image/png", "image/jpeg"]
 # objects_path = "./images"
 
+# Author photos (add-author-profiles). Mirrors the bucket the migration creates.
+[storage.buckets.author-photos]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg"]
+
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
 enabled = true
