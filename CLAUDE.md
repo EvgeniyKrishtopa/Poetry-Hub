@@ -47,7 +47,7 @@ CI (`.github/workflows/ci.yml`) runs six checks (all of the above except `deps:o
 - Tests live in a `tests/` folder at the feature/module root, never next to source.
 - Name numeric and string constants; no magic values. Exception: Next.js route segment config (`maxDuration`, …) must be a literal — comment why. Page cache lifetimes use a named `cacheLife` profile (`cacheLife("minutes")`), not a `revalidate` export (rejected under Cache Components) or a magic number.
 - No `implements FR-x of <change>` markers in production code: they go on the test that verifies the requirement. Only an `NFR-` that no test verifies may keep a marker in code (`docs/code-style.md`).
-- A change with user-facing screens: after test-plan, write a Claude Design brief (`docs/claude-design.md`) and record the wait in `PROGRESS.md`. Don't run `opsx-scaffold` or `opsx-apply-git` for UI groups until the approved mockup link arrives; non-UI groups may proceed.
+- A change with user-facing screens: after Gate 2 and test-plan, write the Claude Design brief and record the wait in `PROGRESS.md`. No `opsx-scaffold` or `opsx-apply-git` for UI groups until the approved link arrives; non-UI groups may proceed. Procedure: `docs/claude-design.md`.
 - At the end of every task group, before its commit, record each task that ends blocked, skipped by decision, or obsolete in `docs/deferred.md`, and add `<!-- deferred: docs/deferred.md -->` to its line. Keep the line and any `blocked` marker in `tasks.md`, because `opsx-apply-git` reads them.
 
 ## Read when relevant
