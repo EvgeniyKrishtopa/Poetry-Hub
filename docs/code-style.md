@@ -37,3 +37,17 @@ Read before writing or changing a component, a helper, a type, a constant, or a 
   - UI copy — it stays in the feature's messages file (`auth-messages.ts`);
   - declared in a server-only module;
   - Next.js route segment config — a literal in the route file (see `CLAUDE.md`).
+
+## Explicit over terse
+
+- No logical assignment (`??=`, `||=`, `&&=`): write the `if`, comparing strictly. `if (browserQueryClient === undefined) browserQueryClient = makeQueryClient();`
+- No nested ternaries: use an `if` chain or a named function.
+- Strict equality only (`===`, `!==`); no `== null`.
+- Plain `??` and `?.` stay allowed.
+- ESLint enforces all three bans: `logical-assignment-operators: ["error", "never"]`, `no-nested-ternary`, `eqeqeq`.
+
+## Route files compose, features render
+
+- A route file passes a feature only the request data it needs, e.g. `<SignInPanel error={searchParams.then((params) => params.error)} />`, and renders the feature's component.
+- Suspense boundaries and their fallbacks live inside the feature's component (`SignInPanel`, `HeaderSession`), not in the route file.
+- TanStack Query prefetching and `HydrationBoundary` stay in the page (`docs/state-management.md`).
