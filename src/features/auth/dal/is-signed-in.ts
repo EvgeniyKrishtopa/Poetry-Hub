@@ -19,7 +19,8 @@ export async function isSignedIn(): Promise<boolean> {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.getClaims();
     // An error result (an expired or bad token) is routine, so it isn't logged.
-    return !error && data?.claims != null;
+    const hasClaims = data !== null && data.claims !== undefined && data.claims !== null;
+    return !error && hasClaims;
   } catch (error) {
     // The proxy already logs a missing config on every request. Anything else is an outage,
     // logged by name only.

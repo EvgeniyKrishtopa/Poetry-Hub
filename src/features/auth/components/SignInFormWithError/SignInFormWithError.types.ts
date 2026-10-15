@@ -1,4 +1,4 @@
 export interface SignInFormWithErrorProps {
-  /** The `/login` page's request-time search params; only `error` is read. */
-  readonly searchParams: Promise<{ error?: string | string[] }>;
+  /** The `/login` page's request-time `error` search param. */
+  readonly error: Promise<string | string[] | undefined>;
 }

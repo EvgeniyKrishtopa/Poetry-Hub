@@ -43,7 +43,7 @@ export async function refreshSession(request: NextRequest): Promise<NextResponse
         // The library sends its cache headers only with the first write; keep them for later ones.
         Object.assign(cacheHeaders, headers);
         for (const [name, value] of Object.entries(cacheHeaders)) response.headers.set(name, value);
-        wroteCookies ||= cookiesToSet.length > 0;
+        if (cookiesToSet.length > 0) wroteCookies = true;
       },
     },
   });
