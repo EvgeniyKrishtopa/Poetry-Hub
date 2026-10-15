@@ -593,3 +593,59 @@ sequenceDiagram
 ## Open Questions
 
 None.
+
+## Scaffold map
+
+Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each component row covers its `.tsx` and, where it has props, its `.types.ts`. Paths are relative to `src/`.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `shared/ui/TextField/TextField.tsx`, `.types.ts` | Labelled input with error wiring, promoted from auth's `AuthField` (7.1) | `TextField`, `TextFieldProps` |
+| `shared/ui/index.ts` | Shared UI barrel, now with `TextField` | `TextField` |
+| `shared/lib/safe-action/create-action-client.ts` | The one action-client error policy (D1) | `createActionClient`, `ActionClientOptions`, `ActionClient` |
+| `shared/lib/supabase/public.ts` | Cookie-less anon client for cached reads (D1) | `createSupabasePublicClient` |
+| `shared/config/supabase-image-patterns.ts` | `images.remotePatterns` from `NEXT_PUBLIC_SUPABASE_URL` (D8) | `buildSupabaseImagePatterns` |
+| `features/auth/dal/current-user.ts` | Who is signed in; the session gate (D1, D9) | `getCurrentUserId`, `requireUserId` |
+| `features/auth/index.ts` | Public API, now with the two accessors | + `getCurrentUserId`, `requireUserId` |
+| `features/authors/model/author.types.ts` | Domain types, DAL and action results, field form state, Markdown edit types | `NameField`, `ProfileField`, `AboutAlign`, `ProfileFailure`, `ImageType`, `PhotoFileCheck`, `AuthorProfile`, `PublicAuthor`, `ProfileRowPatch`, `MyProfileResult`, `ProfileWriteResult`, `PublicAuthorResult`, `PublicAuthorsResult`, `ProfileActionResult`, `ProfileActionResponse`, `FieldFormState`, `MarkdownFormat`, `TextSelection`, `FormattedText` |
+| `features/authors/model/author.constants.ts` | Limits, bucket, column lists, photo size | `NAME_MAX_LENGTH`, `ABOUT_MAX_LENGTH`, `PHOTO_MAX_BYTES`, `AUTHOR_PHOTOS_BUCKET`, `OWNER_PROFILE_COLUMNS`, `PUBLIC_AUTHOR_COLUMNS`, `PHOTO_WIDTH`, `PHOTO_HEIGHT` |
+| `features/authors/model/author-profile.schema.ts` | Action input schemas and the row schema (rules in 3.1) | `saveNameSchema`, `saveAboutSchema`, `savePhotoSchema`, `deleteProfileFieldSchema`, `profileRowSchema`, `ProfileRow` |
+| `features/authors/model/author-messages.ts` | Russian UI copy; failure → message | `getProfileFailureMessage` |
+| `features/authors/model/is-public-profile.ts` | FR-4 rule | `isPublicProfile` |
+| `features/authors/model/has-profile-content.ts` | Empty row reads as no profile (D3) | `hasProfileContent` |
+| `features/authors/model/compare-authors.ts` | Directory order (D5) | `compareAuthors` |
+| `features/authors/model/detect-image-type.ts` | PNG/JPEG magic bytes | `detectImageType` |
+| `features/authors/model/validate-photo-file.ts` | Size + type check, browser and action (D4) | `validatePhotoFile` |
+| `features/authors/model/markdown-format.ts` | Toolbar edits (D7) | `applyFormat` |
+| `features/authors/model/classify-profile-error.ts` | Error → `ProfileFailure` (D10) | `classifyProfileError` |
+| `features/authors/model/author-cache-tags.ts` | Cache tags (D3, D5) | `AUTHORS_TAG`, `authorTag` |
+| `features/authors/model/profile-form-state.ts` | Action result + draft → field state | `toFieldFormState` |
+| `features/authors/dal/my-author-profile.ts` | Owner read, per request | `getMyAuthorProfile` |
+| `features/authors/dal/public-authors.ts` | Cached public reads | `listPublicAuthors`, `getPublicAuthor` |
+| `features/authors/dal/author-profile-writes.ts` | Field writes and photo replace/remove | `writeOwnProfile`, `clearProfileField`, `replacePhoto`, `removePhoto` |
+| `features/authors/actions/action-client.ts` | Authors action client on the shared factory | `authorsActionClient` |
+| `features/authors/actions/author-profile.actions.ts` | The four Server Actions (D3) | `saveNameAction`, `saveAboutAction`, `savePhotoAction`, `deleteProfileFieldAction` |
+| `features/authors/components/AuthorAbout/` | Allowlisted Markdown render (D7) | `AuthorAbout`, `AuthorAboutProps` |
+| `features/authors/components/AuthorPhoto/` (+ `is-local-image-host.ts`) | Photo or placeholder (FR-16); local-host check (D8) | `AuthorPhoto`, `AuthorPhotoProps`, `isLocalImageHost` |
+| `features/authors/components/AuthorDirectory/` | Directory Suspense boundary | `AuthorDirectory` |
+| `features/authors/components/AuthorList/` | Directory list, empty, unavailable | `AuthorList`, `AuthorListProps` |
+| `features/authors/components/AuthorPage/` | Author page Suspense boundary | `AuthorPage`, `AuthorPageProps` |
+| `features/authors/components/AuthorProfileView/` | Public profile layout; `ownerLink` slot before the h1 | `AuthorProfileView`, `AuthorProfileViewProps` |
+| `features/authors/components/AuthorOwnerLink/` | Per-request owner check | `AuthorOwnerLink`, `AuthorOwnerLinkProps` |
+| `features/authors/components/AuthorOwnerLinkView/` | "Редактировать профиль" when owner | `AuthorOwnerLinkView`, `AuthorOwnerLinkViewProps` |
+| `features/authors/components/AccountAuthorSection/` | Account section: session gate, owner read | `AccountAuthorSection` |
+| `features/authors/components/AccountAuthorLinks/` | FR-1 links or FR-18 alert, from the whole read result | `AccountAuthorLinks`, `AccountAuthorLinksProps` |
+| `features/authors/components/AuthorEditorPanel/` | Editor Suspense boundary | `AuthorEditorPanel` |
+| `features/authors/components/AuthorEditorLoader/` | Session gate, owner read, editor or alert | `AuthorEditorLoader` |
+| `features/authors/components/AuthorProfileEditor/` | Field editors, one-active-field rule, notice; the shared field-editor props | `AuthorProfileEditor`, `AuthorProfileEditorProps`, `FieldEditorControls` |
+| `features/authors/components/NameFieldEditor/` | First / last name field | `NameFieldEditor`, `NameFieldEditorProps` |
+| `features/authors/components/AboutFieldEditor/` | About field: toolbar, alignment, tabs, counter | `AboutFieldEditor`, `AboutFieldEditorProps` |
+| `features/authors/components/MarkdownToolbar/` | Seven format buttons | `MarkdownToolbar`, `MarkdownToolbarProps` |
+| `features/authors/components/PhotoFieldEditor/` | Photo field with browser pre-check | `PhotoFieldEditor`, `PhotoFieldEditorProps` |
+| `features/authors/components/SaveNotice/` | `role="status"` notice | `SaveNotice`, `SaveNoticeProps` |
+| `features/authors/components/FieldErrorText/` | Error text wired by id | `FieldErrorText`, `FieldErrorTextProps` |
+| `features/authors/index.ts` | Public API for route files | `AccountAuthorSection`, `AuthorDirectory`, `AuthorEditorPanel`, `AuthorPage` |
+| `app/(public)/authors/page.tsx` | `/authors` route | default |
+| `app/(public)/authors/[id]/page.tsx` | `/authors/[id]` route | default |
+| `app/(authorized)/account/page.tsx` | `/account` route | default |
+| `app/(authorized)/account/author/page.tsx` | `/account/author` route | default |
