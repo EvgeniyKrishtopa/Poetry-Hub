@@ -1,20 +1,35 @@
 import { z } from "zod";
 
-// Structure only; the trim, length, and file rules land in task 3.1.
-const alignSchema = z.enum(["left", "center", "right"]);
+import { VALIDATION_MESSAGES } from "./author-messages";
+import { ABOUT_MAX_LENGTH, NAME_MAX_LENGTH, PHOTO_MAX_BYTES } from "./author.constants";
+import { trimmedLength } from "./trimmed-length";
+
+const alignSchema = z.enum(["left", "center", "right"], { error: VALIDATION_MESSAGES.invalidAlign });
+
+/** Trimmed, non-empty, and at most `max` code points: what is stored is the trimmed value (FR-8). */
+function trimmedText(max: number, tooLongMessage: string) {
+  return z
+    .string({ error: VALIDATION_MESSAGES.required })
+    .trim()
+    .min(1, VALIDATION_MESSAGES.required)
+    .refine((value) => trimmedLength(value) <= max, tooLongMessage);
+}
 
 export const saveNameSchema = z.object({
   field: z.enum(["first_name", "last_name"]),
-  value: z.string(),
+  value: trimmedText(NAME_MAX_LENGTH, VALIDATION_MESSAGES.nameTooLong),
 });
 
 export const saveAboutSchema = z.object({
-  about: z.string(),
+  about: trimmedText(ABOUT_MAX_LENGTH, VALIDATION_MESSAGES.aboutTooLong),
   align: alignSchema,
 });
 
+// Only the size is checked here; the type is checked by content in `validatePhotoFile` (design D4).
 export const savePhotoSchema = z.object({
-  photo: z.instanceof(File),
+  photo: z
+    .instanceof(File, { error: VALIDATION_MESSAGES.required })
+    .refine((file) => file.size <= PHOTO_MAX_BYTES, VALIDATION_MESSAGES.photoTooLarge),
 });
 
 export const deleteProfileFieldSchema = z.object({

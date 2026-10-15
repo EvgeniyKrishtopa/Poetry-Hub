@@ -47,14 +47,14 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 
 ## 3. Authors domain model <!-- isolated -->
 
-- [ ] 3.1 (FR-8, NFR-5) Implement four modules:
+- [x] 3.1 (FR-8, NFR-5) Implement four modules:
   - `model/author.constants.ts`: `OWNER_PROFILE_COLUMNS` / `PUBLIC_AUTHOR_COLUMNS` (explicit lists, never `*`), `NAME_MAX_LENGTH = 60`, `ABOUT_MAX_LENGTH = 1000`, `PHOTO_MAX_BYTES = 5 * 1024 * 1024`, bucket name, photo display size, sizes string;
   - `model/author.types.ts`;
   - `model/author-profile.schema.ts`: name (trim, 1–60), about (trim, 1–1000 code points), align enum, photo (`File`, size), field enum, plus the row schema used by the DAL;
   - `model/author-messages.ts`: every string from the proposal's UI copy table, in Russian (NFR-8), verbatim.
 
   Verify with `tests/model/author-profile.schema.test.ts`: 60/61 and blank names, a 60-emoji name accepted (code points), trimming, 1000/1001 about counted in code points (an emoji case), Markdown syntax counted, invalid align, a 5 MiB / 5 MiB + 1 file.
-- [ ] 3.2 (FR-4, FR-8, FR-9, FR-13) Implement seven pure functions:
+- [x] 3.2 (FR-4, FR-8, FR-9, FR-13) Implement seven pure functions:
   - `model/is-public-profile.ts`;
   - `model/has-profile-content.ts` (a row with every content field `NULL` counts as no profile, design D3);
   - `model/detect-image-type.ts` (PNG/JPEG magic bytes → `"png" | "jpeg" | null`);
@@ -64,11 +64,11 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
   - `model/validate-photo-file.ts` (size, then the first 12 bytes through `detectImageType` → `{ ok, type } | { ok: false, error: "too-large" | "unsupported-type" }`; it runs in the browser and the action, design D4).
 
   Verify with table-driven unit tests for each: a GIF header and a truncated buffer → `null`; a 5 MiB + 1 file → `too-large` without reading its bytes.
-- [ ] 3.3 (FR-11) Implement `model/markdown-format.ts` `applyFormat(text, selection, format)` per design D7. Verify with unit tests:
+- [x] 3.3 (FR-11) Implement `model/markdown-format.ts` `applyFormat(text, selection, format)` per design D7. Verify with unit tests:
   - each of the seven formats with a selection and with an empty selection (placeholder inserted and selected);
   - multi-line block prefixing;
   - the returned selection covers the formatted text.
-- [ ] 3.4 (FR-7, FR-9) Implement `model/profile-form-state.ts`, which maps a next-safe-action result (validation errors / serverError / `failed` / `saved`) plus the submitted draft into a field form state. It mirrors `auth/model/form-state.ts`. Verify with table-driven tests: every branch, the draft kept on failure, and `serverError` → the generic message.
+- [x] 3.4 (FR-7, FR-9) Implement `model/profile-form-state.ts`, which maps a next-safe-action result (validation errors / serverError / `failed` / `saved`) plus the submitted draft into a field form state. It mirrors `auth/model/form-state.ts`. Verify with table-driven tests: every branch, the draft kept on failure, and `serverError` → the generic message.
 
 ## 4. Authors data access and actions <!-- judgement-heavy -->
 

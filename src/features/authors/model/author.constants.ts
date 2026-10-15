@@ -10,3 +10,9 @@ export const PUBLIC_AUTHOR_COLUMNS = OWNER_PROFILE_COLUMNS;
 
 export const PHOTO_WIDTH = 300;
 export const PHOTO_HEIGHT = 400;
+
+/**
+ * `next/image` sizes for the photo (FR-16): 300 px from a 460 px viewport up, below that the
+ * content column's width (the viewport minus the `px-6` gutters on both sides).
+ */
+export const PHOTO_SIZES = "(min-width: 460px) 300px, calc(100vw - 3rem)";
