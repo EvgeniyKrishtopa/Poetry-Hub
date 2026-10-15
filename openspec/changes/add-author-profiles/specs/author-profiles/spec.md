@@ -216,6 +216,12 @@ A photo SHALL be a PNG or JPEG file of at most 5 × 1024 × 1024 bytes, typed by
 - **WHEN** it is saved as the photo
 - **THEN** it is stored and the photo field shows it
 
+#### Scenario: Stored type follows the content (FR-8, added by defect fix)
+- **GIVEN** a valid JPEG sent with a declared type of `image/png`
+- **WHEN** it is saved as the photo
+- **THEN** it is stored with a `.jpg` name and served with content type `image/jpeg`
+- **AND** the client's declared type is not passed to Storage
+
 ### Requirement: Server and data-access failures (FR-9)
 Failures after validation SHALL be shown under the field that triggered them: not signed in → "Сессия истекла. Войдите снова."; storage or database unavailable → "Сохранение сейчас недоступно. Попробуйте позже."; anything else, including an unexpected server error → "Что-то пошло не так. Попробуйте ещё раз." Logs SHALL carry no input values or file contents.
 
