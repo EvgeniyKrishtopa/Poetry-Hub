@@ -5,7 +5,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(43);
+select plan(47);
 
 -- Fixtures, written as the superuser (bypasses RLS). A owns a non-public profile, B a public one.
 insert into auth.users (id, email) values
@@ -310,8 +310,51 @@ select isnt_empty(
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}', true);
 
--- A's row was made public above (both names); make the check about a row B cannot see by owner rules.
+-- A's row is public at this point (both names set above).
+select results_eq(
+  $$select first_name from public.author_profiles where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
+  array['Anna'],
+  'a signed-in user reads another user''s public profile'
+);
+
+-- Storage in the test plan's direction: B against A's folder.
 reset role;
+insert into storage.objects (bucket_id, name) values
+  ('author-photos', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/99999999-9999-4999-8999-999999999999.png');
+set local role authenticated;
+
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name)
+    values ('author-photos', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/88888888-8888-4888-8888-888888888888.png')$$,
+  '42501', null,
+  'B cannot upload into A''s folder'
+);
+
+-- Make A's file visible to B for this one check, so the delete is refused by the delete policy itself
+-- and not only because the select policy hides the row. Rolled back with the rest of the file.
+reset role;
+create policy "test only: every author photo is visible" on storage.objects
+  for select to authenticated using (bucket_id = 'author-photos');
+set local role authenticated;
+
+select isnt_empty(
+  $$select name from storage.objects
+    where name = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/99999999-9999-4999-8999-999999999999.png'$$,
+  'with the test-only policy, B sees A''s file'
+);
+
+select is_empty(
+  $$delete from storage.objects
+    where bucket_id = 'author-photos'
+      and name = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/99999999-9999-4999-8999-999999999999.png'
+    returning name$$,
+  'the delete policy alone stops B deleting a file in A''s folder'
+);
+
+reset role;
+drop policy "test only: every author photo is visible" on storage.objects;
+
+-- Now make the check about a row B cannot see by owner rules.
 update public.author_profiles set last_name = null where user_id = '11111111-1111-4111-8111-111111111111';
 set local role authenticated;
 
