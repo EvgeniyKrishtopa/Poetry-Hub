@@ -46,6 +46,7 @@ CI (`.github/workflows/ci.yml`) runs six checks (all of the above except `deps:o
 - Server data lives in TanStack Query or a feature's server-only `dal/`; never copy it into Zustand. Never store derived values.
 - Tests live in a `tests/` folder at the feature/module root, never next to source.
 - Name numeric and string constants; no magic values. Exception: Next.js route segment config (`maxDuration`, …) must be a literal — comment why. Page cache lifetimes use a named `cacheLife` profile (`cacheLife("minutes")`), not a `revalidate` export (rejected under Cache Components) or a magic number.
+- No `implements FR-x of <change>` markers in production code: they go on the test that verifies the requirement. Only an `NFR-` that no test verifies may keep a marker in code. Other comments explain a non-obvious *why* only (`docs/code-style.md`).
 - At the end of every task group, before its commit, record each task that ends blocked, skipped by decision, or obsolete in `docs/deferred.md`, and add `<!-- deferred: docs/deferred.md -->` to its line. Keep the line and any `blocked` marker in `tasks.md`, because `opsx-apply-git` reads them.
 
 ## Read when relevant
@@ -56,6 +57,7 @@ Not auto-loaded — open the file before doing the matching kind of work.
 | --- | --- |
 | `docs/architecture.md` | adding a feature or file, naming files, touching `shared/`, cross-feature imports |
 | `docs/state-management.md` | fetching data, adding a store, DAL work, server → client data flow |
+| `docs/code-style.md` | writing a component, helper, type, constant, or comment; deciding what gets its own file |
 | `docs/styling.md` | writing or changing component styles |
 | `docs/design-system.md` | planning UI (`ui-plan`, a Claude Design brief) or picking tokens and primitives for a component |
 | `docs/claude-design.md` | starting a change with user-facing screens, or applying a Claude Design link |

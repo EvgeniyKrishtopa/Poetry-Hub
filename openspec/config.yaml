@@ -53,9 +53,15 @@ rules:
     - Give every requirement a stable identifier — FR-1, FR-2 for functional
       requirements, NFR-1, NFR-2 for non-functional ones. Unique within the
       change. Never renumber an identifier once it is written.
+    - A requirement about how code is written rather than what it does
+      (design tokens only, stays a Server Component, cache config) is an
+      NFR, not an FR.
     - State every acceptance criterion as Given/When/Then — the state it
       assumes, the action taken, the observable result.
   tasks:
     - Every task states the requirement identifier it implements.
+    - Requirement markers (implements <ID> of <change>) go on the test that
+      verifies the requirement; production code carries one only for an NFR
+      no test verifies (docs/code-style.md).
     - Verification belongs in the task list as its own task, not left as a
       manual check after the fact.
