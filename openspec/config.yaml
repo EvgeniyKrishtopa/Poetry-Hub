@@ -38,7 +38,7 @@ context: |
   Server caching uses "use cache" + cacheLife + cacheTag (see docs/state-management.md).
   Tailwind CSS v4 for layout/basic styling, CSS Modules for custom element styles.
   Feature-first layout: src/app/ (routing only), src/features/<name>/
-  {api,model,components,index.ts} (public API via index.ts), src/shared/
+  {actions,api,dal,model,components,tests,index.ts} (public API via index.ts), src/shared/
   {ui,lib,config}. Conventions in CLAUDE.md.
   Reviewed by the sdd-harness-web-ykryshtopa harness — see
   .claude/docs/review-gates.md for the gates and their order.

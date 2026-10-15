@@ -58,7 +58,7 @@ src/
 
 - Components: `PascalCase` folder + file (`PoemCard/PoemCard.tsx`, `PoemCard.module.css`, `PoemCard.types.ts`), named exports only (except Next.js route files, which need default exports). A helper only that component uses sits in the same folder in `kebab-case` (`SignInForm/submit-sign-in.ts`). What gets its own file: `docs/code-style.md`.
 - Constants: `model/<name>.constants.ts` per feature, `shared/config/constants.ts` project-wide (`docs/code-style.md`).
-- Non-component files: `kebab-case` with a role suffix (`poems.api.ts`, `poems.queries.ts`, `poems-ui.store.ts`, `poem.types.ts`, `auth.actions.ts`). Exception: modules in a feature's `dal/` folder take no suffix (`dal/home-greeting.ts`).
+- Non-component files: `kebab-case` with a role suffix (`poems.api.ts`, `poems.queries.ts`, `poems-ui.store.ts`, `poem.types.ts`, `auth.actions.ts`). Exceptions take no suffix: modules in a feature's `dal/` folder (`dal/home-greeting.ts`) and a helper inside a component's folder (`SignInForm/submit-sign-in.ts`, see `docs/code-style.md`).
 - A feature's `actions/` folder holds `"use server"` modules (`<name>.actions.ts`, exporting only Server Actions) and the feature's action client (`action-client.ts`, `import "server-only"`). Server Actions are public endpoints: validate input with a `model/` schema and never export anything else from a `"use server"` module.
 - Add `"use client"` only to components that need hooks, state, or browser APIs; keep pages as Server Components.
 - Keep domain logic in pure functions under `model/` so it's testable without React.

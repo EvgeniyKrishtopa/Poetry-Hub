@@ -5,6 +5,7 @@ Read before writing or changing a component, a helper, a type, a constant, or a 
 ## Comments
 
 - Comment only what the code can't say itself: a non-obvious constraint, a subtle framework behavior, a security or accessibility reason, a deliberate trade-off. Explain *why*, never *what*.
+- "Production code" below means application source: `src/` (tests excluded) and `next.config.ts`. Tooling and CI files (`.husky/`, `.github/`, `knip.jsonc`, …) keep their markers, since a requirement on them often has no test to carry one.
 - Requirement markers (`implements <ID> of <change>`) belong in tests, on the test that verifies the requirement — `code-review`'s coverage check finds them there.
 - Production code may carry a marker only for an `NFR-` that no test verifies; put it on the code that satisfies it. Never put an `FR-` marker in production code.
 - A requirement about how code is written rather than what it does (tokens only, stays a Server Component, cache config) is specified as an `NFR-`, not an `FR-`.
