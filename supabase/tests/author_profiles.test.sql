@@ -5,7 +5,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(47);
+select plan(54);
 
 -- Fixtures, written as the superuser (bypasses RLS). A owns a non-public profile, B a public one.
 insert into auth.users (id, email) values
@@ -38,6 +38,12 @@ select throws_ok(
   'anon cannot select user_id'
 );
 
+select throws_ok(
+  'select public.ensure_my_author_profile()',
+  '42501', null,
+  'anon cannot call ensure_my_author_profile()'
+);
+
 reset role;
 
 -- ---------- signed in as A ----------
@@ -50,42 +56,54 @@ select results_eq(
   'the owner reads their own non-public profile'
 );
 
--- A real save through the grants, as the DAL does it: ensure the row, then update with the column list.
-select lives_ok(
-  $$insert into public.author_profiles (user_id) values ('11111111-1111-4111-8111-111111111111')
-    on conflict (user_id) do nothing$$,
-  'ensuring an existing row is a no-op insert'
+select throws_ok(
+  'select user_id from public.author_profiles',
+  '42501', null,
+  'a signed-in user cannot select user_id, not even their own'
+);
+
+select is(
+  public.my_author_profile_id(),
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid,
+  'my_author_profile_id() returns the caller''s profile id'
+);
+
+-- A real save, as the DAL does it: ensure the row, then update by id with the column list.
+select is(
+  public.ensure_my_author_profile(),
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid,
+  'ensure_my_author_profile() returns the existing profile id'
 );
 
 select results_eq(
   $$update public.author_profiles set last_name = 'Akhmatova'
-    where user_id = '11111111-1111-4111-8111-111111111111'
+    where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
     returning id::text, first_name, last_name, about, about_align, photo_path$$,
   $$values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Anna'::text, 'Akhmatova'::text, null::text, 'left'::text, null::text)$$,
   'the owner updates a content field and reads it back with the explicit column list'
 );
 
 select throws_ok(
-  $$insert into public.author_profiles (user_id, first_name) values ('11111111-1111-4111-8111-111111111111', 'Second')$$,
-  '23505', null,
-  'a second profile for the same user violates the unique constraint'
+  $$insert into public.author_profiles (first_name) values ('Second')$$,
+  '42501', null,
+  'a direct insert is denied: profiles are created only by ensure_my_author_profile()'
 );
 
 select throws_ok(
-  $$update public.author_profiles set id = gen_random_uuid() where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set id = gen_random_uuid() where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '42501', null,
   'the owner cannot update id'
 );
 
 select throws_ok(
   $$update public.author_profiles set user_id = '33333333-3333-4333-8333-333333333333'
-    where user_id = '11111111-1111-4111-8111-111111111111'$$,
+    where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '42501', null,
   'the owner cannot update user_id'
 );
 
 select throws_ok(
-  $$update public.author_profiles set created_at = now() where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set created_at = now() where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '42501', null,
   'the owner cannot update created_at'
 );
@@ -96,18 +114,43 @@ select throws_ok(
   'a user cannot insert a profile for someone else'
 );
 
+-- ---------- signed in as C, who has no profile yet ----------
+select set_config('request.jwt.claims', '{"sub":"33333333-3333-4333-8333-333333333333","role":"authenticated"}', true);
+
+select is(public.my_author_profile_id(), null::uuid, 'my_author_profile_id() is null without a profile');
+
+select isnt(public.ensure_my_author_profile(), null::uuid, 'ensure_my_author_profile() creates the caller''s row');
+
+select is(
+  public.ensure_my_author_profile(),
+  public.my_author_profile_id(),
+  'a second ensure_my_author_profile() returns the same row'
+);
+
+reset role;
+
+select results_eq(
+  $$select count(*)::int from public.author_profiles where user_id = '33333333-3333-4333-8333-333333333333'$$,
+  array[1],
+  'the created row belongs to the caller, and only one exists'
+);
+
+-- Back to A.
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+
 -- Photo path checks.
 select lives_ok(
   $$update public.author_profiles
     set photo_path = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/dddddddd-dddd-4ddd-8ddd-dddddddddddd.png'
-    where user_id = '11111111-1111-4111-8111-111111111111'$$,
+    where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   'a photo path inside the own folder is accepted'
 );
 
 select throws_ok(
   $$update public.author_profiles
     set photo_path = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/cccccccc-cccc-4ccc-8ccc-cccccccccccc.jpg'
-    where user_id = '11111111-1111-4111-8111-111111111111'$$,
+    where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a photo path in another profile''s folder is rejected'
 );
@@ -115,7 +158,7 @@ select throws_ok(
 select throws_ok(
   $$update public.author_profiles
     set photo_path = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/../bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/cccccccc-cccc-4ccc-8ccc-cccccccccccc.jpg'
-    where user_id = '11111111-1111-4111-8111-111111111111'$$,
+    where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a photo path escaping the folder with dot segments is rejected'
 );
@@ -123,7 +166,7 @@ select throws_ok(
 select throws_ok(
   $$update public.author_profiles
     set photo_path = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/portrait.jpg'
-    where user_id = '11111111-1111-4111-8111-111111111111'$$,
+    where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a photo file name that is not a uuid is rejected'
 );
@@ -131,90 +174,90 @@ select throws_ok(
 select throws_ok(
   $$update public.author_profiles
     set photo_path = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/------------------------------------.png'
-    where user_id = '11111111-1111-4111-8111-111111111111'$$,
+    where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a 36-character file name that is not in uuid form is rejected'
 );
 
 -- Content checks.
 select throws_ok(
-  $$update public.author_profiles set first_name = '' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set first_name = '' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'an empty name is rejected'
 );
 
 select throws_ok(
-  $$update public.author_profiles set first_name = '   ' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set first_name = '   ' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a whitespace-only name is rejected'
 );
 
 -- Blank means what the app's trim() removes, not only U+0020: tab, newline, NBSP, ideographic space, BOM.
 select throws_ok(
-  $$update public.author_profiles set first_name = E'\t' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set first_name = E'\t' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a tab-only first name is rejected'
 );
 
 select throws_ok(
-  $$update public.author_profiles set last_name = E'\n \r' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set last_name = E'\n \r' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a newline-and-space last name is rejected'
 );
 
 select throws_ok(
-  $$update public.author_profiles set first_name = E'\u00A0\u3000' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set first_name = E'\u00A0\u3000' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a first name of a no-break space and an ideographic space is rejected'
 );
 
 select throws_ok(
-  $$update public.author_profiles set last_name = E'\uFEFF' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set last_name = E'\uFEFF' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a last name of a byte order mark is rejected'
 );
 
 select throws_ok(
-  $$update public.author_profiles set about = E'\n\t\n' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set about = E'\n\t\n' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'an about of newlines and tabs is rejected'
 );
 
 select lives_ok(
-  $$update public.author_profiles set first_name = E'\tAnna\n' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set first_name = E'\tAnna\n' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   'a name with surrounding whitespace and real content is accepted'
 );
 
 select lives_ok(
-  $$update public.author_profiles set first_name = 'Anna' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set first_name = 'Anna' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   'restore the first name for the cases below'
 );
 
 select throws_ok(
-  $$update public.author_profiles set last_name = repeat('я', 61) where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set last_name = repeat('я', 61) where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a 61-character name is rejected'
 );
 
 select lives_ok(
-  $$update public.author_profiles set last_name = repeat('я', 60) where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set last_name = repeat('я', 60) where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   'a 60-character name is accepted'
 );
 
 select throws_ok(
-  $$update public.author_profiles set about = repeat('a', 1001) where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set about = repeat('a', 1001) where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a 1001-character about is rejected'
 );
 
 select throws_ok(
-  $$update public.author_profiles set about = '  ' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set about = '  ' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a whitespace-only about is rejected'
 );
 
 select throws_ok(
-  $$update public.author_profiles set about_align = 'justify' where user_id = '11111111-1111-4111-8111-111111111111'$$,
+  $$update public.author_profiles set about_align = 'justify' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'an unknown alignment is rejected'
 );
@@ -355,7 +398,7 @@ reset role;
 drop policy "test only: every author photo is visible" on storage.objects;
 
 -- Now make the check about a row B cannot see by owner rules.
-update public.author_profiles set last_name = null where user_id = '11111111-1111-4111-8111-111111111111';
+update public.author_profiles set last_name = null where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 set local role authenticated;
 
 select is_empty(
