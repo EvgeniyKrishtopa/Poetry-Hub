@@ -1,0 +1,12 @@
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"about: trimmed vs raw stored","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"name length unit (UTF-16 vs code points)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"one vs several fields in edit mode","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"value line vs input-only edit mode during pending/failed save","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"field display while delete is pending","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"input caps and counter measure","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"pending field's own input/Cancel/toolbar state","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"directory collation and tie-break","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"exact validation copy (minor; now Russian per NFR-8)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"Delete confirmation (minor)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"meaning of 'at the top' (minor)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-15T14:04:16Z","kind":"finding","change":"add-author-profiles","group":"full","gate":"spec-clarify","finding":"meaning of 'full content width' (minor)","outcome":"fixed","ruleNumber":""}
