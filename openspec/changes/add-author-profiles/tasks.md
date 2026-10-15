@@ -72,8 +72,8 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 
 ## 4. Authors data access and actions <!-- judgement-heavy -->
 
-- [ ] 4.1 (FR-1, FR-2, FR-15) Implement `dal/my-author-profile.ts` `getMyAuthorProfile()`: cookie client, `rpc("my_author_profile_id")` (`null` → no profile), then select that row by `id` with `OWNER_PROFILE_COLUMNS` (design D3, CR-01), Zod-parse, return `AuthorProfile | null` (`null` also for a row with no content) or a failure; never throws for an expected failure. Verify with `tests/dal/my-author-profile.test.ts` (mock the server client): row, no row, empty row → `null`, Supabase error, config error, malformed row, and the select string is the explicit column list.
-- [ ] 4.2 (FR-13, FR-14, FR-17, NFR-7) Implement `dal/public-authors.ts` per design D5:
+- [x] 4.1 (FR-1, FR-2, FR-15) Implement `dal/my-author-profile.ts` `getMyAuthorProfile()`: cookie client, `rpc("my_author_profile_id")` (`null` → no profile), then select that row by `id` with `OWNER_PROFILE_COLUMNS` (design D3, CR-01), Zod-parse, return `AuthorProfile | null` (`null` also for a row with no content) or a failure; never throws for an expected failure. Verify with `tests/dal/my-author-profile.test.ts` (mock the server client): row, no row, empty row → `null`, Supabase error, config error, malformed row, and the select string is the explicit column list.
+- [x] 4.2 (FR-13, FR-14, FR-17, NFR-7) Implement `dal/public-authors.ts` per design D5:
   - `listPublicAuthors()` (tag `authors`) and `getPublicAuthor(id)` (tag `author:<id>`), each with an inner `"use cache"`;
   - `cacheLife` chosen by result: `hours` for ok, `minutes` for not-found, `seconds` for unavailable (NFR-7);
   - failures returned as values, never thrown;
@@ -89,7 +89,7 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
   - each read tagged with its own tag only.
 
   Add the "Supabase public reads" subsection to `docs/state-management.md` per design D12: the cookie-less client, the feature-DAL cache scope, result-dependent `cacheLife`, and `updateTag` from actions vs `revalidateTag` from webhooks.
-- [ ] 4.3 (FR-5, FR-10, FR-12) Implement `dal/author-profile-writes.ts` per design D3/D4:
+- [x] 4.3 (FR-5, FR-10, FR-12) Implement `dal/author-profile-writes.ts` per design D3/D4:
   - `writeOwnProfile(patch)`: `rpc("ensure_my_author_profile")` → id, then `update(patch).eq("id", id).select(OWNER_PROFILE_COLUMNS).single()`; the client never sends `user_id` (design D3, Gate 1 N1, CR-01);
   - `clearProfileField(field)`: `rpc("my_author_profile_id")`, `null` → `saved` with no profile; otherwise update by id (about also resets align; ends with `.maybeSingle()`, design D3 N5);
   - `replacePhoto(file, type)`:
@@ -102,7 +102,7 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
   - `removePhoto()`: find the own id with `rpc("my_author_profile_id")`, read the path, set `photo_path = null`, then remove the file best-effort; a row failure leaves the file untouched (design D3, Gate 1 C4).
 
   Verify with tests for each path, including the compensation and best-effort branches, and that no log line contains the input.
-- [ ] 4.4 (FR-7, FR-8, FR-9, FR-10, FR-17, NFR-2, NFR-3) Implement `actions/action-client.ts` (`authorsActionClient = createActionClient({ logPrefix: "authors", … })`) and `actions/author-profile.actions.ts` with `saveNameAction`, `saveAboutAction`, `savePhotoAction` (`validatePhotoFile` repeated on the server), and `deleteProfileFieldAction`. Each resolves the user via `getCurrentUserId()`, never from input. On success it calls `updateTag(AUTHORS_TAG)` and `updateTag(authorTag(id))`. Verify with `tests/actions/author-profile.actions.test.ts`:
+- [x] 4.4 (FR-7, FR-8, FR-9, FR-10, FR-17, NFR-2, NFR-3) Implement `actions/action-client.ts` (`authorsActionClient = createActionClient({ logPrefix: "authors", … })`) and `actions/author-profile.actions.ts` with `saveNameAction`, `saveAboutAction`, `savePhotoAction` (`validatePhotoFile` repeated on the server), and `deleteProfileFieldAction`. Each resolves the user via `getCurrentUserId()`, never from input. On success it calls `updateTag(AUTHORS_TAG)` and `updateTag(authorTag(id))`. Verify with `tests/actions/author-profile.actions.test.ts`:
   - validation → no DAL call;
   - `null` user → `unauthenticated` with no DAL call;
   - a DAL failure passed through;

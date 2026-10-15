@@ -10,9 +10,11 @@ export type ProfileFailure = "unauthenticated" | "unavailable" | "unknown";
 
 export type ImageType = "png" | "jpeg";
 
+export type PhotoFileError = "too-large" | "unsupported-type";
+
 export type PhotoFileCheck =
   | { readonly ok: true; readonly type: ImageType }
-  | { readonly ok: false; readonly error: "too-large" | "unsupported-type" };
+  | { readonly ok: false; readonly error: PhotoFileError };
 
 /** The owner's own profile; any field may be empty. */
 export interface AuthorProfile {

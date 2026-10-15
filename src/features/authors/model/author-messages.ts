@@ -1,5 +1,5 @@
 import { ABOUT_MAX_LENGTH } from "./author.constants";
-import type { AboutAlign, MarkdownFormat, ProfileFailure, ProfileField } from "./author.types";
+import type { AboutAlign, MarkdownFormat, PhotoFileError, ProfileFailure, ProfileField } from "./author.types";
 
 // Every string of the proposal's UI copy table, verbatim and in Russian (NFR-8).
 
@@ -77,6 +77,12 @@ export const VALIDATION_MESSAGES = {
   photoUnsupportedType: "Допустимы только изображения PNG или JPEG.",
   invalidAlign: "Недопустимое выравнивание.",
 } as const;
+
+/** The field error for a photo `validatePhotoFile` rejects, in the browser and in the action (FR-8). */
+export const PHOTO_FILE_ERROR_MESSAGES: Readonly<Record<PhotoFileError, string>> = {
+  "too-large": VALIDATION_MESSAGES.photoTooLarge,
+  "unsupported-type": VALIDATION_MESSAGES.photoUnsupportedType,
+};
 
 const FAILURE_MESSAGES: Readonly<Record<ProfileFailure, string>> = {
   unauthenticated: "Сессия истекла. Войдите снова.",

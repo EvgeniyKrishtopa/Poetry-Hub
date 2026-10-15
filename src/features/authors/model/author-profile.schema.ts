@@ -36,6 +36,9 @@ export const deleteProfileFieldSchema = z.object({
   field: z.enum(["first_name", "last_name", "about", "photo"]),
 });
 
+/** An author page's id: anything else is not-found before it can become a cache key (design D5). */
+export const authorIdSchema = z.uuid();
+
 /** A row as the DAL selects it with `OWNER_PROFILE_COLUMNS`. */
 export const profileRowSchema = z.object({
   id: z.string(),
