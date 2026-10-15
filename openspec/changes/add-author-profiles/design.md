@@ -260,7 +260,7 @@ FieldErrorText           error text wired by id for aria-describedby, for the ab
   - **Block formats** prefix each selected line.
   
   The textarea applies the result and restores the selection. Pure, so it is unit-tested without the DOM.
-- `AuthorAbout` renders with `react-markdown`, `skipHtml`, `allowedElements: ["p", "strong", "em", "h2", "h3", "ul", "ol", "li", "blockquote", "br"]`, and `unwrapDisallowed`. Disallowed nodes such as links, images, `h1`, and code keep their text content but lose their element (NFR-1). Alignment is applied as a `text-left | text-center | text-right` utility on the wrapper.
+- `AuthorAbout` renders with `react-markdown`, `skipHtml`, `allowedElements: ["p", "strong", "em", "h2", "h3", "ul", "ol", "li", "blockquote", "br"]`, and `unwrapDisallowed`. Disallowed nodes such as links, `h1`, and code keep their text content but lose their element (NFR-1). An image has no children to keep, so unwrapping would drop it whole: `img` is therefore on the allowlist only for `components.img` to render its alt text instead of an element (group 5). Alignment is applied as a `text-left | text-center | text-right` utility on the wrapper.
 - *Alternative rejected (user decision):* a WYSIWYG editor (Tiptap), or Markdown with an inline-HTML allowlist via `rehype-sanitize`. Both are heavier, and the second opens an XSS surface.
 - `react-markdown` renders in Server Components too, so the public page does not ship the editor.
 
