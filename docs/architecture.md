@@ -51,7 +51,7 @@ src/
 - `shared/` never imports from `features/` or `app/`.
 - Inside a feature, use relative imports; across layers, use the `@/` alias.
 - Don't create a `shared/` abstraction until a second feature actually needs it. Exception: an infrastructure client for an external service (e.g. `shared/lib/contentful`, `shared/lib/supabase`) may live in `shared/lib` from its first consumer.
-- `shared/lib/supabase/index.ts` stays client-safe. Its server-only modules start with `import "server-only"` and are imported by subpath: `@/shared/lib/supabase/server` (actions and `dal/`; route handlers reach it through a `dal/` module) and `@/shared/lib/supabase/session` (the proxy only). Identity and reader content live in Supabase, editorial pages in Contentful (`docs/decisions/0003-supabase-auth-and-content-split.md`).
+- `shared/lib/supabase/index.ts` stays client-safe. Its server-only modules start with `import "server-only"` and are imported by subpath: `@/shared/lib/supabase/server` (actions and `dal/`; route handlers reach it through a `dal/` module), `@/shared/lib/supabase/public` (a cookie-less anon client, used only inside a `"use cache"` scope, where reading cookies is not allowed and RLS returns public rows only; anything per reader uses `server`), and `@/shared/lib/supabase/session` (the proxy only). Identity and reader content live in Supabase, editorial pages in Contentful (`docs/decisions/0003-supabase-auth-and-content-split.md`).
 - A feature index that exports a server-only module (e.g. `features/auth` exports `confirmSignUp`) is imported only by Server Components and route handlers. The feature's own Client Components import their siblings by relative path, including its `"use server"` actions.
 
 ## Naming

@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { createSafeActionClient } from "next-safe-action";
+import { createSafeActionClient } from "next-safe-action";
 
 export interface ActionClientOptions {
   /** Prefix of the log line, e.g. `authors` → `[authors] action failed: <error.name>`. */
@@ -16,7 +16,13 @@ export type ActionClient = ReturnType<typeof createSafeActionClient<"flattened",
  * error's `name`, never the input, return the generic message, and use the "flattened"
  * validation-error shape.
  */
-export function createActionClient(options: ActionClientOptions): ActionClient {
-  void options;
-  throw new Error("not implemented");
+export function createActionClient({ logPrefix, genericMessage }: ActionClientOptions): ActionClient {
+  return createSafeActionClient({
+    handleServerError(error) {
+      // The error's message or the action input could carry a password or other reader data.
+      console.error(`[${logPrefix}] action failed: ${error.name}`);
+      return genericMessage;
+    },
+    defaultValidationErrorsShape: "flattened",
+  });
 }

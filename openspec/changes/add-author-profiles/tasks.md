@@ -34,14 +34,14 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 
 ## 2. Session accessor and the public Supabase client <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-1, FR-2, NFR-2) In `features/auth/dal/current-user.ts`, implement two functions per design D1, and export both from `features/auth/index.ts`:
+- [x] 2.1 (FR-1, FR-2, NFR-2) In `features/auth/dal/current-user.ts`, implement two functions per design D1, and export both from `features/auth/index.ts`:
   - `getCurrentUserId()`: `connection()` first; `getClaims()` → `sub` or `null`; never throws; logs by name only for non-config errors;
   - `requireUserId()`: redirects to `/login` when `null`, with the redirect outside any `try`.
 
   Re-implement `isSignedIn()` on top of `getCurrentUserId()`. Verify with `tests/dal/current-user.test.ts`: claims → id; error, no claims, or throw → `null`; config error not logged; `requireUserId` calls `redirect("/login")` for `null`. The existing `is-signed-in.test.ts` must still pass unchanged.
-- [ ] 2.2 (FR-13, FR-14, NFR-3) Add `shared/lib/supabase/public.ts` (`import "server-only"`): `createSupabasePublicClient()`, a cookie-less client with `persistSession: false, autoRefreshToken: false` that throws `SupabaseConfigError` on bad config. Verify with `tests/public.test.ts` (mock `@supabase/supabase-js`): options passed, config error propagates, no `cookies()` call. Update `docs/architecture.md`'s `shared/lib/supabase` bullet with the new subpath and when to use it (inside `"use cache"` only).
+- [x] 2.2 (FR-13, FR-14, NFR-3) Add `shared/lib/supabase/public.ts` (`import "server-only"`): `createSupabasePublicClient()`, a cookie-less client with `persistSession: false, autoRefreshToken: false` that throws `SupabaseConfigError` on bad config. Verify with `tests/public.test.ts` (mock `@supabase/supabase-js`): options passed, config error propagates, no `cookies()` call. Update `docs/architecture.md`'s `shared/lib/supabase` bullet with the new subpath and when to use it (inside `"use cache"` only).
 
-- [ ] 2.3 (FR-9, NFR-3) Add `shared/lib/safe-action/create-action-client.ts` (`import "server-only"`): `createActionClient({ logPrefix, genericMessage })` with `handleServerError` (it logs `[<prefix>] action failed: <name>` and returns the generic message) and `defaultValidationErrorsShape: "flattened"` (design D1). Rebuild `features/auth/actions/action-client.ts` on it. Verify:
+- [x] 2.3 (FR-9, NFR-3) Add `shared/lib/safe-action/create-action-client.ts` (`import "server-only"`): `createActionClient({ logPrefix, genericMessage })` with `handleServerError` (it logs `[<prefix>] action failed: <name>` and returns the generic message) and `defaultValidationErrorsShape: "flattened"` (design D1). Rebuild `features/auth/actions/action-client.ts` on it. Verify:
   - a factory test: name-only log, generic message, input never logged;
   - every existing auth action test passes unchanged.
 
