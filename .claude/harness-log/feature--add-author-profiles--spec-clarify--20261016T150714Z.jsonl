@@ -1,0 +1,3 @@
+{"ts":"2026-10-16T15:07:14Z","change":"add-author-profiles","kind":"finding","gate":"spec-clarify","finding":"Proxy redirect for a cookie-less guest: always no-store, vs only when cookies changed","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-16T15:07:14Z","change":"add-author-profiles","kind":"finding","gate":"spec-clarify","finding":"readClaimsState order for odd results (claims with a retryable error, claims without sub)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-16T15:07:14Z","change":"add-author-profiles","kind":"finding","gate":"spec-clarify","finding":"Redirect Location: literal /login vs absolute URL with path /login","outcome":"fixed","ruleNumber":""}
