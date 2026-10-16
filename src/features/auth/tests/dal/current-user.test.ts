@@ -1,5 +1,5 @@
 // @vitest-environment node
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { AuthRetryableFetchError, type SupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
-import { getCurrentUserId, requireUserId } from "../../dal/current-user";
+import { getCurrentUserId, requireSession } from "../../dal/current-user";
 
 vi.mock("next/server", () => ({ connection: vi.fn() }));
 vi.mock("@/shared/lib/supabase/server", () => ({
@@ -93,27 +93,35 @@ describe("current user", () => {
     });
   });
 
-  describe("requireUserId", () => {
+  describe("requireSession", () => {
     // implements FR-1, FR-2 of add-author-profiles
-    it("returns the user id without redirecting", async () => {
+    it("returns the signed-in session without redirecting", async () => {
       getClaims.mockResolvedValue({ data: { claims: { sub: USER_ID } }, error: null });
 
-      await expect(requireUserId()).resolves.toBe(USER_ID);
+      await expect(requireSession()).resolves.toEqual({ state: "signed-in", userId: USER_ID });
       expect(redirect).not.toHaveBeenCalled();
     });
 
     it("redirects to /login when there is no user", async () => {
       getClaims.mockResolvedValue({ data: null, error: null });
 
-      await expect(requireUserId()).rejects.toThrow("NEXT_REDIRECT");
+      await expect(requireSession()).rejects.toThrow("NEXT_REDIRECT");
       expect(redirect).toHaveBeenCalledWith("/login");
     });
 
-    it("redirects to /login when the session check throws", async () => {
+    // implements FR-20 of add-author-profiles
+    it("returns unknown, without redirecting, when the session check throws", async () => {
       getClaims.mockRejectedValue(new TypeError("fetch failed"));
 
-      await expect(requireUserId()).rejects.toThrow("NEXT_REDIRECT");
-      expect(redirect).toHaveBeenCalledWith("/login");
+      await expect(requireSession()).resolves.toEqual({ state: "unknown" });
+      expect(redirect).not.toHaveBeenCalled();
     });
+  });
+
+  // implements FR-20 of add-author-profiles
+  it("getCurrentUserId is null when the session is unknown", async () => {
+    getClaims.mockResolvedValue({ data: { claims: { sub: USER_ID } }, error: new AuthRetryableFetchError("fetch failed", 0) });
+
+    await expect(getCurrentUserId()).resolves.toBeNull();
   });
 });

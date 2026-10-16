@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
+import { SIGN_IN_PATH } from "@/shared/config/account-paths";
 import { Alert, Button, TextField } from "@/shared/ui";
 
 import { CHECK_EMAIL_TITLE, getFailureMessage } from "../../model/auth-messages";
@@ -57,7 +58,7 @@ export function SignUpForm() {
       </Button>
       <p className="text-sm text-muted">
         Already have an account?{" "}
-        <Link href="/login" className="text-accent underline">
+        <Link href={SIGN_IN_PATH} className="text-accent underline">
           Sign in
         </Link>
       </p>

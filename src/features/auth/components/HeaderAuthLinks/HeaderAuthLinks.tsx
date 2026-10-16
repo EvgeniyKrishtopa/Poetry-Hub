@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 
 import { HeaderAuthLinksContent } from "../HeaderAuthLinksContent/HeaderAuthLinksContent";
+import { HeaderAuthPlaceholder } from "../HeaderAuthPlaceholder/HeaderAuthPlaceholder";
 
 /**
  * The header's auth links (Sign in, or the account link and Sign out). The session is read on the
@@ -9,7 +10,7 @@ import { HeaderAuthLinksContent } from "../HeaderAuthLinksContent/HeaderAuthLink
  */
 export function HeaderAuthLinks() {
   return (
-    <Suspense fallback={<div aria-hidden="true" className="min-w-24" />}>
+    <Suspense fallback={<HeaderAuthPlaceholder />}>
       <HeaderAuthLinksContent />
     </Suspense>
   );

@@ -9,3 +9,10 @@ export const IMAGE_QUALITY = 60;
  * stays `lang="en"` while the auth screens are in English, so each Russian block carries this.
  */
 export const CONTENT_LANG = "ru";
+
+/** What a session check found: a valid session, none, or no answer (Supabase unreachable or failing). */
+export const SESSION_STATE = {
+  signedIn: "signed-in",
+  signedOut: "signed-out",
+  unknown: "unknown",
+} as const;

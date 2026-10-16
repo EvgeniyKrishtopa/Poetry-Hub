@@ -1,8 +1,8 @@
 import Link from "next/link";
 
+import { ACCOUNT_PATH } from "@/shared/config/account-paths";
 import { CONTENT_LANG } from "@/shared/config/constants";
 
-import { ACCOUNT_PATH } from "../../model/auth.constants";
 import { ACCOUNT_LINK_LABEL } from "../../model/auth-messages";
 
 /** The header's link to the signed-in reader's account page (add-author-profiles FR-3). */

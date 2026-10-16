@@ -30,7 +30,7 @@ src/
 ├── features/                 # One folder per business feature
 │   ├── auth/                 # Sign-up, sign-in, sign-out, the header's "Sign in" / "Sign out" part
 │   │   ├── actions/          # Server Actions ("use server", *.actions.ts) + the feature's action client
-│   │   └── …                 # dal/ (confirmSignUp, isSignedIn, getCurrentUserId, requireUserId), model/, components/, tests/, index.ts (roles as below)
+│   │   └── …                 # dal/ (confirmSignUp, getSessionState, getCurrentUserId, requireSession), model/, components/, tests/, index.ts (roles as below)
 │   ├── authors/              # Author profiles: the directory, public author pages, the account section, the editor, the header's «Наши авторы» link
 │   │   └── …                 # actions/, dal/ (owner reads and writes, cached public reads), hooks/ (the editor's field hooks), model/, components/, tests/, index.ts
 │   └── poems/                # The folder roles every feature can use:
@@ -46,17 +46,17 @@ src/
     ├── lib/                  # Infrastructure helpers (query-client, …)
     │   ├── contentful/       # Server-only Contentful GraphQL client, cached with "use cache" (every module: import "server-only")
     │   ├── safe-action/      # Server-only next-safe-action client factory (name-only logging, generic message); each feature builds its action client on it
-    │   └── supabase/         # Supabase: index.ts client-safe (SupabaseConfigError); server.ts (server client), public.ts (cookie-less client for "use cache"), and session.ts (proxy refresh) server-only
-    └── config/               # App-wide constants (constants.ts), site config, the Supabase image-host helper
+    │   └── supabase/         # Supabase: index.ts client-safe (SupabaseConfigError); server.ts (server client), public.ts (cookie-less client for "use cache"), session.ts (proxy refresh, which also reports the session state) server-only; claims.ts (one reading of a getClaims() result, shared by the proxy and auth's DAL)
+    └── config/               # App-wide constants (constants.ts: IMAGE_QUALITY, CONTENT_LANG, SESSION_STATE), site config, the Supabase image-host helper, the account and sign-in paths (account-paths.ts)
 ```
 
 ## Boundary rules
 
 - `app/` stays thin: compose features, prefetch data, declare page caching (`"use cache"` + `cacheLife` + `cacheTag`, see `docs/state-management.md`), no business logic. Suspense boundaries and fallbacks belong to the feature's component, not the route file (`docs/code-style.md`).
-- A new page goes in `app/(public)/` unless it needs a signed-in reader; then it goes in `app/(authorized)/`. The group's layout enforces nothing — placing a page there does not protect it. Each page's feature component calls `requireUserId()` (from `@/features/auth`) inside its own Suspense boundary before reading any reader data; never a layout-only check, since a shared layout does not re-render on client navigation. Route handlers under `app/api/` stay outside both groups.
+- A new page goes in `app/(public)/` unless it needs a signed-in reader; then it goes in `app/(authorized)/`. The group's layout enforces nothing — placing a page there does not protect it. Each page's feature component calls `requireSession()` (from `@/features/auth`) inside its own Suspense boundary before reading any reader data: it redirects a signed-out reader to `/login`, and returns `unknown` when Supabase can't be reached, which the page shows as "service unavailable" instead of redirecting. Never a layout-only check, since a shared layout does not re-render on client navigation. On top of that, the proxy redirects a signed-out page request under `/account` before anything renders (ACCOUNT_PATH in `shared/config/account-paths.ts`; a page outside it gets only its own gate). That redirect is optimistic, so the page gate always stays. Route handlers under `app/api/` stay outside both groups.
 - Import a feature only through its public API: `@/features/poems`, never `@/features/poems/model/...` (enforced by `no-restricted-imports` in `eslint.config.mjs`).
 - Features must not import from other features' internals. If two features need the same thing, move it to `shared/` or compose them in `app/`.
-- A feature may import another feature's public API for a server-only accessor it needs, e.g. `authors` takes `getCurrentUserId` / `requireUserId` from `@/features/auth`. Only through the index, only server-side, and never in both directions (no cycles).
+- A feature may import another feature's public API for a server-only accessor it needs, e.g. `authors` takes `getSessionState` / `getCurrentUserId` / `requireSession` from `@/features/auth`. Only through the index, only server-side, and never in both directions (no cycles).
 - `shared/` never imports from `features/` or `app/`.
 - Inside a feature, use relative imports; across layers, use the `@/` alias.
 - Don't create a `shared/` abstraction until a second feature actually needs it. Exception: an infrastructure client for an external service (e.g. `shared/lib/contentful`, `shared/lib/supabase`) may live in `shared/lib` from its first consumer.

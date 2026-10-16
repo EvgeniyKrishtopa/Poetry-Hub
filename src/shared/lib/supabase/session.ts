@@ -3,24 +3,34 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { SESSION_STATE } from "@/shared/config/constants";
+
+import { readClaimsState, type SessionState } from "./claims";
 import { getSupabaseConfig } from "./config";
 import { SupabaseConfigError } from "./errors";
 
-/** A response that sets a session cookie must never be shared by a cache. */
-const SESSION_CACHE_CONTROL = "private, no-store";
+/** A response that sets a session cookie, or depends on the session, must never be shared by a cache. */
+export const SESSION_CACHE_CONTROL = "private, no-store";
+
+export interface SessionRefresh {
+  /** The response to continue with, carrying any refreshed or cleared session cookies. */
+  readonly response: NextResponse;
+  /** What the refresh's own `getClaims()` call found; routing only, never rendering (design D9). */
+  readonly session: SessionState;
+}
 
 /**
- * Refreshes the Supabase session for the proxy and returns the response to continue with.
+ * Refreshes the Supabase session for the proxy and reports what it found (auth FR-6).
  * Never throws: a Supabase outage or a bad config must not take every page down (design D4).
  */
-export async function refreshSession(request: NextRequest): Promise<NextResponse> {
+export async function refreshSession(request: NextRequest): Promise<SessionRefresh> {
   let config;
   try {
     config = getSupabaseConfig();
   } catch (error) {
     if (!(error instanceof SupabaseConfigError)) throw error;
     console.error(`[supabase] invalid configuration: ${error.variables.join(", ")}`);
-    return NextResponse.next();
+    return { response: NextResponse.next(), session: SESSION_STATE.unknown };
   }
 
   // Built before `setAll` can touch `request.cookies`, so it forwards the cookies as received.
@@ -48,15 +58,16 @@ export async function refreshSession(request: NextRequest): Promise<NextResponse
     },
   });
 
+  let session: SessionState;
   try {
     // A resolved `{ error }` (e.g. a revoked refresh token) is not a failure: `setAll` has
     // already cleared the dead session on `response`.
-    await supabase.auth.getClaims();
+    session = readClaimsState(await supabase.auth.getClaims()).state;
   } catch {
     // Network failure or similar: continue un-refreshed, without logging the error's payload.
-    return unrefreshed;
+    return { response: unrefreshed, session: SESSION_STATE.unknown };
   }
 
   if (wroteCookies) response.headers.set("Cache-Control", SESSION_CACHE_CONTROL);
-  return response;
+  return { response, session };
 }

@@ -10,7 +10,7 @@ import { refreshSession } from "@/shared/lib/supabase/session";
 
 import { applySecurityHeaders, config, proxy, SECURITY_HEADERS } from "../proxy";
 
-vi.mock("@/shared/lib/supabase/session", () => ({ refreshSession: vi.fn() }));
+vi.mock("@/shared/lib/supabase/session", () => ({ refreshSession: vi.fn(), SESSION_CACHE_CONTROL: "private, no-store" }));
 
 const MATCHED_PATHS = ["/", "/poems/some-poem"];
 const EXCLUDED_PATHS = [
@@ -44,7 +44,7 @@ describe("applySecurityHeaders", () => {
 // implements FR-6 of add-supabase-auth
 describe("proxy", () => {
   it("refreshes the session for the incoming request", async () => {
-    vi.mocked(refreshSession).mockResolvedValue(NextResponse.next());
+    vi.mocked(refreshSession).mockResolvedValue({ response: NextResponse.next(), session: "signed-out" });
     const request = new NextRequest(REQUEST_URL);
 
     await proxy(request);
@@ -56,7 +56,7 @@ describe("proxy", () => {
     const refreshed = NextResponse.next();
     refreshed.cookies.set(SESSION_COOKIE, "refreshed");
     refreshed.headers.set("Cache-Control", SESSION_CACHE_CONTROL);
-    vi.mocked(refreshSession).mockResolvedValue(refreshed);
+    vi.mocked(refreshSession).mockResolvedValue({ response: refreshed, session: "signed-in" });
 
     const response = await proxy(new NextRequest(REQUEST_URL));
 
@@ -66,12 +66,98 @@ describe("proxy", () => {
   });
 
   it("adds the security headers to a plain response without setting a cookie", async () => {
-    vi.mocked(refreshSession).mockResolvedValue(NextResponse.next());
+    vi.mocked(refreshSession).mockResolvedValue({ response: NextResponse.next(), session: "signed-out" });
 
     const response = await proxy(new NextRequest(REQUEST_URL));
 
     expect(response.headers.get("Set-Cookie")).toBeNull();
     expect(response.headers.get("Cache-Control")).toBeNull();
+    expectSecurityHeaders(response);
+  });
+});
+
+describe("proxy redirect for account routes", () => {
+  const ORIGIN = "http://localhost:3000";
+
+  function request(path: string, init?: { method?: string; headers?: Record<string, string> }): NextRequest {
+    return new NextRequest(`${ORIGIN}${path}`, init);
+  }
+
+  function signedOut(response = NextResponse.next()) {
+    vi.mocked(refreshSession).mockResolvedValue({ response, session: "signed-out" });
+  }
+
+  // implements FR-19 of add-author-profiles
+  it("sends a signed-out GET for /account/author to /login with a 307, headers, and no-store", async () => {
+    signedOut();
+
+    const response = await proxy(request("/account/author"));
+
+    expect(response.status).toBe(307);
+    const location = new URL(response.headers.get("location") ?? "");
+    expect(location.origin).toBe(ORIGIN);
+    expect(location.pathname).toBe("/login");
+    expect(location.search).toBe("");
+    expect(response.headers.get("Cache-Control")).toBe(SESSION_CACHE_CONTROL);
+    expectSecurityHeaders(response);
+  });
+
+  // implements FR-19 of add-author-profiles
+  it.each(["/account", "/account/", "/account/author/x"])("redirects a signed-out %s", async (path) => {
+    signedOut();
+
+    const response = await proxy(request(path));
+
+    expect(response.status).toBe(307);
+  });
+
+  // implements FR-19 of add-author-profiles
+  it.each(["/accounts", "/authors", "/"])("lets a signed-out %s through", async (path) => {
+    signedOut();
+
+    const response = await proxy(request(path));
+
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  // implements FR-19 of add-author-profiles
+  it("carries a revoked session's cleared cookies on the redirect", async () => {
+    const refreshed = NextResponse.next();
+    refreshed.cookies.set(SESSION_COOKIE, "", { maxAge: 0 });
+    signedOut(refreshed);
+
+    const response = await proxy(request("/account"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("set-cookie")).toContain(`${SESSION_COOKIE}=;`);
+  });
+
+  // implements FR-19, FR-9 of add-author-profiles
+  it("never redirects a Server Action call, so the action can report the expired session", async () => {
+    signedOut();
+
+    const response = await proxy(request("/account/author", { method: "POST", headers: { "Next-Action": "abc123" } }));
+
+    expect(response.headers.get("location")).toBeNull();
+    expectSecurityHeaders(response);
+  });
+
+  // implements FR-19 of add-author-profiles
+  it("lets a POST without Next-Action through too (only GET and HEAD are page requests)", async () => {
+    signedOut();
+
+    const response = await proxy(request("/account", { method: "POST" }));
+
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  // implements FR-19 of add-author-profiles
+  it.each(["signed-in", "unknown"] as const)("lets a %s request for /account through", async (session) => {
+    vi.mocked(refreshSession).mockResolvedValue({ response: NextResponse.next(), session });
+
+    const response = await proxy(request("/account"));
+
+    expect(response.headers.get("location")).toBeNull();
     expectSecurityHeaders(response);
   });
 });

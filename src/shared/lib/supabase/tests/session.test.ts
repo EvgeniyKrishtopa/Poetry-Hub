@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { createServerClient } from "@supabase/ssr";
+import { AuthRetryableFetchError } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -71,7 +72,7 @@ describe("refreshSession", () => {
     });
 
     const request = makeRequest(`${COOKIE_NAME}=stale`);
-    const response = await refreshSession(request);
+    const { response } = await refreshSession(request);
 
     expect(request.cookies.get(COOKIE_NAME)?.value).toBe("fresh");
     expect(response.cookies.get(COOKIE_NAME)?.value).toBe("fresh");
@@ -86,7 +87,7 @@ describe("refreshSession", () => {
       return { data: null, error: null };
     });
 
-    const response = await refreshSession(makeRequest());
+    const { response } = await refreshSession(makeRequest());
 
     expect(response.cookies.get(`${COOKIE_NAME}.1`)?.value).toBe("two");
     expect(response.headers.get("Expires")).toBe("0");
@@ -108,7 +109,7 @@ describe("refreshSession", () => {
   it("sets no cookie and adds no Cache-Control when nothing was written", async () => {
     mockClient(async () => ({ data: null, error: null }));
 
-    const response = await refreshSession(makeRequest());
+    const { response } = await refreshSession(makeRequest());
 
     expect(response.headers.get("set-cookie")).toBeNull();
     expect(response.headers.get("Cache-Control")).toBeNull();
@@ -120,7 +121,7 @@ describe("refreshSession", () => {
       return { data: null, error: null };
     });
 
-    const response = await refreshSession(makeRequest());
+    const { response } = await refreshSession(makeRequest());
 
     expect(response.headers.get("Cache-Control")).toBeNull();
   });
@@ -131,7 +132,7 @@ describe("refreshSession", () => {
     vi.stubEnv(URL_VAR, undefined);
     vi.stubEnv(KEY_VAR, " has space");
 
-    const response = await refreshSession(makeRequest());
+    const { response } = await refreshSession(makeRequest());
 
     expect(consoleError).toHaveBeenCalledWith(`[supabase] invalid configuration: ${URL_VAR}, ${KEY_VAR}`);
     expect(createServerClient).not.toHaveBeenCalled();
@@ -156,11 +157,37 @@ describe("refreshSession", () => {
       throw new TypeError("fetch failed");
     });
 
-    const response = await refreshSession(makeRequest(`${COOKIE_NAME}=stale`));
+    const { response } = await refreshSession(makeRequest(`${COOKIE_NAME}=stale`));
 
     expect(response.headers.get("set-cookie")).toBeNull();
     expect(response.headers.get("Cache-Control")).toBeNull();
     expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  // implements FR-19 of add-author-profiles
+  it.each([
+    ["signed-in", { data: { claims: { sub: "user-1" } }, error: null }],
+    ["signed-out", { data: null, error: new Error("Invalid Refresh Token") }],
+    ["unknown", { data: null, error: new AuthRetryableFetchError("fetch failed", 0) }],
+  ])("reports %s from its single getClaims call", async (expected, result) => {
+    mockClient(async () => result);
+
+    const { session } = await refreshSession(makeRequest());
+
+    expect(session).toBe(expected);
+    expect(getClaims).toHaveBeenCalledTimes(1);
+  });
+
+  // implements FR-19 of add-author-profiles
+  it("reports unknown when getClaims throws or the config is missing", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mockClient(async () => {
+      throw new TypeError("fetch failed");
+    });
+    expect((await refreshSession(makeRequest())).session).toBe("unknown");
+
+    vi.stubEnv(URL_VAR, undefined);
+    expect((await refreshSession(makeRequest())).session).toBe("unknown");
   });
 
   it("keeps setAll's removals when getClaims resolves with an error", async () => {
@@ -169,7 +196,7 @@ describe("refreshSession", () => {
       return { data: null, error: new Error("Invalid Refresh Token") };
     });
 
-    const response = await refreshSession(makeRequest(`${COOKIE_NAME}=revoked`));
+    const { response } = await refreshSession(makeRequest(`${COOKIE_NAME}=revoked`));
 
     expect(response.headers.get("set-cookie")).toContain(`${COOKIE_NAME}=;`);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");

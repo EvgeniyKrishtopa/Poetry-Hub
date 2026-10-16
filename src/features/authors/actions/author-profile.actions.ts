@@ -3,7 +3,8 @@
 import { updateTag } from "next/cache";
 import { returnValidationErrors } from "next-safe-action";
 
-import { getCurrentUserId } from "@/features/auth";
+import { getSessionState } from "@/features/auth";
+import { SESSION_STATE } from "@/shared/config/constants";
 
 import { clearProfileField, removePhoto, replacePhoto, writeOwnProfile } from "../dal/author-profile-writes";
 import { AUTHORS_TAG, authorTag } from "../model/author-cache-tags";
@@ -24,10 +25,17 @@ import { authorsActionClient } from "./action-client";
 // expires the directory's and the author's cache tags (FR-17).
 
 const UNAUTHENTICATED = { status: ACTION_STATUS.failed, failure: "unauthenticated" } as const;
+const UNAVAILABLE = { status: ACTION_STATUS.failed, failure: "unavailable" } as const;
 
-/** Decides `unauthenticated` before any I/O; the DAL itself then runs as the session's user. */
-async function isSignedOut(): Promise<boolean> {
-  return (await getCurrentUserId()) === null;
+/**
+ * The failure for a session that isn't signed in, before any I/O; `null` when it is, and the DAL then
+ * runs as the session's user. A session that can't be checked is the outage message, not "expired" (FR-20).
+ */
+async function sessionFailure(): Promise<ProfileActionResult | null> {
+  const { state } = await getSessionState();
+  if (state === SESSION_STATE.signedOut) return UNAUTHENTICATED;
+  if (state === SESSION_STATE.unknown) return UNAVAILABLE;
+  return null;
 }
 
 /** The DAL write and, on success, the cache expiry every action shares (design D3). */
@@ -44,7 +52,7 @@ async function writeAndExpire(write: () => Promise<ProfileWriteResult>): Promise
 }
 
 async function runOwnerWrite(write: () => Promise<ProfileWriteResult>): Promise<ProfileActionResult> {
-  return (await isSignedOut()) ? UNAUTHENTICATED : writeAndExpire(write);
+  return (await sessionFailure()) ?? writeAndExpire(write);
 }
 
 export const saveNameAction = authorsActionClient
@@ -63,7 +71,8 @@ export const savePhotoAction = authorsActionClient
   .inputSchema(savePhotoSchema)
   .action(async ({ parsedInput: { photo } }): Promise<ProfileActionResult> => {
     // The session first, so a signed-out caller never makes the server read the file.
-    if (await isSignedOut()) return UNAUTHENTICATED;
+    const failure = await sessionFailure();
+    if (failure !== null) return failure;
 
     // The browser ran the same check, but an action is a public endpoint (design D4). The stored
     // type comes from the file's bytes, whatever `photo.type` claims (FR-8).

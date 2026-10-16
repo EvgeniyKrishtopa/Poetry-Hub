@@ -56,7 +56,7 @@ The proxy SHALL redirect a signed-out page request for `/account` or any path un
 #### Scenario: Signed-out page request
 - **GIVEN** a GET request for `/account/author` with no session cookies
 - **WHEN** the proxy handles it
-- **THEN** the response is a 307 whose `Location`, parsed as a URL, has the request's origin, the path `/login`, and no query string (an absolute URL, as `NextResponse.redirect` writes it)
+- **THEN** the response is a 307 whose `Location`, resolved against the request URL, has the request's origin, the path `/login`, and no query string
 - **AND** it carries all four security headers and `Cache-Control: private, no-store`
 
 #### Scenario: Any path under /account
