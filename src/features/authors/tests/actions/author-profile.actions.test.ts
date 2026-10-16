@@ -234,4 +234,39 @@ describe("author profile actions", () => {
       expect(clearProfileField).not.toHaveBeenCalled();
     });
   });
+
+  describe("when the session can't be checked", () => {
+    const UNAVAILABLE = { status: "failed", failure: "unavailable" };
+
+    // implements FR-20, FR-9 of add-author-profiles
+    it.each([
+      ["saveNameAction", () => saveNameAction({ field: "last_name", value: NAME })],
+      ["saveAboutAction", () => saveAboutAction({ about: "Поэт", align: "left" })],
+      ["deleteProfileFieldAction (a name)", () => deleteProfileFieldAction({ field: "first_name" })],
+      ["deleteProfileFieldAction (the photo)", () => deleteProfileFieldAction({ field: "photo" })],
+    ])("%s returns unavailable without a DAL call", async (_name, run) => {
+      vi.mocked(getSessionState).mockResolvedValue({ state: "unknown" });
+
+      const result = await run();
+
+      expect(result.data).toEqual(UNAVAILABLE);
+      for (const write of [writeOwnProfile, clearProfileField, removePhoto, replacePhoto]) {
+        expect(write).not.toHaveBeenCalled();
+      }
+      expect(updateTag).not.toHaveBeenCalled();
+    });
+
+    // implements FR-20 of add-author-profiles
+    it("savePhotoAction returns unavailable before reading the file's bytes", async () => {
+      vi.mocked(getSessionState).mockResolvedValue({ state: "unknown" });
+      const photo = file(PNG_BYTES, "photo.png", "image/png");
+      const slice = vi.spyOn(photo, "slice");
+
+      const result = await savePhotoAction({ photo });
+
+      expect(result.data).toEqual(UNAVAILABLE);
+      expect(slice).not.toHaveBeenCalled();
+      expect(replacePhoto).not.toHaveBeenCalled();
+    });
+  });
 });
