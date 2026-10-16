@@ -1,6 +1,6 @@
 # Tasks
 
-Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1 and 8. The scaffold (`opsx-scaffold`) lands before group 1 and creates the file map from design D1/D6 with stub bodies.
+Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1 and 9. The scaffold (`opsx-scaffold`) lands before group 1 and creates the file map from design D1/D6 with stub bodies.
 
 ## 1. Database: table, RLS, bucket, policies <!-- judgement-heavy -->
 
@@ -215,10 +215,58 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 
   Verify the ADR exists and is linked from `docs/decisions/`.
 
-## 8. Integration verification <!-- judgement-heavy -->
+## 8. Proxy redirect and session-unavailable state <!-- judgement-heavy -->
 
-- [ ] 8.1 (NFR-4, NFR-6) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`, all green. The build route table lists `/authors` and `/authors/[id]` as partially prerendered and `/account` and `/account/author` per request. With no Supabase env, the build still exits 0. Grep new components for color literals (none) and `src/` for `SUPABASE_SERVICE_ROLE|SUPABASE_SECRET` (none).
-- [ ] 8.2 (FR-4, FR-5, NFR-2) Manually validate against the local Supabase stack with two test users:
+Added 2026-10-16 (user decision, PR #81 discussion): FR-19, design D9.
+
+- [ ] 8.1 (FR-19) One reading of a `getClaims()` result (design D9):
+  - add the pure helper `shared/lib/supabase/claims.ts` `readClaimsState(result)` → `{ state: "signed-in", userId } | { state: "signed-out" } | { state: "unknown" }`. Rules in order, first match wins: a returned retryable error (`isAuthRetryableFetchError`, or status ≥ 500) → unknown, even with claims; a non-empty string `sub` → signed-in; anything else (no claims, a non-retryable error, claims without a valid `sub`) → signed-out. Name the states as an `as const` object (no magic strings);
+  - in `shared/lib/supabase/session.ts`, make `refreshSession(request)` return `{ response, session }`, with `session` from `readClaimsState`, or unknown for a missing config or a thrown `getClaims`;
+  - rebuild auth's `getCurrentUserId()` on `readClaimsState`: signed-in → its id, anything else → `null`, logging unchanged.
+
+  Verify:
+  - table tests for `readClaimsState`, in `shared/lib/supabase/tests/claims.test.ts`;
+  - `session.test.ts`: each of the three states with `getClaims` called exactly once, and every existing session test still passes;
+  - every existing `current-user.test.ts` and `is-signed-in.test.ts` test still passes unchanged, plus a case where a retryable error → `null`.
+- [ ] 8.2 (FR-19) Add `shared/config/account-paths.ts`: the pure helper `isAccountPath(pathname)` (`/account`, `/account/`, anything under `/account/`; not `/accounts`) and the `ACCOUNT_PATH` and `SIGN_IN_PATH` constants. Auth's `ACCOUNT_PATH` (`model/auth.constants.ts`) and `SIGN_IN_PATH` (`dal/current-user.ts`) are replaced by imports of these. Verify with table tests in `shared/config/tests/`; existing auth tests pass unchanged.
+- [ ] 8.3 (FR-19, NFR-2) In `src/proxy.ts`, redirect when every one holds: `isAccountPath`, method GET or HEAD, no `Next-Action` header, `session === "signed-out"`. The redirect is a 307 to `/login` (no query string) carrying every `Set-Cookie` from the refresh response, then the security headers and `Cache-Control: private, no-store`. Everything else returns the refresh response with the security headers, as today. Pages keep `requireUserId()` and actions keep `getCurrentUserId()` unchanged. Verify with `src/tests/proxy.test.ts`:
+  - a signed-out GET for `/account/author` → 307 whose `Location` parses to the request's origin, path `/login`, no query; headers; no-store;
+  - a revoked session's cleared cookies are on the redirect;
+  - a POST with `Next-Action` while signed out → passes through, no redirect;
+  - signed-in and unknown → pass through;
+  - `/authors` and `/accounts` while signed out → pass through;
+  - every existing proxy test still passes.
+- [ ] 8.4 (FR-20) Auth side of "can't tell" (design D9):
+  - add `getSessionState()` to `features/auth/dal/current-user.ts` as the base function: `await connection()` first, outside any `try`; then the cookie client and `readClaimsState`; `unknown` for a missing config or a throw; logging by name as today. Export it from `@/features/auth`. `getCurrentUserId()` delegates: `signed-in ? userId : null`;
+  - replace `requireUserId()` with `requireSession(): Promise<Exclude<ClaimsState, { state: "signed-out" }>>`, still redirecting on `signed-out` outside any `try`;
+  - the header: `HeaderAuthLinksContent` passes only `state` (`"signed-in" | "signed-out" | "unknown"`, never the user id) to `AuthStatus`, which renders the new `HeaderAuthPlaceholder` for `unknown`; the Suspense fallback uses the same component; remove `isSignedIn()`.
+
+  Verify:
+  - `current-user.test.ts`: the three states, the redirect only on signed-out, and a missing config → `unknown` with `connection` awaited before the client is created;
+  - `AuthStatus` tests: unknown → no "Sign in", "Sign out", or "Мастерская поэта";
+  - every existing header and auth test passes, or is updated only where FR-7's "Session check fails" scenario was split.
+- [ ] 8.5 (FR-20, FR-9) Authors side:
+  - add `components/SessionUnavailableAlert`: a server-rendered danger `Alert` with the copy-table text and `lang="ru"`, plus a client «Повторить» button (its own component) that calls `router.refresh()` inside `useTransition` and is disabled while pending;
+  - `AccountAuthorSection` and `AuthorEditorLoader` call `requireSession()` and render it on `state: "unknown"`, with no profile read;
+  - the profile actions map `getSessionState()` `unknown` → the `unavailable` failure, with no DAL call.
+
+  Verify:
+  - loader tests: unavailable → the alert and no `getMyAuthorProfile` call;
+  - `SessionUnavailableAlert` test: the text; the button calls `refresh` and is disabled while the transition is pending;
+  - actions test: unknown → `unavailable`, with no DAL call;
+  - every existing test still passes.
+- [ ] 8.6 (FR-19, FR-20) Docs:
+  - `docs/architecture.md`:
+    - the `(authorized)` bullet notes the proxy's optimistic redirect for `/account` and that the page gate stays;
+    - every `requireUserId()` mention (project tree, boundary rules, the cross-feature accessor rule) becomes `requireSession()` / `getSessionState()`;
+  - the `src/app/(authorized)/layout.tsx` comment names `requireSession()`;
+  - record ADR `docs/decisions/0006-proxy-redirect-and-session-states.md`, with `Supersedes: 0004 — only its first Decision bullet's boolean isSignedIn() and two-state AuthStatus; the rest stays in force`. The superseded part was replaced by FR-20's three-state read: the header and account pages say "can't tell" instead of "signed out", and only the state name, never the user id, reaches the header. The rest of ADR 0004 holds: the proxy is still the only token refresher, and "is the reader signed in?" for rendering stays auth's `dal/` question. The ADR says plainly that it narrows ADR 0004's rejected alternative ("put the check in `session.ts`") for routing only: the proxy routes on the result of the refresh it already runs, read by the same `readClaimsState` the DAL uses. It covers why the gate is optimistic, the Server Action exclusion, fail-open on an outage, and why a reader-triggered `router.refresh()` fits the retry when ADR 0004 rejected a client refresh after sign-out. One line notes that ADR 0005 point 2's `getCurrentUserId()` is now `getSessionState()` for actions, with the same principle (the user comes from the session, never from input);
+  - mark ADR 0004's `## Status` with `Partially superseded by 0006` (the one edit the editing rule allows).
+
+## 9. Integration verification <!-- judgement-heavy -->
+
+- [ ] 9.1 (NFR-4, NFR-6) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`, all green. The build route table lists `/authors` and `/authors/[id]` as partially prerendered and `/account` and `/account/author` per request. With no Supabase env, the build still exits 0. Grep new components for color literals (none) and `src/` for `SUPABASE_SERVICE_ROLE|SUPABASE_SECRET` (none).
+- [ ] 9.2 (FR-4, FR-5, NFR-2) Manually validate against the local Supabase stack with two test users:
   - A creates a first name only → not on `/authors`; adds a last name → listed;
   - B cannot see A's non-public row via the REST API with B's token;
   - B cannot upload into, or delete from, A's folder;
@@ -227,8 +275,10 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
   - deleting A's last name → `/authors/<id>` shows the 404 page.
 
   Record the results in the group's commit body.
-- [ ] 8.3 (FR-1–FR-18, NFR-5, NFR-8) Gate 3 web-qa over the full change. Flows:
-  - signed-out `/account` → `/login`;
+- [ ] 9.3 (FR-1–FR-20, NFR-5, NFR-8) Gate 3 web-qa over the full change. Flows:
+  - signed-out `/account` and `/account/author` → `/login` with no flash of the page (the network tab shows a 307 from the proxy, FR-19);
+  - with the editor open, sign out in another tab, then save a field: the error «Сессия истекла. Войдите снова.» shows under the field, with no redirect (FR-19, FR-9);
+  - signed in, stop the local Supabase stack (`npx supabase stop`), open `/account`: «Сервис временно недоступен. Попробуйте позже.» with «Повторить», no redirect, and the header shows neither "Sign in" nor "Sign out"; start it again and click «Повторить»: the author section renders (FR-20);
   - create the profile field by field, with pending, disabled, and "Сохранено";
   - only one field in edit mode at a time;
   - a validation error under the field, in Russian;
@@ -239,4 +289,4 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
   - an edit is reflected on `/authors` immediately;
   - header links for signed-in and signed-out visitors;
   - `lang="ru"` on the feature's content.
-- [ ] 8.4 (FR-5, NFR-6) Add the deploy steps to `PROGRESS.md`'s deploy checklist: `npx supabase db push`, verify the bucket's limits, and `NEXT_PUBLIC_SUPABASE_URL` set at build time. Verify the lines exist.
+- [ ] 9.4 (FR-5, NFR-6) Add the deploy steps to `PROGRESS.md`'s deploy checklist: `npx supabase db push`, verify the bucket's limits, and `NEXT_PUBLIC_SUPABASE_URL` set at build time. Verify the lines exist.

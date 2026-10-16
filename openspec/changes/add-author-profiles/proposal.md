@@ -10,6 +10,7 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
 ## What Changes
 
 - Add a personal account page `/account` and an author-profile editor `/account/author`, both for signed-in readers only. These are the first pages in the `(authorized)` route group. Each page checks the session on the server; a signed-out request is redirected to `/login`.
+- The proxy also redirects a signed-out page request under `/account` to `/login` before anything renders (FR-19), as an extra layer on top of the pages' own check.
 - Add a public author directory `/authors` and a public author page `/authors/[id]`. Both are cached, and an owner's edit expires the cache.
 - Add a Supabase table `author_profiles`, at most one row per user, protected by row-level security. Add a public Storage bucket `author-photos` whose write policies restrict each user to their own folder. Both live in the first versioned migration under `supabase/migrations/`.
 - Add feature `src/features/authors/`. Each field (first name, last name, about, photo) is created, edited, saved, and deleted on its own through a `next-safe-action` Server Action, driven by `useActionState` with optimistic display.
@@ -24,11 +25,11 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
 
 ### Account and access
 
-- **FR-1**: `/account` SHALL be reachable only with a valid session. Without one, the request SHALL be redirected to `/login`. The page SHALL show the reader's author-profile section:
+- **FR-1**: `/account` SHALL be reachable only with a valid session. Without one, the request SHALL be redirected to `/login`, unless the session can't be checked (FR-20). The page SHALL show the reader's author-profile section:
   - no profile, meaning no row or a row with no field filled → a "Создать кабинет автора" link to `/account/author`;
   - a row exists → an "Редактировать профиль автора" link to `/account/author`;
   - the profile is public (FR-4) → also a "Открыть публичную страницу" link to `/authors/<id>`.
-- **FR-2**: `/account/author` SHALL be reachable only with a valid session. Without one, the request SHALL be redirected to `/login`. It SHALL show the editor (FR-6–FR-12) for the signed-in reader's own profile, which may not exist yet. Once the profile is public, a "Открыть публичную страницу" link to `/authors/<id>` SHALL appear at the top.
+- **FR-2**: `/account/author` SHALL be reachable only with a valid session. Without one, the request SHALL be redirected to `/login`, unless the session can't be checked (FR-20). It SHALL show the editor (FR-6–FR-12) for the signed-in reader's own profile, which may not exist yet. Once the profile is public, a "Открыть публичную страницу" link to `/authors/<id>` SHALL appear at the top.
 - **FR-3**: The header SHALL show an "Наши авторы" link to `/authors` to every visitor. When signed in, it SHALL also show a "Мастерская поэта" link to `/account` next to "Sign out".
 
 ### Profile data and visibility
@@ -92,13 +93,24 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
 - **FR-16**: The photo SHALL display at 300 × 400 CSS pixels (cropped to cover) on viewports 460 px wide or wider. On narrower viewports it SHALL take the full width of the page's content container (the same `max-w-4xl px-6` column the header uses), not the window, at the same 3:4 ratio. The placeholder SHALL follow the same sizing.
 - **FR-17**: Public author data SHALL be cached. A successful save or delete SHALL expire both that author's cached data and the directory's, so the owner's next view of either page shows the change (read-your-own-writes).
 
+- **FR-19**: The proxy SHALL answer a page request for `/account` or any path under `/account/` that has no valid session with a 307 redirect to `/login`, before any page renders. It is an optimistic layer on top of NFR-2's page check, which stays. A page request is a GET or HEAD without a `Next-Action` header; anything else passes through. In particular (user decision 2026-10-16, PR #81 discussion):
+  - a Server Action call SHALL NOT be redirected, so an expired session still gets FR-9's message under the field;
+  - the redirect SHALL carry the session refresh's cookies (a cleared dead session included), the four security headers, and `Cache-Control: private, no-store`;
+  - when the proxy can't tell (missing config, a network or Supabase outage error, returned or thrown), it SHALL let the request through, and the page's own check decides;
+  - the proxy and the page gate SHALL read a `getClaims()` result with one shared rule, so they can't disagree on who is signed in;
+  - the session SHALL be read by the proxy's existing session refresh, with no additional Supabase call;
+  - `/login` SHALL be reached without a return-to parameter.
+- **FR-20**: When the session can't be checked because Supabase is unreachable or failing, or its config is missing (FR-19's "can't tell" state, not a missing or invalid session), the app SHALL say so instead of treating the reader as signed out (user decision 2026-10-16, PR #81 discussion):
+  - `/account` and `/account/author` SHALL show «Сервис временно недоступен. Попробуйте позже.» in a `role="alert"` element with a «Повторить» button that reloads the page's data, instead of redirecting to `/login`, and SHALL read no profile data;
+  - the header's session part SHALL show neither "Sign in" nor "Мастерская поэта"/"Sign out", only the same empty placeholder as while it loads;
+  - a profile action SHALL fail with FR-9's "Сохранение сейчас недоступно. Попробуйте позже.", not the session-expired message.
 - **FR-18**: If the reader's own profile can't be read, `/account` and `/account/author` SHALL show "Не удалось загрузить профиль. Попробуйте позже." instead of the section or editor. `/authors/[id]` SHALL then show no "Редактировать профиль" link.
 
 ### Non-functional
 
 - **NFR-1**: Rendered Markdown SHALL allow no raw HTML. Only these elements SHALL be allowed: paragraphs, strong, emphasis, h2, h3, lists, list items, blockquotes, and line breaks. Links and images SHALL be rendered as plain text.
 - **NFR-2**: Authorization is enforced in three places, each independently:
-  - the page checks the session on the server (never only in a layout);
+  - the page checks the session on the server (never only in a layout, and never only in the proxy: FR-19's redirect is an extra, optimistic layer);
   - every action resolves the user from the session and never trusts a client-sent user or profile id;
   - RLS and Storage policies restrict writes to the owner.
 - **NFR-3**: Only the publishable key SHALL be used; no service-role key is read. Action logs SHALL carry an error's `name` only, never input values or file contents.
@@ -132,6 +144,7 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
 | Validation | «Обязательное поле.», «Не более 60 символов.», «Не более 1000 символов.», «Файл должен быть не больше 5 МБ.», «Допустимы только изображения PNG или JPEG.», «Недопустимое выравнивание.» |
 | Failures (FR-9) | «Сессия истекла. Войдите снова.», «Сохранение сейчас недоступно. Попробуйте позже.», «Что-то пошло не так. Попробуйте ещё раз.» |
 | Load failure (FR-18) | «Не удалось загрузить профиль. Попробуйте позже.» |
+| Session check unavailable (FR-20) | «Сервис временно недоступен. Попробуйте позже.»; button «Повторить» |
 | Directory | page heading «Наши авторы»; «Пока нет авторов.»; «Список авторов сейчас недоступен.» |
 | Account page heading | «Мастерская поэта»; editor page heading «Профиль автора» |
 | Author page | «Редактировать профиль»; photo alt «Фото: <имя фамилия>» |
@@ -154,7 +167,9 @@ Where a mockup and a requirement disagree, the requirement wins; `ui-plan.md` li
 
 Each FR/NFR above is accepted by the scenarios in `specs/*/spec.md`, all written as Given/When/Then. Headline criteria:
 
-- **GIVEN** a signed-out visitor, **WHEN** they request `/account` or `/account/author`, **THEN** they are redirected to `/login`.
+- **GIVEN** a signed-out visitor, **WHEN** they request `/account` or `/account/author`, **THEN** they are redirected to `/login`: by the proxy with an HTTP 307 before the page renders (FR-19), and by the page itself if the proxy let the request through.
+- **GIVEN** Supabase Auth is unreachable, **WHEN** a signed-in reader opens `/account`, **THEN** they see «Сервис временно недоступен. Попробуйте позже.» with «Повторить», are not sent to `/login`, and the header shows neither "Sign in" nor "Sign out" (FR-20).
+- **GIVEN** a reader whose session expired while the editor was open, **WHEN** they save a field, **THEN** the proxy does not redirect the action call, and "Сессия истекла. Войдите снова." is shown under the field.
 - **GIVEN** a signed-in reader with no profile, **WHEN** they open `/account`, **THEN** they see "Создать кабинет автора" linking to `/account/author`.
 - **GIVEN** a reader who has saved a first name only, **WHEN** anyone requests `/authors`, **THEN** the reader is not listed. **AND WHEN** they save a last name too, **THEN** they are listed, and "Открыть публичную страницу" appears in the editor.
 - **GIVEN** the first-name save is pending, **WHEN** the editor renders, **THEN** first name shows the submitted value with a disabled "Сохранение…" button, and every other field's Edit/Delete is disabled.
@@ -171,7 +186,7 @@ Each FR/NFR above is accepted by the scenarios in `specs/*/spec.md`, all written
 - `reader-account`: the signed-in-only `/account` page and the server-side session gate for pages in the `(authorized)` group.
 
 ### Modified Capabilities
-- `auth`: the session-aware header (FR-7) gains "Наши авторы" for everyone and "Мастерская поэта" for signed-in readers.
+- `auth`: the session-aware header (FR-7) gains "Наши авторы" for everyone and "Мастерская поэта" for signed-in readers. The proxy's session refresh (FR-6) also reports whether the session is valid, and the proxy redirects a signed-out page request under `/account` to `/login` (FR-19). The header (FR-7) gains a third state: when the session can't be checked, it shows only its empty placeholder (FR-20).
 - `route-groups`: the pass-through layouts requirement (FR-8) no longer forbids pages in `(authorized)/`. It now states that pages there enforce the session themselves.
 
 ## Out of Scope
@@ -184,6 +199,7 @@ Each FR/NFR above is accepted by the scenarios in `specs/*/spec.md`, all written
 - Cleaning up Storage files when an auth user is deleted, and orphaned files from a failed cleanup step.
 - Links and images inside about.
 - HttpOnly session cookies (a separate follow-up).
+- Returning to the requested page after sign-in (`/login?next=…`): the parameter must be validated against open redirects, so it is a separate feature (user decision 2026-10-16).
 
 ## Open Questions
 
@@ -203,6 +219,9 @@ None at proposal time. User decisions on 2026-10-15:
   - `src/shared/lib/supabase/` (a cookie-less client for cached public reads);
   - new routes under `src/app/(authorized)/account/` and `src/app/(public)/authors/`;
   - `src/app/layout.tsx` (header nav);
+  - `src/proxy.ts` and `src/shared/lib/supabase/session.ts` (the account-route redirect, FR-19);
+  - new `src/shared/lib/supabase/claims.ts` and `src/shared/config/account-paths.ts` (one reading of a session check; the account and sign-in paths);
+  - `src/features/auth/` session states for FR-20: `getSessionState` and `requireSession` (replacing `requireUserId`), a three-state header with `HeaderAuthPlaceholder`, `isSignedIn()` removed; `src/features/authors/` gains `SessionUnavailableAlert`;
   - `next.config.ts`.
 - **Database:** first migration `supabase/migrations/<timestamp>_author_profiles.sql`, covering the table, RLS, bucket, and storage policies. It must be applied to the remote project at deploy (`supabase db push`). The local `supabase/config.toml` declares the bucket.
 - **Dependencies:** `react-markdown` (runtime).

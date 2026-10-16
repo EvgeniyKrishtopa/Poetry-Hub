@@ -223,7 +223,13 @@ A photo SHALL be a PNG or JPEG file of at most 5 × 1024 × 1024 bytes, typed by
 - **AND** the client's declared type is not passed to Storage
 
 ### Requirement: Server and data-access failures (FR-9)
-Failures after validation SHALL be shown under the field that triggered them: not signed in → "Сессия истекла. Войдите снова."; storage or database unavailable → "Сохранение сейчас недоступно. Попробуйте позже."; anything else, including an unexpected server error → "Что-то пошло не так. Попробуйте ещё раз." Logs SHALL carry no input values or file contents.
+Failures after validation SHALL be shown under the field that triggered them: not signed in → "Сессия истекла. Войдите снова."; storage, database, or the session check unavailable (FR-20) → "Сохранение сейчас недоступно. Попробуйте позже."; anything else, including an unexpected server error → "Что-то пошло не так. Попробуйте ещё раз." Logs SHALL carry no input values or file contents.
+
+#### Scenario: Session check unavailable (FR-20)
+- **GIVEN** Supabase Auth is unreachable when the reader saves a field
+- **WHEN** the action checks the session
+- **THEN** "Сохранение сейчас недоступно. Попробуйте позже." is shown under that field, not "Сессия истекла. Войдите снова."
+- **AND** no database write happened
 
 #### Scenario: Session expired
 - **GIVEN** the session has expired since the editor loaded

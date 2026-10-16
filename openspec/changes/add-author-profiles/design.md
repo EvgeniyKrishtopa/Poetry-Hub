@@ -64,7 +64,7 @@ src/features/authors/
 └── index.ts
 ```
 
-- **`features/auth` gains `dal/current-user.ts` with `getCurrentUserId(): Promise<string | null>`.** It is server-only and never throws, and it calls `connection()` first, like `isSignedIn`. It also gains `requireUserId(): Promise<string>`, which calls `redirect("/login")` when there is no user. `isSignedIn()` becomes `(await getCurrentUserId()) !== null`, so one function owns the claims read. Both are exported from `@/features/auth`.
+- **`features/auth` gains `dal/current-user.ts` with `getCurrentUserId(): Promise<string | null>`.** It is server-only and never throws, and it calls `connection()` first, like `isSignedIn`. It also gains `requireUserId(): Promise<string>`, which calls `redirect("/login")` when there is no user. `isSignedIn()` becomes `(await getCurrentUserId()) !== null`, so one function owns the claims read. Both are exported from `@/features/auth`. (FR-20 reworks this: `getSessionState()` becomes the base function and `requireSession()` replaces `requireUserId()`; see D9.)
 - **`features/authors` imports `getCurrentUserId` / `requireUserId` from `@/features/auth`,** the public API, never internals. The dependency is one-way (`authors → auth`), and `auth` never imports `authors`. *Alternative rejected:* each authors module calling `supabase.auth.getClaims()` itself. That duplicates the one place where "who is signed in" is decided, which ADR 0004 put in `auth/dal`. *Alternative rejected:* composing only in `app/`. Actions are endpoints and must resolve the user themselves (NFR-2), and an action cannot receive the user id from a route file.
 - **`shared/lib/safe-action/create-action-client.ts`** (server-only) holds the error policy both features need: log `[<prefix>] action failed: <error.name>`, return the generic message, and use the `"flattened"` validation shape. `features/auth/actions/action-client.ts` is rewritten on top of it, with behavior unchanged and its existing tests still green. A second consumer now exists, which is the rule's trigger for moving code to `shared/` (`docs/architecture.md`). It also keeps the security-relevant "never log the input" policy from drifting between copies (Gate 1 P3).
 - **`shared/lib/supabase/public.ts`** (server-only) adds `createSupabasePublicClient()`. It is a cookie-less `createClient(url, publishableKey, { auth: { persistSession: false, autoRefreshToken: false } })`, usable inside `"use cache"` because it reads no request data. It returns an anon-role client, so RLS returns only public rows. This follows the precedent of an infrastructure client in `shared/lib` (`docs/architecture.md`).
@@ -145,7 +145,7 @@ create function public.owns_author_profile(folder text) returns boolean ...;  --
 
 Every action:
 1. Runs the Zod schema (next-safe-action `inputSchema`). A violation becomes `validationErrors` → a field error (FR-8).
-2. Checks the session with `getCurrentUserId()`. `null` returns `{ status: "failed", failure: "unauthenticated" }`. The input never carries a user or profile id (NFR-2).
+2. Checks the session with `getSessionState()`: `signed-out` returns `{ status: "failed", failure: "unauthenticated" }`, `unknown` returns the `unavailable` failure (FR-20). The input never carries a user or profile id (NFR-2).
 3. Calls a DAL write. The DAL uses the cookie client (`createSupabaseServerClient`), so the request runs as `authenticated` with the same session, RLS applies, and the database functions resolve the caller themselves. The owner DAL therefore takes no `userId` argument (CR-01); the action's session check only decides `unauthenticated` before any I/O.
 4. On `ok`, calls `updateTag(AUTHORS_TAG)` (the directory) and `updateTag(authorTag(profileId))` (that author's page) (FR-17), and returns `{ status: "saved", profile }`. Otherwise it returns the failure.
 
@@ -212,7 +212,7 @@ Every action:
 
 ```
 AuthorEditorPanel        (server, exported) Suspense → AuthorEditorLoader
-AuthorEditorLoader       (server) requireUserId(); getMyAuthorProfile(); renders AuthorProfileEditor, or a danger Alert on a failed read
+AuthorEditorLoader       (server) requireSession(); getMyAuthorProfile(); renders AuthorProfileEditor, a danger Alert on a failed read, or SessionUnavailableAlert (FR-20)
 AuthorProfileEditor      ("use client") activeField: useOptimistic<ProfileField | null>(null); "Сохранено" notice; layout
 ├── NameFieldEditor ×2   ("use client") useActionState + useOptimistic, text input
 ├── AboutFieldEditor     ("use client") useActionState + useOptimistic, MarkdownToolbar, Write/Preview, counter
@@ -276,10 +276,30 @@ FieldErrorText           error text wired by id for aria-describedby, for the ab
 
 ### D9. Session gate for `(authorized)` pages
 
-- `app/(authorized)/account/page.tsx` renders `<AccountPage />`, and `app/(authorized)/account/author/page.tsx` renders `<AuthorEditorPanel />`. Each feature component has a `<Suspense>` whose child calls `requireUserId()` first (FR-1, FR-2).
+- `app/(authorized)/account/page.tsx` renders `<AccountPage />`, and `app/(authorized)/account/author/page.tsx` renders `<AuthorEditorPanel />`. Each feature component has a `<Suspense>` whose child calls `requireSession()` first (FR-1, FR-2; `requireUserId()` until FR-20).
 - Reading the session needs Suspense under Cache Components, so the redirect happens inside a streamed boundary. Next then performs it client-side (an injected redirect) instead of an HTTP 307. Both reach `/login` before any account data renders: the loader returns before fetching the profile. Gate 3 verifies the browser lands on `/login`.
-- *Alternative rejected:* a proxy redirect for `/account/*` (a real 307). It would need `refreshSession` to also report "signed in". That changes a shared module and the `auth` FR-6 contract for a UX nicety. It can be added later without changing this design. A layout-only check is ruled out by `route-groups` (soft navigation skips shared layouts).
-- `(authorized)/layout.tsx` stays pass-through. Its comment changes from "enforces nothing yet" to "pages here enforce the session themselves (requireUserId)".
+- **Proxy redirect on top (FR-19; user decision 2026-10-16, PR #81 discussion; was the rejected alternative here).** A signed-out guest used to see the page heading and skeleton flash before the streamed client redirect. The proxy now answers a signed-out page request under `/account` with a real 307 to `/login`, before anything renders:
+  - **One reading of a `getClaims()` result (Gate 1 revision, PLAUSIBLE 1 and 2; user decision 2026-10-16).** A pure helper `readClaimsState(result)` in `shared/lib/supabase/claims.ts` maps it to `{ state: "signed-in", userId } | { state: "signed-out" } | { state: "unknown" }`:
+    Checked in this order, first match wins (spec-clarify 2026-10-16):
+    1. a returned retryable error (`isAuthRetryableFetchError`, or status ≥ 500: supabase-js returns network and outage failures rather than throwing) → `unknown`, even if claims came with it;
+    2. a non-empty string `sub` → `signed-in`;
+    3. anything else → `signed-out`: no claims, a non-retryable `{ error }` (expired or invalid JWT), or claims without a non-empty string `sub`. The page gate reads such a result the same way.
+
+    Both `refreshSession` and auth's `getCurrentUserId` use it, so the proxy and the page gate can't disagree on what counts as signed in. `getCurrentUserId` still turns anything but `signed-in` into `null` and keeps its own logging. Auth still decides "who is signed in" for rendering; only the parsing of Supabase's result is shared.
+  - **`refreshSession` reports the session state** from the `getClaims()` call it already makes: `{ response, session }`, with `session` from `readClaimsState`, or `unknown` for a missing config or a thrown `getClaims`. No second Supabase call (auth FR-6). This is routing only. Rendering still asks auth's `dal/` (`getSessionState`, `requireSession`). ADR 0006 records that this narrows ADR 0004's rejected alternative ("put the check in `session.ts`") for routing only.
+  - **Which requests redirect** is a pure helper in `shared/config/account-paths.ts` (`isAccountPath(pathname)`: `/account` or `/account/…`, never `/accounts`) plus the proxy's check: method `GET` or `HEAD`, no `Next-Action` header, `session === "signed-out"`. The same module owns the `ACCOUNT_PATH` and `SIGN_IN_PATH` constants; auth imports them instead of keeping its own copies (Gate 1 revision, PLAUSIBLE 4), since `shared/` can't import from a feature. A Server Action call is never redirected: it is a POST to the page's path, and a 307 there would replace FR-9's "session expired" field error with a failed call.
+  - **The redirect response** is `NextResponse.redirect(new URL("/login", request.url), 307)` with every `Set-Cookie` from the refresh copied onto it (a revoked session's clearing cookies included), then the security headers and `Cache-Control: private, no-store`. No `?next=` (open-redirect risk; Out of Scope).
+  - **Fail open.** `unknown` passes through; the page's `requireSession()` decides, and on `unknown` shows the unavailable alert (FR-20). The page gate stays in every case (NFR-2): the Next docs call the proxy an optimistic check only, since a matcher change can silently drop it.
+  - The account-path prefix is the one list to update when an `(authorized)` page is added outside `/account`; the page gate still protects a page the list misses.
+- **"Can't tell" is shown honestly (FR-20; user decision 2026-10-16).** Before this, any failure of the session check read as signed out: during a Supabase outage a signed-in reader saw "Sign in" in the header and was sent from `/account` to `/login`, where sign-in failed too. Now the same three states reach the render tree:
+  - **auth `dal/`** gains `getSessionState(): Promise<ClaimsState>`, now the one base function. It calls `await connection()` first, outside any `try`, as D1 and ADR 0004 require: otherwise an env-less build's config error would resolve during prerender and bake `unknown` into the shell (Gate 1 rerun, PLAUSIBLE 1). Then it applies `readClaimsState` to the cookie client's `getClaims()`, with `unknown` for a missing config or a throw. `getCurrentUserId()` delegates to it as `signed-in ? userId : null`, for callers that only need an id (`AuthorOwnerLink`: no owner link on `unknown`, as with any failed read).
+  - **`requireUserId()` becomes `requireSession()`**, typed `Promise<Exclude<ClaimsState, { state: "signed-out" }>>`, so one name runs along the chain (`state: "unknown"`); "unavailable" is only UI and action-failure wording (Gate 1 rerun, PLAUSIBLE 3). It still redirects on `signed-out`, outside any `try`. `AccountAuthorSection` renders `SessionUnavailableAlert` under its «Профиль автора» heading, where the links go, as with FR-18; `AuthorEditorLoader` renders it in place of the editor. Both do so on `unknown`, with no profile read (spec-clarify 2026-10-16). That component is a server-rendered danger `Alert` with «Сервис временно недоступен. Попробуйте позже.»; only its «Повторить» button is a client component. The button calls `router.refresh()` inside `useTransition`, disabled while pending so a click shows it is working (Gate 1 rerun, PLAUSIBLE 4). `router.refresh()` re-requests the route's server tree under Cache Components, so the header recovers in the same round trip. ADR 0004 rejected a client `refresh()` after sign-out because the server knew when cookies changed; no server event marks the end of an outage, so a reader-triggered refresh fits here.
+  - **The header** gets only the state's name, not the claims. `HeaderAuthLinksContent` awaits `getSessionState()` and passes `state` (`"signed-in" | "signed-out" | "unknown"`) to `AuthStatus`, so no user id enters the render tree (ADR 0004; Gate 1 rerun, PLAUSIBLE 2). `AuthStatus` renders "Sign in", the signed-in links, or, for `unknown`, the same empty placeholder as the Suspense fallback (`HeaderAuthPlaceholder`, extracted so both use one element). `isSignedIn()` is removed.
+  - **Actions** call `getSessionState()`. `signed-out` → `unauthenticated`, as today. `unknown` → the `unavailable` failure (FR-9's "Сохранение сейчас недоступно…"), with no DAL call.
+  - A missing config counts as `unknown` everywhere, the same as in the proxy. In a deployed app it means the service is broken, not that the reader is a guest.
+  - `SessionUnavailableAlert` lives in `features/authors`, its only consumer. A second account-area feature (the poems change) couldn't import it: a cross-feature import is allowed only for server-only accessors. Then it moves to auth's public API (Gate 1 rerun, PLAUSIBLE 5).
+- A layout-only check is ruled out by `route-groups` (soft navigation skips shared layouts).
+- `(authorized)/layout.tsx` stays pass-through. Its comment changes from "enforces nothing yet" to "pages here enforce the session themselves (requireSession)".
 
 ### D10. Error layers (FR-9)
 
@@ -287,7 +307,7 @@ FieldErrorText           error text wired by id for aria-describedby, for the ab
 | --- | --- | --- |
 | Browser pre-check (photo only) | Size over 5 MiB, or not PNG/JPEG by magic bytes | The same field error, and no request is sent |
 | Zod schema (next-safe-action) | Invalid input | `validationErrors` → field error, no I/O |
-| Action | `getCurrentUserId()` is `null` | `failed: unauthenticated` |
+| Action | `getSessionState()` is `signed-out` / `unknown` | `failed: unauthenticated` / `failed: unavailable` (FR-20) |
 | DAL | Supabase `{ error }` results, `SupabaseConfigError` | `classifyProfileError` → `unauthenticated` (JWT expired/invalid, HTTP 401 only), `unavailable` (config, network, 5xx, Storage 5xx), `unknown` (everything else, including `42501` permission denied: with a valid session that means a grant or policy bug, not an expired session) |
 | Action client `handleServerError` | Any unexpected throw | `serverError` (generic). The form maps it to `unknown`. Only `error.name` is logged |
 | Field wrapper `catch` (client) | The action call itself rejects (body over `bodySizeLimit`, network) | `unknown` failure under the field. Never `error.tsx` |
@@ -318,7 +338,7 @@ The poems change is expected to copy this pattern, so the docs move with the cod
   - `updateTag` from actions vs `revalidateTag` from webhooks.
 - **`docs/architecture.md`:**
   - the project tree gains `features/authors`, `shared/lib/safe-action`, `shared/lib/supabase/public.ts`, and the `(authorized)/account` routes;
-  - the `(authorized)` bullet changes from "enforces nothing yet" to "each page calls `requireUserId()` inside its feature's Suspense";
+  - the `(authorized)` bullet changes from "enforces nothing yet" to "each page calls `requireSession()` inside its feature's Suspense" (was `requireUserId()` until FR-20);
   - a new note: a feature may import another feature's public API for server-only accessors (`authors → auth`).
 - **ADR 0005** records the durable decisions: RLS plus column grants as the last line of defense for reader-owned rows, per-field actions with `updateTag`, cookie-less cached public reads, and photo upload through a Server Action with a browser pre-check.
 
@@ -332,7 +352,7 @@ sequenceDiagram
   participant F as NameFieldEditor
   participant E as AuthorProfileEditor
   participant A as saveNameAction (server)
-  participant AU as auth getCurrentUserId
+  participant AU as auth getSessionState
   participant D as DAL writeOwnProfile
   participant S as Supabase PostgREST (RLS + column grants)
   participant C as Next cache
@@ -349,11 +369,13 @@ sequenceDiagram
     alt invalid
       A-->>F: validationErrors → field error
     else valid
-      A->>AU: getCurrentUserId()
+      A->>AU: getSessionState()
       AU->>S: getClaims (cookie session)
-      alt no session
+      alt signed-out
         A-->>F: failed: unauthenticated
-      else user
+      else unknown (Supabase unreachable or failing, FR-20)
+        A-->>F: failed: unavailable; no DAL call
+      else signed-in
         A->>D: writeOwnProfile({ first_name })
         D->>S: rpc ensure_my_author_profile → id; update … eq(id) select OWNER_PROFILE_COLUMNS
         alt error
@@ -379,7 +401,7 @@ sequenceDiagram
 sequenceDiagram
   participant P as PhotoFieldEditor (browser)
   participant A as savePhotoAction
-  participant AU as auth getCurrentUserId
+  participant AU as auth getSessionState
   participant D as DAL replacePhoto
   participant S as PostgREST (RLS)
   participant ST as Supabase Storage (author-photos)
@@ -393,10 +415,12 @@ sequenceDiagram
       A--xP: rejection → catch → unknown failure under field
     else action runs
       A->>A: Zod: File, size
-      A->>AU: getCurrentUserId() (before reading any bytes, code-review CR-01)
-      alt no session
+      A->>AU: getSessionState() (before reading any bytes, code-review CR-01)
+      alt signed-out
         A-->>P: failed: unauthenticated; nothing read or uploaded
-      else user
+      else unknown (FR-20)
+        A-->>P: failed: unavailable; nothing read or uploaded
+      else signed-in
         A->>A: validatePhotoFile (magic bytes)
         alt invalid
           A-->>P: validationErrors → field error; nothing uploaded
@@ -433,7 +457,7 @@ sequenceDiagram
 sequenceDiagram
   participant P as PhotoFieldEditor
   participant A as deleteProfileFieldAction { field: "photo" }
-  participant AU as auth getCurrentUserId
+  participant AU as auth getSessionState
   participant D as DAL removePhoto
   participant S as PostgREST (RLS)
   participant ST as Supabase Storage
@@ -443,10 +467,12 @@ sequenceDiagram
   alt call rejects
     A--xP: catch → unknown failure; previous photo shown again
   else
-    A->>AU: getCurrentUserId()
-    alt no session
+    A->>AU: getSessionState()
+    alt signed-out
       A-->>P: failed: unauthenticated
-    else user
+    else unknown (FR-20)
+      A-->>P: failed: unavailable; previous photo shown again
+    else signed-in
       A->>D: removePhoto()
       D->>S: select photo_path; update photo_path = null
       alt row write fails
@@ -540,26 +566,50 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   actor R as Browser
+  participant P as proxy (refreshSession)
+  participant A as Supabase Auth
   participant L as AuthorEditorLoader (inside Suspense)
-  participant AU as requireUserId (auth dal)
+  participant AU as requireSession (auth dal)
   participant D as getMyAuthorProfile
   participant S as PostgREST (owner policy)
 
-  R->>L: GET /account/author
-  L->>AU: requireUserId()
-  alt no valid session
-    AU-->>R: redirect("/login") (streamed → client redirect); no profile read
-  else user id
-    L->>D: getMyAuthorProfile()
-    D->>S: select own row (cookie client)
-    alt row or none
-      D-->>L: AuthorProfile | null
-      L-->>R: editor (add prompts for empty fields)
-    else error
-      D-->>L: failure (logged by name)
-      L-->>R: danger Alert "Не удалось загрузить профиль. Попробуйте позже."
+  R->>P: GET /account/author (no Next-Action header)
+  alt Supabase config missing
+    P->>P: session = unknown
+  else config present
+    P->>A: getClaims() (once; may refresh cookies via setAll)
+    alt claims with sub
+      A-->>P: claims → signed-in
+    else no claims, or a non-retryable error (expired / invalid JWT)
+      A-->>P: → signed-out (a revoked session's cookies are cleared)
+    else retryable error (network, 5xx) or a throw
+      A--xP: → unknown
     end
   end
+  alt signed-out
+    P-->>R: 307 Location /login (+ refresh cookies, security headers, no-store); nothing renders
+  else signed-in or unknown (fail open)
+    P->>L: pass through
+    L->>AU: requireSession() (the page gate stays, NFR-2)
+    alt signed-out (the proxy let it through only if it couldn't tell)
+      AU-->>R: redirect("/login") (streamed → client redirect); no profile read
+    else unknown (Supabase unreachable or failing, FR-20)
+      AU-->>L: { state: "unknown" }
+      L-->>R: SessionUnavailableAlert «Сервис временно недоступен. Попробуйте позже.» + «Повторить»; no profile read
+    else signed-in
+      AU-->>L: { state: "signed-in", userId }
+      L->>D: getMyAuthorProfile()
+      D->>S: select own row (cookie client)
+      alt row or none
+        D-->>L: AuthorProfile | null
+        L-->>R: editor (add prompts for empty fields)
+      else error
+        D-->>L: failure (logged by name)
+        L-->>R: danger Alert "Не удалось загрузить профиль. Попробуйте позже."
+      end
+    end
+  end
+  Note over P: A Server Action POST (Next-Action header) is never redirected, so FR-9's field error still shows
 ```
 
 ## Risks / Trade-offs
@@ -578,7 +628,9 @@ sequenceDiagram
   Manual validation against the local stack is a task.
 - **[Security definer functions]** `ensure_my_author_profile`, `my_author_profile_id` and `owns_author_profile` run as the table owner, bypassing RLS. → Each takes no user id, resolves the caller from `auth.uid()` only, sets an empty `search_path`, and is executable by `authenticated` alone; pgTAP covers their results and anon's denied call. (This replaced the earlier residual risk that signed-in users could read public authors' auth ids, closed by code-review CR-01.)
 - **[Photo-only rows]** A photo saved before any name creates a non-public row. → That state is intended (FR-4). It is invisible publicly and editable by its owner.
-- **[Streamed redirect and soft 404]** Signed-out `/account*` gets a client redirect, not a 307, and an unknown author gets the 404 UI with status 200. → Acceptable for UX, with no data rendered first (D5, D9). A proxy redirect is a later additive option.
+- **[Soft 404]** An unknown author gets the 404 UI with status 200. → Acceptable for UX, with no data rendered first (D5). Signed-out `/account*` now gets a proxy 307 (D9, FR-19); the streamed client redirect remains only as the fallback when the proxy can't read the session.
+- **[FR-20 depends on how tokens are signed]** "Can't tell" during an Auth outage only happens while `getClaims()` needs the network. The project signs JWTs with a shared secret: `supabase/config.toml` has no `signing_keys_path`, and ADR 0004 says the same. If it moves to asymmetric keys, a reader with a still-valid token reads as `signed-in` during an outage. They then reach the page and get FR-18's load-failure message instead of FR-20's, and the 9.3 outage flow would need restating. → Revisit FR-20 and 9.3 together with that follow-up.
+- **[Proxy gate drift]** The proxy redirects by path prefix, so an `(authorized)` page added outside `/account` gets no 307 until the prefix list is updated. → It still can't render data for a guest: the page gate stays (D9). Accepted.
 - **[`getClaims` per request on account pages and the owner link]** → Same cost profile as the header (ADR 0004). The public page body stays cached; only the small owner link is per request.
 - **[Server Action `File` serialization holds the whole file in memory]** → Bounded by the 6 MB limit.
 - **[CI builds without Supabase env produce empty `remotePatterns`]** → Builds don't render photos. A deploy with the env set gets the pattern. A missing env at deploy shows broken images rather than failing: `next/image` throws on an unconfigured host only at render, so Gate 3 checks a photo renders.
@@ -615,8 +667,8 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `shared/lib/safe-action/create-action-client.ts` | The one action-client error policy (D1) | `createActionClient`, `ActionClientOptions`, `ActionClient` |
 | `shared/lib/supabase/public.ts` | Cookie-less anon client for cached reads (D1) | `createSupabasePublicClient` |
 | `shared/config/supabase-image-patterns.ts` | `images.remotePatterns` from `NEXT_PUBLIC_SUPABASE_URL` (D8) | `buildSupabaseImagePatterns` |
-| `features/auth/dal/current-user.ts` | Who is signed in; the session gate (D1, D9) | `getCurrentUserId`, `requireUserId` |
-| `features/auth/index.ts` | Public API, now with the two accessors | + `getCurrentUserId`, `requireUserId` |
+| `features/auth/dal/current-user.ts` | Who is signed in; the session gate (D1, D9; reworked by FR-20, see the row below) | `getCurrentUserId`, `requireUserId` (until FR-20) |
+| `features/auth/index.ts` | Public API, now with the session accessors | + `getCurrentUserId`, `requireUserId`; FR-20 (task 8.4): + `getSessionState`, `requireSession`, − `requireUserId` |
 | `features/authors/model/author.types.ts` | Domain types, DAL and action results, field form state, Markdown edit types | `NameField`, `ProfileField`, `AboutAlign`, `ProfileFailure`, `ImageType`, `PhotoFileCheck`, `AuthorProfile`, `PublicAuthor`, `ProfileRowPatch`, `MyProfileResult`, `ProfileWriteResult`, `PublicAuthorResult`, `PublicAuthorsResult`, `ProfileActionResult`, `ProfileActionResponse`, `FieldFormState`, `MarkdownFormat`, `TextSelection`, `FormattedText` |
 | `features/authors/model/author.constants.ts` | Limits, bucket, column lists, photo size | `NAME_MAX_LENGTH`, `ABOUT_MAX_LENGTH`, `PHOTO_MAX_BYTES`, `AUTHOR_PHOTOS_BUCKET`, `OWNER_PROFILE_COLUMNS`, `PUBLIC_AUTHOR_COLUMNS`, `PHOTO_WIDTH`, `PHOTO_HEIGHT` |
 | `features/authors/model/author-profile.schema.ts` | Action input schemas and the row schema (rules in 3.1) | `saveNameSchema`, `saveAboutSchema`, `savePhotoSchema`, `deleteProfileFieldSchema`, `profileRowSchema`, `ProfileRow` |
@@ -649,6 +701,13 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `features/authors/components/AccountAuthorLinks/` | FR-1 links or FR-18 alert, from the whole read result | `AccountAuthorLinks`, `AccountAuthorLinksProps` |
 | `features/authors/components/AuthorsNavLink/` | The header's «Наши авторы» link (FR-3), composed by the root layout (added in group 6) | `AuthorsNavLink` |
 | `shared/ui/ButtonLink/` | A link drawn as `Button` (added in group 6, user decision 2026-10-16: the account links are navigation, so an `<a>`, not a `Button` with an `href` prop) | `ButtonLink` |
+| `shared/lib/supabase/session.ts` | `refreshSession` also reports the session state from its one `getClaims()` (FR-19, task 8.1) | `refreshSession`, `SessionState` |
+| `shared/config/account-paths.ts` | Which paths the proxy gates, and the account and sign-in paths auth also uses (FR-19, task 8.2) | `isAccountPath`, `ACCOUNT_PATH`, `SIGN_IN_PATH` |
+| `features/auth/dal/current-user.ts` | `getSessionState` (three states), `getCurrentUserId`, `requireSession` replacing `requireUserId` (FR-20, task 8.4) | `getSessionState`, `getCurrentUserId`, `requireSession` |
+| `features/auth/components/HeaderAuthPlaceholder/` | The header's empty session slot, for the Suspense fallback and the "can't tell" state (FR-20, task 8.4) | `HeaderAuthPlaceholder` |
+| `features/authors/components/SessionUnavailableAlert/` | «Сервис временно недоступен…» with «Повторить» on the account pages (FR-20, task 8.5) | `SessionUnavailableAlert` |
+| `shared/lib/supabase/claims.ts` | One reading of a `getClaims()` result for the proxy and auth's DAL (FR-19, task 8.1) | `readClaimsState`, `ClaimsState` |
+| `proxy.ts` | The account-route redirect on top of the refresh and security headers (FR-19, task 8.3) | `proxy`, `config`, `applySecurityHeaders` |
 | `shared/config/constants.ts` | `IMAGE_QUALITY`; `CONTENT_LANG`, the `lang` of the Russian product copy in authors, auth's header link, and the layout (user decision 2026-10-16; named `RUSSIAN_LANG` until the PR #80 review) | `IMAGE_QUALITY`, `CONTENT_LANG` |
 | `features/auth/components/AccountLink/` | The header's «Мастерская поэта» link to `/account`, signed-in only (PR #80 review) | `AccountLink` |
 | `features/auth/components/HeaderAuthLinks/` | The header's session part: Suspense around `HeaderAuthLinksContent` (renamed from `HeaderSession` / `HeaderSessionStatus` in the PR #80 review) | `HeaderAuthLinks` |

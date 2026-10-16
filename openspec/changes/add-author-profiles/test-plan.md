@@ -9,9 +9,9 @@ Levels:
 
 | Requirement | Criterion (scenario) | Tests | Level |
 | --- | --- | --- | --- |
-| FR-1, NFR-2 | Signed-out visitor opens `/account` → ends on `/login`, no profile read | `AccountAuthorSection` loader: with `requireUserId` redirecting, `getMyAuthorProfile` is never called; `requireUserId` calls `redirect("/login")` for a `null` user | unit |
+| FR-1, NFR-2 | Signed-out visitor opens `/account` → ends on `/login`, no profile read | `AccountAuthorSection` loader: with `requireSession` redirecting, `getMyAuthorProfile` is never called; `requireSession` calls `redirect("/login")` only for `signed-out` (was `requireUserId` until FR-20) | unit |
 | FR-1, NFR-2 | (same) | Browser: signed-out `/account` lands on `/login` | end-to-end |
-| FR-2, NFR-2 | Signed-out visitor opens `/account/author` → `/login` | `AuthorEditorPanel` loader: no profile read when `requireUserId` redirects; browser: expired session on `/account/author` lands on `/login` | unit + end-to-end |
+| FR-2, NFR-2 | Signed-out visitor opens `/account/author` → `/login` | `AuthorEditorPanel` loader: no profile read when `requireSession` redirects; browser: expired session on `/account/author` lands on `/login` | unit + end-to-end |
 | FR-8 (route-groups) | Authorized pages check the session themselves; layout has no session read | Group-layout test: `(authorized)/layout.tsx` renders children unchanged; browser: both account URLs redirect when signed out | unit + end-to-end |
 | FR-8 (route-groups) | Layout adds no markup | Existing `group-layouts.test.tsx` still passes | unit |
 | FR-1 | No profile yet → «Создать кабинет автора», no public link | `AccountAuthorLinks` with `profile = null` | unit |
@@ -21,7 +21,8 @@ Levels:
 | FR-18 | Account page profile can't be loaded → alert message | `AccountAuthorSection` view with a failed read renders the `role="alert"` text | unit |
 | FR-3 (auth FR-7) | Signed out: site link, «Наши авторы», Sign in; no Sign out / Мастерская поэта | `AuthStatus` (signed out) + layout header test | unit |
 | FR-3 (auth FR-7) | Signed in: «Наши авторы», «Мастерская поэта» (`AccountLink`), Sign out; no email | `AuthStatus` (signed in), `AccountLink` | unit |
-| FR-3 (auth FR-7) | Session check fails → Sign in + «Наши авторы» | `isSignedIn` / `getCurrentUserId` failure branches → `false` / `null`; existing header tests | unit |
+| FR-3 (auth FR-7) | Session check fails (no claims or a non-retryable error) → Sign in + «Наши авторы» | `getSessionState` → `signed-out` for those results; `AuthStatus` with `signed-out` | unit |
+| FR-20 (auth FR-7) | Session check unavailable (retryable error, throw, or no config) → «Наши авторы» + the empty placeholder; no Sign in, Sign out, or Мастерская поэта; page still renders | `getSessionState` → `unknown` for those results; `AuthStatus` with `unknown` renders `HeaderAuthPlaceholder` only; `HeaderAuthLinksContent` passes the state name, never the user id | unit |
 | FR-3 (auth FR-7) | Pending check → no Sign in, Sign out, or Мастерская поэта; «Наши авторы» present | `HeaderAuthLinks` fallback test; layout nav renders outside the boundary | unit |
 | FR-3 | Header links for both states in a real page | Browser: header signed in and signed out | end-to-end |
 | FR-4 | First name only → not listed, `/authors/<id>` 404 | pgTAP: anon select returns no row for a first-name-only profile; `getPublicAuthor` maps "no row" → `not-found` | integration + unit |
@@ -37,7 +38,7 @@ Levels:
 | FR-5, NFR-2 | Dot segments in photo path rejected | pgTAP: `<own>/../<other>/<file>.jpg` and a non-uuid name → check violation | integration |
 | FR-5, NFR-2 | Whitespace-only name rejected | pgTAP check violation | integration |
 | FR-5, NFR-2 | A real save runs through the grants | pgTAP: `ensure_my_author_profile()` + update-by-id-returning with the column list as `authenticated` succeeds | integration |
-| FR-5, NFR-2 | Manual two-user check of all of the above via REST | Task 8.2 manual validation (recorded in the commit body) | end-to-end |
+| FR-5, NFR-2 | Manual two-user check of all of the above via REST | Task 9.2 manual validation (recorded in the commit body) | end-to-end |
 | FR-6 | Empty profile → four add prompts, photo placeholder, no public link | `AuthorProfileEditor` with `profile = null` | unit |
 | FR-6 | Edit opens the input labelled «Имя» with «Сохранить»/«Отмена» | `NameFieldEditor` | unit |
 | FR-6 | Only one field is edited at a time; enabled again after Отмена or success | `AuthorProfileEditor` with `editingField` set: the other fields' controls are disabled | unit |
@@ -61,8 +62,9 @@ Levels:
 | FR-8 | Same two cases checked in the browser itself (network tab shows no request) | Browser pass | end-to-end |
 | FR-8 | Server repeats the check (disguised GIF, 5 MiB + 1) | Action test: field error, `replacePhoto` not called | unit |
 | FR-8 | Valid 2 MB PNG stored and shown | `replacePhoto` happy path; browser upload | unit + end-to-end |
-| FR-9 | Session expired → «Сессия истекла. Войдите снова.», no write | Action test: `getCurrentUserId` → `null` → `unauthenticated`, DAL not called; `classifyProfileError` JWT/401 → `unauthenticated` | unit |
+| FR-9 | Session expired → «Сессия истекла. Войдите снова.», no write | Action test: `getSessionState` → `signed-out` → `unauthenticated`, DAL not called; `classifyProfileError` JWT/401 → `unauthenticated` | unit |
 | FR-9 | Backend unavailable or config missing → «Сохранение сейчас недоступно…» | `classifyProfileError` 5xx, network, and config → `unavailable`; form-state mapping | unit |
+| FR-9, FR-20 | Session check unavailable on save → «Сохранение сейчас недоступно…», not the session-expired text; no write | Action test: `getSessionState` → `unknown` → `unavailable`, DAL not called | unit |
 | FR-9, NFR-3 | Unexpected throw → generic message; log has the name only | `createActionClient` factory test; action test with a throwing DAL | unit |
 | FR-9 | Request rejected before the action → generic message, no error screen | `NameFieldEditor` with a rejecting action promise | unit |
 | FR-10 | Delete about → «Добавить «О себе»», «Сохранено», later save starts left-aligned | `clearProfileField("about")` sets `about_align` left; `AboutFieldEditor` delete flow | unit |
@@ -100,13 +102,32 @@ Levels:
 | NFR-8 | «Редактировать профиль» precedes the h1 | `AuthorProfileView` composition test | unit |
 | NFR-1 | `<script>` in about → no script element | `AuthorAbout` | unit |
 | NFR-1 | Link becomes text, no `a`; image → alt text, no `img` | `AuthorAbout` | unit |
-| NFR-3 | No privileged key in source | Task 8.1 grep `SUPABASE_SERVICE_ROLE\|SUPABASE_SECRET` → none | integration |
+| NFR-3 | No privileged key in source | Task 9.1 grep `SUPABASE_SERVICE_ROLE\|SUPABASE_SECRET` → none | integration |
 | NFR-3 | Logs carry error names only | DAL-write and action tests assert log arguments contain no input values | unit |
-| NFR-4 | Only `react-markdown` added; no colour literals | Task 8.1 dependency diff and colour grep | integration |
+| NFR-4 | Only `react-markdown` added; no colour literals | Task 9.1 dependency diff and colour grep | integration |
 | NFR-5 | Field error wiring (`aria-invalid`, `aria-describedby`) | `NameFieldEditor` / `FieldErrorText` | unit |
 | NFR-5 | Shared `TextField` keeps the label and error wiring after the move from auth | `TextField` test; the existing `SignInForm`/`SignUpForm` tests pass unchanged | unit |
 | NFR-5 | Toolbar buttons have Russian accessible names | `AboutFieldEditor` `getByRole("button", { name })` × 7 | unit |
-| NFR-6 | Build without env exits 0; route table modes | Task 8.1 `npm run build` with no Supabase env | integration |
+| NFR-6 | Build without env exits 0; route table modes | Task 9.1 `npm run build` with no Supabase env | integration |
 | Proposal headline | GIF / 6 MB → error before sending | Same as the FR-8 browser-check rows | unit + end-to-end |
 | Proposal headline | Deleted photo → placeholder in the editor and on the public page | Same as the FR-10 delete-photo row | unit + end-to-end |
 | Proposal headline | Direct API `photo_path` into another file → rejected | Same as the FR-5 pgTAP rows | integration |
+| FR-19 (auth FR-6) | The refresh keeps its cookie, headers, and no-store behaviour; a cookie-less request outside `/account` gets no no-store | Existing `session.test.ts` and `proxy.test.ts` cases, unchanged | unit |
+| FR-19 (auth FR-6) | The refresh reports signed-in, signed-out, or unknown from one `getClaims()` call | `session.test.ts`: each state, `getClaims` called once | unit |
+| FR-19 (auth FR-6) | Rule order: retryable error → unknown (even with claims); non-empty `sub` → signed-in; anything else, including claims without `sub` → signed-out | `claims.test.ts`: `readClaimsState` table | unit |
+| FR-19 (auth FR-6) | Missing config → unknown, request continues | `session.test.ts` config-error case | unit |
+| FR-19 | Signed-out GET for `/account/author` → 307, `Location` parses to the same origin, path `/login`, no query; four security headers; no-store | `proxy.test.ts` | unit |
+| FR-19 | `/account`, `/account/`, `/account/author/x` redirect; `/accounts` and `/authors` don't | `account-paths.test.ts` (`isAccountPath` table) + `proxy.test.ts` pass-through cases | unit |
+| FR-19 | A revoked session's cleared cookies are on the redirect | `proxy.test.ts` with a refresh that clears cookies | unit |
+| FR-19, FR-9 | A Server Action POST (`Next-Action`) while signed out is not redirected; the field shows «Сессия истекла. Войдите снова.» | `proxy.test.ts` POST case; browser: sign out in another tab, then save a field (task 9.3) | unit + end-to-end |
+| FR-19 | Signed-in and unknown requests pass through | `proxy.test.ts` | unit |
+| FR-19 | Signed-out `/account` and `/account/author` get the proxy's 307, with no flash of the page | Browser, network tab (task 9.3) | end-to-end |
+| FR-19 | Proxy and page gate read a `getClaims()` result the same way | `getSessionState` and `refreshSession` both use `readClaimsState` (checked by the `claims.test.ts` table and both callers' tests) | unit |
+| FR-20 | `/account` during an outage: «Мастерская поэта», «Профиль автора», the alert «Сервис временно недоступен. Попробуйте позже.» with «Повторить», no links, no redirect, no profile read | `AccountAuthorSection` with `requireSession` → `unknown`: alert rendered, `getMyAuthorProfile` not called | unit |
+| FR-20 | `/account/author` during an outage: the alert and «Повторить» in place of the editor, no field editor | `AuthorEditorLoader` with `requireSession` → `unknown` | unit |
+| FR-20 | «Повторить» re-requests the server data, disabled while pending | `SessionUnavailableAlert` retry-button test: `router.refresh` called inside a transition, button disabled while pending | unit |
+| FR-20 | `requireSession` redirects only on signed-out; `getSessionState` awaits `connection()` before creating the client | `current-user.test.ts` | unit |
+| FR-20 | Real outage: stop the local stack → alert, no redirect, header with neither link; restart and «Повторить» → section renders | Browser (task 9.3) | end-to-end |
+| Proposal headline | Signed-out `/account` or `/account/author` → `/login` (proxy 307; page redirect as fallback) | Same as the FR-19 redirect rows and the FR-1/FR-2 rows | unit + end-to-end |
+| Proposal headline | Expired session while editing → save shows the field error, no redirect | Same as the FR-19 Server Action row | unit + end-to-end |
+| Proposal headline | Auth unreachable → alert on `/account`, no redirect, header with neither link | Same as the FR-20 rows | unit + end-to-end |
