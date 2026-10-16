@@ -23,6 +23,8 @@ describe("readClaimsState", () => {
     ["a retryable fetch error", { data: null, error: OUTAGE }, "unknown"],
     ["a 5xx answer", { data: null, error: SERVER_ERROR }, "unknown"],
     ["a 429 rate limit", { data: null, error: RATE_LIMITED }, "unknown"],
+    ["an error without a status", { data: CLAIMS, error: new Error("unexpected") }, "signed-out"],
+    ["an error that isn't an object", { data: CLAIMS, error: "bad token" }, "signed-out"],
     ["claims with a retryable error", { data: CLAIMS, error: OUTAGE }, "unknown"],
   ])("%s → %s", (_label, result, expected) => {
     expect(readClaimsState(result).state).toBe(expected);
