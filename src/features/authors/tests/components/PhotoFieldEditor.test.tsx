@@ -180,6 +180,18 @@ describe("PhotoFieldEditor", () => {
   });
 
   // implements FR-8 of add-author-profiles
+  it("checks the file again on Сохранить and sends nothing when it fails then", async () => {
+    const user = await chooseFile(pngFile());
+    await screen.findByRole("img");
+    vi.mocked(validatePhotoFile).mockResolvedValueOnce({ ok: false, error: "too-large" });
+
+    await user.click(screen.getByRole("button", { name: "Сохранить" }));
+
+    expect(await screen.findByText("Файл должен быть не больше 5 МБ.")).toBeInTheDocument();
+    expect(savePhotoAction).not.toHaveBeenCalled();
+  });
+
+  // implements FR-8 of add-author-profiles
   it("keeps the file chosen last when an earlier file's check finishes after it", async () => {
     const slowCheck = deferred<PhotoFileCheck>();
     vi.mocked(validatePhotoFile).mockReturnValueOnce(slowCheck.promise);
