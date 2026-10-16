@@ -7,7 +7,8 @@ interface TextFieldClasses {
   readonly error: string;
 }
 
-const INPUT_BASE =
+/** The text input look: also used by inputs `TextField` can't render, such as the author editor's textarea. */
+export const FIELD_INPUT_CLASS =
   "rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-accent aria-invalid:border-danger aria-invalid:focus:border-danger";
 
 const ERROR_BASE = "text-sm font-medium text-danger";
@@ -20,13 +21,13 @@ export const TEXT_FIELD_CLASSES: Readonly<Record<TextFieldLayout, TextFieldClass
   stacked: {
     wrapper: "flex flex-col gap-1",
     label: "text-sm font-medium",
-    input: INPUT_BASE,
+    input: FIELD_INPUT_CLASS,
     error: ERROR_BASE,
   },
   columns: {
     wrapper: "contents",
     label: "text-sm font-medium min-[600px]:col-start-1 min-[600px]:pt-2",
-    input: `${INPUT_BASE} w-full max-w-sm min-[600px]:col-start-2`,
+    input: `${FIELD_INPUT_CLASS} w-full max-w-sm min-[600px]:col-start-2`,
     error: `${ERROR_BASE} min-[600px]:col-start-2`,
   },
 };

@@ -3,7 +3,7 @@
 import { useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
-import { Button } from "@/shared/ui";
+import { Button, FIELD_INPUT_CLASS } from "@/shared/ui";
 
 import { deleteProfileFieldAction, saveAboutAction } from "../../actions/author-profile.actions";
 import { ABOUT_MAX_LENGTH } from "../../model/author.constants";
@@ -22,9 +22,7 @@ import { ProfileFieldRow } from "../ProfileFieldRow/ProfileFieldRow";
 
 import type { AboutContent, AboutFieldEditorProps, AboutView } from "./AboutFieldEditor.types";
 
-// TextField's input classes, so the textarea matches the name inputs.
-const TEXTAREA_CLASS =
-  "min-h-64 w-full resize-y rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-accent aria-invalid:border-danger aria-invalid:focus:border-danger";
+const TEXTAREA_CLASS = `${FIELD_INPUT_CLASS} min-h-64 w-full resize-y`;
 
 const EMPTY_DRAFT: AboutContent = { markdown: "", align: "left" };
 
