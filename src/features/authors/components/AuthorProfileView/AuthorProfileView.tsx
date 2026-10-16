@@ -1,4 +1,5 @@
-import { AUTHOR_CONTENT_LANG } from "../../model/author.constants";
+import { CONTENT_LANG } from "@/shared/config/constants";
+
 import { fullName } from "../../model/full-name";
 import { AuthorAbout } from "../AuthorAbout/AuthorAbout";
 import { AuthorPhoto } from "../AuthorPhoto/AuthorPhoto";
@@ -10,7 +11,7 @@ export function AuthorProfileView({ author, ownerLink }: AuthorProfileViewProps)
   const name = fullName(author);
 
   return (
-    <article lang={AUTHOR_CONTENT_LANG} className="flex flex-col gap-8">
+    <article lang={CONTENT_LANG} className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
         {ownerLink}
         <h1 className="text-4xl font-bold tracking-tight">{name}</h1>

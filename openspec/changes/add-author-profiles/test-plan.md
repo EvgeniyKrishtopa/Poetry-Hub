@@ -19,10 +19,10 @@ Levels:
 | FR-1 | Profile exists but not public → «Редактировать профиль автора», no public link | `AccountAuthorLinks` with a first name only | unit |
 | FR-1 | Public profile → edit link + «Открыть публичную страницу» `/authors/<id>` | `AccountAuthorLinks` with both names | unit |
 | FR-18 | Account page profile can't be loaded → alert message | `AccountAuthorSection` view with a failed read renders the `role="alert"` text | unit |
-| FR-3 (auth FR-7) | Signed out: site link, «Наши авторы», Sign in; no Sign out / Личный кабинет | `AuthStatus` (signed out) + layout header test | unit |
-| FR-3 (auth FR-7) | Signed in: «Наши авторы», «Личный кабинет», Sign out; no email | `AuthStatus` (signed in) | unit |
+| FR-3 (auth FR-7) | Signed out: site link, «Наши авторы», Sign in; no Sign out / Мастерская поэта | `AuthStatus` (signed out) + layout header test | unit |
+| FR-3 (auth FR-7) | Signed in: «Наши авторы», «Мастерская поэта» (`AccountLink`), Sign out; no email | `AuthStatus` (signed in), `AccountLink` | unit |
 | FR-3 (auth FR-7) | Session check fails → Sign in + «Наши авторы» | `isSignedIn` / `getCurrentUserId` failure branches → `false` / `null`; existing header tests | unit |
-| FR-3 (auth FR-7) | Pending check → no Sign in, Sign out, or Личный кабинет; «Наши авторы» present | `HeaderSession` fallback test; layout nav renders outside the boundary | unit |
+| FR-3 (auth FR-7) | Pending check → no Sign in, Sign out, or Мастерская поэта; «Наши авторы» present | `HeaderAuthLinks` fallback test; layout nav renders outside the boundary | unit |
 | FR-3 | Header links for both states in a real page | Browser: header signed in and signed out | end-to-end |
 | FR-4 | First name only → not listed, `/authors/<id>` 404 | pgTAP: anon select returns no row for a first-name-only profile; `getPublicAuthor` maps "no row" → `not-found` | integration + unit |
 | FR-4 | Both names → listed as "Anna Akhmatova" | pgTAP: anon sees the row; `AuthorList` renders the link | integration + unit |

@@ -45,9 +45,10 @@ light theme, below WCAG AA for text. Inside an `Alert` the tone colours only the
 | --- | --- | --- |
 | `Alert` | Feedback box: tone `danger` (`role="alert"`) or `success` (`role="status"`); 4px left border in the tone colour, `surface` background, `foreground` text, `rounded-md px-3 py-2 text-sm font-medium`; `className` for layout utilities only | `src/shared/ui/Alert/Alert.tsx` |
 | `Button` | Pill button (`border-radius: 9999px`), variants `primary` (accent fill) and `ghost` (transparent, surface on hover); disabled at 50% opacity; press scale 0.97 | `src/shared/ui/Button/Button.tsx` + `Button.module.css` |
+| `ButtonLink` | A navigation link (`next/link`, an `<a>`) drawn exactly as `Button`: same `Button.module.css`, variants `primary` and `ghost`. Use it when a button-looking control navigates (the account page's author links); a `Button` stays for actions | `src/shared/ui/ButtonLink/ButtonLink.tsx` |
 | `AuthField` | Labelled input with error text wired through `aria-invalid` / `aria-describedby`; `rounded-md`, `px-3 py-2`, accent border on focus; on error, `text-danger` error text and a `danger` border that stays while focused | `src/features/auth/components/AuthField/AuthField.tsx` (feature-local, not shared) |
 | `PoemCard` | Card: `border-radius: 1rem`, surface background, accent border and glow on hover; quoted excerpt with an accent left rule | `src/features/poems/components/PoemCard/` (feature-local) |
-| `AuthorPhoto` | Portrait box: 300 × 400 px from a 460 px viewport up, full column width at 3:4 below; `border-radius: 1rem`, `object-fit: cover`, surface background. No photo → a 64 px `muted` stroke user icon, `aria-hidden`. `next/image` with `sizes`; `unoptimized` only for a local Supabase host | `src/features/authors/components/AuthorPhoto/` + `AuthorPhoto.module.css` (feature-local) |
+| `AuthorPhoto` | Portrait box: 300 × 400 px from a 460 px viewport up, full column width at 3:4 below; `border-radius: 1rem`, `object-fit: cover`, surface background. No photo → `AuthorPhotoPlaceholder`, a 64 px `muted` stroke user icon, `aria-hidden`. `next/image` with `sizes`, quality `IMAGE_QUALITY`, `preload`; `unoptimized` only for a local Supabase host | `src/features/authors/components/AuthorPhoto/` + `AuthorPhoto.module.css` (feature-local) |
 
 ## 4. States
 

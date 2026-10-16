@@ -143,13 +143,13 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 
 ## 6. Account page and header <!-- judgement-heavy -->
 
-- [ ] 6.1 (FR-1, FR-2, FR-18, NFR-8) Implement `components/AccountAuthorSection` (Suspense → `requireUserId` → `getMyAuthorProfile()` → the presentational `AccountAuthorLinks`, or a danger `Alert` on a failed read) and add `app/(authorized)/account/page.tsx`. Update `(authorized)/layout.tsx`'s comment per design D9. Update `docs/architecture.md` (design D12):
+- [x] 6.1 (FR-1, FR-2, FR-18, NFR-8) Implement `components/AccountPage` (Suspense → `AccountAuthorSection`: `requireUserId` → `getMyAuthorProfile()` → the presentational `AccountAuthorLinks`, or a danger `Alert` on a failed read) and add `app/(authorized)/account/page.tsx`. Update `(authorized)/layout.tsx`'s comment per design D9. Update `docs/architecture.md` (design D12):
   - the `(authorized)` bullet ("each page calls `requireUserId()`");
   - the project tree gains `features/authors`, `shared/lib/safe-action`, `shared/lib/supabase/public.ts`, and the `(authorized)/account` routes;
   - the rule that a feature may import another feature's public API for server-only accessors (authors → auth).
 
   Verify `AccountAuthorLinks` tests for the three FR-1 states (including an emptied row → "Создать кабинет автора"), the FR-18 alert, and `lang="ru"` on the root. Verify `docs/architecture.md` matches the files on disk.
-- [ ] 6.2 (FR-3, NFR-8) Add the header `<nav>` with "Наши авторы" (`lang="ru"`) in `app/layout.tsx`, and a "Личный кабинет" link (`lang="ru"`) in `AuthStatus`'s signed-in branch. Verify the updated `AuthStatus` tests (signed in: «Личный кабинет» + Sign out; signed out: Sign in only) and the auth FR-7 scenarios.
+- [x] 6.2 (FR-3, NFR-8) Add the header `<nav>` with "Наши авторы" (`lang="ru"`) in `app/layout.tsx`, and a "Мастерская поэта" link (`lang="ru"`, its own `AccountLink` component; was «Личный кабинет» until the PR #80 review) in `AuthStatus`'s signed-in branch. Verify the updated `AuthStatus` tests (signed in: «Мастерская поэта» + Sign out; signed out: Sign in only) and the auth FR-7 scenarios.
 
 ## 7. Author editor <!-- judgement-heavy -->
 

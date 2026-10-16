@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 
-import { AUTHOR_CONTENT_LANG } from "../../model/author.constants";
+import { CONTENT_LANG } from "@/shared/config/constants";
+
 import { PAGE_TITLES } from "../../model/author-messages";
 import { AuthorListLoader } from "../AuthorListLoader/AuthorListLoader";
 
@@ -17,7 +18,7 @@ export function AuthorDirectory() {
   return (
     <Suspense
       fallback={
-        <section lang={AUTHOR_CONTENT_LANG} className="flex flex-col gap-8">
+        <section lang={CONTENT_LANG} className="flex flex-col gap-8">
           <h1 className="text-4xl font-bold tracking-tight">{PAGE_TITLES.authors}</h1>
           <div aria-hidden="true" className="flex flex-col gap-4">
             {SKELETON_LINE_WIDTHS.map((width) => (

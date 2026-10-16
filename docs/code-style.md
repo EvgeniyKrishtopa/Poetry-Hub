@@ -49,5 +49,5 @@ Read before writing or changing a component, a helper, a type, a constant, or a 
 ## Route files compose, features render
 
 - A route file passes a feature only the request data it needs, e.g. `<SignInPanel error={searchParams.then((params) => params.error)} />`, and renders the feature's component.
-- Suspense boundaries and their fallbacks live inside the feature's component (`SignInPanel`, `HeaderSession`), not in the route file.
+- Suspense boundaries and their fallbacks live inside the feature's component (`SignInPanel`, `HeaderAuthLinks`), not in the route file.
 - TanStack Query prefetching and `HydrationBoundary` stay in the page (`docs/state-management.md`).

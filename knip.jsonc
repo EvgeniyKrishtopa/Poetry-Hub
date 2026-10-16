@@ -6,8 +6,6 @@
     ".ncurc.cjs",
     // TEMPORARY (add-author-profiles): scaffold stubs that groups 6-7 wire into routes. Each group deletes the
     // lines for the components it connects; the block is gone by the end of group 7 (task 8.1 runs knip clean).
-    // Group 6:
-    "src/features/authors/components/AccountAuthorLinks/**",
     // Group 7:
     "src/features/authors/components/AuthorEditorLoader/**",
     "src/features/authors/components/AuthorProfileEditor/**",
@@ -20,11 +18,9 @@
   ],
   "ignoreIssues": {
     // TEMPORARY (add-author-profiles), same removal rule as above: exports the scaffold declared for the
-    // account page (group 6) and the editor (group 7) before any route imports them. Only `exports` is
-    // ignored here, so every other check still runs on these files.
-    "src/features/auth/index.ts": ["exports"],
+    // editor (group 7) before any route imports them. Only `exports` is ignored here, so every other check
+    // still runs on these files.
     "src/features/authors/index.ts": ["exports"],
-    "src/features/authors/components/AccountAuthorSection/AccountAuthorSection.tsx": ["exports"],
     "src/features/authors/components/AuthorEditorPanel/AuthorEditorPanel.tsx": ["exports"],
     "src/features/authors/model/author-messages.ts": ["exports"],
     "src/shared/ui/index.ts": ["exports"],
