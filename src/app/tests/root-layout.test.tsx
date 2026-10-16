@@ -11,13 +11,13 @@ vi.mock("next/font/google", () => ({
   Geist: () => ({ variable: "font-sans" }),
   Geist_Mono: () => ({ variable: "font-mono" }),
 }));
-vi.mock("@/features/auth", () => ({ HeaderSession: () => null }));
-vi.mock("@/features/authors", async () => {
-  const actual = await vi.importActual<typeof import("../../features/authors/components/AuthorsNavLink/AuthorsNavLink")>(
-    "../../features/authors/components/AuthorsNavLink/AuthorsNavLink",
-  );
-  return { AuthorsNavLink: actual.AuthorsNavLink };
-});
+// The real authors index loads here (server-only is stubbed in Vitest); only auth's session part is
+// replaced, since the authors loaders import their session accessors from it.
+vi.mock("@/features/auth", () => ({
+  HeaderSession: () => null,
+  getCurrentUserId: vi.fn(),
+  requireUserId: vi.fn(),
+}));
 
 type AnyElement = ReactElement<{ children?: ReactNode }>;
 
