@@ -9,6 +9,9 @@ export const PAGE_TITLES = {
   authorEditor: "Профиль автора",
 } as const;
 
+/** The account page's author-section heading; the same words as the editor's title, but its own key. */
+export const ACCOUNT_AUTHOR_SECTION_TITLE = "Профиль автора";
+
 export const ACCOUNT_LINK_LABELS = {
   createProfile: "Создать кабинет автора",
   editProfile: "Редактировать профиль автора",
