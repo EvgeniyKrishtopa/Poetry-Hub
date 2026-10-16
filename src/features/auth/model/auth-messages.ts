@@ -8,6 +8,9 @@ export const CONFIRM_FAILED_MESSAGE =
 
 export const SIGN_OUT_FAILED_MESSAGE = "Couldn't sign out. Try again.";
 
+/** The header's account link; Russian, like the authors pages it leads to (add-author-profiles NFR-8). */
+export const ACCOUNT_LINK_LABEL = "Личный кабинет";
+
 export const CHECK_EMAIL_TITLE = "Check your email";
 
 /** The `/login` alert for its `error` search param, or none for any other value. */

@@ -640,8 +640,12 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `features/authors/components/AuthorProfileView/` | Public profile layout; `ownerLink` slot before the h1 | `AuthorProfileView`, `AuthorProfileViewProps` |
 | `features/authors/components/AuthorOwnerLink/` | Per-request owner check | `AuthorOwnerLink`, `AuthorOwnerLinkProps` |
 | `features/authors/components/AuthorOwnerLinkView/` | "Редактировать профиль" when owner | `AuthorOwnerLinkView`, `AuthorOwnerLinkViewProps` |
-| `features/authors/components/AccountAuthorSection/` | Account section: session gate, owner read | `AccountAuthorSection` |
+| `features/authors/components/AccountAuthorSection/` | Account page: «Личный кабинет» h1 in the shell, Suspense with skeletons | `AccountAuthorSection` |
+| `features/authors/components/AccountAuthorLoader/` | Session gate, owner read, «Профиль автора» h2 over the links (added in group 6, mirroring `AuthorEditorLoader`: a Suspense boundary needs an async child) | `AccountAuthorLoader` |
 | `features/authors/components/AccountAuthorLinks/` | FR-1 links or FR-18 alert, from the whole read result | `AccountAuthorLinks`, `AccountAuthorLinksProps` |
+| `features/authors/components/AuthorsNavLink/` | The header's «Наши авторы» link (FR-3), composed by the root layout (added in group 6) | `AuthorsNavLink` |
+| `shared/ui/ButtonLink/` | A link drawn as `Button` (added in group 6, user decision 2026-10-16: the account links are navigation, so an `<a>`, not a `Button` with an `href` prop) | `ButtonLink` |
+| `shared/config/constants.ts` | `IMAGE_QUALITY`; `RUSSIAN_LANG`, the `lang` of the Russian copy in authors, auth's header link, and the layout (user decision 2026-10-16) | `IMAGE_QUALITY`, `RUSSIAN_LANG` |
 | `features/authors/components/AuthorEditorPanel/` | Editor Suspense boundary | `AuthorEditorPanel` |
 | `features/authors/components/AuthorEditorLoader/` | Session gate, owner read, editor or alert | `AuthorEditorLoader` |
 | `features/authors/components/AuthorProfileEditor/` | Field editors, one-active-field rule, notice; the shared field-editor props | `AuthorProfileEditor`, `AuthorProfileEditorProps`, `FieldEditorControls` |
@@ -651,7 +655,7 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `features/authors/components/PhotoFieldEditor/` | Photo field with browser pre-check | `PhotoFieldEditor`, `PhotoFieldEditorProps` |
 | `features/authors/components/SaveNotice/` | `role="status"` notice | `SaveNotice`, `SaveNoticeProps` |
 | `features/authors/components/FieldErrorText/` | Error text wired by id | `FieldErrorText`, `FieldErrorTextProps` |
-| `features/authors/index.ts` | Public API for route files | `AccountAuthorSection`, `AuthorDirectory`, `AuthorEditorPanel`, `AuthorPage` |
+| `features/authors/index.ts` | Public API for route files | `AccountAuthorSection`, `AuthorDirectory`, `AuthorEditorPanel`, `AuthorPage`, `AuthorsNavLink` |
 | `app/(public)/authors/page.tsx` | `/authors` route | default |
 | `app/(public)/authors/[id]/page.tsx` | `/authors/[id]` route | default |
 | `app/(authorized)/account/page.tsx` | `/account` route | default |

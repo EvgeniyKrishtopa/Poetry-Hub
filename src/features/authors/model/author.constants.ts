@@ -6,8 +6,8 @@ export const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 
 export const AUTHOR_PHOTOS_BUCKET = "author-photos";
 
-/** The language of the feature's public pages (the UI copy is Russian; the root layout is `en`). */
-export const AUTHOR_CONTENT_LANG = "ru";
+/** The owner's editor page: the account page's links and the public page's owner link point here. */
+export const AUTHOR_EDITOR_PATH = "/account/author";
 
 /**
  * How a sniffed image type is stored: the object's extension (the `photo_path` check allows only

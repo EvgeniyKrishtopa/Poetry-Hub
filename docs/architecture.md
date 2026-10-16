@@ -7,7 +7,7 @@ Read before adding a feature, adding a file to `shared/`, or importing across fe
 ```
 src/
 ├── app/                      # Routing only: pages, layouts, route handlers, providers
-│   ├── layout.tsx            # Root shell: html/body/Providers + header (site link + auth's `HeaderSession`, which reads the session inside its own <Suspense>)
+│   ├── layout.tsx            # Root shell: html/body/Providers + header (site link; a <nav> with authors' `AuthorsNavLink` and auth's `HeaderSession`, which reads the session inside its own <Suspense>)
 │   ├── error.tsx             # Client error boundary: generic copy + digest, retry() (covers both groups)
 │   ├── not-found.tsx         # 404 screen for unmatched URLs (covers both groups)
 │   ├── loading.tsx           # Neutral loading state for any segment (covers both groups)
@@ -15,9 +15,13 @@ src/
 │   │   ├── layout.tsx        # Pass-through
 │   │   ├── page.tsx          # / (home)
 │   │   ├── login/page.tsx    # /login (passes ?error= to auth's `SignInPanel`, which awaits it inside <Suspense>)
-│   │   └── signup/page.tsx   # /signup
-│   ├── (authorized)/         # Route group for pages that will need a signed-in reader
-│   │   └── layout.tsx        # Pass-through placement marker; enforces nothing yet
+│   │   ├── signup/page.tsx   # /signup
+│   │   ├── authors/page.tsx  # /authors: the author directory (authors' `AuthorDirectory`)
+│   │   └── authors/[id]/page.tsx # /authors/<profile id>: a public author page (authors' `AuthorPage`)
+│   ├── (authorized)/         # Route group for pages that need a signed-in reader
+│   │   ├── layout.tsx        # Pass-through placement marker; each page enforces the session itself
+│   │   ├── account/page.tsx  # /account: the reader's account page (authors' `AccountAuthorSection`)
+│   │   └── account/author/page.tsx # /account/author: the author profile editor (authors' `AuthorEditorPanel`)
 │   ├── api/                  # Route handlers, outside both groups
 │   ├── auth/confirm/route.ts # Sign-up email link: verifies the token, 303 to / or /login?error=confirm-failed
 │   │                         # (reached only once the Supabase "Confirm sign up" template links here; see the change's Migration Plan)
@@ -26,7 +30,9 @@ src/
 ├── features/                 # One folder per business feature
 │   ├── auth/                 # Sign-up, sign-in, sign-out, the header's "Sign in" / "Sign out" part
 │   │   ├── actions/          # Server Actions ("use server", *.actions.ts) + the feature's action client
-│   │   └── …                 # dal/ (confirmSignUp, isSignedIn), model/, components/, tests/, index.ts (roles as below)
+│   │   └── …                 # dal/ (confirmSignUp, isSignedIn, getCurrentUserId, requireUserId), model/, components/, tests/, index.ts (roles as below)
+│   ├── authors/              # Author profiles: the directory, public author pages, the account section, the editor, the header's «Наши авторы» link
+│   │   └── …                 # actions/, dal/ (owner reads and writes, cached public reads), model/, components/, tests/, index.ts
 │   └── poems/                # The folder roles every feature can use:
 │       ├── api/              # Fetchers (*.api.ts) + query keys/options/hooks (*.queries.ts)
 │       ├── dal/              # Server-only data access for Server Components (no role suffix)
@@ -38,16 +44,18 @@ src/
     ├── ui/                   # Reusable UI primitives (Button, …) + index.ts
     ├── lib/                  # Infrastructure helpers (query-client, …)
     │   ├── contentful/       # Server-only Contentful GraphQL client, cached with "use cache" (every module: import "server-only")
-    │   └── supabase/         # Supabase: index.ts client-safe (SupabaseConfigError); server.ts (server client) and session.ts (proxy refresh) server-only
-    └── config/               # App-wide constants
+    │   ├── safe-action/      # Server-only next-safe-action client factory (name-only logging, generic message); each feature builds its action client on it
+    │   └── supabase/         # Supabase: index.ts client-safe (SupabaseConfigError); server.ts (server client), public.ts (cookie-less client for "use cache"), and session.ts (proxy refresh) server-only
+    └── config/               # App-wide constants (constants.ts), site config, the Supabase image-host helper
 ```
 
 ## Boundary rules
 
 - `app/` stays thin: compose features, prefetch data, declare page caching (`"use cache"` + `cacheLife` + `cacheTag`, see `docs/state-management.md`), no business logic. Suspense boundaries and fallbacks belong to the feature's component, not the route file (`docs/code-style.md`).
-- A new page goes in `app/(public)/` unless it needs a signed-in reader; then it goes in `app/(authorized)/`. That group enforces nothing yet — placing a page there does not protect it; the auth change that introduces sign-in owns enforcement (proxy or DAL/page checks, never a layout-only check). Route handlers under `app/api/` stay outside both groups.
+- A new page goes in `app/(public)/` unless it needs a signed-in reader; then it goes in `app/(authorized)/`. The group's layout enforces nothing — placing a page there does not protect it. Each page's feature component calls `requireUserId()` (from `@/features/auth`) inside its own Suspense boundary before reading any reader data; never a layout-only check, since a shared layout does not re-render on client navigation. Route handlers under `app/api/` stay outside both groups.
 - Import a feature only through its public API: `@/features/poems`, never `@/features/poems/model/...` (enforced by `no-restricted-imports` in `eslint.config.mjs`).
 - Features must not import from other features' internals. If two features need the same thing, move it to `shared/` or compose them in `app/`.
+- A feature may import another feature's public API for a server-only accessor it needs, e.g. `authors` takes `getCurrentUserId` / `requireUserId` from `@/features/auth`. Only through the index, only server-side, and never in both directions (no cycles).
 - `shared/` never imports from `features/` or `app/`.
 - Inside a feature, use relative imports; across layers, use the `@/` alias.
 - Don't create a `shared/` abstraction until a second feature actually needs it. Exception: an infrastructure client for an external service (e.g. `shared/lib/contentful`, `shared/lib/supabase`) may live in `shared/lib` from its first consumer.

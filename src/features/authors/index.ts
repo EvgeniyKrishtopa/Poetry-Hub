@@ -4,3 +4,4 @@ export { AccountAuthorSection } from "./components/AccountAuthorSection/AccountA
 export { AuthorDirectory } from "./components/AuthorDirectory/AuthorDirectory";
 export { AuthorEditorPanel } from "./components/AuthorEditorPanel/AuthorEditorPanel";
 export { AuthorPage } from "./components/AuthorPage/AuthorPage";
+export { AuthorsNavLink } from "./components/AuthorsNavLink/AuthorsNavLink";
