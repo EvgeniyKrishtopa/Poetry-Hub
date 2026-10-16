@@ -268,6 +268,7 @@ FieldErrorText           error text wired by id for aria-describedby, for the ab
 
 - `next.config.ts` builds `images.remotePatterns` from `NEXT_PUBLIC_SUPABASE_URL`, when it is set, as `new URL("/storage/v1/object/public/author-photos/**", supabaseUrl)`. With the env unset (CI build), the list is empty and the build still succeeds (NFR-6).
 - `AuthorPhoto` passes `unoptimized` when the photo URL's host is `localhost` or `127.0.0.1`, decided by a pure helper. Next 16 refuses to optimize local-IP sources, and `dangerouslyAllowLocalIP` is rejected because it is an SSRF opening in production config.
+- **Weight on slow mobile connections (PR #79 review, 2026-10-16).** `images.formats` puts AVIF before WebP, `images.qualities` allows only `IMAGE_QUALITY` (60, `shared/config/constants.ts`), and `AuthorPhoto` passes `preload`, since the photo is the author page's largest above-the-fold element. A blur placeholder is left out: a remote photo needs a stored `blurDataURL`, generated at upload, and the frame's surface color already holds the space.
 - *Alternative rejected:* a plain `<img>`. It loses responsive optimization in production and trips `@next/next/no-img-element` under the zero-warning lint.
 
 ### D9. Session gate for `(authorized)` pages

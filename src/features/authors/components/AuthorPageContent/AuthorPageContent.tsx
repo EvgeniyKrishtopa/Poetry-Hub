@@ -23,6 +23,8 @@ export async function AuthorPageContent({ id }: AuthorPageContentProps) {
       author={result.author}
       ownerLink={
         // Its own boundary: the owner check reads the session per request, the profile stays cached.
+        // No placeholder while it resolves: most visitors aren't the owner, and a skeleton would
+        // flash and vanish for them on every visit.
         <Suspense fallback={null}>
           <AuthorOwnerLink profileId={result.author.id} />
         </Suspense>

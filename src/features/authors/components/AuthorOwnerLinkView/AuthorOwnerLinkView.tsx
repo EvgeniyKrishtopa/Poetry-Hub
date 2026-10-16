@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AUTHOR_CONTENT_LANG } from "../../model/author.constants";
 import { OWNER_EDIT_LINK_LABEL } from "../../model/author-messages";
 
 import type { AuthorOwnerLinkViewProps } from "./AuthorOwnerLinkView.types";
@@ -11,7 +12,7 @@ export function AuthorOwnerLinkView({ isOwner }: AuthorOwnerLinkViewProps) {
   if (!isOwner) return null;
 
   return (
-    <Link lang="ru" href={EDITOR_PATH} className="self-start font-medium text-accent underline-offset-4 hover:underline">
+    <Link lang={AUTHOR_CONTENT_LANG} href={EDITOR_PATH} className="self-start font-medium text-accent underline-offset-4 hover:underline">
       {OWNER_EDIT_LINK_LABEL}
     </Link>
   );
