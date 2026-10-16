@@ -6,7 +6,7 @@ import { connection } from "next/server";
 import { SIGN_IN_PATH } from "@/shared/config/account-paths";
 import { SESSION_STATE } from "@/shared/config/constants";
 import { SupabaseConfigError } from "@/shared/lib/supabase";
-import { type ClaimsState, readClaimsState } from "@/shared/lib/supabase/claims";
+import { type ClaimsState, describeAuthError, readClaimsState } from "@/shared/lib/supabase/claims";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
 /** A session check that found a valid session, or couldn't tell; signed-out already redirected. */
@@ -24,7 +24,13 @@ export async function getSessionState(): Promise<ClaimsState> {
 
   try {
     const supabase = await createSupabaseServerClient();
-    return readClaimsState(await supabase.auth.getClaims());
+    const result = await supabase.auth.getClaims();
+    const session = readClaimsState(result);
+    // A returned outage leaves no other trace: the reader only sees the "unavailable" alert.
+    if (session.state === SESSION_STATE.unknown) {
+      console.error(`[auth] session check unavailable: ${describeAuthError(result.error)}`);
+    }
+    return session;
   } catch (error) {
     // The proxy already logs a missing config on every request. Anything else is an outage,
     // logged by name only.

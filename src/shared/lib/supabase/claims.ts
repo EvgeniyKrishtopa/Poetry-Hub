@@ -28,6 +28,13 @@ function isOutage(error: unknown): boolean {
   return typeof status === "number" && (status >= SERVER_ERROR_STATUS || status === TOO_MANY_REQUESTS_STATUS);
 }
 
+/** An error's name and HTTP status for a log line; never its message, which could carry a token. */
+export function describeAuthError(error: unknown): string {
+  const name = error instanceof Error ? error.name : typeof error;
+  const status = typeof error === "object" && error !== null && "status" in error ? error.status : undefined;
+  return typeof status === "number" ? `${name} ${status}` : name;
+}
+
 /**
  * One reading of a `getClaims()` result, shared by the proxy and auth's session check so they can't
  * disagree on who is signed in (design D9). The rules apply in order, first match wins.

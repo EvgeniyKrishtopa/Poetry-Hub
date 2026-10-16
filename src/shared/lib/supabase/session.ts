@@ -5,7 +5,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { SESSION_STATE } from "@/shared/config/constants";
 
-import { readClaimsState, type SessionState } from "./claims";
+import { describeAuthError, readClaimsState, type SessionState } from "./claims";
 import { getSupabaseConfig } from "./config";
 import { SupabaseConfigError } from "./errors";
 
@@ -62,7 +62,11 @@ export async function refreshSession(request: NextRequest): Promise<SessionRefre
   try {
     // A resolved `{ error }` (e.g. a revoked refresh token) is not a failure: `setAll` has
     // already cleared the dead session on `response`.
-    session = readClaimsState(await supabase.auth.getClaims()).state;
+    const result = await supabase.auth.getClaims();
+    session = readClaimsState(result).state;
+    if (session === SESSION_STATE.unknown) {
+      console.error(`[supabase] session refresh unavailable: ${describeAuthError(result.error)}`);
+    }
   } catch {
     // Network failure or similar: continue un-refreshed, without logging the error's payload.
     return { response: unrefreshed, session: SESSION_STATE.unknown };

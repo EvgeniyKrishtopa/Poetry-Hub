@@ -178,6 +178,15 @@ describe("refreshSession", () => {
     expect(getClaims).toHaveBeenCalledTimes(1);
   });
 
+  it("logs a returned outage by error name and status only", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockClient(async () => ({ data: null, error: new AuthRetryableFetchError("fetch failed: secret-token-value", 0) }));
+
+    await refreshSession(makeRequest());
+
+    expect(consoleError).toHaveBeenCalledExactlyOnceWith("[supabase] session refresh unavailable: AuthRetryableFetchError 0");
+  });
+
   // implements FR-19 of add-author-profiles
   it("reports unknown when getClaims throws or the config is missing", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});

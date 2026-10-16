@@ -85,10 +85,11 @@ describe("getSessionState", () => {
   });
 
   // implements FR-20 of add-author-profiles
-  it("is unknown when getClaims returns a retryable error", async () => {
-    getClaims.mockResolvedValue({ data: null, error: new AuthRetryableFetchError("fetch failed", 0) });
+  it("is unknown when getClaims returns a retryable error, logging only its name and status", async () => {
+    getClaims.mockResolvedValue({ data: null, error: new AuthRetryableFetchError("fetch failed: secret-token-value", 503) });
 
     await expect(getSessionState()).resolves.toEqual({ state: "unknown" });
+    expect(console.error).toHaveBeenCalledExactlyOnceWith("[auth] session check unavailable: AuthRetryableFetchError 503");
   });
 
   // implements FR-20 of add-author-profiles
