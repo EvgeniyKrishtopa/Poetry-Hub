@@ -121,6 +121,21 @@ describe("AboutFieldEditor", () => {
     expect(field).toHaveAccessibleDescription(/Не более 1000 символов\./);
   });
 
+  // implements FR-7, FR-9 of add-author-profiles
+  it("stays in edit mode with the text and alignment kept after a failed save", async () => {
+    vi.mocked(saveAboutAction).mockResolvedValue({ data: { status: "failed", failure: "unavailable" } });
+    const { user, textarea } = await openEmptyEditor();
+    await user.type(textarea, "Поэт");
+    await user.click(screen.getByRole("button", { name: "По центру" }));
+
+    await user.click(screen.getByRole("button", { name: "Сохранить" }));
+
+    const field = await screen.findByRole("textbox", { name: "О себе" });
+    expect(field).toHaveValue("Поэт");
+    expect(field).toHaveAccessibleDescription(/Сохранение сейчас недоступно\. Попробуйте позже\./);
+    expect(screen.getByRole("button", { name: "По центру" })).toHaveAttribute("aria-pressed", "true");
+  });
+
   // implements FR-10 of add-author-profiles
   it("starts a new about with left alignment after a delete", async () => {
     vi.mocked(deleteProfileFieldAction).mockResolvedValue({ data: { status: "saved", profile: null } });
