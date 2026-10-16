@@ -161,6 +161,14 @@ Approved Claude Design canvas (2026-10-15): https://claude.ai/artifact/GCN2BZQF5
 | `/authors` | «4 · /authors — Наши авторы» |
 | `/authors/[id]` | «5 · /authors/[id] — author page» |
 
+FR-20's "session can't be checked" states (approved 2026-10-16, same canvas, page https://claude.ai/artifact/GCN2BZQF5eG454fA1PZG8z#page-dcb81aee8d83) were added as extra frames on the same artboards:
+
+| Screen | Frames |
+| --- | --- |
+| Header (all pages) | «session can't be checked (service unavailable)» on artboard 1 |
+| `/account` | «service unavailable · «Повторить» idle» and «… pending (re-requesting)» on artboard 2 |
+| `/account/author` | «page · service unavailable · «Повторить» idle (replaces the editor)» and «… pending» on artboard 3 |
+
 Where a mockup and a requirement disagree, the requirement wins; `ui-plan.md` lists each such point.
 
 ## Acceptance Criteria
