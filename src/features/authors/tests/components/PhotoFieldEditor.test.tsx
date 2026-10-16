@@ -41,11 +41,9 @@ function pngFile(): File {
 
 const controls = {
   disabled: false,
-  onEditStart: vi.fn(),
-  onEditEnd: vi.fn(),
+  onEditingChange: vi.fn(),
   onActionStart: vi.fn(),
-  onSaved: vi.fn(),
-  onFailed: vi.fn(),
+  onActionEnd: vi.fn(),
 };
 
 beforeEach(() => {

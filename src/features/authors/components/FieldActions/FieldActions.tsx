@@ -1,5 +1,6 @@
 import { Button } from "@/shared/ui";
 
+import { FIELD_ACTION } from "../../model/author.constants";
 import { FIELD_ACTION_LABELS } from "../../model/author-messages";
 
 import type { FieldActionsProps } from "./FieldActions.types";
@@ -8,18 +9,18 @@ import type { FieldActionsProps } from "./FieldActions.types";
 const VIEW_ACTIONS_CLASS = "-ml-4 flex flex-wrap gap-2";
 
 /**
- * A field's view-mode buttons: one disabled "Сохранение…" / "Удаление…" while its action is pending,
- * else "Изменить" and "Удалить" for a value or the add prompt for an empty field (FR-6, FR-7, FR-10).
+ * A field's view-mode buttons: one disabled saving or deleting button while its action is pending,
+ * else Edit and Delete for a value, or the add prompt for an empty field (FR-6, FR-7, FR-10).
  */
 export function FieldActions({ hasValue, pendingKind, disabled, addPrompt, describedBy, onEdit, onDelete }: FieldActionsProps) {
-  if (pendingKind === "save") {
+  if (pendingKind === FIELD_ACTION.save) {
     return (
       <div className="flex flex-wrap gap-2">
         <Button disabled>{FIELD_ACTION_LABELS.saving}</Button>
       </div>
     );
   }
-  if (pendingKind === "delete") {
+  if (pendingKind === FIELD_ACTION.delete) {
     return (
       <div className={VIEW_ACTIONS_CLASS}>
         <Button variant="ghost" disabled>

@@ -8,10 +8,10 @@ export interface AuthorProfileEditorProps {
 export interface FieldEditorControls {
   /** Another field is being edited or has an action pending. */
   readonly disabled: boolean;
-  readonly onEditStart: () => void;
-  readonly onEditEnd: () => void;
-  /** Called first inside the action wrapper: marks the field active and empties the notice. */
+  /** The field opened or closed its edit mode. */
+  readonly onEditingChange: (isEditing: boolean) => void;
+  /** Called first inside the action wrapper: locks the other fields and empties the notice. */
   readonly onActionStart: () => void;
-  readonly onSaved: () => void;
-  readonly onFailed: () => void;
+  /** The action settled; `saved` decides whether the notice announces the save. */
+  readonly onActionEnd: (saved: boolean) => void;
 }

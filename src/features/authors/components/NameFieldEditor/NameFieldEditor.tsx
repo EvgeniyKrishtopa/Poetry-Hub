@@ -2,13 +2,13 @@
 
 import { useId, useState } from "react";
 
-import { Button, TextField } from "@/shared/ui";
-
 import { deleteProfileFieldAction, saveNameAction } from "../../actions/author-profile.actions";
-import { ADD_PROMPTS, FIELD_ACTION_LABELS, FIELD_LABELS } from "../../model/author-messages";
+import { FIELD_MODE } from "../../model/author.constants";
+import { ADD_PROMPTS, FIELD_LABELS } from "../../model/author-messages";
 import { useProfileField } from "../AuthorProfileEditor/use-profile-field";
 import { FieldActions } from "../FieldActions/FieldActions";
 import { FieldErrorText } from "../FieldErrorText/FieldErrorText";
+import { NameFieldEditForm } from "../NameFieldEditForm/NameFieldEditForm";
 import { ProfileFieldRow } from "../ProfileFieldRow/ProfileFieldRow";
 
 import type { NameFieldEditorProps } from "./NameFieldEditor.types";
@@ -31,29 +31,16 @@ export function NameFieldEditor({ field, savedValue, ...controls }: NameFieldEdi
     editor.startEditing();
   }
 
-  if (editor.mode === "edit") {
+  if (editor.mode === FIELD_MODE.edit) {
     return (
-      // noValidate: the action's schema is the only validation, so its message is what the reader sees.
-      <form action={() => editor.submit(draft)} noValidate>
-        <ProfileFieldRow
-          control={
-            <TextField
-              layout="columns"
-              label={FIELD_LABELS[field]}
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              error={editor.error}
-            />
-          }
-        >
-          <div className="flex flex-wrap gap-2">
-            <Button type="submit">{FIELD_ACTION_LABELS.save}</Button>
-            <Button variant="ghost" onClick={editor.cancelEditing}>
-              {FIELD_ACTION_LABELS.cancel}
-            </Button>
-          </div>
-        </ProfileFieldRow>
-      </form>
+      <NameFieldEditForm
+        field={field}
+        draft={draft}
+        error={editor.error}
+        onDraftChange={setDraft}
+        onSubmit={() => editor.submit(draft)}
+        onCancel={editor.cancelEditing}
+      />
     );
   }
 

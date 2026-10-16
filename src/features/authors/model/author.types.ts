@@ -1,3 +1,5 @@
+import type { ACTION_STATUS, FIELD_ACTION, FIELD_MODE, FORM_STATUS } from "./author.constants";
+
 export type NameField = "first_name" | "last_name";
 
 /** The four editor fields; each is saved and deleted on its own. */
@@ -63,8 +65,8 @@ export type PublicAuthorsResult =
 
 /** What every profile action returns as its data. */
 export type ProfileActionResult =
-  | { readonly status: "saved"; readonly profile: AuthorProfile | null }
-  | { readonly status: "failed"; readonly failure: ProfileFailure };
+  | { readonly status: typeof ACTION_STATUS.saved; readonly profile: AuthorProfile | null }
+  | { readonly status: typeof ACTION_STATUS.failed; readonly failure: ProfileFailure };
 
 /**
  * The part of a next-safe-action result the editor reads, with the client's "flattened"
@@ -81,10 +83,14 @@ export interface ProfileActionResponse {
 
 /** One field's form state; a failure keeps the submitted draft (FR-7). */
 export type FieldFormState<Draft> =
-  | { readonly status: "idle" }
-  | { readonly status: "saved" }
-  | { readonly status: "invalid"; readonly draft: Draft; readonly error: string }
-  | { readonly status: "failed"; readonly draft: Draft; readonly failure: ProfileFailure };
+  | { readonly status: typeof FORM_STATUS.idle }
+  | { readonly status: typeof FORM_STATUS.saved }
+  | { readonly status: typeof FORM_STATUS.invalid; readonly draft: Draft; readonly error: string }
+  | { readonly status: typeof FORM_STATUS.failed; readonly draft: Draft; readonly failure: ProfileFailure };
+
+export type FieldActionKind = (typeof FIELD_ACTION)[keyof typeof FIELD_ACTION];
+
+export type FieldMode = (typeof FIELD_MODE)[keyof typeof FIELD_MODE];
 
 export type MarkdownFormat = "bold" | "italic" | "heading" | "subheading" | "bulleted" | "numbered" | "quote";
 

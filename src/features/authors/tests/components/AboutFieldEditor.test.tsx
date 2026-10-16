@@ -22,11 +22,9 @@ afterEach(() => {
 function renderAbout(saved: Pick<AboutFieldEditorProps, "savedAbout" | "savedAlign">) {
   const controls = {
     disabled: false,
-    onEditStart: vi.fn(),
-    onEditEnd: vi.fn(),
+    onEditingChange: vi.fn(),
     onActionStart: vi.fn(),
-    onSaved: vi.fn(),
-    onFailed: vi.fn(),
+    onActionEnd: vi.fn(),
   };
   const view = render(<AboutFieldEditor {...saved} {...controls} />);
   return { ...view, controls };

@@ -8,7 +8,7 @@ import type { AboutViewTabsProps } from "./AboutViewTabs.types";
 const VIEWS: readonly AboutView[] = ["editor", "preview"];
 
 /**
- * «Редактор» / «Просмотр» (FR-11), as an ARIA tab list: only the selected tab is in the tab order,
+ * The about editor's Editor / Preview switch (FR-11), as an ARIA tab list: only the selected tab is in the tab order,
  * and the arrow keys move between the two (the WAI-ARIA tabs pattern, NFR-5).
  */
 export function AboutViewTabs({ value, onChange, panelId }: AboutViewTabsProps) {

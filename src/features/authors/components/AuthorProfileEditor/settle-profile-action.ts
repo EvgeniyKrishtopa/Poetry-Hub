@@ -1,6 +1,7 @@
+import { ACTION_STATUS } from "../../model/author.constants";
 import type { ProfileActionResponse } from "../../model/author.types";
 
-const REJECTED_CALL: ProfileActionResponse = { data: { status: "failed", failure: "unknown" } };
+const REJECTED_CALL: ProfileActionResponse = { data: { status: ACTION_STATUS.failed, failure: "unknown" } };
 
 /**
  * Awaits an action call, mapping a rejected call (a body over the size limit, a network failure)

@@ -2,15 +2,18 @@
 
 import { startTransition, useActionState, useOptimistic, useState } from "react";
 
-import type { FieldFormState, ProfileActionResponse } from "../../model/author.types";
-import { getFieldErrorMessage, toFieldFormState } from "../../model/profile-form-state";
+import { FIELD_ACTION, FORM_STATUS } from "../../model/author.constants";
+import type { FieldActionKind, FieldFormState, FieldMode, ProfileActionResponse } from "../../model/author.types";
+import { getFieldMode } from "../../model/field-mode";
+import { toFieldFormState } from "../../model/profile-form-state";
 
 import type { FieldEditorControls } from "./AuthorProfileEditor.types";
 import { settleProfileAction } from "./settle-profile-action";
+import { useDismissibleError } from "./use-dismissible-error";
 
-type FieldIntent<Draft> = { readonly kind: "save"; readonly draft: Draft } | { readonly kind: "delete" };
-
-export type FieldPendingKind = FieldIntent<unknown>["kind"];
+type FieldIntent<Draft> =
+  | { readonly kind: typeof FIELD_ACTION.save; readonly draft: Draft }
+  | { readonly kind: typeof FIELD_ACTION.delete };
 
 interface ProfileFieldOptions<Value, Draft> {
   /** The value in props: after a successful action the re-rendered page already holds the new one (design D3). */
@@ -22,15 +25,15 @@ interface ProfileFieldOptions<Value, Draft> {
   readonly toPendingValue: (draft: Draft) => Value;
   /** Stay in edit mode after a failed save, with the draft kept (FR-7); the photo input can't be refilled, so it doesn't. */
   readonly keepEditingOnFailure: boolean;
-  /** Runs once the action has settled, before the transition commits (the photo revokes its preview URL). */
+  /** Runs once the action has settled, before the transition commits. */
   readonly onSettled?: () => void;
 }
 
 export interface ProfileField<Value, Draft> {
-  readonly mode: "view" | "edit";
+  readonly mode: FieldMode;
   readonly shownValue: Value | null;
   /** Which action is pending, or `null` when none is. */
-  readonly pendingKind: FieldPendingKind | null;
+  readonly pendingKind: FieldActionKind | null;
   readonly error: string | undefined;
   readonly disabled: boolean;
   readonly startEditing: () => void;
@@ -39,12 +42,12 @@ export interface ProfileField<Value, Draft> {
   readonly remove: () => void;
 }
 
-const IDLE: FieldFormState<never> = { status: "idle" };
+const IDLE: FieldFormState<never> = { status: FORM_STATUS.idle };
 
 /**
- * One field's edit mode, optimistic value, and action wrapper (design D6): the field leaves edit mode
- * as soon as an action starts, shows the submitted value (or the empty state for a delete) while it
- * is pending, and falls back to the props when the transition settles.
+ * One field's edit mode, optimistic value, and action (design D6): the field leaves edit mode as
+ * soon as an action starts, shows the submitted value (or the empty state for a delete) while it is
+ * pending, and falls back to the props when the transition settles.
  */
 export function useProfileField<Value, Draft>({
   savedValue,
@@ -56,58 +59,57 @@ export function useProfileField<Value, Draft>({
   onSettled,
 }: ProfileFieldOptions<Value, Draft>): ProfileField<Value, Draft> {
   const [isEditing, setIsEditing] = useState(false);
-  // The form state whose error the reader dismissed (Cancel, or Edit after a failed delete).
-  const [dismissedState, setDismissedState] = useState<FieldFormState<Draft | null> | null>(null);
   const [shownValue, setShownValue] = useOptimistic(savedValue);
-  const [pendingKind, setPendingKind] = useOptimistic<FieldPendingKind | null>(null);
+  const [pendingKind, setPendingKind] = useOptimistic<FieldActionKind | null>(null);
 
-  async function runAction(_previous: FieldFormState<Draft | null>, intent: FieldIntent<Draft>): Promise<FieldFormState<Draft | null>> {
+  function setEditing(next: boolean) {
+    setIsEditing(next);
+    controls.onEditingChange(next);
+  }
+
+  function showPending(intent: FieldIntent<Draft>) {
     controls.onActionStart();
     setPendingKind(intent.kind);
-    setShownValue(intent.kind === "save" ? toPendingValue(intent.draft) : null);
+    setShownValue(intent.kind === FIELD_ACTION.save ? toPendingValue(intent.draft) : null);
+  }
 
-    const response = await settleProfileAction(() => (intent.kind === "save" ? save(intent.draft) : remove()));
+  function callAction(intent: FieldIntent<Draft>): Promise<ProfileActionResponse> {
+    return intent.kind === FIELD_ACTION.save ? save(intent.draft) : remove();
+  }
+
+  function finish(next: FieldFormState<Draft | null>) {
+    const saved = next.status === FORM_STATUS.saved;
+    if (saved || !keepEditingOnFailure) setEditing(false);
+    controls.onActionEnd(saved);
+  }
+
+  async function runAction(_previous: FieldFormState<Draft | null>, intent: FieldIntent<Draft>) {
+    showPending(intent);
+    const response = await settleProfileAction(() => callAction(intent));
     onSettled?.();
-    const next = toFieldFormState(response, intent.kind === "save" ? intent.draft : null);
-
-    if (next.status === "saved") {
-      setIsEditing(false);
-      controls.onEditEnd();
-      controls.onSaved();
-    } else {
-      if (!keepEditingOnFailure) {
-        setIsEditing(false);
-        controls.onEditEnd();
-      }
-      controls.onFailed();
-    }
+    const next = toFieldFormState(response, intent.kind === FIELD_ACTION.save ? intent.draft : null);
+    finish(next);
     return next;
   }
 
   const [state, dispatch, isPending] = useActionState(runAction, IDLE);
-
-  function startEditing() {
-    setDismissedState(state);
-    setIsEditing(true);
-    controls.onEditStart();
-  }
-
-  function cancelEditing() {
-    setDismissedState(state);
-    setIsEditing(false);
-    controls.onEditEnd();
-  }
+  const { error, dismiss } = useDismissibleError(state);
 
   return {
-    // A pending action always shows view mode: the submitted value, or the empty state (FR-7, FR-10).
-    mode: !isPending && isEditing ? "edit" : "view",
+    mode: getFieldMode(isPending, isEditing),
     shownValue,
     pendingKind: isPending ? pendingKind : null,
-    error: state === dismissedState ? undefined : getFieldErrorMessage(state),
+    error,
     disabled: controls.disabled,
-    startEditing,
-    cancelEditing,
-    submit: (draft) => startTransition(() => dispatch({ kind: "save", draft })),
-    remove: () => startTransition(() => dispatch({ kind: "delete" })),
+    startEditing: () => {
+      dismiss();
+      setEditing(true);
+    },
+    cancelEditing: () => {
+      dismiss();
+      setEditing(false);
+    },
+    submit: (draft) => startTransition(() => dispatch({ kind: FIELD_ACTION.save, draft })),
+    remove: () => startTransition(() => dispatch({ kind: FIELD_ACTION.delete })),
   };
 }

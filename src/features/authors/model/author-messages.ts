@@ -108,7 +108,7 @@ export const DIRECTORY_MESSAGES = {
 
 export const OWNER_EDIT_LINK_LABEL = "Редактировать профиль";
 
-/** The photo's alt text: "Фото: <first name> <last name>" (NFR-5). */
+/** The photo's alt text: the "photo" prefix, then the first and last name (NFR-5). */
 export function getPhotoAlt(fullName: string): string {
   return `Фото: ${fullName}`;
 }

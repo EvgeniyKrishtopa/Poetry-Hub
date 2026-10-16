@@ -7,6 +7,7 @@ import { getCurrentUserId } from "@/features/auth";
 
 import { clearProfileField, removePhoto, replacePhoto, writeOwnProfile } from "../dal/author-profile-writes";
 import { AUTHORS_TAG, authorTag } from "../model/author-cache-tags";
+import { ACTION_STATUS } from "../model/author.constants";
 import { PHOTO_FILE_ERROR_MESSAGES } from "../model/author-messages";
 import {
   deleteProfileFieldSchema,
@@ -22,7 +23,7 @@ import { authorsActionClient } from "./action-client";
 // Each action resolves the user from the session, never from input (NFR-2), and on success
 // expires the directory's and the author's cache tags (FR-17).
 
-const UNAUTHENTICATED = { status: "failed", failure: "unauthenticated" } as const;
+const UNAUTHENTICATED = { status: ACTION_STATUS.failed, failure: "unauthenticated" } as const;
 
 /** Decides `unauthenticated` before any I/O; the DAL itself then runs as the session's user. */
 async function isSignedOut(): Promise<boolean> {
@@ -32,14 +33,14 @@ async function isSignedOut(): Promise<boolean> {
 /** The DAL write and, on success, the cache expiry every action shares (design D3). */
 async function writeAndExpire(write: () => Promise<ProfileWriteResult>): Promise<ProfileActionResult> {
   const result = await write();
-  if (!result.ok) return { status: "failed", failure: result.failure };
+  if (!result.ok) return { status: ACTION_STATUS.failed, failure: result.failure };
 
   // `updateTag`, not `revalidateTag`: the action's own re-render must already read the new data.
   updateTag(AUTHORS_TAG);
   // A `null` profile is a row with no content left, or no row at all. Either way it held no name
   // before this write either (one write clears one field), so it had no public page to expire.
   if (result.profile !== null) updateTag(authorTag(result.profile.id));
-  return { status: "saved", profile: result.profile };
+  return { status: ACTION_STATUS.saved, profile: result.profile };
 }
 
 async function runOwnerWrite(write: () => Promise<ProfileWriteResult>): Promise<ProfileActionResult> {
