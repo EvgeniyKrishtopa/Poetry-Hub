@@ -1,5 +1,6 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Activity } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { deleteProfileFieldAction, savePhotoAction } from "../../actions/author-profile.actions";
@@ -217,6 +218,30 @@ describe("PhotoFieldEditor", () => {
 
     expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
     expect(URL.createObjectURL).toHaveBeenCalledWith(second);
+  });
+
+  // Next keeps a left route mounted but hidden (Cache Components), running effect cleanups on hide.
+  it("gives the kept file a fresh preview when the page is shown again", async () => {
+    const user = userEvent.setup();
+    const freshUrl = "blob:http://localhost:3000/0e5c8a5d-7f2b-4c1a-9b1e-3d6f4a2c8e10";
+    const page = (mode: "visible" | "hidden") => (
+      <Activity mode={mode}>
+        <PhotoFieldEditor photoUrl={null} fullName={FULL_NAME} {...controls} />
+      </Activity>
+    );
+    const { rerender } = render(page("visible"));
+    await user.click(screen.getByRole("button", { name: "Добавить фото" }));
+    await user.upload(screen.getByLabelText("Фото"), pngFile());
+    await screen.findByRole("img");
+
+    rerender(page("hidden"));
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(PREVIEW_URL);
+
+    vi.mocked(URL.createObjectURL).mockReturnValue(freshUrl);
+    rerender(page("visible"));
+
+    expect(await screen.findByRole("img")).toHaveAttribute("src", freshUrl);
+    expect(screen.getByRole("button", { name: "Сохранить" })).toBeEnabled();
   });
 
   it("releases the chosen file's preview when the editor unmounts", async () => {

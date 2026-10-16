@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useState } from "react";
+import { useLayoutEffect, useOptimistic, useState } from "react";
 
 import { SAVED_MESSAGE } from "../model/author-messages";
 
@@ -12,6 +12,10 @@ export function useSaveNotice() {
   const [notice, setNotice] = useState("");
   // A plain update inside the action would be held back until it settles, so the clear is optimistic.
   const [shownNotice, setShownNotice] = useOptimistic(notice);
+
+  // Next keeps a left page mounted but hidden; clearing on hide keeps a stale notice from greeting
+  // the reader on return. Drafts are kept on purpose (user decision 2026-10-16).
+  useLayoutEffect(() => () => setNotice(""), []);
 
   return {
     shownNotice,

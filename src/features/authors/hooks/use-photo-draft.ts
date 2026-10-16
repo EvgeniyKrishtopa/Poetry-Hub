@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 
 import { PHOTO_FILE_ERROR_MESSAGES } from "../model/author-messages";
 import { validatePhotoFile } from "../model/validate-photo-file";
 
+import { getObjectUrl, subscribeObjectUrl } from "./object-url-store";
 import type { PhotoDraft } from "./profile-field.types";
 
 /**
@@ -15,29 +16,32 @@ import type { PhotoDraft } from "./profile-field.types";
  * the action runs, and the reader would see the generic error instead of the size message (design D4).
  */
 export function usePhotoDraft() {
-  const [draft, setDraft] = useState<PhotoDraft | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
 
-  // Each preview URL is released once its draft is replaced, cleared, or the editor unmounts.
-  useEffect(() => {
-    if (draft === null) return undefined;
-    const { previewUrl } = draft;
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [draft]);
+  // The store creates the URL on subscribe and releases it on unsubscribe; React re-reads the
+  // snapshot right after subscribing, so no change notification is needed.
+  const subscribe = useCallback(() => (file === null ? () => undefined : subscribeObjectUrl(file)), [file]);
+  const previewUrl = useSyncExternalStore(
+    subscribe,
+    () => (file === null ? null : getObjectUrl(file)),
+    () => null,
+  );
+  const draft: PhotoDraft | null = file !== null && previewUrl !== null ? { file, previewUrl } : null;
 
   async function choose(input: HTMLInputElement) {
-    const file = input.files?.[0];
-    if (file === undefined) return;
-    const check = await validatePhotoFile(file);
+    const chosen = input.files?.[0];
+    if (chosen === undefined) return;
+    const check = await validatePhotoFile(chosen);
     // The reader chose another file while this one was being checked: that file's check decides.
-    if (input.files?.[0] !== file) return;
+    if (input.files?.[0] !== chosen) return;
     if (!check.ok) {
-      setDraft(null);
+      setFile(null);
       setFileError(PHOTO_FILE_ERROR_MESSAGES[check.error]);
       return;
     }
     setFileError(null);
-    setDraft({ file, previewUrl: URL.createObjectURL(file) });
+    setFile(chosen);
   }
 
   /** Checks the chosen file again right before sending; `false` shows the error instead. */
@@ -52,9 +56,10 @@ export function usePhotoDraft() {
     fileError,
     choose,
     recheck,
-    clearDraft: () => setDraft(null),
+    // Set inside the field's action, so the URL is released only after the transition commits.
+    clearDraft: () => setFile(null),
     reset: () => {
-      setDraft(null);
+      setFile(null);
       setFileError(null);
     },
   };

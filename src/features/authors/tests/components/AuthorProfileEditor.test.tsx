@@ -1,5 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Activity } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { deleteProfileFieldAction, saveNameAction } from "../../actions/author-profile.actions";
@@ -141,6 +142,29 @@ describe("AuthorProfileEditor", () => {
     await act(async () => second.save.resolve(SAVED));
 
     expect(status).toHaveTextContent("Сохранено");
+  });
+
+  // Next keeps a left route mounted but hidden (Cache Components); a draft survives, the notice doesn't.
+  it("keeps an open draft but clears «Сохранено» when the page is hidden and shown again", async () => {
+    vi.mocked(saveNameAction).mockResolvedValue(SAVED);
+    const user = userEvent.setup();
+    const page = (mode: "visible" | "hidden") => (
+      <Activity mode={mode}>
+        <AuthorProfileEditor profile={PROFILE} />
+      </Activity>
+    );
+    const { rerender } = render(page("visible"));
+    await user.click(editButtons()[1]);
+    await user.click(screen.getByRole("button", { name: "Сохранить" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Сохранено");
+    await user.click(editButtons()[0]);
+    await user.type(screen.getByRole("textbox", { name: "Имя" }), "-черновик");
+
+    rerender(page("hidden"));
+    rerender(page("visible"));
+
+    expect(screen.getByRole("textbox", { name: "Имя" })).toHaveValue("Anna-черновик");
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
   });
 
   // implements FR-7, FR-9, NFR-5 of add-author-profiles
