@@ -3,9 +3,9 @@
 import { useId, useState } from "react";
 
 import { deleteProfileFieldAction, saveNameAction } from "../../actions/author-profile.actions";
+import { useProfileField } from "../../hooks/use-profile-field";
 import { FIELD_MODE } from "../../model/author.constants";
 import { ADD_PROMPTS, FIELD_LABELS } from "../../model/author-messages";
-import { useProfileField } from "../AuthorProfileEditor/use-profile-field";
 import { FieldActions } from "../FieldActions/FieldActions";
 import { FieldErrorText } from "../FieldErrorText/FieldErrorText";
 import { NameFieldEditForm } from "../NameFieldEditForm/NameFieldEditForm";

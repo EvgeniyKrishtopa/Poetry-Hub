@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-import type { FieldFormState } from "../../model/author.types";
-import { getFieldErrorMessage } from "../../model/profile-form-state";
+import type { FieldFormState } from "../model/author.types";
+import { getFieldErrorMessage } from "../model/profile-form-state";
 
 /**
  * A field's error from its last action, until the reader dismisses it (Cancel, or Edit after a

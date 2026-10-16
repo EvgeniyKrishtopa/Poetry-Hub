@@ -2,7 +2,7 @@
 
 import { useOptimistic, useState } from "react";
 
-import { SAVED_MESSAGE } from "../../model/author-messages";
+import { SAVED_MESSAGE } from "../model/author-messages";
 
 /**
  * The save notice's text (FR-7, NFR-5): emptied while an action is pending and set when it settles,

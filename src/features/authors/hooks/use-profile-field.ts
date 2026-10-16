@@ -2,12 +2,12 @@
 
 import { startTransition, useActionState, useOptimistic, useState } from "react";
 
-import { FIELD_ACTION, FORM_STATUS } from "../../model/author.constants";
-import type { FieldActionKind, FieldFormState, FieldMode, ProfileActionResponse } from "../../model/author.types";
-import { getFieldMode } from "../../model/field-mode";
-import { toFieldFormState } from "../../model/profile-form-state";
+import { FIELD_ACTION, FORM_STATUS } from "../model/author.constants";
+import type { FieldActionKind, FieldFormState, FieldMode, ProfileActionResponse } from "../model/author.types";
+import { getFieldMode } from "../model/field-mode";
+import { toFieldFormState } from "../model/profile-form-state";
 
-import type { FieldEditorControls } from "./AuthorProfileEditor.types";
+import type { FieldEditorControls } from "./profile-field.types";
 import { settleProfileAction } from "./settle-profile-action";
 import { useDismissibleError } from "./use-dismissible-error";
 

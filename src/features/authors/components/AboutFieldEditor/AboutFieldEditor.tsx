@@ -3,10 +3,10 @@
 import { useId, useState } from "react";
 
 import { deleteProfileFieldAction, saveAboutAction } from "../../actions/author-profile.actions";
+import { useProfileField } from "../../hooks/use-profile-field";
 import { FIELD_MODE } from "../../model/author.constants";
 import { ADD_PROMPTS, FIELD_LABELS } from "../../model/author-messages";
 import { AboutEditForm } from "../AboutEditForm/AboutEditForm";
-import { useProfileField } from "../AuthorProfileEditor/use-profile-field";
 import { AuthorAbout } from "../AuthorAbout/AuthorAbout";
 import { FieldActions } from "../FieldActions/FieldActions";
 import { FieldErrorText } from "../FieldErrorText/FieldErrorText";

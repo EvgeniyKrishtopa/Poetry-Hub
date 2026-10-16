@@ -1,5 +1,5 @@
+import type { FieldEditorControls } from "../../hooks/profile-field.types";
 import type { AboutAlign } from "../../model/author.types";
-import type { FieldEditorControls } from "../AuthorProfileEditor/AuthorProfileEditor.types";
 
 export interface AboutFieldEditorProps extends FieldEditorControls {
   readonly savedAbout: string | null;

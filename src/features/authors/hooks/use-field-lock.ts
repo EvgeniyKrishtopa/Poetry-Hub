@@ -2,7 +2,7 @@
 
 import { useOptimistic, useState } from "react";
 
-import type { ProfileField } from "../../model/author.types";
+import type { ProfileField } from "../model/author.types";
 
 /**
  * The one-active-field rule (FR-6, FR-7): a field being edited, or one with a pending action,

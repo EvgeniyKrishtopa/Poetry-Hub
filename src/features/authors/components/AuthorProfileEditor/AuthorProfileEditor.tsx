@@ -4,6 +4,9 @@ import Link from "next/link";
 
 import { CONTENT_LANG } from "@/shared/config/constants";
 
+import type { FieldEditorControls } from "../../hooks/profile-field.types";
+import { useFieldLock } from "../../hooks/use-field-lock";
+import { useSaveNotice } from "../../hooks/use-save-notice";
 import { ACCOUNT_LINK_LABELS } from "../../model/author-messages";
 import type { ProfileField } from "../../model/author.types";
 import { authorPagePath } from "../../model/author-page-path";
@@ -13,9 +16,7 @@ import { NameFieldEditor } from "../NameFieldEditor/NameFieldEditor";
 import { PhotoFieldEditor } from "../PhotoFieldEditor/PhotoFieldEditor";
 import { SaveNotice } from "../SaveNotice/SaveNotice";
 
-import type { AuthorProfileEditorProps, FieldEditorControls } from "./AuthorProfileEditor.types";
-import { useFieldLock } from "./use-field-lock";
-import { useSaveNotice } from "./use-save-notice";
+import type { AuthorProfileEditorProps } from "./AuthorProfileEditor.types";
 
 /** The four field editors, the one-active-field rule, and the save notice (FR-6, FR-7). */
 export function AuthorProfileEditor({ profile }: AuthorProfileEditorProps) {

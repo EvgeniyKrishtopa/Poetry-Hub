@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-import { PHOTO_FILE_ERROR_MESSAGES } from "../../model/author-messages";
-import { validatePhotoFile } from "../../model/validate-photo-file";
+import { PHOTO_FILE_ERROR_MESSAGES } from "../model/author-messages";
+import { validatePhotoFile } from "../model/validate-photo-file";
 
-import type { PhotoDraft } from "./PhotoFieldEditor.types";
+import type { PhotoDraft } from "./profile-field.types";
 
 /**
  * The chosen photo file, checked in the browser, with its object-URL preview.

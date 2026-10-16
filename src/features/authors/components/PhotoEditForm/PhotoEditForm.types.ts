@@ -1,4 +1,4 @@
-import type { PhotoDraft } from "../PhotoFieldEditor/PhotoFieldEditor.types";
+import type { PhotoDraft } from "../../hooks/profile-field.types";
 
 export interface PhotoEditFormProps {
   readonly draft: PhotoDraft | null;

@@ -653,20 +653,20 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `features/auth/components/HeaderAuthLinks/` | The header's session part: Suspense around `HeaderAuthLinksContent` (renamed from `HeaderSession` / `HeaderSessionStatus` in the PR #80 review) | `HeaderAuthLinks` |
 | `features/authors/components/AuthorEditorPanel/` | Editor Suspense boundary | `AuthorEditorPanel` |
 | `features/authors/components/AuthorEditorLoader/` | Session gate, owner read, editor or alert | `AuthorEditorLoader` |
-| `features/authors/components/AuthorProfileEditor/` | Field editors, one-active-field rule, notice; the shared field-editor props | `AuthorProfileEditor`, `AuthorProfileEditorProps`, `FieldEditorControls` |
+| `features/authors/components/AuthorProfileEditor/` | Field editors, one-active-field rule, notice | `AuthorProfileEditor`, `AuthorProfileEditorProps` |
 | `features/authors/components/NameFieldEditor/` | First / last name field | `NameFieldEditor`, `NameFieldEditorProps` |
 | `features/authors/components/AboutFieldEditor/` | About field: toolbar, alignment, tabs, counter | `AboutFieldEditor`, `AboutFieldEditorProps` |
 | `features/authors/components/MarkdownToolbar/` | Seven format buttons | `MarkdownToolbar`, `MarkdownToolbarProps` |
 | `features/authors/components/PhotoFieldEditor/` | Photo field with browser pre-check | `PhotoFieldEditor`, `PhotoFieldEditorProps` |
 | `features/authors/components/SaveNotice/` | `role="status"` notice | `SaveNotice`, `SaveNoticeProps` |
 | `features/authors/components/FieldErrorText/` | Error text wired by id | `FieldErrorText`, `FieldErrorTextProps` |
-| `features/authors/components/AuthorProfileEditor/use-profile-field.ts`, `use-dismissible-error.ts`, `settle-profile-action.ts` | One field's edit mode, optimistic value, and action, shared by the three field editors; its error until dismissed; the rejected-call → `unknown` mapping (added in group 7, split per the PR #81 review) | `useProfileField`, `useDismissibleError`, `settleProfileAction` |
-| `features/authors/components/AuthorProfileEditor/use-field-lock.ts`, `use-save-notice.ts` | The one-active-field rule; the optimistic save notice (PR #81 review: `FieldEditorControls` is now `disabled`, `onEditingChange`, `onActionStart`, `onActionEnd`) | `useFieldLock`, `useSaveNotice` |
+| `features/authors/hooks/use-profile-field.ts`, `use-dismissible-error.ts`, `settle-profile-action.ts`, `profile-field.types.ts` | One field's edit mode, optimistic value, and action, shared by the three field editors; its error until dismissed; the rejected-call → `unknown` mapping; the `FieldEditorControls` and `PhotoDraft` contracts (added in group 7, split and moved to `hooks/` per the PR #81 review) | `useProfileField`, `useDismissibleError`, `settleProfileAction`, `FieldEditorControls`, `PhotoDraft` |
+| `features/authors/hooks/use-field-lock.ts`, `use-save-notice.ts` | The one-active-field rule; the optimistic save notice (PR #81 review: `FieldEditorControls` is now `disabled`, `onEditingChange`, `onActionStart`, `onActionEnd`) | `useFieldLock`, `useSaveNotice` |
 | `features/authors/model/field-mode.ts` | Pending → view, else the field's edit flag (PR #81 review) | `getFieldMode` |
 | `features/authors/components/NameFieldEditForm/`, `AboutEditForm/`, `PhotoEditForm/` | Each field's edit-mode form, split from its field editor (PR #81 review) | `NameFieldEditForm`, `AboutEditForm`, `PhotoEditForm` |
 | `features/authors/components/AboutToolbarRow/`, `AboutPreview/`, `AboutTextarea/`, `AboutFieldMeta/` | The about form's parts: toolbar + alignment, preview tab, textarea, error + counter (PR #81 review) | `AboutToolbarRow`, `AboutPreview`, `AboutTextarea`, `AboutFieldMeta` |
 | `features/authors/components/FieldEditActions/` | Save/Cancel, shared by the three edit forms (PR #81 review) | `FieldEditActions` |
-| `features/authors/components/PhotoFieldEditor/use-photo-draft.ts` | The chosen file, its browser check and preview lifecycle (PR #81 review) | `usePhotoDraft` |
+| `features/authors/hooks/use-photo-draft.ts` | The chosen file, its browser check and preview lifecycle (PR #81 review) | `usePhotoDraft` |
 | `features/authors/components/ProfileFieldRow/` | The field row: 10rem caption column + value column, stacking below 600 px (group 7) | `ProfileFieldRow` |
 | `features/authors/components/FieldActions/` | View-mode buttons: Изменить/Удалить, the add prompt, or the pending «Сохранение…»/«Удаление…» (group 7) | `FieldActions` |
 | `features/authors/components/AlignControl/`, `AboutViewTabs/` | About's alignment toggles and «Редактор»/«Просмотр» tabs (group 7) | `AlignControl`, `AboutViewTabs` |

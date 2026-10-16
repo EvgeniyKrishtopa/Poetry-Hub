@@ -3,17 +3,18 @@
 import { useId } from "react";
 
 import { deleteProfileFieldAction, savePhotoAction } from "../../actions/author-profile.actions";
+import type { PhotoDraft } from "../../hooks/profile-field.types";
+import { usePhotoDraft } from "../../hooks/use-photo-draft";
+import { useProfileField } from "../../hooks/use-profile-field";
 import { FIELD_MODE } from "../../model/author.constants";
 import { ADD_PROMPTS, FIELD_LABELS } from "../../model/author-messages";
-import { useProfileField } from "../AuthorProfileEditor/use-profile-field";
 import { AuthorPhoto } from "../AuthorPhoto/AuthorPhoto";
 import { FieldActions } from "../FieldActions/FieldActions";
 import { FieldErrorText } from "../FieldErrorText/FieldErrorText";
 import { PhotoEditForm } from "../PhotoEditForm/PhotoEditForm";
 import { ProfileFieldRow } from "../ProfileFieldRow/ProfileFieldRow";
 
-import type { PhotoDraft, PhotoFieldEditorProps } from "./PhotoFieldEditor.types";
-import { usePhotoDraft } from "./use-photo-draft";
+import type { PhotoFieldEditorProps } from "./PhotoFieldEditor.types";
 
 /** Photo: browser pre-check, optimistic preview, placeholder when empty (FR-8, FR-10, FR-12). */
 export function PhotoFieldEditor({ photoUrl, fullName, ...controls }: PhotoFieldEditorProps) {
