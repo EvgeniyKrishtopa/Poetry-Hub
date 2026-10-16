@@ -52,7 +52,9 @@ async function writeAndExpire(write: () => Promise<ProfileWriteResult>): Promise
 }
 
 async function runOwnerWrite(write: () => Promise<ProfileWriteResult>): Promise<ProfileActionResult> {
-  return (await sessionFailure()) ?? writeAndExpire(write);
+  const failure = await sessionFailure();
+  if (failure !== null) return failure;
+  return writeAndExpire(write);
 }
 
 export const saveNameAction = authorsActionClient
