@@ -180,6 +180,20 @@ describe("PhotoFieldEditor", () => {
   });
 
   // implements FR-8 of add-author-profiles
+  it("drops the preview and disables Сохранить when a rejected file replaces a valid one", async () => {
+    const user = await chooseFile(pngFile());
+    await screen.findByRole("img");
+    const gif = new File([new Uint8Array(GIF_HEADER)], "photo.png", { type: "image/png" });
+
+    await user.upload(screen.getByLabelText("Фото"), gif);
+
+    expect(await screen.findByText("Допустимы только изображения PNG или JPEG.")).toBeInTheDocument();
+    expect(screen.queryByRole("img")).toBeNull();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(PREVIEW_URL);
+    expect(screen.getByRole("button", { name: "Сохранить" })).toBeDisabled();
+  });
+
+  // implements FR-8 of add-author-profiles
   it("checks the file again on Сохранить and sends nothing when it fails then", async () => {
     const user = await chooseFile(pngFile());
     await screen.findByRole("img");
