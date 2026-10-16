@@ -6,4 +6,4 @@ export { SignInPanel } from "./components/SignInPanel/SignInPanel";
 export { SignUpForm } from "./components/SignUpForm/SignUpForm";
 export { confirmSignUp } from "./dal/confirm-sign-up";
 export { CONFIRM_FAILED_ERROR } from "./model/auth.constants";
-export { getCurrentUserId, requireUserId } from "./dal/current-user";
+export { getCurrentUserId, getSessionState, requireSession } from "./dal/current-user";

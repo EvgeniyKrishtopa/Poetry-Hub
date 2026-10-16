@@ -3,7 +3,8 @@
 import { updateTag } from "next/cache";
 import { returnValidationErrors } from "next-safe-action";
 
-import { getCurrentUserId } from "@/features/auth";
+import { getSessionState } from "@/features/auth";
+import { SESSION_STATE } from "@/shared/config/constants";
 
 import { clearProfileField, removePhoto, replacePhoto, writeOwnProfile } from "../dal/author-profile-writes";
 import { AUTHORS_TAG, authorTag } from "../model/author-cache-tags";
@@ -15,7 +16,7 @@ import {
   saveNameSchema,
   savePhotoSchema,
 } from "../model/author-profile.schema";
-import type { ProfileActionResult, ProfileWriteResult } from "../model/author.types";
+import type { ProfileActionResult, ProfileWriteResult, WriteAccess } from "../model/author.types";
 import { validatePhotoFile } from "../model/validate-photo-file";
 
 import { authorsActionClient } from "./action-client";
@@ -23,11 +24,21 @@ import { authorsActionClient } from "./action-client";
 // Each action resolves the user from the session, never from input (NFR-2), and on success
 // expires the directory's and the author's cache tags (FR-17).
 
-const UNAUTHENTICATED = { status: ACTION_STATUS.failed, failure: "unauthenticated" } as const;
+const WRITE_ALLOWED: WriteAccess = { ok: true };
+const UNAUTHENTICATED: WriteAccess = {
+  ok: false,
+  result: { status: ACTION_STATUS.failed, failure: "unauthenticated" },
+};
+const UNAVAILABLE: WriteAccess = { ok: false, result: { status: ACTION_STATUS.failed, failure: "unavailable" } };
 
-/** Decides `unauthenticated` before any I/O; the DAL itself then runs as the session's user. */
-async function isSignedOut(): Promise<boolean> {
-  return (await getCurrentUserId()) === null;
+/**
+ * Decided from the session before any I/O; the DAL then runs as the session's user. A session that
+ * can't be checked gets the outage message, not "expired" (FR-20).
+ */
+async function checkWriteAccess(): Promise<WriteAccess> {
+  const { state } = await getSessionState();
+  if (state === SESSION_STATE.signedIn) return WRITE_ALLOWED;
+  return state === SESSION_STATE.signedOut ? UNAUTHENTICATED : UNAVAILABLE;
 }
 
 /** The DAL write and, on success, the cache expiry every action shares (design D3). */
@@ -44,7 +55,9 @@ async function writeAndExpire(write: () => Promise<ProfileWriteResult>): Promise
 }
 
 async function runOwnerWrite(write: () => Promise<ProfileWriteResult>): Promise<ProfileActionResult> {
-  return (await isSignedOut()) ? UNAUTHENTICATED : writeAndExpire(write);
+  const access = await checkWriteAccess();
+  if (!access.ok) return access.result;
+  return writeAndExpire(write);
 }
 
 export const saveNameAction = authorsActionClient
@@ -63,7 +76,8 @@ export const savePhotoAction = authorsActionClient
   .inputSchema(savePhotoSchema)
   .action(async ({ parsedInput: { photo } }): Promise<ProfileActionResult> => {
     // The session first, so a signed-out caller never makes the server read the file.
-    if (await isSignedOut()) return UNAUTHENTICATED;
+    const access = await checkWriteAccess();
+    if (!access.ok) return access.result;
 
     // The browser ran the same check, but an action is a public endpoint (design D4). The stored
     // type comes from the file's bytes, whatever `photo.type` claims (FR-8).

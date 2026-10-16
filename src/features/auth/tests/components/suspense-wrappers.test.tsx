@@ -8,7 +8,7 @@ import { SignInFormWithError } from "../../components/SignInFormWithError/SignIn
 import { SignInPanel } from "../../components/SignInPanel/SignInPanel";
 
 vi.mock("../../actions/auth.actions", () => ({ signInAction: vi.fn() }));
-vi.mock("../../dal/is-signed-in", () => ({ isSignedIn: vi.fn() }));
+vi.mock("../../dal/current-user", () => ({ getSessionState: vi.fn() }));
 
 interface SuspenseProps {
   fallback: ReactElement;

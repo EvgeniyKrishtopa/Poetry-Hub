@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { Suspense, type ReactElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { requireUserId } from "@/features/auth";
+import { requireSession } from "@/features/auth";
 
 import { AccountAuthorLinks } from "../../components/AccountAuthorLinks/AccountAuthorLinks";
 import { AccountAuthorSection } from "../../components/AccountAuthorSection/AccountAuthorSection";
@@ -11,8 +11,9 @@ import { AccountPage } from "../../components/AccountPage/AccountPage";
 import { getMyAuthorProfile } from "../../dal/my-author-profile";
 import type { AuthorProfile, MyProfileResult } from "../../model/author.types";
 
-vi.mock("@/features/auth", () => ({ requireUserId: vi.fn() }));
+vi.mock("@/features/auth", () => ({ requireSession: vi.fn() }));
 vi.mock("../../dal/my-author-profile", () => ({ getMyAuthorProfile: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const PROFILE_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
 const USER_ID = "2b3c4d5e-6f70-4a1b-9c2d-3e4f5a6b7c8d";
@@ -67,7 +68,7 @@ describe("AccountAuthorLinks", () => {
 describe("AccountAuthorSection", () => {
   // implements FR-1, NFR-2 of add-author-profiles
   it("reads no profile when the session gate redirects", async () => {
-    vi.mocked(requireUserId).mockRejectedValue(new Error("NEXT_REDIRECT"));
+    vi.mocked(requireSession).mockRejectedValue(new Error("NEXT_REDIRECT"));
 
     await expect(AccountAuthorSection()).rejects.toThrow("NEXT_REDIRECT");
     expect(getMyAuthorProfile).not.toHaveBeenCalled();
@@ -76,13 +77,26 @@ describe("AccountAuthorSection", () => {
   // implements FR-1, FR-18 of add-author-profiles
   it("renders the «Профиль автора» section over the links for the read's result", async () => {
     const result: MyProfileResult = { ok: false, failure: "unavailable" };
-    vi.mocked(requireUserId).mockResolvedValue(USER_ID);
+    vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID });
     vi.mocked(getMyAuthorProfile).mockResolvedValue(result);
 
     render(await AccountAuthorSection());
 
     expect(screen.getByRole("heading", { level: 2, name: "Профиль автора" })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Не удалось загрузить профиль. Попробуйте позже.");
+  });
+
+  // implements FR-20 of add-author-profiles
+  it("keeps the heading and shows the outage alert with «Повторить», reading no profile, when the session can't be checked", async () => {
+    vi.mocked(requireSession).mockResolvedValue({ state: "unknown" });
+
+    render(await AccountAuthorSection());
+
+    expect(screen.getByRole("heading", { level: 2, name: "Профиль автора" })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Сервис временно недоступен. Попробуйте позже.");
+    expect(screen.getByRole("button", { name: "Повторить" })).toBeEnabled();
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(getMyAuthorProfile).not.toHaveBeenCalled();
   });
 });
 

@@ -1,7 +1,8 @@
-import { isSignedIn } from "../../dal/is-signed-in";
+import { getSessionState } from "../../dal/current-user";
 import { AuthStatus } from "../AuthStatus/AuthStatus";
 
-/** Awaits the session check and passes a plain value down (design D3). Rendered inside `HeaderAuthLinks`'s Suspense. */
+/** Awaits the session check and passes only its state down, never the user id (design D3). Rendered inside `HeaderAuthLinks`'s Suspense. */
 export async function HeaderAuthLinksContent() {
-  return <AuthStatus signedIn={await isSignedIn()} />;
+  const { state } = await getSessionState();
+  return <AuthStatus session={state} />;
 }

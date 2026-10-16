@@ -4,6 +4,8 @@
 
 Accepted (2026-10-13)
 
+Partially superseded by 0006 — only the first Decision bullet's boolean `isSignedIn()` and two-state `AuthStatus` (now three session states). The rest stays in force.
+
 Supersedes: 0003 — only its "Session freshness and the header" bullet and the consequences that follow from it. The rest of ADR 0003 stays in force.
 
 ## Context

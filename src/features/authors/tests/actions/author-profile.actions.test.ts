@@ -2,7 +2,7 @@
 import { updateTag } from "next/cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getCurrentUserId } from "@/features/auth";
+import { getSessionState } from "@/features/auth";
 
 import {
   deleteProfileFieldAction,
@@ -15,7 +15,7 @@ import { getProfileFailureMessage, VALIDATION_MESSAGES } from "../../model/autho
 import type { AuthorProfile } from "../../model/author.types";
 
 vi.mock("next/cache", () => ({ updateTag: vi.fn() }));
-vi.mock("@/features/auth", () => ({ getCurrentUserId: vi.fn() }));
+vi.mock("@/features/auth", () => ({ getSessionState: vi.fn() }));
 vi.mock("../../dal/author-profile-writes", () => ({
   writeOwnProfile: vi.fn(),
   clearProfileField: vi.fn(),
@@ -45,7 +45,7 @@ function file(bytes: readonly number[], name: string, type: string): File {
 
 describe("author profile actions", () => {
   beforeEach(() => {
-    vi.mocked(getCurrentUserId).mockResolvedValue(USER_ID);
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID });
     for (const write of [writeOwnProfile, clearProfileField, replacePhoto, removePhoto]) {
       vi.mocked(write).mockResolvedValue({ ok: true, profile: PROFILE });
     }
@@ -63,7 +63,7 @@ describe("author profile actions", () => {
       const result = await saveNameAction({ field: "first_name", value: "   " });
 
       expect(result.validationErrors?.fieldErrors.value).toEqual([VALIDATION_MESSAGES.required]);
-      expect(getCurrentUserId).not.toHaveBeenCalled();
+      expect(getSessionState).not.toHaveBeenCalled();
       expect(writeOwnProfile).not.toHaveBeenCalled();
     });
 
@@ -79,11 +79,22 @@ describe("author profile actions", () => {
 
     // implements NFR-2 of add-author-profiles
     it("returns unauthenticated without a DAL call when there is no session", async () => {
-      vi.mocked(getCurrentUserId).mockResolvedValue(null);
+      vi.mocked(getSessionState).mockResolvedValue({ state: "signed-out" });
 
       const result = await saveNameAction({ field: "first_name", value: NAME });
 
       expect(result.data).toEqual({ status: "failed", failure: "unauthenticated" });
+      expect(writeOwnProfile).not.toHaveBeenCalled();
+      expect(updateTag).not.toHaveBeenCalled();
+    });
+
+    // implements FR-20, FR-9 of add-author-profiles
+    it("returns unavailable, not unauthenticated, without a DAL call when the session can't be checked", async () => {
+      vi.mocked(getSessionState).mockResolvedValue({ state: "unknown" });
+
+      const result = await saveNameAction({ field: "first_name", value: NAME });
+
+      expect(result.data).toEqual({ status: "failed", failure: "unavailable" });
       expect(writeOwnProfile).not.toHaveBeenCalled();
       expect(updateTag).not.toHaveBeenCalled();
     });
@@ -153,7 +164,7 @@ describe("author profile actions", () => {
     });
 
     it("checks the session before reading the file's bytes", async () => {
-      vi.mocked(getCurrentUserId).mockResolvedValue(null);
+      vi.mocked(getSessionState).mockResolvedValue({ state: "signed-out" });
       const photo = file(GIF_BYTES, "photo.png", "image/png");
       const slice = vi.spyOn(photo, "slice");
 
@@ -174,7 +185,7 @@ describe("author profile actions", () => {
     });
 
     it("returns unauthenticated without an upload when there is no session", async () => {
-      vi.mocked(getCurrentUserId).mockResolvedValue(null);
+      vi.mocked(getSessionState).mockResolvedValue({ state: "signed-out" });
 
       const result = await savePhotoAction({ photo: file(PNG_BYTES, "photo.png", "image/png") });
 
@@ -208,7 +219,7 @@ describe("author profile actions", () => {
     });
 
     it("returns unauthenticated without a DAL call when there is no session", async () => {
-      vi.mocked(getCurrentUserId).mockResolvedValue(null);
+      vi.mocked(getSessionState).mockResolvedValue({ state: "signed-out" });
 
       const result = await deleteProfileFieldAction({ field: "photo" });
 
@@ -221,6 +232,41 @@ describe("author profile actions", () => {
 
       expect(result.validationErrors?.fieldErrors.field).toHaveLength(1);
       expect(clearProfileField).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("when the session can't be checked", () => {
+    const UNAVAILABLE = { status: "failed", failure: "unavailable" };
+
+    // implements FR-20, FR-9 of add-author-profiles
+    it.each([
+      ["saveNameAction", () => saveNameAction({ field: "last_name", value: NAME })],
+      ["saveAboutAction", () => saveAboutAction({ about: "Поэт", align: "left" })],
+      ["deleteProfileFieldAction (a name)", () => deleteProfileFieldAction({ field: "first_name" })],
+      ["deleteProfileFieldAction (the photo)", () => deleteProfileFieldAction({ field: "photo" })],
+    ])("%s returns unavailable without a DAL call", async (_name, run) => {
+      vi.mocked(getSessionState).mockResolvedValue({ state: "unknown" });
+
+      const result = await run();
+
+      expect(result.data).toEqual(UNAVAILABLE);
+      for (const write of [writeOwnProfile, clearProfileField, removePhoto, replacePhoto]) {
+        expect(write).not.toHaveBeenCalled();
+      }
+      expect(updateTag).not.toHaveBeenCalled();
+    });
+
+    // implements FR-20 of add-author-profiles
+    it("savePhotoAction returns unavailable before reading the file's bytes", async () => {
+      vi.mocked(getSessionState).mockResolvedValue({ state: "unknown" });
+      const photo = file(PNG_BYTES, "photo.png", "image/png");
+      const slice = vi.spyOn(photo, "slice");
+
+      const result = await savePhotoAction({ photo });
+
+      expect(result.data).toEqual(UNAVAILABLE);
+      expect(slice).not.toHaveBeenCalled();
+      expect(replacePhoto).not.toHaveBeenCalled();
     });
   });
 });

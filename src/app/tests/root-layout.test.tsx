@@ -16,7 +16,7 @@ vi.mock("next/font/google", () => ({
 vi.mock("@/features/auth", () => ({
   HeaderAuthLinks: () => null,
   getCurrentUserId: vi.fn(),
-  requireUserId: vi.fn(),
+  requireSession: vi.fn(),
 }));
 
 type AnyElement = ReactElement<{ children?: ReactNode }>;

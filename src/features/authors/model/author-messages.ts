@@ -101,6 +101,11 @@ export function getProfileFailureMessage(failure: ProfileFailure): string {
   return FAILURE_MESSAGES[failure];
 }
 
+/** Shown on the account pages when the session itself can't be checked: Supabase is down (FR-20). */
+export const SESSION_UNAVAILABLE_MESSAGE = "Сервис временно недоступен. Попробуйте позже.";
+
+export const RETRY_LABEL = "Повторить";
+
 /** Shown instead of the account section or the editor when the own profile can't be read (FR-18). */
 export const PROFILE_LOAD_FAILED_MESSAGE = "Не удалось загрузить профиль. Попробуйте позже.";
 

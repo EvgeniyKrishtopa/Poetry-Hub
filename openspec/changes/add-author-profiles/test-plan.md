@@ -114,7 +114,7 @@ Levels:
 | Proposal headline | Direct API `photo_path` into another file → rejected | Same as the FR-5 pgTAP rows | integration |
 | FR-19 (auth FR-6) | The refresh keeps its cookie, headers, and no-store behaviour; a cookie-less request outside `/account` gets no no-store | Existing `session.test.ts` and `proxy.test.ts` cases, unchanged | unit |
 | FR-19 (auth FR-6) | The refresh reports signed-in, signed-out, or unknown from one `getClaims()` call | `session.test.ts`: each state, `getClaims` called once | unit |
-| FR-19 (auth FR-6) | Rule order: retryable error → unknown (even with claims); non-empty `sub` → signed-in; anything else, including claims without `sub` → signed-out | `claims.test.ts`: `readClaimsState` table | unit |
+| FR-19 (auth FR-6) | Rule order: retryable error, 5xx, or 429 → unknown (even with claims); any other error → signed-out (even with claims); non-empty `sub` → signed-in; anything else, including claims without `sub` → signed-out | `claims.test.ts`: `readClaimsState` table | unit |
 | FR-19 (auth FR-6) | Missing config → unknown, request continues | `session.test.ts` config-error case | unit |
 | FR-19 | Signed-out GET for `/account/author` → 307, `Location` parses to the same origin, path `/login`, no query; four security headers; no-store | `proxy.test.ts` | unit |
 | FR-19 | `/account`, `/account/`, `/account/author/x` redirect; `/accounts` and `/authors` don't | `account-paths.test.ts` (`isAccountPath` table) + `proxy.test.ts` pass-through cases | unit |
