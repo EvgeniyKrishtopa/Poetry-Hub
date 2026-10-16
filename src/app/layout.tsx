@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 
-import { HeaderSession } from "@/features/auth";
+import { HeaderAuthLinks } from "@/features/auth";
 import { AuthorsNavLink } from "@/features/authors";
 import { siteConfig } from "@/shared/config/site";
 
@@ -39,7 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Link>
             <nav className="flex items-center justify-end gap-4">
               <AuthorsNavLink />
-              <HeaderSession />
+              <HeaderAuthLinks />
             </nav>
           </header>
           {children}

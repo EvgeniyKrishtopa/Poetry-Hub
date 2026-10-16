@@ -4,5 +4,8 @@
  */
 export const IMAGE_QUALITY = 60;
 
-/** `lang` for Russian copy inside the `lang="en"` document: the authors pages and their header links. */
-export const RUSSIAN_LANG = "ru";
+/**
+ * `lang` of the product's Russian copy (the authors pages and the header links). The document itself
+ * stays `lang="en"` while the auth screens are in English, so each Russian block carries this.
+ */
+export const CONTENT_LANG = "ru";

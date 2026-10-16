@@ -1,31 +1,20 @@
-import { Suspense } from "react";
+import { requireUserId } from "@/features/auth";
 
-import { RUSSIAN_LANG } from "@/shared/config/constants";
+import { getMyAuthorProfile } from "../../dal/my-author-profile";
+import { ACCOUNT_AUTHOR_SECTION_TITLE } from "../../model/author-messages";
+import { AccountAuthorLinks } from "../AccountAuthorLinks/AccountAuthorLinks";
 
-import { PAGE_TITLES } from "../../model/author-messages";
-import { AccountAuthorLoader } from "../AccountAuthorLoader/AccountAuthorLoader";
+/** The «Профиль автора» section: session gate, then the owner read, inside `AccountPage`'s Suspense boundary (FR-1, FR-18). */
+export async function AccountAuthorSection() {
+  // Redirects a signed-out visitor to /login before any profile read (NFR-2). Without it, a guest's
+  // read would come back as "no profile" and the page would offer «Создать кабинет автора».
+  await requireUserId();
+  const result = await getMyAuthorProfile();
 
-const SKELETON_BLOCK = "bg-surface animate-pulse motion-reduce:animate-none";
-
-/**
- * The account page: its heading in the static shell, then the author section, which reads the session
- * and the own profile per request inside this Suspense boundary (FR-1). The fallback stands in for the
- * section heading (180 × 28) and the link pill (232 × 36).
- */
-export function AccountAuthorSection() {
   return (
-    <div lang={RUSSIAN_LANG} className="flex flex-col gap-8">
-      <h1 className="text-4xl font-bold tracking-tight">{PAGE_TITLES.account}</h1>
-      <Suspense
-        fallback={
-          <div aria-hidden="true" className="flex flex-col gap-4">
-            <div data-skeleton className={`${SKELETON_BLOCK} h-7 w-45 rounded`} />
-            <div data-skeleton className={`${SKELETON_BLOCK} h-9 w-58 rounded-full`} />
-          </div>
-        }
-      >
-        <AccountAuthorLoader />
-      </Suspense>
-    </div>
+    <section className="flex flex-col gap-4">
+      <h2 className="text-xl font-semibold">{ACCOUNT_AUTHOR_SECTION_TITLE}</h2>
+      <AccountAuthorLinks result={result} />
+    </section>
   );
 }

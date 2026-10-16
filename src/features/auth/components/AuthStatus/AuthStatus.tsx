@@ -1,9 +1,6 @@
 import Link from "next/link";
 
-import { RUSSIAN_LANG } from "@/shared/config/constants";
-
-import { ACCOUNT_PATH } from "../../model/auth.constants";
-import { ACCOUNT_LINK_LABEL } from "../../model/auth-messages";
+import { AccountLink } from "../AccountLink/AccountLink";
 import { SignOutButton } from "../SignOutButton/SignOutButton";
 
 import type { AuthStatusProps } from "./AuthStatus.types";
@@ -17,9 +14,7 @@ export function AuthStatus({ signedIn }: AuthStatusProps) {
   if (signedIn) {
     return (
       <div className="flex items-center gap-4">
-        <Link lang={RUSSIAN_LANG} href={ACCOUNT_PATH} className="text-sm font-medium text-foreground hover:text-accent">
-          {ACCOUNT_LINK_LABEL}
-        </Link>
+        <AccountLink />
         <SignOutButton />
       </div>
     );

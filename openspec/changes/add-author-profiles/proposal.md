@@ -14,7 +14,7 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
 - Add a Supabase table `author_profiles`, at most one row per user, protected by row-level security. Add a public Storage bucket `author-photos` whose write policies restrict each user to their own folder. Both live in the first versioned migration under `supabase/migrations/`.
 - Add feature `src/features/authors/`. Each field (first name, last name, about, photo) is created, edited, saved, and deleted on its own through a `next-safe-action` Server Action, driven by `useActionState` with optimistic display.
 - "About" is Markdown, edited with a toolbar. Alignment is one setting for the whole section. It is rendered with `react-markdown`, with raw HTML disabled.
-- Header: an "Наши авторы" link for every visitor, and a "Личный кабинет" link for signed-in readers.
+- Header: an "Наши авторы" link for every visitor, and a "Мастерская поэта" link for signed-in readers.
 - `next.config.ts`:
   - raise the Server Action body limit so a 5 MB photo fits;
   - allow the Supabase Storage host for `next/image`.
@@ -29,7 +29,7 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
   - a row exists → an "Редактировать профиль автора" link to `/account/author`;
   - the profile is public (FR-4) → also a "Открыть публичную страницу" link to `/authors/<id>`.
 - **FR-2**: `/account/author` SHALL be reachable only with a valid session. Without one, the request SHALL be redirected to `/login`. It SHALL show the editor (FR-6–FR-12) for the signed-in reader's own profile, which may not exist yet. Once the profile is public, a "Открыть публичную страницу" link to `/authors/<id>` SHALL appear at the top.
-- **FR-3**: The header SHALL show an "Наши авторы" link to `/authors` to every visitor. When signed in, it SHALL also show a "Личный кабинет" link to `/account` next to "Sign out".
+- **FR-3**: The header SHALL show an "Наши авторы" link to `/authors` to every visitor. When signed in, it SHALL also show a "Мастерская поэта" link to `/account` next to "Sign out".
 
 ### Profile data and visibility
 
@@ -120,7 +120,7 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
 
 | Key | Text |
 | --- | --- |
-| Header links | «Наши авторы», «Личный кабинет» |
+| Header links | «Наши авторы», «Мастерская поэта» (was «Личный кабинет»; user decision 2026-10-16, PR #80 review) |
 | Account section | «Создать кабинет автора», «Редактировать профиль автора», «Открыть публичную страницу» |
 | Field labels | «Имя», «Фамилия», «О себе», «Фото» |
 | Add prompts | «Добавить имя», «Добавить фамилию», «Добавить «О себе»», «Добавить фото» |
@@ -132,7 +132,7 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
 | Failures (FR-9) | «Сессия истекла. Войдите снова.», «Сохранение сейчас недоступно. Попробуйте позже.», «Что-то пошло не так. Попробуйте ещё раз.» |
 | Load failure (FR-18) | «Не удалось загрузить профиль. Попробуйте позже.» |
 | Directory | page heading «Наши авторы»; «Пока нет авторов.»; «Список авторов сейчас недоступен.» |
-| Account page heading | «Личный кабинет»; editor page heading «Профиль автора» |
+| Account page heading | «Мастерская поэта»; editor page heading «Профиль автора» |
 | Author page | «Редактировать профиль»; photo alt «Фото: <имя фамилия>» |
 
 ## Mockups
@@ -142,7 +142,7 @@ Approved Claude Design canvas (2026-10-15): https://claude.ai/artifact/GCN2BZQF5
 | Screen | Artboard |
 | --- | --- |
 | Header (all pages) | «1 · Header — all pages» |
-| `/account` | «2 · /account — Личный кабинет» |
+| `/account` | «2 · /account — Личный кабинет» (the artboard's title; the page now reads «Мастерская поэта», see the UI copy table) |
 | `/account/author` | «3 · /account/author — Профиль автора (editor)» |
 | `/authors` | «4 · /authors — Наши авторы» |
 | `/authors/[id]` | «5 · /authors/[id] — author page» |
@@ -170,7 +170,7 @@ Each FR/NFR above is accepted by the scenarios in `specs/*/spec.md`, all written
 - `reader-account`: the signed-in-only `/account` page and the server-side session gate for pages in the `(authorized)` group.
 
 ### Modified Capabilities
-- `auth`: the session-aware header (FR-7) gains "Наши авторы" for everyone and "Личный кабинет" for signed-in readers.
+- `auth`: the session-aware header (FR-7) gains "Наши авторы" for everyone and "Мастерская поэта" for signed-in readers.
 - `route-groups`: the pass-through layouts requirement (FR-8) no longer forbids pages in `(authorized)/`. It now states that pages there enforce the session themselves.
 
 ## Out of Scope

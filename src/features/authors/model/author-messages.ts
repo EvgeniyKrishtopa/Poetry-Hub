@@ -5,7 +5,7 @@ import type { AboutAlign, MarkdownFormat, PhotoFileError, ProfileFailure, Profil
 
 export const PAGE_TITLES = {
   authors: "Наши авторы",
-  account: "Личный кабинет",
+  account: "Мастерская поэта",
   authorEditor: "Профиль автора",
 } as const;
 

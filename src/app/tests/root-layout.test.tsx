@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { Children, Suspense, isValidElement, type ReactElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
-import { HeaderSession } from "@/features/auth";
+import { HeaderAuthLinks } from "@/features/auth";
 import { AuthorsNavLink } from "@/features/authors";
 
 import RootLayout from "../layout";
@@ -14,7 +14,7 @@ vi.mock("next/font/google", () => ({
 // The real authors index loads here (server-only is stubbed in Vitest); only auth's session part is
 // replaced, since the authors loaders import their session accessors from it.
 vi.mock("@/features/auth", () => ({
-  HeaderSession: () => null,
+  HeaderAuthLinks: () => null,
   getCurrentUserId: vi.fn(),
   requireUserId: vi.fn(),
 }));
@@ -47,7 +47,7 @@ describe("RootLayout header", () => {
     expect(nav).toBeDefined();
 
     const items = Children.toArray(nav?.props.children) as AnyElement[];
-    expect(items.map((item) => item.type)).toEqual([AuthorsNavLink, HeaderSession]);
+    expect(items.map((item) => item.type)).toEqual([AuthorsNavLink, HeaderAuthLinks]);
   });
 
   // implements FR-3 of add-author-profiles
@@ -55,10 +55,10 @@ describe("RootLayout header", () => {
     const path = pathTo(renderLayoutTree(), AuthorsNavLink);
     expect(path).toBeDefined();
 
-    // Its ancestors: no Suspense, and not the session part (whose own boundary lives inside HeaderSession).
+    // Its ancestors: no Suspense, and not the session part (whose own boundary lives inside HeaderAuthLinks).
     const ancestors = path?.slice(0, -1) ?? [];
     expect(ancestors.some((element) => element.type === Suspense)).toBe(false);
-    expect(ancestors.some((element) => element.type === HeaderSession)).toBe(false);
+    expect(ancestors.some((element) => element.type === HeaderAuthLinks)).toBe(false);
   });
 
   // implements FR-3, NFR-8 of add-author-profiles

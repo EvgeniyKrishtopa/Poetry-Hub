@@ -273,7 +273,7 @@ FieldErrorText           error text wired by id for aria-describedby, for the ab
 
 ### D9. Session gate for `(authorized)` pages
 
-- `app/(authorized)/account/page.tsx` renders `<AccountAuthorSection />`, and `app/(authorized)/account/author/page.tsx` renders `<AuthorEditorPanel />`. Each feature component has a `<Suspense>` whose child calls `requireUserId()` first (FR-1, FR-2).
+- `app/(authorized)/account/page.tsx` renders `<AccountPage />`, and `app/(authorized)/account/author/page.tsx` renders `<AuthorEditorPanel />`. Each feature component has a `<Suspense>` whose child calls `requireUserId()` first (FR-1, FR-2).
 - Reading the session needs Suspense under Cache Components, so the redirect happens inside a streamed boundary. Next then performs it client-side (an injected redirect) instead of an HTTP 307. Both reach `/login` before any account data renders: the loader returns before fetching the profile. Gate 3 verifies the browser lands on `/login`.
 - *Alternative rejected:* a proxy redirect for `/account/*` (a real 307). It would need `refreshSession` to also report "signed in". That changes a shared module and the `auth` FR-6 contract for a UX nicety. It can be added later without changing this design. A layout-only check is ruled out by `route-groups` (soft navigation skips shared layouts).
 - `(authorized)/layout.tsx` stays pass-through. Its comment changes from "enforces nothing yet" to "pages here enforce the session themselves (requireUserId)".
@@ -295,7 +295,7 @@ FieldErrorText           error text wired by id for aria-describedby, for the ab
 ### D11. Header (FR-3)
 
 - **`app/layout.tsx`'s header gains a static `<nav>` with "Наши авторы".** It is plain composition, so it stays in the prerendered shell.
-- **`AuthStatus` (signed in) renders a "Личный кабинет" link and `SignOutButton`.** The link is part of the same session-dependent Suspense child, so no extra session read is added.
+- **`AuthStatus` (signed in) renders a "Мастерская поэта" link (`AccountLink`) and `SignOutButton`.** The link is part of the same session-dependent Suspense child, so no extra session read is added.
 
 ### D12. Documentation and decision record (Gate 1 C6)
 
@@ -640,12 +640,15 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `features/authors/components/AuthorProfileView/` | Public profile layout; `ownerLink` slot before the h1 | `AuthorProfileView`, `AuthorProfileViewProps` |
 | `features/authors/components/AuthorOwnerLink/` | Per-request owner check | `AuthorOwnerLink`, `AuthorOwnerLinkProps` |
 | `features/authors/components/AuthorOwnerLinkView/` | "Редактировать профиль" when owner | `AuthorOwnerLinkView`, `AuthorOwnerLinkViewProps` |
-| `features/authors/components/AccountAuthorSection/` | Account page: «Личный кабинет» h1 in the shell, Suspense with skeletons | `AccountAuthorSection` |
-| `features/authors/components/AccountAuthorLoader/` | Session gate, owner read, «Профиль автора» h2 over the links (added in group 6, mirroring `AuthorEditorLoader`: a Suspense boundary needs an async child) | `AccountAuthorLoader` |
+| `features/authors/components/AccountPage/` | Account page: «Мастерская поэта» h1 in the shell, Suspense around the author section (renamed from `AccountAuthorSection` in the PR #80 review) | `AccountPage` |
+| `features/authors/components/AccountAuthorSectionSkeleton/` | The section's Suspense fallback: heading and link-pill skeletons | `AccountAuthorSectionSkeleton` |
+| `features/authors/components/AccountAuthorSection/` | Session gate, owner read, «Профиль автора» h2 over the links (added in group 6 as `AccountAuthorLoader`: a Suspense boundary needs an async child) | `AccountAuthorSection` |
 | `features/authors/components/AccountAuthorLinks/` | FR-1 links or FR-18 alert, from the whole read result | `AccountAuthorLinks`, `AccountAuthorLinksProps` |
 | `features/authors/components/AuthorsNavLink/` | The header's «Наши авторы» link (FR-3), composed by the root layout (added in group 6) | `AuthorsNavLink` |
 | `shared/ui/ButtonLink/` | A link drawn as `Button` (added in group 6, user decision 2026-10-16: the account links are navigation, so an `<a>`, not a `Button` with an `href` prop) | `ButtonLink` |
-| `shared/config/constants.ts` | `IMAGE_QUALITY`; `RUSSIAN_LANG`, the `lang` of the Russian copy in authors, auth's header link, and the layout (user decision 2026-10-16) | `IMAGE_QUALITY`, `RUSSIAN_LANG` |
+| `shared/config/constants.ts` | `IMAGE_QUALITY`; `CONTENT_LANG`, the `lang` of the Russian product copy in authors, auth's header link, and the layout (user decision 2026-10-16; named `RUSSIAN_LANG` until the PR #80 review) | `IMAGE_QUALITY`, `CONTENT_LANG` |
+| `features/auth/components/AccountLink/` | The header's «Мастерская поэта» link to `/account`, signed-in only (PR #80 review) | `AccountLink` |
+| `features/auth/components/HeaderAuthLinks/` | The header's session part: Suspense around `HeaderAuthLinksContent` (renamed from `HeaderSession` / `HeaderSessionStatus` in the PR #80 review) | `HeaderAuthLinks` |
 | `features/authors/components/AuthorEditorPanel/` | Editor Suspense boundary | `AuthorEditorPanel` |
 | `features/authors/components/AuthorEditorLoader/` | Session gate, owner read, editor or alert | `AuthorEditorLoader` |
 | `features/authors/components/AuthorProfileEditor/` | Field editors, one-active-field rule, notice; the shared field-editor props | `AuthorProfileEditor`, `AuthorProfileEditorProps`, `FieldEditorControls` |
@@ -655,7 +658,7 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `features/authors/components/PhotoFieldEditor/` | Photo field with browser pre-check | `PhotoFieldEditor`, `PhotoFieldEditorProps` |
 | `features/authors/components/SaveNotice/` | `role="status"` notice | `SaveNotice`, `SaveNoticeProps` |
 | `features/authors/components/FieldErrorText/` | Error text wired by id | `FieldErrorText`, `FieldErrorTextProps` |
-| `features/authors/index.ts` | Public API for route files | `AccountAuthorSection`, `AuthorDirectory`, `AuthorEditorPanel`, `AuthorPage`, `AuthorsNavLink` |
+| `features/authors/index.ts` | Public API for route files | `AccountPage`, `AuthorDirectory`, `AuthorEditorPanel`, `AuthorPage`, `AuthorsNavLink` |
 | `app/(public)/authors/page.tsx` | `/authors` route | default |
 | `app/(public)/authors/[id]/page.tsx` | `/authors/[id]` route | default |
 | `app/(authorized)/account/page.tsx` | `/account` route | default |

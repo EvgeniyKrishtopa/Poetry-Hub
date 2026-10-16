@@ -5,8 +5,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { requireUserId } from "@/features/auth";
 
 import { AccountAuthorLinks } from "../../components/AccountAuthorLinks/AccountAuthorLinks";
-import { AccountAuthorLoader } from "../../components/AccountAuthorLoader/AccountAuthorLoader";
 import { AccountAuthorSection } from "../../components/AccountAuthorSection/AccountAuthorSection";
+import { AccountAuthorSectionSkeleton } from "../../components/AccountAuthorSectionSkeleton/AccountAuthorSectionSkeleton";
+import { AccountPage } from "../../components/AccountPage/AccountPage";
 import { getMyAuthorProfile } from "../../dal/my-author-profile";
 import type { AuthorProfile, MyProfileResult } from "../../model/author.types";
 
@@ -63,12 +64,12 @@ describe("AccountAuthorLinks", () => {
   });
 });
 
-describe("AccountAuthorLoader", () => {
+describe("AccountAuthorSection", () => {
   // implements FR-1, NFR-2 of add-author-profiles
   it("reads no profile when the session gate redirects", async () => {
     vi.mocked(requireUserId).mockRejectedValue(new Error("NEXT_REDIRECT"));
 
-    await expect(AccountAuthorLoader()).rejects.toThrow("NEXT_REDIRECT");
+    await expect(AccountAuthorSection()).rejects.toThrow("NEXT_REDIRECT");
     expect(getMyAuthorProfile).not.toHaveBeenCalled();
   });
 
@@ -78,7 +79,7 @@ describe("AccountAuthorLoader", () => {
     vi.mocked(requireUserId).mockResolvedValue(USER_ID);
     vi.mocked(getMyAuthorProfile).mockResolvedValue(result);
 
-    render(await AccountAuthorLoader());
+    render(await AccountAuthorSection());
 
     expect(screen.getByRole("heading", { level: 2, name: "Профиль автора" })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Не удалось загрузить профиль. Попробуйте позже.");
@@ -90,21 +91,29 @@ interface SuspenseProps {
   children: ReactElement;
 }
 
-describe("AccountAuthorSection", () => {
+describe("AccountPage", () => {
   // An async Server Component can't render in jsdom, so this checks the tree the wrapper returns.
   // implements FR-1, NFR-8 of add-author-profiles
-  it("puts the «Личный кабинет» heading in the shell on a lang=ru root, and streams the loader with skeletons", () => {
-    const element = AccountAuthorSection() as ReactElement<{ lang: string; children: ReactElement[] }>;
+  it("puts the «Мастерская поэта» heading in the shell on a lang=ru root, and streams the section behind its skeleton", () => {
+    const element = AccountPage() as ReactElement<{ lang: string; children: ReactElement[] }>;
     expect(element.props.lang).toBe("ru");
 
     const [heading, boundary] = element.props.children;
     render(heading);
-    expect(screen.getByRole("heading", { level: 1, name: "Личный кабинет" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Мастерская поэта" })).toBeInTheDocument();
 
     expect(boundary.type).toBe(Suspense);
     const { fallback, children } = boundary.props as SuspenseProps;
-    expect(children.type).toBe(AccountAuthorLoader);
-    const { container } = render(fallback);
+    expect(children.type).toBe(AccountAuthorSection);
+    expect(fallback.type).toBe(AccountAuthorSectionSkeleton);
+  });
+});
+
+describe("AccountAuthorSectionSkeleton", () => {
+  it("draws the heading and link-pill placeholders, hidden from assistive technology", () => {
+    const { container } = render(<AccountAuthorSectionSkeleton />);
+
+    expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");
     expect(container.querySelectorAll("[data-skeleton]")).toHaveLength(2);
   });
 });

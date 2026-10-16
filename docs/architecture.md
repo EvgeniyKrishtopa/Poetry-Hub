@@ -7,7 +7,7 @@ Read before adding a feature, adding a file to `shared/`, or importing across fe
 ```
 src/
 ├── app/                      # Routing only: pages, layouts, route handlers, providers
-│   ├── layout.tsx            # Root shell: html/body/Providers + header (site link; a <nav> with authors' `AuthorsNavLink` and auth's `HeaderSession`, which reads the session inside its own <Suspense>)
+│   ├── layout.tsx            # Root shell: html/body/Providers + header (site link; a <nav> with authors' `AuthorsNavLink` and auth's `HeaderAuthLinks`, which reads the session inside its own <Suspense>)
 │   ├── error.tsx             # Client error boundary: generic copy + digest, retry() (covers both groups)
 │   ├── not-found.tsx         # 404 screen for unmatched URLs (covers both groups)
 │   ├── loading.tsx           # Neutral loading state for any segment (covers both groups)
@@ -20,7 +20,7 @@ src/
 │   │   └── authors/[id]/page.tsx # /authors/<profile id>: a public author page (authors' `AuthorPage`)
 │   ├── (authorized)/         # Route group for pages that need a signed-in reader
 │   │   ├── layout.tsx        # Pass-through placement marker; each page enforces the session itself
-│   │   ├── account/page.tsx  # /account: the reader's account page (authors' `AccountAuthorSection`)
+│   │   ├── account/page.tsx  # /account: «Мастерская поэта», the reader's account page (authors' `AccountPage`)
 │   │   └── account/author/page.tsx # /account/author: the author profile editor (authors' `AuthorEditorPanel`)
 │   ├── api/                  # Route handlers, outside both groups
 │   ├── auth/confirm/route.ts # Sign-up email link: verifies the token, 303 to / or /login?error=confirm-failed
