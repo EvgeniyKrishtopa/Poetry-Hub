@@ -125,6 +125,7 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
 | Field labels | «Имя», «Фамилия», «О себе», «Фото» |
 | Add prompts | «Добавить имя», «Добавить фамилию», «Добавить «О себе»», «Добавить фото» |
 | Field buttons | «Изменить», «Удалить», «Сохранить», «Отмена»; pending «Сохранение…», «Удаление…» |
+| Photo picker | «Выбрать фото», then the chosen file's name next to it; replaces the browser's own file-input text, which follows the browser's language (user decision 2026-10-16, PR #81 discussion) |
 | Notification | «Сохранено» |
 | Toolbar | «Жирный», «Курсив», «Заголовок», «Подзаголовок», «Маркированный список», «Нумерованный список», «Цитата»; «По левому краю», «По центру», «По правому краю»; «Редактор», «Просмотр»; counter «N / 1000» |
 | Toolbar placeholder word (empty selection) | «текст» |

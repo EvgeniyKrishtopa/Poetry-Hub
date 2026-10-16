@@ -78,6 +78,23 @@ describe("PhotoFieldEditor", () => {
     expect(screen.getByRole("button", { name: "Добавить фото" })).toBeEnabled();
   });
 
+  // implements NFR-8, NFR-5 of add-author-profiles
+  it("labels the picker in Russian and shows the chosen file's name, keeping the native input focusable", async () => {
+    const user = userEvent.setup();
+    render(<PhotoFieldEditor photoUrl={null} fullName={FULL_NAME} {...controls} />);
+    await user.click(screen.getByRole("button", { name: "Добавить фото" }));
+
+    const input = screen.getByLabelText("Фото");
+    expect(screen.getByText("Выбрать фото")).toHaveAttribute("for", input.id);
+    expect(input).toHaveClass("sr-only");
+    await user.tab();
+    expect(input).toHaveFocus();
+
+    await user.upload(input, pngFile());
+
+    expect(await screen.findByText("photo.png")).toBeInTheDocument();
+  });
+
   // implements FR-8, NFR-5 of add-author-profiles
   it("rejects a 6 MB file in the browser, without calling the action", async () => {
     const big = new File([new Uint8Array(SIX_MEGABYTES)], "big.jpg", { type: "image/jpeg" });

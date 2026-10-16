@@ -666,6 +666,7 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `features/authors/model/field-mode.ts` | Pending → view, else the field's edit flag (PR #81 review) | `getFieldMode` |
 | `features/authors/components/NameFieldEditForm/`, `AboutEditForm/`, `PhotoEditForm/` | Each field's edit-mode form, split from its field editor (PR #81 review) | `NameFieldEditForm`, `AboutEditForm`, `PhotoEditForm` |
 | `features/authors/components/AboutToolbarRow/`, `AboutPreview/`, `AboutTextarea/`, `AboutFieldMeta/` | The about form's parts: toolbar + alignment, preview tab, textarea, error + counter (PR #81 review) | `AboutToolbarRow`, `AboutPreview`, `AboutTextarea`, `AboutFieldMeta` |
+| `features/authors/components/PhotoPicker/` | The photo's file input, visually hidden but focusable, opened by a Russian pill label, with the chosen file's name (NFR-8: a native file input's text follows the browser's language; PR #81 discussion) | `PhotoPicker` |
 | `features/authors/components/FieldEditActions/` | Save/Cancel, shared by the three edit forms (PR #81 review) | `FieldEditActions` |
 | `features/authors/hooks/use-photo-draft.ts`, `object-url-store.ts` | The chosen file, its browser check, and its preview URL, live only while subscribed (PR #81 review; Activity fix) | `usePhotoDraft`, `subscribeObjectUrl`, `getObjectUrl` |
 | `features/authors/components/ProfileFieldRow/` | The field row: 10rem caption column + value column, stacking below 600 px (group 7) | `ProfileFieldRow` |

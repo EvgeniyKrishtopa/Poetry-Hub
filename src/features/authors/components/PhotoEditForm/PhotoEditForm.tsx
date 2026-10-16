@@ -4,16 +4,12 @@ import { FIELD_LABELS } from "../../model/author-messages";
 import { AuthorPhoto } from "../AuthorPhoto/AuthorPhoto";
 import { FieldEditActions } from "../FieldEditActions/FieldEditActions";
 import { FieldErrorText } from "../FieldErrorText/FieldErrorText";
+import { PhotoPicker } from "../PhotoPicker/PhotoPicker";
 import { ProfileFieldRow } from "../ProfileFieldRow/ProfileFieldRow";
 
 import type { PhotoEditFormProps } from "./PhotoEditForm.types";
 
-const ACCEPTED_TYPES = "image/png,image/jpeg";
-
-const FILE_INPUT_CLASS =
-  "max-w-full text-sm file:mr-3 file:cursor-pointer file:rounded-full file:border-0 file:bg-surface file:px-3 file:py-2 file:font-medium file:text-foreground";
-
-/** The photo field in edit mode: the file input, its error, the chosen file's preview, and Save/Cancel (FR-8, FR-12). */
+/** The photo field in edit mode: the file picker, its error, the chosen file's preview, and Save/Cancel (FR-8, FR-12). */
 export function PhotoEditForm({ draft, error, fullName, onFileChange, onSubmit, onCancel }: PhotoEditFormProps) {
   const inputId = useId();
   const errorId = useId();
@@ -27,14 +23,11 @@ export function PhotoEditForm({ draft, error, fullName, onFileChange, onSubmit, 
           </label>
         }
       >
-        <input
+        <PhotoPicker
           id={inputId}
-          type="file"
-          accept={ACCEPTED_TYPES}
-          onChange={(event) => onFileChange(event.currentTarget)}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? errorId : undefined}
-          className={FILE_INPUT_CLASS}
+          fileName={draft?.file.name ?? null}
+          errorId={error ? errorId : undefined}
+          onFileChange={onFileChange}
         />
         {error && <FieldErrorText id={errorId} message={error} />}
         {draft !== null && <AuthorPhoto photoUrl={draft.previewUrl} fullName={fullName} />}

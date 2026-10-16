@@ -41,6 +41,9 @@ export const FIELD_ACTION_LABELS = {
   deleting: "Удаление…",
 } as const;
 
+/** The photo picker's button; the native file input's own text follows the browser's language. */
+export const PHOTO_PICKER_LABEL = "Выбрать фото";
+
 export const SAVED_MESSAGE = "Сохранено";
 
 export const FORMAT_LABELS: Readonly<Record<MarkdownFormat, string>> = {
