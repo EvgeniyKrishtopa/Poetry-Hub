@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { deleteProfileFieldAction, savePhotoAction } from "../../actions/author-profile.actions";
 import { PhotoFieldEditor } from "../../components/PhotoFieldEditor/PhotoFieldEditor";
+import type { PhotoFileCheck } from "../../model/author.types";
+import { validatePhotoFile } from "../../model/validate-photo-file";
 
 import { deferred } from "./deferred";
 
@@ -13,6 +15,12 @@ vi.mock("../../actions/author-profile.actions", () => ({
   savePhotoAction: vi.fn(),
   deleteProfileFieldAction: vi.fn(),
 }));
+
+// The real check by default; a test overrides one call to control its timing or result.
+vi.mock("../../model/validate-photo-file", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../../model/validate-photo-file")>();
+  return { validatePhotoFile: vi.fn(original.validatePhotoFile) };
+});
 
 type PhotoResponse = Awaited<ReturnType<typeof savePhotoAction>>;
 type DeleteResponse = Awaited<ReturnType<typeof deleteProfileFieldAction>>;
@@ -169,6 +177,22 @@ describe("PhotoFieldEditor", () => {
 
     expect(await screen.findByText("Сохранение сейчас недоступно. Попробуйте позже.")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: `Фото: ${FULL_NAME}` })).toBeInTheDocument();
+  });
+
+  // implements FR-8 of add-author-profiles
+  it("keeps the file chosen last when an earlier file's check finishes after it", async () => {
+    const slowCheck = deferred<PhotoFileCheck>();
+    vi.mocked(validatePhotoFile).mockReturnValueOnce(slowCheck.promise);
+    const first = pngFile();
+    const second = new File([new Uint8Array(PNG_HEADER)], "second.png", { type: "image/png" });
+    const user = await chooseFile(first);
+
+    await user.upload(screen.getByLabelText("Фото"), second);
+    await screen.findByRole("img");
+    await act(async () => slowCheck.resolve({ ok: true, type: "png" }));
+
+    expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
+    expect(URL.createObjectURL).toHaveBeenCalledWith(second);
   });
 
   it("releases the chosen file's preview when the editor unmounts", async () => {

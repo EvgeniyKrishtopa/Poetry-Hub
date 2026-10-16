@@ -57,9 +57,12 @@ export function PhotoFieldEditor({ photoUrl, fullName, ...controls }: PhotoField
   }
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     if (file === undefined) return;
     const check = await validatePhotoFile(file);
+    // The reader chose another file while this one was being checked: that file's check decides.
+    if (input.files?.[0] !== file) return;
     if (!check.ok) {
       setDraft(null);
       setFileError(PHOTO_FILE_ERROR_MESSAGES[check.error]);
