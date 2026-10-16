@@ -1,3 +1,4 @@
+import { getProfileFailureMessage } from "./author-messages";
 import type { FieldFormState, ProfileActionResponse } from "./author.types";
 
 type ValidationErrors = NonNullable<ProfileActionResponse["validationErrors"]>;
@@ -20,4 +21,11 @@ export function toFieldFormState<Draft>(response: ProfileActionResponse, draft: 
   }
   if (response.data.status === "failed") return { status: "failed", draft, failure: response.data.failure };
   return { status: "saved" };
+}
+
+/** The error a field shows for its form state, if any (FR-8, FR-9). */
+export function getFieldErrorMessage<Draft>(state: FieldFormState<Draft>): string | undefined {
+  if (state.status === "invalid") return state.error;
+  if (state.status === "failed") return getProfileFailureMessage(state.failure);
+  return undefined;
 }

@@ -220,7 +220,9 @@ AuthorProfileEditor      ("use client") activeField: useOptimistic<ProfileField 
 └── SaveNotice           role="status" live region, text "Сохранено"
 AuthorAbout              (shared by Preview and the public page) react-markdown, allowlist (NFR-1)
 AuthorPhoto              next/image or placeholder icon; sizing per FR-16
-TextField (shared/ui)    the name inputs: labelled input with error wiring, moved from auth's AuthField
+TextField (shared/ui)    the name inputs: labelled input with error wiring, moved from auth's AuthField;
+                         layout="columns" puts its label in the field row's 10rem column, as the mockup draws it
+                         (user decision 2026-10-16; "stacked", the default, stays for the auth forms)
 FieldErrorText           error text wired by id for aria-describedby, for the about textarea and photo input (NFR-5)
 ```
 
@@ -256,8 +258,8 @@ FieldErrorText           error text wired by id for aria-describedby, for the ab
 ### D7. Markdown: toolbar edits as pure functions, rendering by allowlist
 
 - `markdown-format.ts` exports `applyFormat(text, { start, end }, format): { text, selection }` for `bold`, `italic`, `heading`, `subheading`, `bulleted`, `numbered`, and `quote`.
-  - **Inline formats** wrap the selection, or insert a placeholder word when the selection is empty.
-  - **Block formats** prefix each selected line.
+  - **Inline formats** wrap the selection, or insert a placeholder word when the selection is empty. Whitespace at the selection's edges stays outside the markers, since CommonMark does not render `** word**` as bold; an all-whitespace selection counts as empty (user decision 2026-10-16, group 3 code-review PLAUSIBLE).
+  - **Block formats** prefix each selected line. With an empty selection they prefix the cursor's line, or fill an empty line with the prefixed placeholder (user decision 2026-10-16; was: a placeholder on a new line).
   
   The textarea applies the result and restores the selection. Pure, so it is unit-tested without the DOM.
 - `AuthorAbout` renders with `react-markdown`, `skipHtml`, `allowedElements: ["p", "strong", "em", "h2", "h3", "ul", "ol", "li", "blockquote", "br"]`, and `unwrapDisallowed`. Disallowed nodes such as links, `h1`, and code keep their text content but lose their element (NFR-1). An image has no children to keep, so unwrapping would drop it whole: `img` is therefore on the allowlist only for `components.img` to render its alt text instead of an element (group 5). Alignment is applied as a `text-left | text-center | text-right` utility on the wrapper.
@@ -633,7 +635,7 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `features/authors/actions/action-client.ts` | Authors action client on the shared factory | `authorsActionClient` |
 | `features/authors/actions/author-profile.actions.ts` | The four Server Actions (D3) | `saveNameAction`, `saveAboutAction`, `savePhotoAction`, `deleteProfileFieldAction` |
 | `features/authors/components/AuthorAbout/` | Allowlisted Markdown render (D7) | `AuthorAbout`, `AuthorAboutProps` |
-| `features/authors/components/AuthorPhoto/` (+ `is-local-image-host.ts`) | Photo or placeholder (FR-16); local-host check (D8) | `AuthorPhoto`, `AuthorPhotoProps`, `isLocalImageHost` |
+| `features/authors/components/AuthorPhoto/` (+ `is-unoptimizable-image.ts`) | Photo or placeholder (FR-16); serve-as-is check for a local host or a `blob:` preview (D8) | `AuthorPhoto`, `AuthorPhotoProps`, `isUnoptimizableImage` |
 | `features/authors/components/AuthorDirectory/` | Directory Suspense boundary | `AuthorDirectory` |
 | `features/authors/components/AuthorList/` | Directory list, empty, unavailable | `AuthorList`, `AuthorListProps` |
 | `features/authors/components/AuthorPage/` | Author page Suspense boundary | `AuthorPage`, `AuthorPageProps` |
@@ -658,6 +660,12 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `features/authors/components/PhotoFieldEditor/` | Photo field with browser pre-check | `PhotoFieldEditor`, `PhotoFieldEditorProps` |
 | `features/authors/components/SaveNotice/` | `role="status"` notice | `SaveNotice`, `SaveNoticeProps` |
 | `features/authors/components/FieldErrorText/` | Error text wired by id | `FieldErrorText`, `FieldErrorTextProps` |
+| `features/authors/components/AuthorProfileEditor/use-profile-field.ts`, `settle-profile-action.ts` | One field's edit mode, optimistic value, and action wrapper, shared by the three field editors; the rejected-call → `unknown` mapping (added in group 7) | `useProfileField`, `settleProfileAction` |
+| `features/authors/components/ProfileFieldRow/` | The field row: 10rem caption column + value column, stacking below 600 px (group 7) | `ProfileFieldRow` |
+| `features/authors/components/FieldActions/` | View-mode buttons: Изменить/Удалить, the add prompt, or the pending «Сохранение…»/«Удаление…» (group 7) | `FieldActions` |
+| `features/authors/components/AlignControl/`, `AboutViewTabs/` | About's alignment toggles and «Редактор»/«Просмотр» tabs (group 7) | `AlignControl`, `AboutViewTabs` |
+| `features/authors/components/AuthorEditorSkeleton/` | The editor's Suspense fallback: four field-row skeletons (group 7) | `AuthorEditorSkeleton` |
+| `shared/ui/TextField/text-field-classes.ts` | Class sets for `TextField`'s `stacked` and `columns` layouts (group 7) | `TEXT_FIELD_CLASSES` |
 | `features/authors/index.ts` | Public API for route files | `AccountPage`, `AuthorDirectory`, `AuthorEditorPanel`, `AuthorPage`, `AuthorsNavLink` |
 | `app/(public)/authors/page.tsx` | `/authors` route | default |
 | `app/(public)/authors/[id]/page.tsx` | `/authors/[id]` route | default |
