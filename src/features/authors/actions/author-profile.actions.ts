@@ -16,7 +16,7 @@ import {
   saveNameSchema,
   savePhotoSchema,
 } from "../model/author-profile.schema";
-import type { ProfileActionResult, ProfileWriteResult } from "../model/author.types";
+import type { ProfileActionResult, ProfileWriteResult, WriteAccess } from "../model/author.types";
 import { validatePhotoFile } from "../model/validate-photo-file";
 
 import { authorsActionClient } from "./action-client";
@@ -24,18 +24,21 @@ import { authorsActionClient } from "./action-client";
 // Each action resolves the user from the session, never from input (NFR-2), and on success
 // expires the directory's and the author's cache tags (FR-17).
 
-const UNAUTHENTICATED = { status: ACTION_STATUS.failed, failure: "unauthenticated" } as const;
-const UNAVAILABLE = { status: ACTION_STATUS.failed, failure: "unavailable" } as const;
+const WRITE_ALLOWED: WriteAccess = { ok: true };
+const UNAUTHENTICATED: WriteAccess = {
+  ok: false,
+  result: { status: ACTION_STATUS.failed, failure: "unauthenticated" },
+};
+const UNAVAILABLE: WriteAccess = { ok: false, result: { status: ACTION_STATUS.failed, failure: "unavailable" } };
 
 /**
- * The failure for a session that isn't signed in, before any I/O; `null` when it is, and the DAL then
- * runs as the session's user. A session that can't be checked is the outage message, not "expired" (FR-20).
+ * Decided from the session before any I/O; the DAL then runs as the session's user. A session that
+ * can't be checked gets the outage message, not "expired" (FR-20).
  */
-async function sessionFailure(): Promise<ProfileActionResult | null> {
+async function checkWriteAccess(): Promise<WriteAccess> {
   const { state } = await getSessionState();
-  if (state === SESSION_STATE.signedOut) return UNAUTHENTICATED;
-  if (state === SESSION_STATE.unknown) return UNAVAILABLE;
-  return null;
+  if (state === SESSION_STATE.signedIn) return WRITE_ALLOWED;
+  return state === SESSION_STATE.signedOut ? UNAUTHENTICATED : UNAVAILABLE;
 }
 
 /** The DAL write and, on success, the cache expiry every action shares (design D3). */
@@ -52,8 +55,8 @@ async function writeAndExpire(write: () => Promise<ProfileWriteResult>): Promise
 }
 
 async function runOwnerWrite(write: () => Promise<ProfileWriteResult>): Promise<ProfileActionResult> {
-  const failure = await sessionFailure();
-  if (failure !== null) return failure;
+  const access = await checkWriteAccess();
+  if (!access.ok) return access.result;
   return writeAndExpire(write);
 }
 
@@ -73,8 +76,8 @@ export const savePhotoAction = authorsActionClient
   .inputSchema(savePhotoSchema)
   .action(async ({ parsedInput: { photo } }): Promise<ProfileActionResult> => {
     // The session first, so a signed-out caller never makes the server read the file.
-    const failure = await sessionFailure();
-    if (failure !== null) return failure;
+    const access = await checkWriteAccess();
+    if (!access.ok) return access.result;
 
     // The browser ran the same check, but an action is a public endpoint (design D4). The stored
     // type comes from the file's bytes, whatever `photo.type` claims (FR-8).

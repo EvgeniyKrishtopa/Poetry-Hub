@@ -68,6 +68,11 @@ export type ProfileActionResult =
   | { readonly status: typeof ACTION_STATUS.saved; readonly profile: AuthorProfile | null }
   | { readonly status: typeof ACTION_STATUS.failed; readonly failure: ProfileFailure };
 
+/** Whether the session may write its own profile; when not, the action's result says why. */
+export type WriteAccess =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly result: Extract<ProfileActionResult, { status: typeof ACTION_STATUS.failed }> };
+
 /**
  * The part of a next-safe-action result the editor reads, with the client's "flattened"
  * validation-error shape. Declared here so `model/` stays free of the library.
