@@ -220,7 +220,7 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 Added 2026-10-16 (user decision, PR #81 discussion): FR-19, design D9.
 
 - [x] 8.1 (FR-19) One reading of a `getClaims()` result (design D9):
-  - add the pure helper `shared/lib/supabase/claims.ts` `readClaimsState(result)` → `{ state: "signed-in", userId } | { state: "signed-out" } | { state: "unknown" }`. Rules in order, first match wins: a returned retryable error (`isAuthRetryableFetchError`, or status ≥ 500) → unknown, even with claims; a non-empty string `sub` → signed-in; anything else (no claims, a non-retryable error, claims without a valid `sub`) → signed-out. Name the states as an `as const` object (no magic strings);
+  - add the pure helper `shared/lib/supabase/claims.ts` `readClaimsState(result)` → `{ state: "signed-in", userId } | { state: "signed-out" } | { state: "unknown" }`. Rules in order, first match wins: a returned retryable error (`isAuthRetryableFetchError`, status ≥ 500, or a 429) → unknown, even with claims; any other returned error → signed-out, even with claims; a non-empty string `sub` → signed-in; anything else (no claims, claims without a valid `sub`) → signed-out. Name the states as an `as const` object (no magic strings);
   - in `shared/lib/supabase/session.ts`, make `refreshSession(request)` return `{ response, session }`, with `session` from `readClaimsState`, or unknown for a missing config or a thrown `getClaims`;
   - rebuild auth's `getCurrentUserId()` on `readClaimsState`: signed-in → its id, anything else → `null`, logging unchanged.
 
