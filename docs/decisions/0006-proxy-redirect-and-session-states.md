@@ -23,7 +23,7 @@ ADR 0004 had the header receive only a boolean from `isSignedIn()`. It had also 
    - There is no `?next=` parameter: returning to the requested page needs open-redirect validation, so it is a separate feature.
    - The proxy check is optimistic. Pages keep `requireSession()` and actions keep their own session check (NFR-2), because the Next docs warn that a matcher change can silently drop proxy coverage.
 2. **There are three session states: `signed-in` (with the user id), `signed-out`, and `unknown`.** One pure helper, `readClaimsState` in `shared/lib/supabase/claims.ts`, reads a `getClaims()` result. Its rules apply in order:
-   1. a retryable error or a status of 500 or above → unknown;
+   1. a retryable error, a status of 500 or above, or a 429 rate limit → unknown;
    2. any other error → signed-out;
    3. a non-empty string `sub` → signed-in;
    4. anything else → signed-out.

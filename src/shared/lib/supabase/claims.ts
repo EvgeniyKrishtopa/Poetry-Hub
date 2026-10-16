@@ -5,6 +5,9 @@ import { SESSION_STATE } from "@/shared/config/constants";
 /** The lowest HTTP status Supabase Auth answers with when it is failing, not refusing the token. */
 const SERVER_ERROR_STATUS = 500;
 
+/** Auth is throttling, not refusing the token: the session can't be told either way. */
+const TOO_MANY_REQUESTS_STATUS = 429;
+
 export type SessionState = (typeof SESSION_STATE)[keyof typeof SESSION_STATE];
 
 export type ClaimsState =
@@ -22,7 +25,7 @@ export interface ClaimsResult {
 function isOutage(error: unknown): boolean {
   if (isAuthRetryableFetchError(error)) return true;
   const status = typeof error === "object" && error !== null && "status" in error ? error.status : undefined;
-  return typeof status === "number" && status >= SERVER_ERROR_STATUS;
+  return typeof status === "number" && (status >= SERVER_ERROR_STATUS || status === TOO_MANY_REQUESTS_STATUS);
 }
 
 /**

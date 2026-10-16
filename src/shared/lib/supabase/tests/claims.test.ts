@@ -8,6 +8,7 @@ const CLAIMS = { claims: { sub: USER_ID } };
 const EXPIRED = new AuthApiError("JWT expired", 401, "bad_jwt");
 const OUTAGE = new AuthRetryableFetchError("fetch failed", 0);
 const SERVER_ERROR = new AuthApiError("Service Unavailable", 503, undefined);
+const RATE_LIMITED = new AuthApiError("Too many requests", 429, "over_request_rate_limit");
 
 describe("readClaimsState", () => {
   // implements FR-19, FR-20 of add-author-profiles
@@ -21,6 +22,7 @@ describe("readClaimsState", () => {
     ["claims with a non-retryable error", { data: CLAIMS, error: EXPIRED }, "signed-out"],
     ["a retryable fetch error", { data: null, error: OUTAGE }, "unknown"],
     ["a 5xx answer", { data: null, error: SERVER_ERROR }, "unknown"],
+    ["a 429 rate limit", { data: null, error: RATE_LIMITED }, "unknown"],
     ["claims with a retryable error", { data: CLAIMS, error: OUTAGE }, "unknown"],
   ])("%s → %s", (_label, result, expected) => {
     expect(readClaimsState(result).state).toBe(expected);

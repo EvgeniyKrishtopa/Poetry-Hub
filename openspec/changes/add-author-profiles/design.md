@@ -281,7 +281,7 @@ FieldErrorText           error text wired by id for aria-describedby, for the ab
 - **Proxy redirect on top (FR-19; user decision 2026-10-16, PR #81 discussion; was the rejected alternative here).** A signed-out guest used to see the page heading and skeleton flash before the streamed client redirect. The proxy now answers a signed-out page request under `/account` with a real 307 to `/login`, before anything renders:
   - **One reading of a `getClaims()` result (Gate 1 revision, PLAUSIBLE 1 and 2; user decision 2026-10-16).** A pure helper `readClaimsState(result)` in `shared/lib/supabase/claims.ts` maps it to `{ state: "signed-in", userId } | { state: "signed-out" } | { state: "unknown" }`:
     Checked in this order, first match wins (spec-clarify 2026-10-16):
-    1. a returned retryable error (`isAuthRetryableFetchError`, or status ≥ 500: supabase-js returns network and outage failures rather than throwing) → `unknown`, even if claims came with it;
+    1. a returned retryable error (`isAuthRetryableFetchError`, status ≥ 500, or a 429 rate limit: supabase-js returns network and outage failures rather than throwing) → `unknown`, even if claims came with it;
     2. any other returned error (expired or invalid JWT) → `signed-out`, even if claims came with it, as `getCurrentUserId` always read it (implementation, group 8);
     3. a non-empty string `sub` → `signed-in`;
     4. anything else → `signed-out`: no claims, or claims without a non-empty string `sub`. The page gate reads such a result the same way.
