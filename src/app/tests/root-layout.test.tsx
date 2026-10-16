@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
+import { Children, Suspense, isValidElement, type ReactElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { HeaderSession } from "@/features/auth";
@@ -21,27 +21,44 @@ vi.mock("@/features/auth", () => ({
 
 type AnyElement = ReactElement<{ children?: ReactNode }>;
 
-/** Depth-first search of an element tree that has not been rendered (the layout returns `<html>`). */
-function findElement(node: ReactNode, type: unknown): AnyElement | undefined {
+/**
+ * Depth-first search of an element tree that has not been rendered (the layout returns `<html>`).
+ * Returns the path from the outermost element down to the first one of `type`, or `undefined`.
+ */
+function pathTo(node: ReactNode, type: unknown): AnyElement[] | undefined {
   for (const child of Children.toArray(node)) {
     if (!isValidElement(child)) continue;
     const element = child as AnyElement;
-    if (element.type === type) return element;
-    const found = findElement(element.props.children, type);
-    if (found !== undefined) return found;
+    if (element.type === type) return [element];
+    const rest = pathTo(element.props.children, type);
+    if (rest !== undefined) return [element, ...rest];
   }
   return undefined;
 }
 
+function renderLayoutTree(): ReactNode {
+  return RootLayout({ children: null, params: Promise.resolve({}) });
+}
+
 describe("RootLayout header", () => {
   // implements FR-3 of add-author-profiles
-  it("puts «Наши авторы» before the session part in a nav, outside the session's Suspense", () => {
-    const tree = RootLayout({ children: null, params: Promise.resolve({}) });
-
-    const nav = findElement(tree, "nav");
+  it("puts «Наши авторы» before the session part in a nav", () => {
+    const nav = pathTo(renderLayoutTree(), "nav")?.at(-1);
     expect(nav).toBeDefined();
+
     const items = Children.toArray(nav?.props.children) as AnyElement[];
     expect(items.map((item) => item.type)).toEqual([AuthorsNavLink, HeaderSession]);
+  });
+
+  // implements FR-3 of add-author-profiles
+  it("keeps «Наши авторы» outside every Suspense boundary, so it shows while the session check is pending", () => {
+    const path = pathTo(renderLayoutTree(), AuthorsNavLink);
+    expect(path).toBeDefined();
+
+    // Its ancestors: no Suspense, and not the session part (whose own boundary lives inside HeaderSession).
+    const ancestors = path?.slice(0, -1) ?? [];
+    expect(ancestors.some((element) => element.type === Suspense)).toBe(false);
+    expect(ancestors.some((element) => element.type === HeaderSession)).toBe(false);
   });
 
   // implements FR-3, NFR-8 of add-author-profiles
