@@ -123,13 +123,17 @@ describe("proxy redirect for account routes", () => {
   // implements FR-19 of add-author-profiles
   it("carries a revoked session's cleared cookies on the redirect", async () => {
     const refreshed = NextResponse.next();
-    refreshed.cookies.set(SESSION_COOKIE, "", { maxAge: 0 });
+    refreshed.cookies.set(SESSION_COOKIE, "", { maxAge: 0, path: "/" });
     signedOut(refreshed);
 
     const response = await proxy(request("/account"));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("set-cookie")).toContain(`${SESSION_COOKIE}=;`);
+    const setCookie = response.headers.get("set-cookie") ?? "";
+    expect(setCookie).toContain(`${SESSION_COOKIE}=;`);
+    // Copied with its options, so the browser really deletes it.
+    expect(setCookie).toContain("Max-Age=0");
+    expect(setCookie).toContain("Path=/");
   });
 
   // implements FR-19, FR-9 of add-author-profiles
