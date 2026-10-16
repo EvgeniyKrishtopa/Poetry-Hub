@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { AuthorProfile, FieldFormState, ProfileActionResponse } from "../../model/author.types";
-import { toFieldFormState } from "../../model/profile-form-state";
+import { getFieldErrorMessage, toFieldFormState } from "../../model/profile-form-state";
 
 const DRAFT = { about: "**Поэт**", align: "center" } as const;
 
@@ -68,5 +68,17 @@ describe("toFieldFormState", () => {
     const state = toFieldFormState({ data: { status: "failed", failure: "unknown" } }, DRAFT);
 
     expect(state).toMatchObject({ draft: DRAFT });
+  });
+});
+
+describe("getFieldErrorMessage", () => {
+  // implements FR-8, FR-9 of add-author-profiles
+  it.each<[string, FieldFormState<string>, string | undefined]>([
+    ["idle", { status: "idle" }, undefined],
+    ["saved", { status: "saved" }, undefined],
+    ["invalid", { status: "invalid", draft: "", error: "Обязательное поле." }, "Обязательное поле."],
+    ["failed", { status: "failed", draft: "", failure: "unavailable" }, "Сохранение сейчас недоступно. Попробуйте позже."],
+  ])("%s", (_label, state, expected) => {
+    expect(getFieldErrorMessage(state)).toBe(expected);
   });
 });

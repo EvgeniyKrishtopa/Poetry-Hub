@@ -32,10 +32,11 @@ src/
 │   │   ├── actions/          # Server Actions ("use server", *.actions.ts) + the feature's action client
 │   │   └── …                 # dal/ (confirmSignUp, isSignedIn, getCurrentUserId, requireUserId), model/, components/, tests/, index.ts (roles as below)
 │   ├── authors/              # Author profiles: the directory, public author pages, the account section, the editor, the header's «Наши авторы» link
-│   │   └── …                 # actions/, dal/ (owner reads and writes, cached public reads), model/, components/, tests/, index.ts
+│   │   └── …                 # actions/, dal/ (owner reads and writes, cached public reads), hooks/ (the editor's field hooks), model/, components/, tests/, index.ts
 │   └── poems/                # The folder roles every feature can use:
 │       ├── api/              # Fetchers (*.api.ts) + query keys/options/hooks (*.queries.ts)
 │       ├── dal/              # Server-only data access for Server Components (no role suffix)
+│       ├── hooks/            # Client hooks shared by several of the feature's components (use-<name>.ts) + their types (*.types.ts)
 │       ├── model/            # Types, Zustand stores (*.store.ts), pure domain logic
 │       ├── components/       # Feature UI, one folder per component (+ .module.css)
 │       ├── tests/            # Tests, mirroring the feature (tests/model/…, tests/components/<Name>.test.tsx)
@@ -66,7 +67,8 @@ src/
 
 - Components: `PascalCase` folder + file (`PoemCard/PoemCard.tsx`, `PoemCard.module.css`, `PoemCard.types.ts`), named exports only (except Next.js route files, which need default exports). A helper only that component uses sits in the same folder in `kebab-case` (`SignInForm/submit-sign-in.ts`). What gets its own file: `docs/code-style.md`.
 - Constants: `model/<name>.constants.ts` per feature, `shared/config/constants.ts` project-wide (`docs/code-style.md`).
-- Non-component files: `kebab-case` with a role suffix (`poems.api.ts`, `poems.queries.ts`, `poems-ui.store.ts`, `poem.types.ts`, `auth.actions.ts`). Exceptions take no suffix: modules in a feature's `dal/` folder (`dal/home-greeting.ts`) and a helper inside a component's folder (`SignInForm/submit-sign-in.ts`, see `docs/code-style.md`).
+- Non-component files: `kebab-case` with a role suffix (`poems.api.ts`, `poems.queries.ts`, `poems-ui.store.ts`, `poem.types.ts`, `auth.actions.ts`). Exceptions take no suffix: modules in a feature's `dal/` folder (`dal/home-greeting.ts`), a helper inside a component's folder (`SignInForm/submit-sign-in.ts`, see `docs/code-style.md`), and hooks in a feature's `hooks/` folder, whose `use-` prefix is the role (`hooks/use-profile-field.ts`); a helper only one hook uses sits next to it (`hooks/settle-profile-action.ts`).
+- A hook that only one component uses stays in that component's folder. It moves to the feature's `hooks/` once a second component uses it, or when it is part of a contract between components (the author editor's `useProfileField`, `useFieldLock`). Hooks never import from `components/`; the types they share with components live in `hooks/<name>.types.ts`.
 - A feature's `actions/` folder holds `"use server"` modules (`<name>.actions.ts`, exporting only Server Actions) and the feature's action client (`action-client.ts`, `import "server-only"`). Server Actions are public endpoints: validate input with a `model/` schema and never export anything else from a `"use server"` module.
 - Add `"use client"` only to components that need hooks, state, or browser APIs; keep pages as Server Components.
 - Keep domain logic in pure functions under `model/` so it's testable without React.

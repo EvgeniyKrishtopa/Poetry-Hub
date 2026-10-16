@@ -41,6 +41,9 @@ export const FIELD_ACTION_LABELS = {
   deleting: "Удаление…",
 } as const;
 
+/** The photo picker's button; the native file input's own text follows the browser's language. */
+export const PHOTO_PICKER_LABEL = "Выбрать фото";
+
 export const SAVED_MESSAGE = "Сохранено";
 
 export const FORMAT_LABELS: Readonly<Record<MarkdownFormat, string>> = {
@@ -108,7 +111,7 @@ export const DIRECTORY_MESSAGES = {
 
 export const OWNER_EDIT_LINK_LABEL = "Редактировать профиль";
 
-/** The photo's alt text: "Фото: <first name> <last name>" (NFR-5). */
+/** The photo's alt text: the "photo" prefix, then the first and last name (NFR-5). */
 export function getPhotoAlt(fullName: string): string {
   return `Фото: ${fullName}`;
 }

@@ -153,7 +153,7 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 
 ## 7. Author editor <!-- judgement-heavy -->
 
-- [ ] 7.1 (NFR-4, NFR-5) Promote `features/auth/components/AuthField` to `shared/ui/TextField`. A second feature now needs a labelled input with an error (`docs/architecture.md`, "move to `shared/` when a second feature needs it"; ui-plan reuse note).
+- [x] 7.1 (NFR-4, NFR-5) Promote `features/auth/components/AuthField` to `shared/ui/TextField`. A second feature now needs a labelled input with an error (`docs/architecture.md`, "move to `shared/` when a second feature needs it"; ui-plan reuse note).
   - **`TextField`**: `src/shared/ui/TextField/TextField.tsx` + `TextField.types.ts`, exported from `src/shared/ui/index.ts`.
     - Props: `label`, optional `error`, and the input's own props (`ComponentPropsWithoutRef<"input">` minus `id`, `className`, `aria-invalid`, `aria-describedby`), so it works both uncontrolled (auth forms) and controlled (the editor's draft).
     - Same markup, classes, `useId` wiring, and token-only styling as `AuthField` today.
@@ -164,7 +164,7 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
   - `src/shared/ui/tests/TextField.test.tsx`: label association; `aria-invalid` and `aria-describedby` only with an error; the error text rendered; a controlled `value`/`onChange` works;
   - every existing `SignInForm`/`SignUpForm` test passes unchanged;
   - `npm run knip` reports no leftover `AuthField` export.
-- [ ] 7.2 (FR-6, FR-7, FR-9, FR-10, NFR-5, NFR-8) Implement:
+- [x] 7.2 (FR-6, FR-7, FR-9, FR-10, NFR-5, NFR-8) Implement:
   - `AuthorProfileEditor`:
     - `editingField` (plain `useState`) and `activeField` via `useOptimistic<ProfileField | null>(null)`, with `disabled = (editingField ?? activeField) !== null && (editingField ?? activeField) !== field` (design D6);
     - the optimistic `SaveNotice`;
@@ -185,13 +185,13 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
   - delete pending shows the empty state with "Удаление…", and a failed delete restores the value;
   - a rejected action promise → the generic error under the field, with no error boundary;
   - `lang="ru"` on the root.
-- [ ] 7.3 (FR-8, FR-10, FR-11) Implement `AboutFieldEditor`: toolbar buttons with Russian accessible names, the alignment control, «Редактор»/«Просмотр» using `AuthorAbout`, and an "N / 1000" counter (code points after trimming, danger colour over 1000, no input cap). Verify with tests:
+- [x] 7.3 (FR-8, FR-10, FR-11) Implement `AboutFieldEditor`: toolbar buttons with Russian accessible names, the alignment control, «Редактор»/«Просмотр» using `AuthorAbout`, and an "N / 1000" counter (code points after trimming, danger colour over 1000, no input cap). Verify with tests:
   - «Жирный» applied to the selection;
   - «Просмотр» renders the h2;
   - the counter updates, reads "1012 / 1000" after a long paste with all text kept, and reads "2 / 1000" for "  hi  ";
   - a save sends `{ about, align }`;
   - Удалить resets the shown alignment.
-- [ ] 7.4 (FR-6, FR-8, FR-10, FR-12) Implement `PhotoFieldEditor`:
+- [x] 7.4 (FR-6, FR-8, FR-10, FR-12) Implement `PhotoFieldEditor`:
   - a file input that accepts `image/png,image/jpeg`;
   - `validatePhotoFile` run on change and before submit, which shows the field error and does not call the action on failure;
   - an optimistic object-URL preview, revoked after settle;
@@ -204,8 +204,8 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
   - a failed save reverts to the previous photo (or the placeholder) with the error;
   - Удалить shows the placeholder and "Добавить фото";
   - a failed delete shows the previous photo again.
-- [ ] 7.5 (FR-2, FR-18) Implement `components/AuthorEditorPanel` (Suspense → `requireUserId` → `getMyAuthorProfile()` → `AuthorProfileEditor`, or the FR-18 danger `Alert` on a failed read) and add `app/(authorized)/account/author/page.tsx`. Verify `npm run typecheck && npm run lint` and that the editor renders in `npm run dev` for a signed-in user.
-- [ ] 7.6 (FR-7, FR-17, NFR-2) Document the editor and record the decision:
+- [x] 7.5 (FR-2, FR-18) Implement `components/AuthorEditorPanel` (Suspense → `requireUserId` → `getMyAuthorProfile()` → `AuthorProfileEditor`, or the FR-18 danger `Alert` on a failed read) and add `app/(authorized)/account/author/page.tsx`. Verify `npm run typecheck && npm run lint` and that the editor renders in `npm run dev` for a signed-in user.
+- [x] 7.6 (FR-7, FR-17, NFR-2) Document the editor and record the decision:
   - add the about-editor toolbar and `SaveNotice` to `docs/design-system.md` as feature-local primitives;
   - record ADR `docs/decisions/0005-reader-owned-data-rls-and-per-field-actions.md` via `record-decision`, covering:
     - RLS plus column grants as the last line of defense;

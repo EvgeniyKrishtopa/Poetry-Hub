@@ -37,3 +37,15 @@ export const PHOTO_HEIGHT = 400;
  * content column's width (the viewport minus the `px-6` gutters on both sides).
  */
 export const PHOTO_SIZES = "(min-width: 460px) 300px, calc(100vw - 3rem)";
+
+/** A profile action's result status (`ProfileActionResult`). */
+export const ACTION_STATUS = { saved: "saved", failed: "failed" } as const;
+
+/** One field's form status (`FieldFormState`). */
+export const FORM_STATUS = { idle: "idle", saved: "saved", invalid: "invalid", failed: "failed" } as const;
+
+/** The two actions a field runs: save its draft, or delete its value. */
+export const FIELD_ACTION = { save: "save", delete: "delete" } as const;
+
+/** A field shows its value (view) or its input (edit). */
+export const FIELD_MODE = { view: "view", edit: "edit" } as const;

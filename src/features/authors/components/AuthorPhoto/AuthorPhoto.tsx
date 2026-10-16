@@ -8,7 +8,7 @@ import { AuthorPhotoPlaceholder } from "../AuthorPhotoPlaceholder/AuthorPhotoPla
 
 import styles from "./AuthorPhoto.module.css";
 import type { AuthorPhotoProps } from "./AuthorPhoto.types";
-import { isLocalImageHost } from "./is-local-image-host";
+import { isUnoptimizableImage } from "./is-unoptimizable-image";
 
 /** The photo at 300 × 400 (full column width at 3:4 below 460 px), or the user-icon placeholder (FR-16). */
 export function AuthorPhoto({ photoUrl, fullName }: AuthorPhotoProps) {
@@ -28,7 +28,7 @@ export function AuthorPhoto({ photoUrl, fullName }: AuthorPhotoProps) {
           // The page's largest above-the-fold element: fetch it with the HTML, not after layout,
           // which matters most on a slow mobile connection.
           preload
-          unoptimized={isLocalImageHost(photoUrl)}
+          unoptimized={isUnoptimizableImage(photoUrl)}
         />
       )}
     </div>

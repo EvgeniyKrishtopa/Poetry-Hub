@@ -1,4 +1,4 @@
-import type { FieldEditorControls } from "../AuthorProfileEditor/AuthorProfileEditor.types";
+import type { FieldEditorControls } from "../../hooks/profile-field.types";
 
 export interface PhotoFieldEditorProps extends FieldEditorControls {
   readonly photoUrl: string | null;

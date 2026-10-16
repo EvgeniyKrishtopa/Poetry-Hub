@@ -7,7 +7,7 @@ import { OWNER_EDIT_LINK_LABEL } from "../../model/author-messages";
 
 import type { AuthorOwnerLinkViewProps } from "./AuthorOwnerLinkView.types";
 
-/** "Редактировать профиль" when the visitor owns the profile (FR-15). */
+/** The edit-profile link, shown only when the visitor owns the profile (FR-15). */
 export function AuthorOwnerLinkView({ isOwner }: AuthorOwnerLinkViewProps) {
   if (!isOwner) return null;
 

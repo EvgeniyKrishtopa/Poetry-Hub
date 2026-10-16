@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { Alert, Button } from "@/shared/ui";
+import { Alert, Button, TextField } from "@/shared/ui";
 
 import type { SignInFormState } from "../../model/auth.types";
-import { AuthField } from "../AuthField/AuthField";
 
 import { getFormError } from "./get-form-error";
 import type { SignInFormProps } from "./SignInForm.types";
@@ -25,7 +24,7 @@ export function SignInForm({ initialError }: SignInFormProps) {
     // noValidate: the server-side schema is the only validation, so its errors are what the reader sees.
     <form action={formAction} noValidate className="flex w-full flex-col gap-4">
       {formError && <Alert tone="danger">{formError}</Alert>}
-      <AuthField
+      <TextField
         label="Email"
         name="email"
         type="email"
@@ -33,7 +32,7 @@ export function SignInForm({ initialError }: SignInFormProps) {
         defaultValue={state.email}
         error={fieldErrors.email}
       />
-      <AuthField
+      <TextField
         label="Password"
         name="password"
         type="password"

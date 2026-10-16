@@ -49,14 +49,14 @@ describe("applyFormat", () => {
       expect(selected(result)).toBe("текст");
     });
 
-    it("puts a block placeholder on its own line in the middle of a line", () => {
-      const result = applyFormat("ab", { start: 1, end: 1 }, "quote");
+    it("prefixes the cursor's line when it has text, and selects that line", () => {
+      const result = applyFormat("one\ntwo words\nthree", { start: 7, end: 7 }, "quote");
 
-      expect(result.text).toBe("a\n> текст\nb");
-      expect(selected(result)).toBe("текст");
+      expect(result.text).toBe("one\n> two words\nthree");
+      expect(selected(result)).toBe("> two words");
     });
 
-    it("adds no extra line break at the start of an empty line", () => {
+    it("fills an empty line with the placeholder, with no extra line break", () => {
       const result = applyFormat("one\n\ntwo", { start: 4, end: 4 }, "heading");
 
       expect(result.text).toBe("one\n## текст\ntwo");
@@ -91,6 +91,29 @@ describe("applyFormat", () => {
       const result = applyFormat("\nb", { start: 0, end: 2 }, "quote");
 
       expect(result.text).toBe("> \n> b");
+    });
+  });
+
+  describe("inline formats and whitespace at the selection's edges", () => {
+    it("keeps the spaces outside the markers", () => {
+      const text = "a  word  b";
+      const result = applyFormat(text, { start: 1, end: 8 }, "bold");
+
+      expect(result.text).toBe("a  **word**  b");
+      expect(selected(result)).toBe("word");
+    });
+
+    it("keeps a trailing line break outside the markers", () => {
+      const result = applyFormat("word\nnext", { start: 0, end: 5 }, "italic");
+
+      expect(result.text).toBe("*word*\nnext");
+    });
+
+    it("treats an all-whitespace selection as empty, at its end", () => {
+      const result = applyFormat("a   b", { start: 1, end: 4 }, "bold");
+
+      expect(result.text).toBe("a   **текст**b");
+      expect(selected(result)).toBe("текст");
     });
   });
 

@@ -1,3 +1,5 @@
+import { ACTION_STATUS, FORM_STATUS } from "./author.constants";
+import { getProfileFailureMessage } from "./author-messages";
 import type { FieldFormState, ProfileActionResponse } from "./author.types";
 
 type ValidationErrors = NonNullable<ProfileActionResponse["validationErrors"]>;
@@ -12,12 +14,23 @@ export function toFieldFormState<Draft>(response: ProfileActionResponse, draft: 
   if (response.validationErrors) {
     const error = firstValidationMessage(response.validationErrors);
     // A validation result with no message at all can't be shown as a field error.
-    return error === undefined ? { status: "failed", draft, failure: "unknown" } : { status: "invalid", draft, error };
+    return error === undefined
+      ? { status: FORM_STATUS.failed, draft, failure: "unknown" }
+      : { status: FORM_STATUS.invalid, draft, error };
   }
   // `serverError` is the action client's generic message for an unexpected throw (design D10).
   if (response.serverError !== undefined || response.data === undefined) {
-    return { status: "failed", draft, failure: "unknown" };
+    return { status: FORM_STATUS.failed, draft, failure: "unknown" };
   }
-  if (response.data.status === "failed") return { status: "failed", draft, failure: response.data.failure };
-  return { status: "saved" };
+  if (response.data.status === ACTION_STATUS.failed) {
+    return { status: FORM_STATUS.failed, draft, failure: response.data.failure };
+  }
+  return { status: FORM_STATUS.saved };
+}
+
+/** The error a field shows for its form state, if any (FR-8, FR-9). */
+export function getFieldErrorMessage<Draft>(state: FieldFormState<Draft>): string | undefined {
+  if (state.status === FORM_STATUS.invalid) return state.error;
+  if (state.status === FORM_STATUS.failed) return getProfileFailureMessage(state.failure);
+  return undefined;
 }
