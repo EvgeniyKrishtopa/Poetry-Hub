@@ -6,6 +6,9 @@ export const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 
 export const AUTHOR_PHOTOS_BUCKET = "author-photos";
 
+/** The language of the feature's public pages (the UI copy is Russian; the root layout is `en`). */
+export const AUTHOR_CONTENT_LANG = "ru";
+
 /**
  * How a sniffed image type is stored: the object's extension (the `photo_path` check allows only
  * `png` and `jpg`) and its content type. Never derived from the browser-supplied `File.type` (FR-8).
@@ -17,6 +20,10 @@ export const PHOTO_FORMATS: Readonly<Record<ImageType, { readonly extension: str
 
 /** Explicit column lists: under the column grants, `*` fails with 42501 (design D2). */
 export const OWNER_PROFILE_COLUMNS = "id, first_name, last_name, about, about_align, photo_path";
+/**
+ * The same list today; a separate name so the public reads can narrow it without touching the owner's.
+ * @alias
+ */
 export const PUBLIC_AUTHOR_COLUMNS = OWNER_PROFILE_COLUMNS;
 
 export const PHOTO_WIDTH = 300;

@@ -112,31 +112,31 @@ Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1
 
 ## 5. Public pages: directory and author page <!-- judgement-heavy -->
 
-- [ ] 5.1 (NFR-4) The user installs `react-markdown`: package installs are blocked for the agent by `permissions.deny`, so the user runs `! npm install react-markdown`. Verify `package.json` `dependencies` gain exactly `react-markdown` vs `main` and `npm run deps:audit` passes.
-- [ ] 5.2 (FR-16, NFR-6) Update `next.config.ts` per design D4/D8:
+- [x] 5.1 (NFR-4) The user installs `react-markdown`: package installs are blocked for the agent by `permissions.deny`, so the user runs `! npm install react-markdown`. Verify `package.json` `dependencies` gain exactly `react-markdown` vs `main` and `npm run deps:audit` passes.
+- [x] 5.2 (FR-16, NFR-6) Update `next.config.ts` per design D4/D8:
   - `experimental.serverActions.bodySizeLimit: "6mb"` with a comment on why;
   - `images.remotePatterns` derived from `NEXT_PUBLIC_SUPABASE_URL` when set, with the derivation as a small pure helper under `src/shared/config/` with tests.
 
   Verify `npm run build` with no Supabase env exits 0. Document the build-time dependency on `NEXT_PUBLIC_SUPABASE_URL` in `docs/environment.md`.
-- [ ] 5.3 (FR-14, NFR-1) Implement `components/AuthorAbout`: `react-markdown` with `skipHtml`, the allowlist, `unwrapDisallowed`, and an alignment utility. Verify with component tests:
+- [x] 5.3 (FR-14, NFR-1) Implement `components/AuthorAbout`: `react-markdown` with `skipHtml`, the allowlist, `unwrapDisallowed`, and an alignment utility. Verify with component tests:
   - `## Poet` → h2;
   - `<script>` → no script element;
   - a link → text with no `a`;
   - an image → alt text only, with no `img`;
   - center alignment class applied.
-- [ ] 5.4 (FR-14, FR-16, NFR-5) Implement `components/AuthorPhoto` plus `AuthorPhoto.module.css`:
+- [x] 5.4 (FR-14, FR-16, NFR-5) Implement `components/AuthorPhoto` plus `AuthorPhoto.module.css`:
   - `next/image` 300 × 400 with `sizes`;
   - `unoptimized` for local hosts, decided by a pure helper;
   - a placeholder user icon (`aria-hidden`);
   - a 460 px media query.
 
   Verify with tests: alt "Фото: <name>", placeholder without an `img`, `unoptimized` only for localhost/127.0.0.1. Add `AuthorPhoto` to `docs/design-system.md` as a feature-local primitive.
-- [ ] 5.5 (FR-13, NFR-8) Implement `components/AuthorDirectory` (Suspense wrapper, awaiting `listPublicAuthors`) and the presentational `AuthorList`, and add `app/(public)/authors/page.tsx`. Verify `AuthorList` tests:
+- [x] 5.5 (FR-13, NFR-8) Implement `components/AuthorDirectory` (Suspense wrapper, awaiting `listPublicAuthors`) and the presentational `AuthorList`, and add `app/(public)/authors/page.tsx`. Verify `AuthorList` tests:
   - the heading "Наши авторы";
   - link labels and hrefs in order;
   - "Пока нет авторов." and "Список авторов сейчас недоступен.";
   - the root element has `lang="ru"`.
-- [ ] 5.6 (FR-14, FR-15, FR-18, NFR-8) Implement `components/AuthorPage` (Suspense; `notFound()` on not-found, a soft 404; throws on unavailable), the presentational `AuthorProfileView`, and `AuthorOwnerLink` (its own Suspense; `getCurrentUserId` + `getMyAuthorProfile()`; renders only on a match, and nothing on a failed read). Add `app/(public)/authors/[id]/page.tsx`. Verify with tests:
+- [x] 5.6 (FR-14, FR-15, FR-18, NFR-8) Implement `components/AuthorPage` (Suspense; `notFound()` on not-found, a soft 404; throws on unavailable), the presentational `AuthorProfileView`, and `AuthorOwnerLink` (its own Suspense; `getCurrentUserId` + `getMyAuthorProfile()`; renders only on a match, and nothing on a failed read). Add `app/(public)/authors/[id]/page.tsx`. Verify with tests:
   - the view renders the h1, the photo or placeholder, and about, or omits about when empty;
   - its root element has `lang="ru"`;
   - `AuthorOwnerLinkView` shows "Редактировать профиль" only when `isOwner`, placed before the h1.

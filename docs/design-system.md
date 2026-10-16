@@ -47,6 +47,7 @@ light theme, below WCAG AA for text. Inside an `Alert` the tone colours only the
 | `Button` | Pill button (`border-radius: 9999px`), variants `primary` (accent fill) and `ghost` (transparent, surface on hover); disabled at 50% opacity; press scale 0.97 | `src/shared/ui/Button/Button.tsx` + `Button.module.css` |
 | `AuthField` | Labelled input with error text wired through `aria-invalid` / `aria-describedby`; `rounded-md`, `px-3 py-2`, accent border on focus; on error, `text-danger` error text and a `danger` border that stays while focused | `src/features/auth/components/AuthField/AuthField.tsx` (feature-local, not shared) |
 | `PoemCard` | Card: `border-radius: 1rem`, surface background, accent border and glow on hover; quoted excerpt with an accent left rule | `src/features/poems/components/PoemCard/` (feature-local) |
+| `AuthorPhoto` | Portrait box: 300 × 400 px from a 460 px viewport up, full column width at 3:4 below; `border-radius: 1rem`, `object-fit: cover`, surface background. No photo → a 64 px `muted` stroke user icon, `aria-hidden`. `next/image` with `sizes`; `unoptimized` only for a local Supabase host | `src/features/authors/components/AuthorPhoto/` + `AuthorPhoto.module.css` (feature-local) |
 
 ## 4. States
 
