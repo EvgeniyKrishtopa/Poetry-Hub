@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Alert } from "@/shared/ui";
 
 import { DIRECTORY_MESSAGES } from "../../model/author-messages";
+import { authorPagePath } from "../../model/author-page-path";
 import { fullName } from "../../model/full-name";
 
 import type { AuthorListContentProps } from "./AuthorListContent.types";
@@ -17,7 +18,7 @@ export function AuthorListContent({ result }: AuthorListContentProps) {
     <ul className="flex flex-col gap-3">
       {result.authors.map((author) => (
         <li key={author.id}>
-          <Link href={`/authors/${author.id}`} className="text-lg text-foreground hover:text-accent">
+          <Link href={authorPagePath(author.id)} className="text-lg text-foreground hover:text-accent">
             {fullName(author)}
           </Link>
         </li>

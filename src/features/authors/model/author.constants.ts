@@ -9,6 +9,9 @@ export const AUTHOR_PHOTOS_BUCKET = "author-photos";
 /** The owner's editor page: the account page's links and the public page's owner link point here. */
 export const AUTHOR_EDITOR_PATH = "/account/author";
 
+/** The author directory; each public author page lives under it (`author-page-path.ts`). */
+export const AUTHORS_PATH = "/authors";
+
 /**
  * How a sniffed image type is stored: the object's extension (the `photo_path` check allows only
  * `png` and `jpg`) and its content type. Never derived from the browser-supplied `File.type` (FR-8).
