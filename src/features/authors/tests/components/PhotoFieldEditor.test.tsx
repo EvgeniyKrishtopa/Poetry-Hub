@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -106,6 +106,7 @@ describe("PhotoFieldEditor", () => {
     expect(savePhotoAction).toHaveBeenCalledWith({ photo: file });
     expect(screen.getByRole("img")).toHaveAttribute("src", PREVIEW_URL);
     expect(screen.getByRole("button", { name: "Сохранение…" })).toBeDisabled();
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
 
     await act(async () => save.resolve({ data: { status: "saved", profile: null } }));
 
@@ -168,6 +169,15 @@ describe("PhotoFieldEditor", () => {
 
     expect(await screen.findByText("Сохранение сейчас недоступно. Попробуйте позже.")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: `Фото: ${FULL_NAME}` })).toBeInTheDocument();
+  });
+
+  it("releases the chosen file's preview when the editor unmounts", async () => {
+    await chooseFile(pngFile());
+    await screen.findByRole("img");
+
+    cleanup();
+
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(PREVIEW_URL);
   });
 
   // implements FR-6 of add-author-profiles

@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEvent, useId, useState } from "react";
+import { type ChangeEvent, useEffect, useId, useState } from "react";
 
 import { Button } from "@/shared/ui";
 
@@ -32,22 +32,26 @@ export function PhotoFieldEditor({ photoUrl, fullName, ...controls }: PhotoField
     toPendingValue: ({ previewUrl }) => previewUrl,
     // A file input can't be refilled, so a failed save shows the previous photo with the error (design D6).
     keepEditingOnFailure: false,
-    onSettled: () => replaceDraft(null),
+    // Set inside the action, so it commits with the settled transition: the pending preview is
+    // never revoked while the optimistic photo still shows it.
+    onSettled: () => setDraft(null),
   });
 
-  function replaceDraft(next: PhotoDraft | null) {
-    if (draft !== null) URL.revokeObjectURL(draft.previewUrl);
-    setDraft(next);
-  }
+  // Each preview URL is released once its draft is replaced, cleared, or the editor unmounts.
+  useEffect(() => {
+    if (draft === null) return undefined;
+    const { previewUrl } = draft;
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [draft]);
 
   function startEditing() {
-    replaceDraft(null);
+    setDraft(null);
     setFileError(null);
     editor.startEditing();
   }
 
   function cancelEditing() {
-    replaceDraft(null);
+    setDraft(null);
     setFileError(null);
     editor.cancelEditing();
   }
@@ -57,12 +61,12 @@ export function PhotoFieldEditor({ photoUrl, fullName, ...controls }: PhotoField
     if (file === undefined) return;
     const check = await validatePhotoFile(file);
     if (!check.ok) {
-      replaceDraft(null);
+      setDraft(null);
       setFileError(PHOTO_FILE_ERROR_MESSAGES[check.error]);
       return;
     }
     setFileError(null);
-    replaceDraft({ file, previewUrl: URL.createObjectURL(file) });
+    setDraft({ file, previewUrl: URL.createObjectURL(file) });
   }
 
   async function submit() {
