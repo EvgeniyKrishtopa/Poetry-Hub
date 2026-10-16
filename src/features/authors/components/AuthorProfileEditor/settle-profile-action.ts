@@ -9,7 +9,9 @@ const REJECTED_CALL: ProfileActionResponse = { data: { status: "failed", failure
 export async function settleProfileAction(call: () => Promise<ProfileActionResponse>): Promise<ProfileActionResponse> {
   try {
     return await call();
-  } catch {
+  } catch (error) {
+    // The error's type only: its message could echo what was submitted (NFR-3).
+    console.error(`[authors] action call rejected: ${error instanceof Error ? error.name : typeof error}`);
     return REJECTED_CALL;
   }
 }

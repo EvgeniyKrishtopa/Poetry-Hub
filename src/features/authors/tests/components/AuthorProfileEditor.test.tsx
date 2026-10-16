@@ -178,14 +178,18 @@ describe("AuthorProfileEditor", () => {
 
   // implements FR-9 of add-author-profiles
   it("shows the generic error under the field when the action call itself rejects", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
     render(<AuthorProfileEditor profile={PROFILE} />);
     const { save } = await startPendingFirstNameSave("Anya");
 
-    await act(async () => save.reject(new TypeError("Failed to fetch")));
+    await act(async () => save.reject(new TypeError("Failed to fetch Anya")));
 
     expect(screen.getByRole("textbox", { name: "Имя" })).toHaveAccessibleDescription(
       "Что-то пошло не так. Попробуйте ещё раз.",
     );
+    // Only the error's type is logged, never its message or the submitted value (NFR-3).
+    expect(log).toHaveBeenCalledWith("[authors] action call rejected: TypeError");
+    expect(JSON.stringify(log.mock.calls)).not.toContain("Anya");
   });
 
   // implements FR-10 of add-author-profiles
