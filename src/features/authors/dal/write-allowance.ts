@@ -34,7 +34,11 @@ export async function consumeWriteAllowance(scope: WriteScope): Promise<WriteAll
 
     const allowed = allowedSchema.safeParse(response.data);
     if (!allowed.success) return { ok: false, failure: toProfileFailure(OPERATION, allowed.error) };
-    return allowed.data ? { ok: true } : { ok: false, failure: OVER_LIMIT_FAILURES[scope] };
+    if (allowed.data) return { ok: true };
+
+    // Expected, not an error, but worth seeing if one account keeps hitting it. The scope only (NFR-3).
+    console.warn(`[authors] write limit reached: ${scope}`);
+    return { ok: false, failure: OVER_LIMIT_FAILURES[scope] };
   } catch (error) {
     // A config error, or an unexpected throw: still a value, never an exception.
     return { ok: false, failure: toProfileFailure(OPERATION, error) };

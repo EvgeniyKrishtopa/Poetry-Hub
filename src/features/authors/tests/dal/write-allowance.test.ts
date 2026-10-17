@@ -56,6 +56,27 @@ describe("consumeWriteAllowance", () => {
     await expect(consumeWriteAllowance(scope)).resolves.toEqual({ ok: false, failure });
   });
 
+  // implements FR-21, NFR-3 of add-author-profiles
+  it("logs a refused attempt by its scope only, as a warning, not an error", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    supabase.onRpc(FUNCTION_NAME, okResponse(false));
+
+    await consumeWriteAllowance(WRITE_SCOPES.photoUpload);
+
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith("[authors] write limit reached: photo_upload");
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  // implements FR-21 of add-author-profiles
+  it("logs nothing for an allowed attempt", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    supabase.onRpc(FUNCTION_NAME, okResponse(true));
+
+    await consumeWriteAllowance(WRITE_SCOPES.profileWrite);
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
   // implements FR-21 of add-author-profiles
   it.each([
     ["no data", null],
