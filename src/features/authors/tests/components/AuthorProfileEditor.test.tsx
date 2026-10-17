@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Activity } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -156,7 +156,9 @@ describe("AuthorProfileEditor", () => {
     const { rerender } = render(page("visible"));
     await user.click(editButtons()[1]);
     await user.click(screen.getByRole("button", { name: "Сохранить" }));
-    expect(screen.getByRole("status")).toHaveTextContent("Сохранено");
+    // The notice is set when the action's transition settles, which a click doesn't wait for: on a slow
+    // CI runner the line after it ran first.
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Сохранено"));
     await user.click(editButtons()[0]);
     await user.type(screen.getByRole("textbox", { name: "Имя" }), "-черновик");
 

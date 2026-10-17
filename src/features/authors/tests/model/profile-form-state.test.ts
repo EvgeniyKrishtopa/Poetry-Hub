@@ -60,6 +60,17 @@ describe("toFieldFormState", () => {
       { data: { status: "failed", failure: "unavailable" } },
       { status: "failed", draft: DRAFT, failure: "unavailable" },
     ],
+    // implements FR-21 of add-author-profiles
+    [
+      "a too-many-saves failure (write limit)",
+      { data: { status: "failed", failure: "too-many-saves" } },
+      { status: "failed", draft: DRAFT, failure: "too-many-saves" },
+    ],
+    [
+      "a too-many-uploads failure (write limit)",
+      { data: { status: "failed", failure: "too-many-uploads" } },
+      { status: "failed", draft: DRAFT, failure: "too-many-uploads" },
+    ],
   ])("maps %s", (_case, response, expected) => {
     expect(toFieldFormState(response, DRAFT)).toEqual(expected);
   });
