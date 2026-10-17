@@ -14,10 +14,10 @@ describe("PoemSearch", () => {
     const user = userEvent.setup();
     render(<PoemSearch />);
 
-    const clearButton = screen.getByRole("button", { name: "Clear" });
+    const clearButton = screen.getByRole("button", { name: "Очистить" });
     expect(clearButton).toBeDisabled();
 
-    await user.type(screen.getByRole("searchbox", { name: "Search poems" }), "frost");
+    await user.type(screen.getByRole("searchbox", { name: "Поиск стихов" }), "frost");
     expect(usePoemsUiStore.getState().searchQuery).toBe("frost");
     expect(clearButton).toBeEnabled();
 

@@ -6,12 +6,12 @@ TBD - created by archiving change add-supabase-auth. Update Purpose after archiv
 ## Requirements
 
 ### Requirement: Sign-in page (FR-1)
-`/login` SHALL render a sign-in form with a labelled email field, a labelled password field, a "Sign in" submit button, and a link to `/signup`.
+`/login` SHALL render a sign-in form with a labelled email field, a labelled password field, a "Войти" submit button, and a link to `/signup`.
 
 #### Scenario: Sign-in page renders
 - **GIVEN** the app is running
 - **WHEN** a browser requests `/login`
-- **THEN** the page shows a textbox labelled "Email", a password input labelled "Password", a button "Sign in", and a link with `href` `/signup`
+- **THEN** the page shows a textbox labelled "Электронная почта", a password input labelled "Пароль", a button "Войти", and a link with `href` `/signup`
 
 ### Requirement: Sign-in submission (FR-2)
 The sign-in form SHALL call `signInAction`. The action SHALL validate input on the server against `signInSchema` (a valid email and a non-empty password) before any Supabase call. Invalid input SHALL return field errors, which the form shows. Valid input SHALL call Supabase `signInWithPassword`. On success the action SHALL set the session cookies and redirect to `/`. On failure the form SHALL show one form-level message chosen by failure kind. The wrong-credentials message SHALL be the same whether or not the email is registered.
@@ -31,38 +31,38 @@ The sign-in form SHALL call `signInAction`. The action SHALL validate input on t
 #### Scenario: Wrong credentials
 - **GIVEN** `signInWithPassword` returns error code `invalid_credentials`
 - **WHEN** the form is submitted
-- **THEN** a `role="alert"` element reads "Incorrect email or password."
+- **THEN** a `role="alert"` element reads "Неверный адрес электронной почты или пароль."
 
 #### Scenario: Email not confirmed
 - **GIVEN** `signInWithPassword` returns error code `email_not_confirmed`
 - **WHEN** the form is submitted
-- **THEN** the alert reads "Confirm your email first. Check your inbox for the link."
+- **THEN** the alert reads "Сначала подтвердите адрес электронной почты: ссылка в письме, которое мы отправили."
 
 #### Scenario: Rate limited
 - **GIVEN** `signInWithPassword` returns error code `over_request_rate_limit` or HTTP status 429
 - **WHEN** the form is submitted
-- **THEN** the alert reads "Too many attempts. Try again in a few minutes."
+- **THEN** the alert reads "Слишком много попыток. Попробуйте через несколько минут."
 
 #### Scenario: Supabase not configured
 - **GIVEN** creating the server client throws `SupabaseConfigError`
 - **WHEN** the form is submitted
-- **THEN** the alert reads "Sign-in is unavailable right now."
+- **THEN** the alert reads "Вход сейчас недоступен."
 
 #### Scenario: Any other failure
 - **GIVEN** `signInWithPassword` returns any other error, or the action result carries `serverError`
 - **WHEN** the form is submitted
-- **THEN** the alert reads "Something went wrong. Try again."
+- **THEN** the alert reads "Что-то пошло не так. Попробуйте ещё раз."
 
 ### Requirement: Sign-up page (FR-3)
-`/signup` SHALL render a sign-up form with a labelled email field, a labelled password field, a "Create account" submit button, and a link to `/login`.
+`/signup` SHALL render a sign-up form with a labelled email field, a labelled password field, a "Зарегистрироваться" submit button, and a link to `/login`.
 
 #### Scenario: Sign-up page renders
 - **GIVEN** the app is running
 - **WHEN** a browser requests `/signup`
-- **THEN** the page shows labelled "Email" and "Password" inputs, a button "Create account", and a link with `href` `/login`
+- **THEN** the page shows labelled "Электронная почта" and "Пароль" inputs, a button "Зарегистрироваться", and a link with `href` `/login`
 
 ### Requirement: Sign-up submission (FR-4)
-The sign-up form SHALL call `signUpAction`. The action SHALL validate on the server against `signUpSchema` (a valid email and a password of at least 8 characters, `MIN_PASSWORD_LENGTH`). Valid input SHALL call Supabase `signUp`. Success SHALL replace the form with a "Check your email" message naming the address, and the message SHALL be identical whether or not the address was already registered. A `weak_password` error SHALL show on the password field. Rate limit, missing config, other failures, and server errors SHALL show form-level messages.
+The sign-up form SHALL call `signUpAction`. The action SHALL validate on the server against `signUpSchema` (a valid email and a password of at least 8 characters, `MIN_PASSWORD_LENGTH`). Valid input SHALL call Supabase `signUp`. Success SHALL replace the form with a "Проверьте почту" message naming the address, and the message SHALL be identical whether or not the address was already registered. A `weak_password` error SHALL show on the password field. Rate limit, missing config, other failures, and server errors SHALL show form-level messages.
 
 #### Scenario: Short password is rejected on the server
 - **GIVEN** `signUpAction` is called with a valid email and a 7-character password
@@ -73,17 +73,17 @@ The sign-up form SHALL call `signUpAction`. The action SHALL validate on the ser
 #### Scenario: Successful sign-up
 - **GIVEN** `signUp` resolves without error
 - **WHEN** the reader submits "reader@example.com" and a valid password
-- **THEN** the form is replaced by a message containing "Check your email" and "reader@example.com"
+- **THEN** the form is replaced by a message containing "Проверьте почту" and "reader@example.com"
 
 #### Scenario: Already-registered address
 - **GIVEN** `signUp` resolves without error and returns a user with an empty `identities` array
 - **WHEN** the form is submitted
-- **THEN** the same "Check your email" message is shown
+- **THEN** the same "Проверьте почту" message is shown
 
 #### Scenario: Weak password rejected by Supabase
 - **GIVEN** `signUp` returns error code `weak_password`
 - **WHEN** the form is submitted
-- **THEN** the password field shows "Choose a stronger password."
+- **THEN** the password field shows "Придумайте пароль надёжнее."
 
 #### Scenario: Other sign-up failures
 - **GIVEN** one of these:
@@ -92,9 +92,9 @@ The sign-up form SHALL call `signUpAction`. The action SHALL validate on the ser
   - `signUp` returns any other error, or the result carries `serverError`.
 - **WHEN** the form is submitted
 - **THEN** the alert reads, for each case in that order:
-  - "Too many attempts. Try again in a few minutes."
-  - "Sign-up is unavailable right now."
-  - "Something went wrong. Try again."
+  - "Слишком много попыток. Попробуйте через несколько минут."
+  - "Регистрация сейчас недоступна."
+  - "Что-то пошло не так. Попробуйте ещё раз."
 
 ### Requirement: Email confirmation route (FR-5)
 `GET /auth/confirm` SHALL verify `token_hash` with Supabase `verifyOtp` when `type` is `email`.
@@ -102,7 +102,7 @@ The sign-up form SHALL call `signUpAction`. The action SHALL validate on the ser
 - A missing hash, any other `type`, a failed verification, or missing config SHALL redirect with 303 to `/login?error=confirm-failed`.
 - The handler SHALL read no redirect-target parameter.
 
-`/login` SHALL show "That confirmation link is invalid or has expired. Sign in, or sign up again to get a new link." when `error=confirm-failed` is present.
+`/login` SHALL show "Ссылка для подтверждения недействительна или устарела. Войдите или зарегистрируйтесь снова, чтобы получить новую ссылку." when `error=confirm-failed` is present.
 
 #### Scenario: Valid link
 - **GIVEN** `verifyOtp` succeeds
@@ -201,51 +201,51 @@ Relative to `main`, the change SHALL add exactly the runtime dependencies `@supa
 - **THEN** exactly the three named dependencies are added and there are no color matches
 
 ### Requirement: Session-aware header (FR-7)
-The root layout SHALL render a `<header>` with a link to `/` showing the site name, an "Наши авторы" link to `/authors` for every visitor, and a session part rendered on the server, inside a `<Suspense>` boundary, from the request's session cookies. The session part SHALL show a "Sign in" link to `/login` when the request has no valid session, and a "Мастерская поэта" link to `/account` plus a "Sign out" button when it has one. When the session can't be checked (Supabase unreachable or failing, or its config missing), it SHALL show only the empty placeholder it shows while loading (add-author-profiles FR-20). The header SHALL NOT show the reader's email. No code in the browser SHALL read the session. The two navigation links come from add-author-profiles FR-3.
+The root layout SHALL render a `<header>` with a link to `/` showing the site name, an "Наши авторы" link to `/authors` for every visitor, and a session part rendered on the server, inside a `<Suspense>` boundary, from the request's session cookies. The session part SHALL show a "Войти" link to `/login` when the request has no valid session, and a "Мастерская поэта" link to `/account` plus a "Выйти" button when it has one. When the session can't be checked (Supabase unreachable or failing, or its config missing), it SHALL show only the empty placeholder it shows while loading (add-author-profiles FR-20). The header SHALL NOT show the reader's email. No code in the browser SHALL read the session. The two navigation links come from add-author-profiles FR-3.
 
 #### Scenario: Signed out
 - **GIVEN** a request with no session cookies
 - **WHEN** any page renders
-- **THEN** the header shows the site-name link to `/`, a link "Наши авторы" with `href` `/authors`, and a link "Sign in" with `href` `/login`
-- **AND** there is no "Sign out" button and no "Мастерская поэта" link
+- **THEN** the header shows the site-name link to `/`, a link "Наши авторы" with `href` `/authors`, and a link "Войти" with `href` `/login`
+- **AND** there is no "Выйти" button and no "Мастерская поэта" link
 
 #### Scenario: Signed in
 - **GIVEN** a request whose session cookies hold a valid session for "reader@example.com"
 - **WHEN** any page renders
-- **THEN** the header shows "Наши авторы" (`/authors`), "Мастерская поэта" (`/account`), and a "Sign out" button, and no "Sign in" link
+- **THEN** the header shows "Наши авторы" (`/authors`), "Мастерская поэта" (`/account`), and a "Выйти" button, and no "Войти" link
 - **AND** "reader@example.com" does not appear in the header
 
 #### Scenario: Session check fails
 - **GIVEN** the server's session check gets no claims or a non-retryable Supabase error (an expired or invalid token); an unreachable or failing Supabase is "Session check unavailable" below (add-author-profiles FR-20)
 - **WHEN** the header renders
-- **THEN** it shows the "Sign in" link and "Наши авторы", and the page still renders
+- **THEN** it shows the "Войти" link and "Наши авторы", and the page still renders
 
 #### Scenario: Session check unavailable
 - **GIVEN** the server's session check gets a retryable Supabase error (unreachable, or status 500 or above), a thrown error, or no Supabase config
 - **WHEN** the header renders
-- **THEN** it shows "Наши авторы" and the empty placeholder, with no "Sign in", "Sign out", or "Мастерская поэта"
+- **THEN** it shows "Наши авторы" and the empty placeholder, with no "Войти", "Выйти", or "Мастерская поэта"
 - **AND** the page still renders
 
 #### Scenario: Pending session check
 - **GIVEN** the session check has not resolved yet
 - **WHEN** the header's Suspense fallback renders
-- **THEN** neither "Sign in", "Sign out", nor "Мастерская поэта" is present
+- **THEN** neither "Войти", "Выйти", nor "Мастерская поэта" is present
 - **AND** "Наши авторы" is present
 
 ### Requirement: Sign out from the header (FR-7a)
-"Sign out" SHALL call `signOutAction`, which calls Supabase `signOut({ scope: "local" })`. On success the action SHALL refresh the server-rendered tree, so the header shows "Sign in" without a full reload. On failure the header SHALL keep "Sign out" and show "Couldn't sign out. Try again." in a `role="alert"` element.
+"Выйти" SHALL call `signOutAction`, which calls Supabase `signOut({ scope: "local" })`. On success the action SHALL refresh the server-rendered tree, so the header shows "Войти" without a full reload. On failure the header SHALL keep "Выйти" and show "Не удалось выйти. Попробуйте ещё раз." in a `role="alert"` element.
 
 #### Scenario: Sign out
 - **GIVEN** a signed-in header
-- **WHEN** the reader clicks "Sign out" and Supabase `signOut` succeeds
+- **WHEN** the reader clicks "Выйти" and Supabase `signOut` succeeds
 - **THEN** the action called `signOut` with `scope: "local"` and refreshed the server-rendered tree
-- **AND** the header then shows "Sign in"
+- **AND** the header then shows "Войти"
 
 #### Scenario: Sign out fails
 - **GIVEN** a signed-in header
-- **WHEN** the reader clicks "Sign out" and `signOutAction` returns `{ ok: false }` or a `serverError`
-- **THEN** "Sign out" is still shown
-- **AND** an alert reads "Couldn't sign out. Try again."
+- **WHEN** the reader clicks "Выйти" and `signOutAction` returns `{ ok: false }` or a `serverError`
+- **THEN** "Выйти" is still shown
+- **AND** an alert reads "Не удалось выйти. Попробуйте ещё раз."
 - **AND** no refresh happened
 
 ### Requirement: Supabase configuration validation (FR-8)
@@ -277,7 +277,7 @@ Invalid config SHALL raise `SupabaseConfigError` naming the variables, never the
 #### Scenario: Header with invalid config
 - **GIVEN** Supabase config is invalid
 - **WHEN** any page renders
-- **THEN** the header shows the "Sign in" link to `/login`
+- **THEN** the header shows the "Войти" link to `/login`
 
 ### Requirement: Rendering modes with a session-aware header (NFR-2)
 `npm run build` SHALL succeed. Every route that renders the root layout and is not dynamic SHALL be partially prerendered: a static shell, with the header's session part streamed per request. Dynamic routes SHALL stay dynamic, and `/` SHALL keep its cache lifetimes (Revalidate 1m, Expire 1h).

@@ -12,12 +12,12 @@ test("signing in with a wrong password shows the wrong-credentials alert and kee
   await page.goto("/login", { waitUntil: "networkidle" });
   await expect(page.locator("form")).toHaveCount(1);
 
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill("wrong-password-123");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Электронная почта").fill(email);
+  await page.getByLabel("Пароль").fill("wrong-password-123");
+  await page.getByRole("button", { name: "Войти" }).click();
 
-  await expect(page.getByRole("main").getByRole("alert")).toHaveText("Incorrect email or password.");
-  await expect(page.getByLabel("Email")).toHaveValue(email);
-  await expect(page.getByLabel("Password")).toHaveValue("");
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText("Неверный адрес электронной почты или пароль.");
+  await expect(page.getByLabel("Электронная почта")).toHaveValue(email);
+  await expect(page.getByLabel("Пароль")).toHaveValue("");
   await expect(page).toHaveURL("/login");
 });

@@ -32,7 +32,7 @@ describe("PoemList", () => {
   it("shows a loading state, then the fetched poems", async () => {
     renderWithQueryClient();
 
-    expect(screen.getByText("Loading poems…")).toBeInTheDocument();
+    expect(screen.getByText("Загрузка стихов…")).toBeInTheDocument();
     expect(await screen.findAllByRole("article")).toHaveLength(3);
     expect(screen.getByRole("heading", { name: "Ozymandias" })).toBeInTheDocument();
   });
@@ -53,7 +53,7 @@ describe("PoemList", () => {
 
     act(() => usePoemsUiStore.getState().setSearchQuery("no such poem"));
 
-    expect(screen.getByText("No poems match your search.")).toBeInTheDocument();
+    expect(screen.getByText("По вашему запросу стихов не найдено.")).toBeInTheDocument();
   });
 
   // implements FR-4 of add-feedback-color-tokens
@@ -62,7 +62,7 @@ describe("PoemList", () => {
     renderWithQueryClient();
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Could not load poems.");
+    expect(alert).toHaveTextContent("Не удалось загрузить стихи.");
     expect(alert).toHaveClass("border-danger", "border-l-4");
   });
 });

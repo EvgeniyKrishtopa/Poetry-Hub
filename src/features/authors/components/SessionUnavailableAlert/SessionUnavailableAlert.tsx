@@ -6,7 +6,7 @@ import { RetryButton } from "../RetryButton/RetryButton";
 
 /**
  * The account pages' answer when the session can't be checked (FR-20): say so instead of treating the
- * reader as signed out. A full-width danger alert with «Повторить» below it (the approved mockup).
+ * reader as signed out. A full-width danger alert with the RETRY_LABEL button below it (the approved mockup).
  */
 export function SessionUnavailableAlert() {
   return (

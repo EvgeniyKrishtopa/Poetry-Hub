@@ -24,8 +24,8 @@ export function SignUpForm() {
       <Alert tone="success" className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">{CHECK_EMAIL_TITLE}</h2>
         <p className="font-normal">
-          We sent a confirmation link to <strong>{state.email}</strong>. Open it to finish creating your
-          account.
+          Мы отправили ссылку для подтверждения на <strong>{state.email}</strong>. Откройте её, чтобы
+          завершить регистрацию.
         </p>
       </Alert>
     );
@@ -39,7 +39,7 @@ export function SignUpForm() {
     <form action={formAction} noValidate className="flex w-full flex-col gap-4">
       {formError && <Alert tone="danger">{formError}</Alert>}
       <TextField
-        label="Email"
+        label="Электронная почта"
         name="email"
         type="email"
         autoComplete="email"
@@ -47,19 +47,19 @@ export function SignUpForm() {
         error={fieldErrors.email}
       />
       <TextField
-        label="Password"
+        label="Пароль"
         name="password"
         type="password"
         autoComplete="new-password"
         error={fieldErrors.password}
       />
       <Button type="submit" disabled={pending}>
-        Create account
+        Зарегистрироваться
       </Button>
       <p className="text-sm text-muted">
-        Already have an account?{" "}
+        Уже есть аккаунт?{" "}
         <Link href={SIGN_IN_PATH} className="text-accent underline">
-          Sign in
+          Войти
         </Link>
       </p>
     </form>

@@ -11,14 +11,14 @@ export function PoemList() {
   const { data: poems, isPending, isError } = usePoemsQuery();
   const searchQuery = usePoemsUiStore((state) => state.searchQuery);
 
-  if (isPending) return <p className="text-muted">Loading poems…</p>;
-  if (isError) return <Alert tone="danger">Could not load poems.</Alert>;
+  if (isPending) return <p className="text-muted">Загрузка стихов…</p>;
+  if (isError) return <Alert tone="danger">Не удалось загрузить стихи.</Alert>;
 
   // Derived on render, not stored: server data + UI state -> visible list.
   const visiblePoems = filterPoems(poems, searchQuery);
 
   if (visiblePoems.length === 0) {
-    return <p className="text-muted">No poems match your search.</p>;
+    return <p className="text-muted">По вашему запросу стихов не найдено.</p>;
   }
 
   return (

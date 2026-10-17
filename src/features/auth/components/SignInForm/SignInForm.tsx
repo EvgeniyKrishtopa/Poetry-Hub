@@ -25,7 +25,7 @@ export function SignInForm({ initialError }: SignInFormProps) {
     <form action={formAction} noValidate className="flex w-full flex-col gap-4">
       {formError && <Alert tone="danger">{formError}</Alert>}
       <TextField
-        label="Email"
+        label="Электронная почта"
         name="email"
         type="email"
         autoComplete="email"
@@ -33,19 +33,19 @@ export function SignInForm({ initialError }: SignInFormProps) {
         error={fieldErrors.email}
       />
       <TextField
-        label="Password"
+        label="Пароль"
         name="password"
         type="password"
         autoComplete="current-password"
         error={fieldErrors.password}
       />
       <Button type="submit" disabled={pending}>
-        Sign in
+        Войти
       </Button>
       <p className="text-sm text-muted">
-        New here?{" "}
+        Впервые здесь?{" "}
         <Link href="/signup" className="text-accent underline">
-          Create an account
+          Создать аккаунт
         </Link>
       </p>
     </form>

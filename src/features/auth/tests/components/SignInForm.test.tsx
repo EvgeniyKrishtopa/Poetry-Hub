@@ -22,9 +22,9 @@ function mockResult(result: SignInActionResult) {
 
 async function submit(email = EMAIL, password = PASSWORD) {
   const user = userEvent.setup();
-  if (email) await user.type(screen.getByLabelText("Email"), email);
-  if (password) await user.type(screen.getByLabelText("Password"), password);
-  await user.click(screen.getByRole("button", { name: "Sign in" }));
+  if (email) await user.type(screen.getByLabelText("Электронная почта"), email);
+  if (password) await user.type(screen.getByLabelText("Пароль"), password);
+  await user.click(screen.getByRole("button", { name: "Войти" }));
 }
 
 describe("SignInForm", () => {
@@ -37,14 +37,14 @@ describe("SignInForm", () => {
   it("renders labelled inputs with the right autocomplete, a submit button, and a sign-up link", () => {
     render(<SignInForm />);
 
-    const email = screen.getByRole("textbox", { name: "Email" });
+    const email = screen.getByRole("textbox", { name: "Электронная почта" });
     expect(email).toHaveAttribute("type", "email");
     expect(email).toHaveAttribute("autocomplete", "email");
-    const password = screen.getByLabelText("Password");
+    const password = screen.getByLabelText("Пароль");
     expect(password).toHaveAttribute("type", "password");
     expect(password).toHaveAttribute("autocomplete", "current-password");
-    expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
-    expect(screen.getByRole("link", { name: /create an account/i })).toHaveAttribute("href", "/signup");
+    expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled();
+    expect(screen.getByRole("link", { name: "Создать аккаунт" })).toHaveAttribute("href", "/signup");
     expect(email.closest("form")).toHaveAttribute("novalidate");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -64,7 +64,7 @@ describe("SignInForm", () => {
     mockResult({
       validationErrors: {
         formErrors: [],
-        fieldErrors: { email: ["Enter a valid email address."], password: ["Enter your password."] },
+        fieldErrors: { email: ["Введите корректный адрес электронной почты."], password: ["Введите пароль."] },
       },
     });
     render(<SignInForm />);
@@ -72,8 +72,8 @@ describe("SignInForm", () => {
     await submit("not-an-email", "");
 
     for (const [label, message] of [
-      ["Email", "Enter a valid email address."],
-      ["Password", "Enter your password."],
+      ["Электронная почта", "Введите корректный адрес электронной почты."],
+      ["Пароль", "Введите пароль."],
     ]) {
       const input = await screen.findByLabelText(label);
       expect(input).toHaveAttribute("aria-invalid", "true");
@@ -83,11 +83,11 @@ describe("SignInForm", () => {
 
   // implements FR-2 of add-supabase-auth
   it.each<[AuthFailure, string]>([
-    ["invalid-credentials", "Incorrect email or password."],
-    ["email-not-confirmed", "Confirm your email first. Check your inbox for the link."],
-    ["rate-limited", "Too many attempts. Try again in a few minutes."],
-    ["unavailable", "Sign-in is unavailable right now."],
-    ["unknown", "Something went wrong. Try again."],
+    ["invalid-credentials", "Неверный адрес электронной почты или пароль."],
+    ["email-not-confirmed", "Сначала подтвердите адрес электронной почты: ссылка в письме, которое мы отправили."],
+    ["rate-limited", "Слишком много попыток. Попробуйте через несколько минут."],
+    ["unavailable", "Вход сейчас недоступен."],
+    ["unknown", "Что-то пошло не так. Попробуйте ещё раз."],
   ])("shows the %s alert and keeps the email", async (failure, message) => {
     mockResult({ data: { status: "failed", failure } });
     render(<SignInForm />);
@@ -95,17 +95,17 @@ describe("SignInForm", () => {
     await submit();
 
     expect(await screen.findByRole("alert")).toHaveTextContent(message);
-    expect(screen.getByLabelText("Email")).toHaveValue(EMAIL);
-    expect(screen.getByLabelText("Password")).toHaveValue("");
+    expect(screen.getByLabelText("Электронная почта")).toHaveValue(EMAIL);
+    expect(screen.getByLabelText("Пароль")).toHaveValue("");
   });
 
   it("shows the generic alert for a serverError", async () => {
-    mockResult({ serverError: "Something went wrong. Try again." });
+    mockResult({ serverError: "Что-то пошло не так. Попробуйте ещё раз." });
     render(<SignInForm />);
 
     await submit();
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong. Try again.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Что-то пошло не так. Попробуйте ещё раз.");
   });
 
   // implements NFR-3 of add-supabase-auth
@@ -116,10 +116,10 @@ describe("SignInForm", () => {
 
     await submit();
 
-    expect(screen.getByRole("button", { name: "Sign in" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Войти" })).toBeDisabled();
     resolve({ data: { status: "failed", failure: "unknown" } });
     expect(await screen.findByRole("alert")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled();
   });
 
   // implements FR-5 of add-supabase-auth
@@ -131,7 +131,7 @@ describe("SignInForm", () => {
 
     await submit();
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Incorrect email or password.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Неверный адрес электронной почты или пароль.");
   });
 });
 
@@ -143,16 +143,16 @@ describe("SignInForm feedback tones", () => {
   // implements FR-2 of add-feedback-color-tokens
   it("shows field errors in danger, with a danger border kept while focused", async () => {
     mockResult({
-      validationErrors: { formErrors: [], fieldErrors: { email: ["Enter a valid email address."] } },
+      validationErrors: { formErrors: [], fieldErrors: { email: ["Введите корректный адрес электронной почты."] } },
     });
     render(<SignInForm />);
 
     await submit("not-an-email", "");
 
-    const email = await screen.findByLabelText("Email");
+    const email = await screen.findByLabelText("Электронная почта");
     expect(email).toHaveAttribute("aria-invalid", "true");
     expect(email).toHaveClass("aria-invalid:border-danger", "aria-invalid:focus:border-danger", "focus:border-accent");
-    expect(screen.getByText("Enter a valid email address.")).toHaveClass("text-danger");
+    expect(screen.getByText("Введите корректный адрес электронной почты.")).toHaveClass("text-danger");
   });
 
   // implements FR-4 of add-feedback-color-tokens
@@ -163,7 +163,7 @@ describe("SignInForm feedback tones", () => {
     await submit();
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Incorrect email or password.");
+    expect(alert).toHaveTextContent("Неверный адрес электронной почты или пароль.");
     expect(alert).toHaveClass("border-danger", "border-l-4");
   });
 });

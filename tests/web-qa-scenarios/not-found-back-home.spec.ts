@@ -7,9 +7,9 @@ test("unknown URL shows the 404 screen and links back home", async ({ page }) =>
   const response = await page.goto("/does-not-exist");
 
   expect(response?.status()).toBe(HTTP_NOT_FOUND);
-  await expect(page.getByRole("heading", { level: 1, name: "Page not found" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Страница не найдена" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Back to the home page" }).click();
+  await page.getByRole("link", { name: "На главную" }).click();
 
   await expect(page).toHaveURL("/");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

@@ -8,12 +8,12 @@ describe("NotFound", () => {
   it("shows the not-found heading", () => {
     render(<NotFound />);
 
-    expect(screen.getByRole("heading", { level: 1, name: "Page not found" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Страница не найдена" })).toBeInTheDocument();
   });
 
   it("links back to the home page", () => {
     render(<NotFound />);
 
-    expect(screen.getByRole("link", { name: "Back to the home page" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "На главную" })).toHaveAttribute("href", "/");
   });
 });

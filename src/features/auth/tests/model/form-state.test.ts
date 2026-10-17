@@ -15,7 +15,7 @@ const PASSWORD = "secret-password-1";
 
 const validationErrors = {
   formErrors: [],
-  fieldErrors: { email: ["Enter a valid email address.", "second"], password: ["Enter your password."] },
+  fieldErrors: { email: ["Введите корректный адрес электронной почты.", "second"], password: ["Введите пароль."] },
 };
 
 const FAILURES: readonly AuthFailure[] = [
@@ -39,10 +39,10 @@ describe("toSignInFormState", () => {
       {
         status: "invalid",
         email: EMAIL,
-        fieldErrors: { email: "Enter a valid email address.", password: "Enter your password." },
+        fieldErrors: { email: "Введите корректный адрес электронной почты.", password: "Введите пароль." },
       },
     ],
-    ["serverError", { serverError: "Something went wrong. Try again." }, { status: "failed", email: EMAIL, failure: "unknown" }],
+    ["serverError", { serverError: "Что-то пошло не так. Попробуйте ещё раз." }, { status: "failed", email: EMAIL, failure: "unknown" }],
     ["an empty result", {}, { status: "failed", email: EMAIL, failure: "unknown" }],
     ...FAILURES.map((failure): [string, AuthActionResult<SignInResult>, SignInFormState] => [
       `data.failure ${failure}`,
@@ -62,15 +62,15 @@ describe("toSignUpFormState", () => {
   it.each<[string, AuthActionResult<SignUpResult>, SignUpFormState]>([
     [
       "validationErrors",
-      { validationErrors: { formErrors: [], fieldErrors: { password: ["Use at least 8 characters."] } } },
-      { status: "invalid", email: EMAIL, fieldErrors: { password: "Use at least 8 characters." } },
+      { validationErrors: { formErrors: [], fieldErrors: { password: ["Не менее 8 символов."] } } },
+      { status: "invalid", email: EMAIL, fieldErrors: { password: "Не менее 8 символов." } },
     ],
-    ["serverError", { serverError: "Something went wrong. Try again." }, { status: "failed", email: EMAIL, failure: "unknown" }],
+    ["serverError", { serverError: "Что-то пошло не так. Попробуйте ещё раз." }, { status: "failed", email: EMAIL, failure: "unknown" }],
     ["check-email", { data: { status: "check-email", email: EMAIL } }, { status: "check-email", email: EMAIL }],
     [
       "weak-password",
       { data: { status: "failed", failure: "weak-password" } },
-      { status: "invalid", email: EMAIL, fieldErrors: { password: "Choose a stronger password." } },
+      { status: "invalid", email: EMAIL, fieldErrors: { password: "Придумайте пароль надёжнее." } },
     ],
     ...FAILURES.map((failure): [string, AuthActionResult<SignUpResult>, SignUpFormState] => [
       `data.failure ${failure}`,

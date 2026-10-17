@@ -28,7 +28,7 @@ src/
 │   ├── providers.tsx         # QueryClientProvider (+ devtools)
 │   └── globals.css           # Tailwind import + design tokens
 ├── features/                 # One folder per business feature
-│   ├── auth/                 # Sign-up, sign-in, sign-out, the header's "Sign in" / "Sign out" part
+│   ├── auth/                 # Sign-up, sign-in, sign-out, the header's «Войти» / «Выйти» part
 │   │   ├── actions/          # Server Actions ("use server", *.actions.ts) + the feature's action client
 │   │   └── …                 # dal/ (confirmSignUp, getSessionState, getCurrentUserId, requireSession), model/, components/, tests/, index.ts (roles as below)
 │   ├── authors/              # Author profiles: the directory, public author pages, the account section, the editor, the header's «Наши авторы» link

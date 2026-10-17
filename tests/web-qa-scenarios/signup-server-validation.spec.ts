@@ -7,16 +7,16 @@ test("sign-up shows server-side field errors for an invalid email and a short pa
   await page.goto("/signup", { waitUntil: "networkidle" });
   await expect(page.locator("form")).toHaveCount(1);
 
-  await page.getByLabel("Email").fill("not-an-email");
-  await page.getByLabel("Password").fill("1234567");
-  await page.getByRole("button", { name: "Create account" }).click();
+  await page.getByLabel("Электронная почта").fill("not-an-email");
+  await page.getByLabel("Пароль").fill("1234567");
+  await page.getByRole("button", { name: "Зарегистрироваться" }).click();
 
-  const email = page.getByLabel("Email");
-  const password = page.getByLabel("Password");
+  const email = page.getByLabel("Электронная почта");
+  const password = page.getByLabel("Пароль");
   await expect(email).toHaveAttribute("aria-invalid", "true");
-  await expect(email).toHaveAccessibleDescription("Enter a valid email address.");
+  await expect(email).toHaveAccessibleDescription("Введите корректный адрес электронной почты.");
   await expect(password).toHaveAttribute("aria-invalid", "true");
-  await expect(password).toHaveAccessibleDescription("Use at least 8 characters.");
+  await expect(password).toHaveAccessibleDescription("Не менее 8 символов.");
   await expect(email).toHaveValue("not-an-email");
   await expect(password).toHaveValue("");
 });

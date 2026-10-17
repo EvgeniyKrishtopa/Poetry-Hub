@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { HeaderAuthLinks } from "@/features/auth";
 import { AuthorsNavLink } from "@/features/authors";
+import { CONTENT_LANG } from "@/shared/config/constants";
 import { siteConfig } from "@/shared/config/site";
 
 import { Providers } from "./providers";
@@ -11,7 +12,7 @@ import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
 });
 
 const geistMono = Geist_Mono({
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang={CONTENT_LANG}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">

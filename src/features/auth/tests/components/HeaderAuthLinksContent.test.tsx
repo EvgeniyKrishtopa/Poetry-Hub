@@ -16,7 +16,7 @@ describe("HeaderAuthLinksContent", () => {
 
     const { container } = render(await HeaderAuthLinksContent());
 
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Выйти" })).toBeInTheDocument();
     expect(container.innerHTML).not.toContain(USER_ID);
   });
 
@@ -25,7 +25,7 @@ describe("HeaderAuthLinksContent", () => {
 
     render(await HeaderAuthLinksContent());
 
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("link", { name: "Войти" })).toHaveAttribute("href", "/login");
   });
 
   // implements FR-20 of add-author-profiles
