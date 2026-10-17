@@ -75,6 +75,7 @@ export function PhotoFieldEditor({ photoUrl, fullName, ...controls }: PhotoField
         disabled={editor.disabled}
         addPrompt={ADD_PROMPTS.photo}
         describedBy={editor.error ? errorId : undefined}
+        focusOnMount={editor.restoreFocus}
         onEdit={startEditing}
         onDelete={editor.remove}
       />

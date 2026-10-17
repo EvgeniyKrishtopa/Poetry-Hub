@@ -9,6 +9,8 @@ export interface FieldActionsProps {
   readonly addPrompt: string;
   /** The id of the field's error text, when it shows one. */
   readonly describedBy: string | undefined;
+  /** The first enabled button takes focus when it mounts: after Cancel or a settled action (NFR-5). */
+  readonly focusOnMount: boolean;
   readonly onEdit: () => void;
   readonly onDelete: () => void;
 }

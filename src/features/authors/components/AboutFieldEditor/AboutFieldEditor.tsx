@@ -62,6 +62,7 @@ export function AboutFieldEditor({ savedAbout, savedAlign, ...controls }: AboutF
         disabled={editor.disabled}
         addPrompt={ADD_PROMPTS.about}
         describedBy={editor.error ? errorId : undefined}
+        focusOnMount={editor.restoreFocus}
         onEdit={startEditing}
         onDelete={editor.remove}
       />
