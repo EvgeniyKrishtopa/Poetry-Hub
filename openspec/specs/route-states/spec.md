@@ -42,11 +42,11 @@ The error screen SHALL NOT render the thrown error's `message` or stack. When th
 - **THEN** no "Код ошибки" text is present
 
 ### Requirement: Retry from the error screen (FR-4)
-The error screen SHALL offer a "Попробовать снова" button that calls the `retry` function Next.js passes to the boundary exactly once per activation.
+The error screen SHALL offer a "Повторить" button that calls the `retry` function Next.js passes to the boundary exactly once per activation.
 
 #### Scenario: Reader retries
 - **GIVEN** the error screen is shown
-- **WHEN** the reader clicks "Попробовать снова"
+- **WHEN** the reader clicks "Повторить"
 - **THEN** `retry` has been called exactly once
 
 ### Requirement: Error logging (FR-5)

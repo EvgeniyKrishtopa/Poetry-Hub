@@ -50,7 +50,7 @@ describe("RootError", () => {
     const retry = vi.fn();
     render(<RootError error={errorWith("boom")} retry={retry} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Попробовать снова" }));
+    await userEvent.click(screen.getByRole("button", { name: "Повторить" }));
 
     expect(retry).toHaveBeenCalledTimes(1);
   });

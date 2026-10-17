@@ -22,7 +22,7 @@ export default function RootError({ error, retry }: RootErrorProps) {
       {error.digest && <p className="font-mono text-sm text-muted">Код ошибки: {error.digest}</p>}
       {/* retry() refetches from the server and resets the boundary. */}
       <Button className="self-start" onClick={() => retry()}>
-        Попробовать снова
+        Повторить
       </Button>
     </main>
   );

@@ -60,7 +60,7 @@ light theme, below WCAG AA for text. Inside an `Alert` the tone colours only the
 | State | Name in this project | What it looks like |
 | --- | --- | --- |
 | loading | `Loading` (`src/app/loading.tsx`, route level) | skeleton blocks (`bg-surface animate-pulse`, off under reduced motion) plus a screen-reader-only "Загрузка…" status. Inside components there is no shared pattern (`PoemList` shows the text "Загрузка стихов…"; the header's session part shows an empty `min-w-24` placeholder as its `<Suspense>` fallback, with neither "Войти" nor "Выйти") |
-| error | `RootError` (`src/app/error.tsx`, route level) | heading "Что-то пошло не так", muted explanation, optional error digest in mono, and a "Попробовать снова" `Button`. Inside components, a danger `Alert` (form-level and list errors) or an inline `text-danger` paragraph (field errors, the header's sign-out failure) |
+| error | `RootError` (`src/app/error.tsx`, route level) | heading "Что-то пошло не так", muted explanation, optional error digest in mono, and a "Повторить" `Button`. Inside components, a danger `Alert` (form-level and list errors) or an inline `text-danger` paragraph (field errors, the header's sign-out failure) |
 | empty | no named component | muted text, e.g. "По вашему запросу стихов не найдено." in `PoemList` |
 | offline | none | not handled |
 
