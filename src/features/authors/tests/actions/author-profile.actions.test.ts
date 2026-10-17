@@ -11,8 +11,10 @@ import {
   savePhotoAction,
 } from "../../actions/author-profile.actions";
 import { clearProfileField, removePhoto, replacePhoto, writeOwnProfile } from "../../dal/author-profile-writes";
+import { consumeWriteAllowance } from "../../dal/write-allowance";
 import { getProfileFailureMessage, VALIDATION_MESSAGES } from "../../model/author-messages";
 import type { AuthorProfile } from "../../model/author.types";
+import { validatePhotoFile } from "../../model/validate-photo-file";
 
 vi.mock("next/cache", () => ({ updateTag: vi.fn() }));
 vi.mock("@/features/auth", () => ({ getSessionState: vi.fn() }));
@@ -22,6 +24,8 @@ vi.mock("../../dal/author-profile-writes", () => ({
   replacePhoto: vi.fn(),
   removePhoto: vi.fn(),
 }));
+vi.mock("../../dal/write-allowance", () => ({ consumeWriteAllowance: vi.fn() }));
+vi.mock("../../model/validate-photo-file", { spy: true });
 
 const USER_ID = "2b3c4d5e-6f70-4a1b-9c2d-3e4f5a6b7c8d";
 const PROFILE_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
@@ -49,6 +53,7 @@ describe("author profile actions", () => {
     for (const write of [writeOwnProfile, clearProfileField, replacePhoto, removePhoto]) {
       vi.mocked(write).mockResolvedValue({ ok: true, profile: PROFILE });
     }
+    vi.mocked(consumeWriteAllowance).mockResolvedValue({ ok: true });
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
@@ -232,6 +237,103 @@ describe("author profile actions", () => {
 
       expect(result.validationErrors?.fieldErrors.field).toHaveLength(1);
       expect(clearProfileField).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("the per-user write limit", () => {
+    const PROFILE_WRITES = [
+      ["saveNameAction", () => saveNameAction({ field: "first_name", value: NAME })],
+      ["saveAboutAction", () => saveAboutAction({ about: "Поэт", align: "left" })],
+      ["deleteProfileFieldAction (about)", () => deleteProfileFieldAction({ field: "about" })],
+      ["deleteProfileFieldAction (the photo)", () => deleteProfileFieldAction({ field: "photo" })],
+    ] as const;
+
+    function expectNoWrite() {
+      for (const write of [writeOwnProfile, clearProfileField, removePhoto, replacePhoto]) {
+        expect(write).not.toHaveBeenCalled();
+      }
+      expect(updateTag).not.toHaveBeenCalled();
+    }
+
+    // implements FR-21 of add-author-profiles
+    it.each(PROFILE_WRITES)("%s counts against the profile_write limit", async (_name, run) => {
+      await run();
+
+      expect(consumeWriteAllowance).toHaveBeenCalledExactlyOnceWith("profile_write");
+    });
+
+    // implements FR-21, FR-17 of add-author-profiles
+    it.each(PROFILE_WRITES)("%s over the limit returns too-many-saves with no write and no tag expiry", async (_name, run) => {
+      vi.mocked(consumeWriteAllowance).mockResolvedValue({ ok: false, failure: "too-many-saves" });
+
+      const result = await run();
+
+      expect(result.data).toEqual({ status: "failed", failure: "too-many-saves" });
+      expectNoWrite();
+    });
+
+    // implements FR-21 of add-author-profiles
+    it("savePhotoAction over the limit returns too-many-uploads before reading the file's bytes", async () => {
+      vi.mocked(consumeWriteAllowance).mockResolvedValue({ ok: false, failure: "too-many-uploads" });
+      const photo = file(PNG_BYTES, "photo.png", "image/png");
+      const slice = vi.spyOn(photo, "slice");
+
+      const result = await savePhotoAction({ photo });
+
+      expect(consumeWriteAllowance).toHaveBeenCalledExactlyOnceWith("photo_upload");
+      expect(result.data).toEqual({ status: "failed", failure: "too-many-uploads" });
+      expect(validatePhotoFile).not.toHaveBeenCalled();
+      expect(slice).not.toHaveBeenCalled();
+      expectNoWrite();
+    });
+
+    // implements FR-21 of add-author-profiles
+    it("a photo that fails the content check has already used its upload attempt", async () => {
+      const result = await savePhotoAction({ photo: file(GIF_BYTES, "photo.jpg", "image/jpeg") });
+
+      expect(consumeWriteAllowance).toHaveBeenCalledExactlyOnceWith("photo_upload");
+      expect(validatePhotoFile).toHaveBeenCalledOnce();
+      expect(vi.mocked(consumeWriteAllowance).mock.invocationCallOrder[0]).toBeLessThan(
+        vi.mocked(validatePhotoFile).mock.invocationCallOrder[0] ?? 0,
+      );
+      expect(result.validationErrors?.fieldErrors.photo).toEqual([VALIDATION_MESSAGES.photoUnsupportedType]);
+      expect(replacePhoto).not.toHaveBeenCalled();
+    });
+
+    // implements FR-21, FR-9 of add-author-profiles
+    it.each(["unavailable", "unauthenticated", "unknown"] as const)(
+      "a failed limit check (%s) is returned as is, with no write",
+      async (failure) => {
+        vi.mocked(consumeWriteAllowance).mockResolvedValue({ ok: false, failure });
+
+        const result = await saveNameAction({ field: "first_name", value: NAME });
+
+        expect(result.data).toEqual({ status: "failed", failure });
+        expectNoWrite();
+      },
+    );
+
+    // implements FR-21 of add-author-profiles
+    it.each([
+      ["signed out", { state: "signed-out" }],
+      ["the session can't be checked", { state: "unknown" }],
+    ] as const)("consumes no allowance when %s", async (_label, session) => {
+      vi.mocked(getSessionState).mockResolvedValue(session);
+
+      await saveNameAction({ field: "first_name", value: NAME });
+      await savePhotoAction({ photo: file(PNG_BYTES, "photo.png", "image/png") });
+
+      expect(consumeWriteAllowance).not.toHaveBeenCalled();
+    });
+
+    // implements FR-21 of add-author-profiles
+    it("consumes no allowance for an input the schema rejects", async () => {
+      const tooLarge = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "big.png", { type: "image/png" });
+
+      await saveNameAction({ field: "first_name", value: "я".repeat(61) });
+      await savePhotoAction({ photo: tooLarge });
+
+      expect(consumeWriteAllowance).not.toHaveBeenCalled();
     });
   });
 

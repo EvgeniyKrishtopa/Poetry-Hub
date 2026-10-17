@@ -7,8 +7,9 @@ import { getSessionState } from "@/features/auth";
 import { SESSION_STATE } from "@/shared/config/constants";
 
 import { clearProfileField, removePhoto, replacePhoto, writeOwnProfile } from "../dal/author-profile-writes";
+import { consumeWriteAllowance } from "../dal/write-allowance";
 import { AUTHORS_TAG, authorTag } from "../model/author-cache-tags";
-import { ACTION_STATUS } from "../model/author.constants";
+import { ACTION_STATUS, WRITE_SCOPES } from "../model/author.constants";
 import { PHOTO_FILE_ERROR_MESSAGES } from "../model/author-messages";
 import {
   deleteProfileFieldSchema,
@@ -16,13 +17,13 @@ import {
   saveNameSchema,
   savePhotoSchema,
 } from "../model/author-profile.schema";
-import type { ProfileActionResult, ProfileWriteResult, WriteAccess } from "../model/author.types";
+import type { ProfileActionResult, ProfileWriteResult, WriteAccess, WriteScope } from "../model/author.types";
 import { validatePhotoFile } from "../model/validate-photo-file";
 
 import { authorsActionClient } from "./action-client";
 
-// Each action resolves the user from the session, never from input (NFR-2), and on success
-// expires the directory's and the author's cache tags (FR-17).
+// Each action resolves the user from the session, never from input (NFR-2), counts against the
+// caller's write limit (FR-21), and on success expires the directory's and the author's cache tags (FR-17).
 
 const WRITE_ALLOWED: WriteAccess = { ok: true };
 const UNAUTHENTICATED: WriteAccess = {
@@ -54,8 +55,20 @@ async function writeAndExpire(write: () => Promise<ProfileWriteResult>): Promise
   return { status: ACTION_STATUS.saved, profile: result.profile };
 }
 
-async function runOwnerWrite(write: () => Promise<ProfileWriteResult>): Promise<ProfileActionResult> {
+/**
+ * The session, then one attempt counted against the caller's write limit for `scope` (FR-21, design D13),
+ * both before any other I/O. An attempt over the limit writes nothing, so it expires no cache tag.
+ */
+async function admitOwnerWrite(scope: WriteScope): Promise<WriteAccess> {
   const access = await checkWriteAccess();
+  if (!access.ok) return access;
+  const allowance = await consumeWriteAllowance(scope);
+  if (!allowance.ok) return { ok: false, result: { status: ACTION_STATUS.failed, failure: allowance.failure } };
+  return WRITE_ALLOWED;
+}
+
+async function runOwnerWrite(write: () => Promise<ProfileWriteResult>): Promise<ProfileActionResult> {
+  const access = await admitOwnerWrite(WRITE_SCOPES.profileWrite);
   if (!access.ok) return access.result;
   return writeAndExpire(write);
 }
@@ -75,8 +88,9 @@ export const saveAboutAction = authorsActionClient
 export const savePhotoAction = authorsActionClient
   .inputSchema(savePhotoSchema)
   .action(async ({ parsedInput: { photo } }): Promise<ProfileActionResult> => {
-    // The session first, so a signed-out caller never makes the server read the file.
-    const access = await checkWriteAccess();
+    // The session and the upload limit first, so neither a signed-out nor an over-limit caller makes the
+    // server read the file. A file that then fails the content check has used its attempt (FR-21).
+    const access = await admitOwnerWrite(WRITE_SCOPES.photoUpload);
     if (!access.ok) return access.result;
 
     // The browser ran the same check, but an action is a public endpoint (design D4). The stored

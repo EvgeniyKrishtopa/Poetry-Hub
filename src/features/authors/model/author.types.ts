@@ -1,4 +1,4 @@
-import type { ACTION_STATUS, FIELD_ACTION, FIELD_MODE, FORM_STATUS } from "./author.constants";
+import type { ACTION_STATUS, FIELD_ACTION, FIELD_MODE, FORM_STATUS, WRITE_SCOPES } from "./author.constants";
 
 export type NameField = "first_name" | "last_name";
 
@@ -9,6 +9,15 @@ export type AboutAlign = "left" | "center" | "right";
 
 /** Why a profile read or write failed, in the terms the editor shows (FR-9). */
 export type ProfileFailure = "unauthenticated" | "unavailable" | "unknown";
+
+/** Why a profile write failed: a read's failures, or the per-user write limit (FR-21). Reads stay narrow. */
+export type WriteFailure = ProfileFailure | "too-many-saves" | "too-many-uploads";
+
+/** Which per-user write limit an action counts against (FR-21). */
+export type WriteScope = (typeof WRITE_SCOPES)[keyof typeof WRITE_SCOPES];
+
+/** Whether the write limit lets this attempt through; when not, why (design D13). */
+export type WriteAllowance = { readonly ok: true } | { readonly ok: false; readonly failure: WriteFailure };
 
 export type ImageType = "png" | "jpeg";
 
@@ -66,7 +75,7 @@ export type PublicAuthorsResult =
 /** What every profile action returns as its data. */
 export type ProfileActionResult =
   | { readonly status: typeof ACTION_STATUS.saved; readonly profile: AuthorProfile | null }
-  | { readonly status: typeof ACTION_STATUS.failed; readonly failure: ProfileFailure };
+  | { readonly status: typeof ACTION_STATUS.failed; readonly failure: WriteFailure };
 
 /** Whether the session may write its own profile; when not, the action's result says why. */
 export type WriteAccess =
@@ -91,7 +100,7 @@ export type FieldFormState<Draft> =
   | { readonly status: typeof FORM_STATUS.idle }
   | { readonly status: typeof FORM_STATUS.saved }
   | { readonly status: typeof FORM_STATUS.invalid; readonly draft: Draft; readonly error: string }
-  | { readonly status: typeof FORM_STATUS.failed; readonly draft: Draft; readonly failure: ProfileFailure };
+  | { readonly status: typeof FORM_STATUS.failed; readonly draft: Draft; readonly failure: WriteFailure };
 
 export type FieldActionKind = (typeof FIELD_ACTION)[keyof typeof FIELD_ACTION];
 

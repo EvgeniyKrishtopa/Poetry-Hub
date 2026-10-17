@@ -12,6 +12,14 @@ describe("author messages", () => {
     expect(getProfileFailureMessage(failure)).toBe(message);
   });
 
+  // implements FR-21, NFR-8 of add-author-profiles
+  it.each([
+    ["too-many-saves", "Слишком много сохранений. Попробуйте через минуту."],
+    ["too-many-uploads", "Слишком много загрузок фото. Попробуйте через час."],
+  ] as const)("maps the write-limit failure %s to its Russian message", (failure, message) => {
+    expect(getProfileFailureMessage(failure)).toBe(message);
+  });
+
   // implements FR-11 of add-author-profiles
   it("formats the about counter against 1000, also over the limit", () => {
     expect(formatAboutCounter(2)).toBe("2 / 1000");

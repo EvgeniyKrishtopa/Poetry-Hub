@@ -1,5 +1,5 @@
 import { ABOUT_MAX_LENGTH } from "./author.constants";
-import type { AboutAlign, MarkdownFormat, PhotoFileError, ProfileFailure, ProfileField } from "./author.types";
+import type { AboutAlign, MarkdownFormat, PhotoFileError, ProfileField, WriteFailure } from "./author.types";
 
 // Every string of the proposal's UI copy table, verbatim and in Russian (NFR-8).
 
@@ -90,14 +90,16 @@ export const PHOTO_FILE_ERROR_MESSAGES: Readonly<Record<PhotoFileError, string>>
   "unsupported-type": VALIDATION_MESSAGES.photoUnsupportedType,
 };
 
-const FAILURE_MESSAGES: Readonly<Record<ProfileFailure, string>> = {
+const FAILURE_MESSAGES: Readonly<Record<WriteFailure, string>> = {
   unauthenticated: "Сессия истекла. Войдите снова.",
   unavailable: "Сохранение сейчас недоступно. Попробуйте позже.",
   unknown: "Что-то пошло не так. Попробуйте ещё раз.",
+  "too-many-saves": "Слишком много сохранений. Попробуйте через минуту.",
+  "too-many-uploads": "Слишком много загрузок фото. Попробуйте через час.",
 };
 
-/** The message shown under a field for a failed read or write (FR-9). */
-export function getProfileFailureMessage(failure: ProfileFailure): string {
+/** The message shown under a field for a failed read or write (FR-9, FR-21). */
+export function getProfileFailureMessage(failure: WriteFailure): string {
   return FAILURE_MESSAGES[failure];
 }
 

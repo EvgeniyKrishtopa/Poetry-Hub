@@ -47,5 +47,8 @@ export const FORM_STATUS = { idle: "idle", saved: "saved", invalid: "invalid", f
 /** The two actions a field runs: save its draft, or delete its value. */
 export const FIELD_ACTION = { save: "save", delete: "delete" } as const;
 
+/** The per-user write limits' scopes, mirrored by the `write_rate_limits.scope` check (FR-21, design D13). */
+export const WRITE_SCOPES = { profileWrite: "profile_write", photoUpload: "photo_upload" } as const;
+
 /** A field shows its value (view) or its input (edit). */
 export const FIELD_MODE = { view: "view", edit: "edit" } as const;
