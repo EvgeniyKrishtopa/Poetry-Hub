@@ -2,13 +2,13 @@ import { render, screen } from "@testing-library/react";
 import { Suspense, type ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 
-import { HeaderSession } from "../../components/HeaderSession/HeaderSession";
-import { HeaderSessionStatus } from "../../components/HeaderSessionStatus/HeaderSessionStatus";
+import { HeaderAuthLinks } from "../../components/HeaderAuthLinks/HeaderAuthLinks";
+import { HeaderAuthLinksContent } from "../../components/HeaderAuthLinksContent/HeaderAuthLinksContent";
 import { SignInFormWithError } from "../../components/SignInFormWithError/SignInFormWithError";
 import { SignInPanel } from "../../components/SignInPanel/SignInPanel";
 
 vi.mock("../../actions/auth.actions", () => ({ signInAction: vi.fn() }));
-vi.mock("../../dal/is-signed-in", () => ({ isSignedIn: vi.fn() }));
+vi.mock("../../dal/current-user", () => ({ getSessionState: vi.fn() }));
 
 interface SuspenseProps {
   fallback: ReactElement;
@@ -35,11 +35,11 @@ describe("SignInPanel", () => {
   });
 });
 
-describe("HeaderSession", () => {
+describe("HeaderAuthLinks", () => {
   it("wraps the session status in Suspense, with an empty placeholder as the fallback", () => {
-    const { fallback, children } = suspenseOf(HeaderSession());
+    const { fallback, children } = suspenseOf(HeaderAuthLinks());
 
-    expect(children.type).toBe(HeaderSessionStatus);
+    expect(children.type).toBe(HeaderAuthLinksContent);
 
     const { container } = render(fallback);
     expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");

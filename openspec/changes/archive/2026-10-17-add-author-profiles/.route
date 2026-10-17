@@ -1,0 +1,2 @@
+full
+# multiple modules: yes (new features/authors, auth header, app routes, shared/lib/supabase, next.config); schema change: yes (author_profiles table + storage bucket + RLS); contract change: yes (route-groups FR-8, auth header requirement, new public routes)

@@ -1,3 +1,6 @@
+import type { SessionState } from "@/shared/lib/supabase/claims";
+
 export interface AuthStatusProps {
-  readonly signedIn: boolean;
+  /** Only the state's name: no user id enters the render tree (ADR 0004). */
+  readonly session: SessionState;
 }

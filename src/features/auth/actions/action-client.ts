@@ -1,18 +1,14 @@
 import "server-only";
 
-import { createSafeActionClient } from "next-safe-action";
+import { createActionClient } from "@/shared/lib/safe-action/create-action-client";
 
 import { GENERIC_SERVER_ERROR } from "../model/auth-messages";
 
 /**
- * The client every auth Server Action is built with (design D2). An unexpected throw becomes
- * the generic `serverError`; only the error's `name` is logged, because its message or the
- * action input could carry the password.
+ * The client every auth Server Action is built with (design D2): the shared log-and-mask policy,
+ * because an error's message or the action input could carry the password.
  */
-export const authActionClient = createSafeActionClient({
-  handleServerError(error) {
-    console.error(`[auth] action failed: ${error.name}`);
-    return GENERIC_SERVER_ERROR;
-  },
-  defaultValidationErrorsShape: "flattened",
+export const authActionClient = createActionClient({
+  logPrefix: "auth",
+  genericMessage: GENERIC_SERVER_ERROR,
 });

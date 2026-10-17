@@ -45,9 +45,19 @@ Read before writing or changing a component, a helper, a type, a constant, or a 
 - Strict equality only (`===`, `!==`); no `== null`.
 - Plain `??` and `?.` stay allowed.
 - ESLint enforces all three bans: `logical-assignment-operators: ["error", "never"]`, `no-nested-ternary`, `eqeqeq`.
+- Success is an explicit value, never the absence of a failure. Don't return `Failure | null`, where `null` means "go on", and then branch with `if (x !== null) return x` or `x ?? next()`. Return a discriminated result with an explicit success member, and branch on it:
+
+  ```ts
+  type WriteAccess = { readonly ok: true } | { readonly ok: false; readonly result: ProfileActionResult };
+
+  const access = await checkWriteAccess();
+  if (!access.ok) return access.result;
+  ```
+
+  Existing examples: `PhotoFileCheck`, `MyProfileResult`, `WriteAccess` in `features/authors/model/author.types.ts`. `null` stays fine for a value that is genuinely absent, where `null` is the negative case: `getCurrentUserId(): Promise<string | null>` returns no user. No lint rule enforces this, so reviews do (PR #82).
 
 ## Route files compose, features render
 
 - A route file passes a feature only the request data it needs, e.g. `<SignInPanel error={searchParams.then((params) => params.error)} />`, and renders the feature's component.
-- Suspense boundaries and their fallbacks live inside the feature's component (`SignInPanel`, `HeaderSession`), not in the route file.
+- Suspense boundaries and their fallbacks live inside the feature's component (`SignInPanel`, `HeaderAuthLinks`), not in the route file.
 - TanStack Query prefetching and `HydrationBoundary` stay in the page (`docs/state-management.md`).

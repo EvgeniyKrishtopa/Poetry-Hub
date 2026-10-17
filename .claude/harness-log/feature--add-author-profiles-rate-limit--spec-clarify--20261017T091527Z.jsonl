@@ -1,0 +1,1 @@
+{"ts":"2026-10-17T09:15:27Z","kind":"finding","change":"add-author-profiles","gate":"spec-clarify","finding":"proposal.md:198 / tasks.md:306 — \"10 profile writes in the last minute\": sliding 60 s vs one fixed window from the first write","outcome":"fixed","ruleNumber":""}

@@ -20,7 +20,7 @@ Not yet built: route protection, password reset, a real poems backend (Supabase 
 - **TanStack Query v5** for server state, **Zustand v5** for client UI state
 - **Tailwind CSS v4** for layout and basic styling, **CSS Modules** for custom element styles
 - **Contentful** (Content Delivery API) for editorial content, **Zod** for validating it
-- **Supabase** (`@supabase/ssr`, `@supabase/supabase-js`) for identity and, later, reader content; **next-safe-action** for validated Server Actions
+- **Supabase** (`@supabase/ssr`, `@supabase/supabase-js`) for identity and, later, reader content; **next-safe-action** for validated Server Actions; **react-markdown** for author bios
 - **Vitest** + Testing Library for unit/component tests, **Playwright** for recorded browser scenarios
 
 ## Getting started
@@ -42,7 +42,7 @@ npm run dev                  # http://localhost:3000
 | `CONTENTFUL_ACCESS_TOKEN` | yes | Content Delivery API token |
 | `CONTENTFUL_ENVIRONMENT` | no | Contentful environment, defaults to `master` |
 | `CONTENTFUL_REVALIDATE_SECRET` | for the webhook | Shared secret for `POST /api/revalidate` (generate with `openssl rand -hex 32`) |
-| `NEXT_PUBLIC_SUPABASE_URL` | for auth | Project URL, exactly `https://<project-ref>.supabase.co` (plain `http://` only for `localhost`/`127.0.0.1`) |
+| `NEXT_PUBLIC_SUPABASE_URL` | for auth and author photos (also read at build time; see `docs/environment.md`) | Project URL, exactly `https://<project-ref>.supabase.co` (plain `http://` only for `localhost`/`127.0.0.1`) |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | for auth | The `sb_publishable_…` key. Never a secret or service-role key |
 
 The Contentful variables are server-only — never prefix them with `NEXT_PUBLIC_`. The two Supabase values are public by design (the publishable key is meant to be exposed). Without Contentful credentials the home page still renders, using the static greeting; without valid Supabase values the header shows "Sign in" and the auth forms report that sign-in is unavailable. Webhook setup, secret rotation, and the Supabase dashboard setup (confirmation email template, URL configuration, rate limits) are described in [`docs/environment.md`](docs/environment.md).

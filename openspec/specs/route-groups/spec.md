@@ -2,7 +2,9 @@
 
 ## Purpose
 Defines how the app's page routes are split into a `(public)` route group and an `(authorized)` route group, and what each group's layout may contain, so future routes land in the right group without changing URLs.
+
 ## Requirements
+
 ### Requirement: Home page in the public group (FR-7)
 The home page SHALL be served from `src/app/(public)/page.tsx` at URL `/`. Its behavior SHALL be: the CMS greeting with its static fallback, the poems list, and a cached render that revalidates every 60 seconds. Since migrate-to-cache-components, the cached render is a `"use cache"` page body with `cacheLife("minutes")` and `cacheTag("contentful")`, replacing the former `revalidate = 60` segment export. No `src/app/page.tsx` SHALL remain.
 
@@ -18,12 +20,18 @@ The home page SHALL be served from `src/app/(public)/page.tsx` at URL `/`. Its b
 - **THEN** the home greeting heading and the poem list render as before the change
 
 ### Requirement: Pass-through group layouts (FR-8)
-`src/app/(public)/layout.tsx` and `src/app/(authorized)/layout.tsx` SHALL render their `children` unchanged, with no wrapper element, data fetching, or auth logic, and `(authorized)/` SHALL contain no page.
+`src/app/(public)/layout.tsx` and `src/app/(authorized)/layout.tsx` SHALL render their `children` unchanged, with no wrapper element, data fetching, or auth logic. Pages in `(authorized)/` SHALL enforce a valid session themselves on the server (add-author-profiles NFR-2); the group layout SHALL NOT be the session check.
 
 #### Scenario: Layout adds no markup
 - **GIVEN** either group layout
 - **WHEN** it renders a child element
 - **THEN** the output is exactly that child, with no added wrapper element
+
+#### Scenario: Authorized pages check the session themselves
+- **GIVEN** a request with no valid session
+- **WHEN** it requests any page under `(authorized)/` (`/account`, `/account/author`)
+- **THEN** the browser ends up on `/login` and no page content of the requested page is rendered
+- **AND** `src/app/(authorized)/layout.tsx` contains no session read
 
 ### Requirement: No route segment cache config (migrate-to-cache-components FR-1)
 With `cacheComponents` enabled, no route segment SHALL export `revalidate`, `dynamic`, `fetchCache`, or `dynamicParams`. Route caching SHALL be expressed with `"use cache"` and `cacheLife`, and the production build SHALL succeed.
@@ -33,4 +41,3 @@ With `cacheComponents` enabled, no route segment SHALL export `revalidate`, `dyn
 - **WHEN** `npm run build` runs
 - **THEN** it exits 0
 - **AND** no file under `src/app` exports `revalidate`, `dynamic`, `fetchCache`, or `dynamicParams`
-

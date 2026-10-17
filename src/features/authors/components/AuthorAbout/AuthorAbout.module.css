@@ -1,0 +1,56 @@
+.about {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.about h2 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+}
+
+.about h3 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+}
+
+.about p,
+.about ul,
+.about ol,
+.about blockquote {
+  margin: 0 0 0.75rem;
+}
+
+.about ul {
+  padding-left: 1.5rem;
+  list-style: disc;
+}
+
+.about ol {
+  padding-left: 1.5rem;
+  list-style: decimal;
+}
+
+.about blockquote {
+  padding-left: 1rem;
+  border-left: 2px solid var(--color-border);
+  font-style: italic;
+}
+
+.about > :first-child {
+  margin-top: 0;
+}
+
+.about > :last-child {
+  margin-bottom: 0;
+}
+
+/* Centred and right-aligned lists keep their markers next to the text instead of at the left edge. */
+.inlineLists ul,
+.inlineLists ol {
+  padding-left: 0;
+  list-style-position: inside;
+}

@@ -27,11 +27,20 @@ Read before fetching data, adding a store, or passing data from a Server Compone
 
 `cacheComponents: true` is on, so server caching is `"use cache"` + `cacheLife` + `cacheTag` from `next/cache` — never `fetch`'s `next` options or route segment config (`export const revalidate`, `dynamic`, …), which Cache Components rejects.
 
-- **Data:** the shared client owns the cache scope. `contentfulQuery` caches each query in an inner `"use cache"` function, always tagged `CONTENTFUL_CACHE_TAG`; callers tune it through its `{ revalidate, tags }` argument. A DAL function adds no cache scope of its own.
+- **Data:** the shared client owns the cache scope. `contentfulQuery` caches each query in an inner `"use cache"` function, always tagged `CONTENTFUL_CACHE_TAG`; callers tune it through its `{ revalidate, tags }` argument. A Contentful DAL function adds no cache scope of its own (Supabase public reads differ: see below).
 - **Pages:** a page whose content is fully cacheable puts `"use cache"` at the top of its body with a named `cacheLife` profile (`cacheLife("minutes")`) and tags itself with the tags its webhook expires (see `app/(public)/page.tsx`). Nothing inside a cache scope may read cookies, headers, or the session — per-request UI sits outside it (Suspense-wrapped or client-only).
 - **Crossing the boundary:** a cached function's arguments form the cache key, so never pass a secret — read it inside. Its return value is serialized, so return a plain result (a discriminated union) instead of throwing a class instance, and rebuild typed errors in an uncached wrapper (see `shared/lib/contentful/client.ts`).
-- **Invalidation:** `revalidateTag(tag, { expire: 0 })` in a route handler (`app/api/revalidate`).
+- **Invalidation:** `revalidateTag(tag, { expire: 0 })` in a route handler (`app/api/revalidate`) for a CMS publish; `updateTag(tag)` in a Server Action for the reader's own write (below).
 - **Tests:** `vitest.setup.ts` mocks `next/cache` globally (no-op `cacheLife`/`cacheTag`); `"use cache"` is an inert string under Vitest.
+
+### Supabase public reads
+
+Public Supabase data (the author directory and pages, `features/authors/dal/public-authors.ts`) departs from the Contentful rules above in two places:
+
+- **The client:** `createSupabasePublicClient()` from `@/shared/lib/supabase/public` — cookie-less, anon role, so RLS returns only public rows. It reads no request data, which is what lets it run inside `"use cache"`. Never use the cookie client (`/server`) in a cache scope.
+- **The feature DAL owns the cache scope.** Each read opens its own `"use cache"` around the query, the Zod parse, and the row mapping, because the lifetime depends on the result and is set after the read: `cacheLife("hours")` for a hit, `"minutes"` for not-found, `"seconds"` for unavailable — so a Supabase blip or an env-less build heals itself instead of freezing into the prerendered shell. Failures are returned as plain values, never thrown, and the scope always carries its tag. Validate an id argument (a UUID) before calling the cached function, so junk never becomes a cache key.
+- **Invalidation from the owner's write:** `updateTag(tag)` in the Server Action that wrote, so the action's own re-render already reads the new data. `revalidateTag(tag, { expire: 0 })` stays for writes that arrive outside a Server Action (a route handler, a CMS webhook) — `updateTag` works only inside a Server Action.
+- **A write that expires a public tag goes through the per-user write limit first** (ADR 0007): after the session check and before any other I/O, the action calls its feature's allowance DAL (`features/authors/dal/write-allowance.ts`, the `consume_write_allowance(scope)` database function). An attempt over the limit writes nothing and expires no tag, so one account's save loop can't keep the public pages uncached.
 
 ## Zustand conventions
 
