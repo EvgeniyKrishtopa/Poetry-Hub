@@ -108,6 +108,7 @@ Levels:
 | NFR-5 | Field error wiring (`aria-invalid`, `aria-describedby`) | `NameFieldEditor` / `FieldErrorText` | unit |
 | NFR-5 | Shared `TextField` keeps the label and error wiring after the move from auth | `TextField` test; the existing `SignInForm`/`SignUpForm` tests pass unchanged | unit |
 | NFR-5 | Toolbar buttons have Russian accessible names | `AboutFieldEditor` `getByRole("button", { name })` × 7 | unit |
+| NFR-5 (added by defect fix) | Keyboard focus follows the field's mode: opening focuses the control; «Отмена» and a settled save or delete focus «Изменить» or the add prompt; a failed name or about save refocuses the control; a first load moves focus nowhere | `AuthorProfileEditor` "keyboard focus" tests (`toHaveFocus`); `PhotoFieldEditor` picker focus on open; browser check in debug record `_debug/editor-focus-lost-on-mode-switch.md` | unit + end-to-end |
 | NFR-6 | Build without env exits 0; route table modes | Task 10.1 `npm run build` with no Supabase env | integration |
 | Proposal headline | GIF / 6 MB → error before sending | Same as the FR-8 browser-check rows | unit + end-to-end |
 | Proposal headline | Deleted photo → placeholder in the editor and on the public page | Same as the FR-10 delete-photo row | unit + end-to-end |

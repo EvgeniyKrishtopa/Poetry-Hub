@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { Activity } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { deleteProfileFieldAction, saveNameAction } from "../../actions/author-profile.actions";
+import { deleteProfileFieldAction, saveAboutAction, saveNameAction } from "../../actions/author-profile.actions";
 import { AuthorProfileEditor } from "../../components/AuthorProfileEditor/AuthorProfileEditor";
 import type { AuthorProfile } from "../../model/author.types";
 
@@ -295,6 +295,21 @@ describe("AuthorProfileEditor", () => {
       const input = screen.getByRole("textbox", { name: "Имя" });
       expect(input).toHaveFocus();
       expect(input).toHaveAttribute("aria-invalid", "true");
+    });
+
+    // implements NFR-5 of add-author-profiles
+    it("focuses the about textarea again when its save fails", async () => {
+      const save = deferred<Awaited<ReturnType<typeof saveAboutAction>>>();
+      vi.mocked(saveAboutAction).mockReturnValue(save.promise);
+      const user = userEvent.setup();
+      render(<AuthorProfileEditor profile={PROFILE} />);
+
+      await user.click(screen.getByRole("button", { name: "Добавить «О себе»" }));
+      await user.type(screen.getByLabelText("О себе"), "Поэт");
+      await user.click(screen.getByRole("button", { name: "Сохранить" }));
+      await act(async () => save.resolve(UNAVAILABLE));
+
+      expect(screen.getByLabelText("О себе")).toHaveFocus();
     });
 
     // implements NFR-5 of add-author-profiles
