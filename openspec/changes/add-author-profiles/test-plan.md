@@ -38,7 +38,7 @@ Levels:
 | FR-5, NFR-2 | Dot segments in photo path rejected | pgTAP: `<own>/../<other>/<file>.jpg` and a non-uuid name → check violation | integration |
 | FR-5, NFR-2 | Whitespace-only name rejected | pgTAP check violation | integration |
 | FR-5, NFR-2 | A real save runs through the grants | pgTAP: `ensure_my_author_profile()` + update-by-id-returning with the column list as `authenticated` succeeds | integration |
-| FR-5, NFR-2 | Manual two-user check of all of the above via REST | Task 9.2 manual validation (recorded in the commit body) | end-to-end |
+| FR-5, NFR-2 | Manual two-user check of all of the above via REST | Task 10.2 manual validation (recorded in the commit body) | end-to-end |
 | FR-6 | Empty profile → four add prompts, photo placeholder, no public link | `AuthorProfileEditor` with `profile = null` | unit |
 | FR-6 | Edit opens the input labelled «Имя» with «Сохранить»/«Отмена» | `NameFieldEditor` | unit |
 | FR-6 | Only one field is edited at a time; enabled again after Отмена or success | `AuthorProfileEditor` with `editingField` set: the other fields' controls are disabled | unit |
@@ -102,13 +102,13 @@ Levels:
 | NFR-8 | «Редактировать профиль» precedes the h1 | `AuthorProfileView` composition test | unit |
 | NFR-1 | `<script>` in about → no script element | `AuthorAbout` | unit |
 | NFR-1 | Link becomes text, no `a`; image → alt text, no `img` | `AuthorAbout` | unit |
-| NFR-3 | No privileged key in source | Task 9.1 grep `SUPABASE_SERVICE_ROLE\|SUPABASE_SECRET` → none | integration |
+| NFR-3 | No privileged key in source | Task 10.1 grep `SUPABASE_SERVICE_ROLE\|SUPABASE_SECRET` → none | integration |
 | NFR-3 | Logs carry error names only | DAL-write and action tests assert log arguments contain no input values | unit |
-| NFR-4 | Only `react-markdown` added; no colour literals | Task 9.1 dependency diff and colour grep | integration |
+| NFR-4 | Only `react-markdown` added; no colour literals | Task 10.1 dependency diff and colour grep | integration |
 | NFR-5 | Field error wiring (`aria-invalid`, `aria-describedby`) | `NameFieldEditor` / `FieldErrorText` | unit |
 | NFR-5 | Shared `TextField` keeps the label and error wiring after the move from auth | `TextField` test; the existing `SignInForm`/`SignUpForm` tests pass unchanged | unit |
 | NFR-5 | Toolbar buttons have Russian accessible names | `AboutFieldEditor` `getByRole("button", { name })` × 7 | unit |
-| NFR-6 | Build without env exits 0; route table modes | Task 9.1 `npm run build` with no Supabase env | integration |
+| NFR-6 | Build without env exits 0; route table modes | Task 10.1 `npm run build` with no Supabase env | integration |
 | Proposal headline | GIF / 6 MB → error before sending | Same as the FR-8 browser-check rows | unit + end-to-end |
 | Proposal headline | Deleted photo → placeholder in the editor and on the public page | Same as the FR-10 delete-photo row | unit + end-to-end |
 | Proposal headline | Direct API `photo_path` into another file → rejected | Same as the FR-5 pgTAP rows | integration |
@@ -119,15 +119,30 @@ Levels:
 | FR-19 | Signed-out GET for `/account/author` → 307, `Location` parses to the same origin, path `/login`, no query; four security headers; no-store | `proxy.test.ts` | unit |
 | FR-19 | `/account`, `/account/`, `/account/author/x` redirect; `/accounts` and `/authors` don't | `account-paths.test.ts` (`isAccountPath` table) + `proxy.test.ts` pass-through cases | unit |
 | FR-19 | A revoked session's cleared cookies are on the redirect | `proxy.test.ts` with a refresh that clears cookies | unit |
-| FR-19, FR-9 | A Server Action POST (`Next-Action`) while signed out is not redirected; the field shows «Сессия истекла. Войдите снова.» | `proxy.test.ts` POST case; browser: sign out in another tab, then save a field (task 9.3) | unit + end-to-end |
+| FR-19, FR-9 | A Server Action POST (`Next-Action`) while signed out is not redirected; the field shows «Сессия истекла. Войдите снова.» | `proxy.test.ts` POST case; browser: sign out in another tab, then save a field (task 10.3) | unit + end-to-end |
 | FR-19 | Signed-in and unknown requests pass through | `proxy.test.ts` | unit |
-| FR-19 | Signed-out `/account` and `/account/author` get the proxy's 307, with no flash of the page | Browser, network tab (task 9.3) | end-to-end |
+| FR-19 | Signed-out `/account` and `/account/author` get the proxy's 307, with no flash of the page | Browser, network tab (task 10.3) | end-to-end |
 | FR-19 | Proxy and page gate read a `getClaims()` result the same way | `getSessionState` and `refreshSession` both use `readClaimsState` (checked by the `claims.test.ts` table and both callers' tests) | unit |
 | FR-20 | `/account` during an outage: «Мастерская поэта», «Профиль автора», the alert «Сервис временно недоступен. Попробуйте позже.» with «Повторить», no links, no redirect, no profile read | `AccountAuthorSection` with `requireSession` → `unknown`: alert rendered, `getMyAuthorProfile` not called | unit |
 | FR-20 | `/account/author` during an outage: the alert and «Повторить» in place of the editor, no field editor | `AuthorEditorLoader` with `requireSession` → `unknown` | unit |
 | FR-20 | «Повторить» re-requests the server data, disabled while pending | `SessionUnavailableAlert` retry-button test: `router.refresh` called inside a transition, button disabled while pending | unit |
 | FR-20 | `requireSession` redirects only on signed-out; `getSessionState` awaits `connection()` before creating the client | `current-user.test.ts` | unit |
-| FR-20 | Real outage: stop the local stack → alert, no redirect, header with neither link; restart and «Повторить» → section renders | Browser (task 9.3) | end-to-end |
+| FR-20 | Real outage: stop the local stack → alert, no redirect, header with neither link; restart and «Повторить» → section renders | Browser (task 10.3) | end-to-end |
+| FR-21 | Eleventh profile write in one minute window → `too-many-saves`, no profile write, no `updateTag` for either tag | `write_rate_limits.test.sql`: `profile_write` calls 1–10 true, 11th false; `author-profile.actions.test.ts`: allowance over the limit → `failed: too-many-saves`, DAL write and `updateTag` not called (save name, save about) | integration + unit |
+| FR-21 | (same) Field returns to edit mode with the draft and «Слишком много сохранений. Попробуйте через минуту.» | `getProfileFailureMessage("too-many-saves")` in the messages test; `toFieldFormState` keeps the draft for a `failed` result (existing table extended with the new failure) | unit |
+| FR-21 | Delete over the limit → previous value returns with «Слишком много сохранений…», about still stored | `author-profile.actions.test.ts`: `deleteProfileFieldAction` (about and photo) over the limit → failure, `clearProfileField` / `removePhoto` not called | unit |
+| FR-21 | Sixth photo in one hour window → «Слишком много загрузок фото. Попробуйте через час.», nothing uploaded, bytes not read, no `updateTag` | `write_rate_limits.test.sql`: `photo_upload` calls 1–5 true, 6th false; actions test: over the limit → `too-many-uploads`, `validatePhotoFile` and `replacePhoto` not called, no `updateTag`; messages test for the string | integration + unit |
+| FR-21 | The two limits are separate (5 uploads used, a name save still succeeds) | `write_rate_limits.test.sql`: `photo_upload` exhausted, `profile_write` still true; independent per user | integration |
+| FR-21 | A window older than its length restarts: the next call is allowed and `hits` is 1 | `write_rate_limits.test.sql` with `window_start` set back as `postgres` | integration |
+| FR-21 | Signed-out caller, unknown session, or a schema-rejected input → no allowance consumed | actions test: `consumeWriteAllowance` not called for signed-out, unknown, and an invalid name / an over-5 MB file | unit |
+| FR-21 | A photo with the wrong content counts: allowance consumed before the bytes are read, then «Допустимы только изображения PNG или JPEG.», nothing uploaded | actions test: call order `consumeWriteAllowance` → `validatePhotoFile`; a GIF → validation error, allowance called once, `replacePhoto` not called | unit |
+| FR-21 | Limit check: server/network error or missing config → «Сохранение сейчас недоступно…», no write | `write-allowance.test.ts`: 5xx and config error → `unavailable`; actions test: allowance failure → returned as is, DAL write not called | unit |
+| FR-21 | Session expires between the two checks (401 from the RPC) → «Сессия истекла. Войдите снова.», no write | `write-allowance.test.ts`: 401 / JWT-expired error → `unauthenticated` | unit |
+| FR-21 | Limit check fails otherwise (missing function `PGRST202`, `null` or non-boolean `data`) → «Что-то пошло не так…», no write | `write-allowance.test.ts`: `PGRST202` → `unknown`; `null` and a non-boolean `data` → `unknown`, logged by name | unit |
+| FR-21 | Counters out of the API's reach: `authenticated` can't select/insert/update/delete counter rows; `anon` can't execute the function; an unknown scope raises | `write_rate_limits.test.sql` privilege cases; manual REST check with a reader's token and anonymously (task 10.2) | integration + end-to-end |
+| FR-21 | The limits are fixed in the database; the RPC takes only the scope | `write-allowance.test.ts`: RPC name `consume_write_allowance` and argument `{ scope }` only; pgTAP limits asserted without any client-supplied number | unit + integration |
+| FR-21 | Real browser: from a fresh counter, 10 writes within a minute of the first, the 11th shows the message with the draft kept and `/authors` unchanged; after the window, a save succeeds | Browser (task 10.3) | end-to-end |
+| Proposal headline | 10 profile writes in one fixed window → the 11th shows «Слишком много сохранений…», nothing written, directory cache not expired (FR-21) | Same as the FR-21 eleventh-write rows | integration + unit + end-to-end |
 | Proposal headline | Signed-out `/account` or `/account/author` → `/login` (proxy 307; page redirect as fallback) | Same as the FR-19 redirect rows and the FR-1/FR-2 rows | unit + end-to-end |
 | Proposal headline | Expired session while editing → save shows the field error, no redirect | Same as the FR-19 Server Action row | unit + end-to-end |
 | Proposal headline | Auth unreachable → alert on `/account`, no redirect, header with neither link | Same as the FR-20 rows | unit + end-to-end |

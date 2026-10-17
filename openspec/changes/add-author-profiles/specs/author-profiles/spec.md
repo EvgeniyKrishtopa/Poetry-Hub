@@ -253,6 +253,73 @@ Failures after validation SHALL be shown under the field that triggered them: no
 - **WHEN** the reader saves a field
 - **THEN** "Что-то пошло не так. Попробуйте ещё раз." is shown under that field and the page is not replaced by the error screen
 
+### Requirement: Per-user write limit (FR-21)
+The profile actions SHALL limit each signed-in user to 10 profile writes (name save, about save, or any field delete, photo included) in one minute window and 5 photo uploads in one hour window, counted separately in fixed (not sliding) windows that start at the first counted attempt. Every attempt that passes the input schema and the session check SHALL count, whether its write succeeds or fails; a photo whose content check fails counts too, because the limit is checked before its bytes are read. The limit SHALL be checked after the session check and before any other database or Storage call, and for a photo before its bytes are read. Over the limit, the action SHALL make no write, no Storage call, and no cache expiry, and SHALL show «Слишком много сохранений. Попробуйте через минуту.» (profile write) or «Слишком много загрузок фото. Попробуйте через час.» (photo) under the field. The limits SHALL be fixed in the database, and a signed-in user SHALL be unable to read or change their counters through the database API.
+
+#### Scenario: Eleventh save in a minute
+- **GIVEN** a reader who has made 10 profile writes in the current minute window
+- **WHEN** they save their first name
+- **THEN** «Слишком много сохранений. Попробуйте через минуту.» is shown under the first-name field, which returns to edit mode with the draft kept
+- **AND** no profile write happened
+- **AND** neither the directory's nor the author's cache tag was expired
+
+#### Scenario: Delete over the limit
+- **GIVEN** a reader with a saved about who has made 10 profile writes in the current minute window
+- **WHEN** they delete about
+- **THEN** the previous about returns with «Слишком много сохранений. Попробуйте через минуту.» under the field
+- **AND** about is still stored
+
+#### Scenario: Sixth photo in an hour
+- **GIVEN** a reader who has uploaded 5 photos in the current hour window
+- **WHEN** they save a valid photo
+- **THEN** «Слишком много загрузок фото. Попробуйте через час.» is shown under the photo field
+- **AND** nothing was uploaded, the file's bytes were not read, and no cache tag was expired
+
+#### Scenario: The two limits are separate
+- **GIVEN** a reader who has uploaded 5 photos in the current hour window
+- **WHEN** they save their last name
+- **THEN** the save succeeds
+
+#### Scenario: The window resets
+- **GIVEN** a reader whose 10 profile writes all fall in a window that started more than a minute ago
+- **WHEN** they save a field
+- **THEN** the save succeeds and starts a new window
+
+#### Scenario: Not counted before the session check
+- **GIVEN** a signed-out caller, or an input the action's schema rejects (a name over 60 characters, a file over 5 MB)
+- **WHEN** the action is called
+- **THEN** no allowance is consumed
+
+#### Scenario: A photo with the wrong content counts
+- **GIVEN** the browser check was bypassed and a GIF renamed to `.jpg` reaches the photo action
+- **WHEN** the action runs
+- **THEN** one photo-upload allowance is consumed before the file's bytes are read
+- **AND** «Допустимы только изображения PNG или JPEG.» is shown under the photo field and nothing is uploaded
+
+#### Scenario: Limit check unavailable
+- **GIVEN** the limit check's database call returns a server or network error, or the Supabase config is missing
+- **WHEN** the reader saves a field
+- **THEN** «Сохранение сейчас недоступно. Попробуйте позже.» is shown under the field
+- **AND** no profile write happened
+
+#### Scenario: Session expires between the two checks
+- **GIVEN** the session check passed, but the limit check's call is rejected because the token has just expired (HTTP 401)
+- **WHEN** the reader saves a field
+- **THEN** «Сессия истекла. Войдите снова.» is shown under the field
+- **AND** no profile write happened
+
+#### Scenario: Limit check fails otherwise
+- **GIVEN** the limit check fails for another reason (the function is missing, or it returns something other than true or false)
+- **WHEN** the reader saves a field
+- **THEN** «Что-то пошло не так. Попробуйте ещё раз.» is shown under the field
+- **AND** no profile write happened
+
+#### Scenario: Counters are out of the API's reach
+- **GIVEN** a signed-in user calling the database API directly with the publishable key
+- **WHEN** they select, insert, update, or delete rows of the counter table
+- **THEN** each request is denied
+- **AND** an anonymous caller cannot call the allowance function
+
 ### Requirement: Deleting a field (FR-10)
 "Удалить" SHALL clear that field through its server action at once, with no confirmation, with the same pending, notification, and error behavior as saving. Afterwards the field SHALL show its add prompt. While pending, the field SHALL show its empty state at once with a disabled add prompt reading "Удаление…"; on failure the previous value SHALL return. Deleting about SHALL reset alignment to left. Deleting the photo SHALL remove the stored file and show the user-icon placeholder again, as before a photo was added.
 

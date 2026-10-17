@@ -146,8 +146,9 @@ create function public.owns_author_profile(folder text) returns boolean ...;  --
 Every action:
 1. Runs the Zod schema (next-safe-action `inputSchema`). A violation becomes `validationErrors` → a field error (FR-8).
 2. Checks the session with `getSessionState()`: `signed-out` returns `{ status: "failed", failure: "unauthenticated" }`, `unknown` returns the `unavailable` failure (FR-20). The input never carries a user or profile id (NFR-2).
-3. Calls a DAL write. The DAL uses the cookie client (`createSupabaseServerClient`), so the request runs as `authenticated` with the same session, RLS applies, and the database functions resolve the caller themselves. The owner DAL therefore takes no `userId` argument (CR-01); the action's session check only decides `unauthenticated` before any I/O.
-4. On `ok`, calls `updateTag(AUTHORS_TAG)` (the directory) and `updateTag(authorTag(profileId))` (that author's page) (FR-17), and returns `{ status: "saved", profile }`. Otherwise it returns the failure.
+3. Consumes one allowance from the write limit (FR-21, D13): over the limit returns `too-many-saves` (or `too-many-uploads` for a photo), and a failed check returns the failure `classifyProfileError` gives it (D10), both before any other I/O.
+4. Calls a DAL write. The DAL uses the cookie client (`createSupabaseServerClient`), so the request runs as `authenticated` with the same session, RLS applies, and the database functions resolve the caller themselves. The owner DAL therefore takes no `userId` argument (CR-01); the action's session check only decides `unauthenticated` before any I/O.
+5. On `ok`, calls `updateTag(AUTHORS_TAG)` (the directory) and `updateTag(authorTag(profileId))` (that author's page) (FR-17), and returns `{ status: "saved", profile }`. Otherwise it returns the failure.
 
 - **Every field write is two steps, through one helper `writeOwnProfile(patch)` (Gate 1 N1; CR-01):**
   1. ensure the row exists and get its id: `rpc("ensure_my_author_profile")`;
@@ -309,6 +310,7 @@ FieldErrorText           error text wired by id for aria-describedby, for the ab
 | Browser pre-check (photo only) | Size over 5 MiB, or not PNG/JPEG by magic bytes | The same field error, and no request is sent |
 | Zod schema (next-safe-action) | Invalid input | `validationErrors` → field error, no I/O |
 | Action | `getSessionState()` is `signed-out` / `unknown` | `failed: unauthenticated` / `failed: unavailable` (FR-20) |
+| Action, write limit (D13) | `consume_write_allowance` returns `false`, or the call fails | `failed: too-many-saves` / `too-many-uploads` (FR-21); a failed call → `classifyProfileError` (usually `unavailable`; a missing function, PostgREST `PGRST202`, is `unknown`); a result other than `true`/`false` → `unknown`. No write, no `updateTag` either way |
 | DAL | Supabase `{ error }` results, `SupabaseConfigError` | `classifyProfileError` → `unauthenticated` (JWT expired/invalid, HTTP 401 only), `unavailable` (config, network, 5xx, Storage 5xx), `unknown` (everything else, including `42501` permission denied: with a valid session that means a grant or policy bug, not an expired session) |
 | Action client `handleServerError` | Any unexpected throw | `serverError` (generic). The form maps it to `unknown`. Only `error.name` is logged |
 | Field wrapper `catch` (client) | The action call itself rejects (body over `bodySizeLimit`, network) | `unknown` failure under the field. Never `error.tsx` |
@@ -345,6 +347,43 @@ The poems change is expected to copy this pattern, so the docs move with the cod
 
 Each doc lands in the task group whose code it describes (`tasks.md`).
 
+### D13. Per-user write limit (FR-21)
+
+Added 2026-10-17 (user decision). A second migration, `supabase/migrations/<timestamp>_write_rate_limits.sql`:
+
+```sql
+create table public.write_rate_limits (
+  user_id      uuid not null references auth.users (id) on delete cascade,
+  scope        text not null check (scope in ('profile_write', 'photo_upload')),
+  window_start timestamptz not null,
+  hits         integer not null check (hits > 0),
+  primary key (user_id, scope)
+);
+
+alter table public.write_rate_limits enable row level security;
+-- No policies and no grants: only consume_write_allowance() touches the table.
+revoke all on public.write_rate_limits from anon, authenticated;
+
+-- Security definer, empty search_path, the caller from auth.uid() only (as D2's functions); execute
+-- granted to authenticated alone. The limits live here, so no client input can raise them:
+--   profile_write: 10 per 1 minute; photo_upload: 5 per 1 hour.
+-- One atomic upsert: a row whose window has passed restarts at hits = 1 and window_start = now();
+-- otherwise hits + 1. Returns hits <= the scope's limit. An unknown scope raises.
+-- `language sql`, and the argument always written `consume_write_allowance.scope`: in plpgsql a bare
+-- `scope` next to the `scope` column raises "column reference is ambiguous" (Gate 1, 2026-10-17).
+create function public.consume_write_allowance(scope text) returns boolean language sql ...;
+```
+
+- **Postgres, not Redis (user decision 2026-10-17).** The counter lives next to the data it protects: no new service, account, secret, or dependency, and pgTAP tests it like the rest of the schema. The cost is one short RPC per write, made only by signed-in readers who already passed the session check. *Alternative rejected:* Upstash Redis with `@upstash/ratelimit`. It is faster and keeps the counter off the database, but adds a vendor, two secrets, a runtime dependency (NFR-4 allows one), and a stand-in for local runs and CI.
+- **Fixed window.** One row per user and scope, so the table stays bounded (two rows per user). A burst across a window boundary can reach twice the limit; that still bounds the cache churn FR-21 targets. *Alternative rejected:* a sliding log, one row per attempt, which needs cleanup.
+- **The atomic upsert decides.** `insert … on conflict (user_id, scope) do update … returning hits` serializes concurrent attempts on the row lock, so two parallel saves can't both read "9" and pass as the 10th.
+- **A blocked attempt still counts.** It raises `hits` past the limit, which changes nothing: the window still ends at `window_start` + its length.
+- **The DAL: `dal/write-allowance.ts` `consumeWriteAllowance(scope)`** → `{ ok: true } | { ok: false, failure }`, never a bare boolean or `null` (`docs/code-style.md`). It uses the cookie client, so the function sees the session's `auth.uid()`. Exactly `true` with no error → allowed; `false` → `too-many-saves` for `profile_write`, `too-many-uploads` for `photo_upload`; any other `data` with no error → `unknown`, logged, so the check stays closed if the function's return shape changes; a Supabase error or `SupabaseConfigError` → `classifyProfileError` (D10), so an outage is `unavailable`. The scope names are an `as const` object in `author.constants.ts` (`WRITE_SCOPES`), mirrored by the SQL check.
+- **The actions.** `runOwnerWrite(scope, write)`: session, then allowance, then `writeAndExpire`. `deleteProfileFieldAction` uses `profile_write` for every field, photo included: a delete expires the cache like a save. `savePhotoAction`: session, then the `photo_upload` allowance, then `validatePhotoFile`, then the write, so an over-limit caller never makes the server read the file's bytes (the body was already received; that cost is bounded by the 6 MB limit, D4). The cost of that order: a file that fails the content check has already used an upload (FR-21); only a bypassed browser check sends one.
+- **A wider failure type for writes only: `WriteFailure = ProfileFailure | "too-many-saves" | "too-many-uploads"`** (Gate 1, 2026-10-17). `WriteAllowance`, `ProfileActionResult`, and `FieldFormState` use it; reads (`MyProfileResult`, FR-18) and `classifyProfileError` keep the narrow `ProfileFailure`, so the types can't say a read was rate-limited. Each new failure has its FR-21 message in `author-messages.ts`. The client needs no new code: any `failed` result already returns the field to edit mode with the draft (FR-7) or restores the value (FR-10).
+- **Logs.** A blocked attempt is expected, not an error, so it is not logged; NFR-3 still holds for a failed check.
+- **Not this layer.** Per-IP flood protection is the hosting's job (proposal Out of Scope), and a direct PostgREST or Storage call with the reader's own token bypasses the actions, so it can't expire the cache.
+
 ### Sequence: save one field (browser ↔ Server Action ↔ Supabase)
 
 ```mermaid
@@ -354,6 +393,7 @@ sequenceDiagram
   participant E as AuthorProfileEditor
   participant A as saveNameAction (server)
   participant AU as auth getSessionState
+  participant L as DAL consumeWriteAllowance
   participant D as DAL writeOwnProfile
   participant S as Supabase PostgREST (RLS + column grants)
   participant C as Next cache
@@ -377,18 +417,29 @@ sequenceDiagram
       else unknown (Supabase unreachable or failing, FR-20)
         A-->>F: failed: unavailable; no DAL call
       else signed-in
-        A->>D: writeOwnProfile({ first_name })
-        D->>S: rpc ensure_my_author_profile → id; update … eq(id) select OWNER_PROFILE_COLUMNS
-        alt error
-          S-->>D: { error }
-          D-->>A: { ok: false, failure }
-          A-->>F: failed → message under field
-        else ok
-          S-->>D: row
-          D-->>A: { ok: true, profile }
-          A->>C: updateTag("authors"), updateTag("author:<id>")
-          A-->>F: saved + re-rendered RSC payload (fresh props)
-          F->>E: onSaved → setNotice("Сохранено") (shown when the transition settles)
+        A->>L: consumeWriteAllowance("profile_write") (FR-21, D13)
+        L->>S: rpc consume_write_allowance → hits <= limit
+        alt over the limit
+          L-->>A: { ok: false, failure: too-many-saves }
+          A-->>F: failed → «Слишком много сохранений…»; no write, no updateTag
+        else check fails (call error, or a result other than true/false)
+          L-->>A: { ok: false, failure } (classifyProfileError: usually unavailable; else unknown)
+          A-->>F: failed → that failure's message; no write
+        else allowed
+          L-->>A: { ok: true }
+          A->>D: writeOwnProfile({ first_name })
+          D->>S: rpc ensure_my_author_profile → id; update … eq(id) select OWNER_PROFILE_COLUMNS
+          alt error
+            S-->>D: { error }
+            D-->>A: { ok: false, failure }
+            A-->>F: failed → message under field
+          else ok
+            S-->>D: row
+            D-->>A: { ok: true, profile }
+            A->>C: updateTag("authors"), updateTag("author:<id>")
+            A-->>F: saved + re-rendered RSC payload (fresh props)
+            F->>E: onSaved → setNotice("Сохранено") (shown when the transition settles)
+          end
         end
       end
     end
@@ -403,6 +454,7 @@ sequenceDiagram
   participant P as PhotoFieldEditor (browser)
   participant A as savePhotoAction
   participant AU as auth getSessionState
+  participant L as DAL consumeWriteAllowance
   participant D as DAL replacePhoto
   participant S as PostgREST (RLS)
   participant ST as Supabase Storage (author-photos)
@@ -422,6 +474,15 @@ sequenceDiagram
       else unknown (FR-20)
         A-->>P: failed: unavailable; nothing read or uploaded
       else signed-in
+        A->>L: consumeWriteAllowance("photo_upload") (FR-21, D13)
+        L->>S: rpc consume_write_allowance → hits <= limit
+        alt over the limit
+          L-->>A: { ok: false, failure: too-many-uploads }
+          A-->>P: failed: too-many-uploads; nothing read or uploaded, no updateTag
+        else check fails (call error, or a result other than true/false)
+          L-->>A: { ok: false, failure } (usually unavailable; else unknown)
+          A-->>P: failed → that failure's message; nothing read or uploaded
+        else allowed
         A->>A: validatePhotoFile (magic bytes)
         alt invalid
           A-->>P: validationErrors → field error; nothing uploaded
@@ -447,6 +508,7 @@ sequenceDiagram
           end
           A-->>P: saved (+ updateTag both tags) / failed
         end
+        end
       end
     end
   end
@@ -459,6 +521,7 @@ sequenceDiagram
   participant P as PhotoFieldEditor
   participant A as deleteProfileFieldAction { field: "photo" }
   participant AU as auth getSessionState
+  participant L as DAL consumeWriteAllowance
   participant D as DAL removePhoto
   participant S as PostgREST (RLS)
   participant ST as Supabase Storage
@@ -474,15 +537,26 @@ sequenceDiagram
     else unknown (FR-20)
       A-->>P: failed: unavailable; previous photo shown again
     else signed-in
-      A->>D: removePhoto()
-      D->>S: select photo_path; update photo_path = null
-      alt row write fails
-        D-->>A: failed (file untouched)
-        A-->>P: failed → previous photo, error under field
-      else cleared
-        D->>ST: remove old object (best effort; logged by name on failure)
-        D-->>A: ok, profile
-        A-->>P: saved (+ updateTag both tags) → placeholder + "Добавить фото", "Сохранено"
+      A->>L: consumeWriteAllowance("profile_write") (FR-21, D13: a delete counts as a profile write)
+      L->>S: rpc consume_write_allowance → hits <= limit
+      alt over the limit
+        L-->>A: { ok: false, failure: too-many-saves }
+        A-->>P: failed → previous photo, «Слишком много сохранений…»; file untouched, no updateTag
+      else check fails (call error, or a result other than true/false)
+        L-->>A: { ok: false, failure } (usually unavailable; else unknown)
+        A-->>P: failed → previous photo, that failure's message; file untouched
+      else allowed
+        L-->>A: { ok: true }
+        A->>D: removePhoto()
+        D->>S: select photo_path; update photo_path = null
+        alt row write fails
+          D-->>A: failed (file untouched)
+          A-->>P: failed → previous photo, error under field
+        else cleared
+          D->>ST: remove old object (best effort; logged by name on failure)
+          D-->>A: ok, profile
+          A-->>P: saved (+ updateTag both tags) → placeholder + "Добавить фото", "Сохранено"
+        end
       end
     end
   end
@@ -630,11 +704,15 @@ sequenceDiagram
 - **[Security definer functions]** `ensure_my_author_profile`, `my_author_profile_id` and `owns_author_profile` run as the table owner, bypassing RLS. → Each takes no user id, resolves the caller from `auth.uid()` only, sets an empty `search_path`, and is executable by `authenticated` alone; pgTAP covers their results and anon's denied call. (This replaced the earlier residual risk that signed-in users could read public authors' auth ids, closed by code-review CR-01.)
 - **[Photo-only rows]** A photo saved before any name creates a non-public row. → That state is intended (FR-4). It is invisible publicly and editable by its owner.
 - **[Soft 404]** An unknown author gets the 404 UI with status 200. → Acceptable for UX, with no data rendered first (D5). Signed-out `/account*` now gets a proxy 307 (D9, FR-19); the streamed client redirect remains only as the fallback when the proxy can't read the session.
-- **[FR-20 depends on how tokens are signed]** "Can't tell" during an Auth outage only happens while `getClaims()` needs the network. Group 8's browser check showed the local stack already signs access tokens with **ES256** (asymmetric keys, the Supabase CLI default), although `supabase/config.toml` has no `signing_keys_path` and ADR 0004 assumed a shared secret. So once the server has loaded Auth's signing keys, `getClaims()` verifies a still-valid token locally, and an Auth outage doesn't change that reader's state: they stay signed in, and a failing database shows FR-18's message. FR-20 appears when the session really can't be checked: the server can't load the keys (verified: Auth stopped, then a dev-server restart), or an expired token can't be refreshed. → Accepted: a valid token is a valid session. Task 9.3 reproduces FR-20 with "stop Auth, restart the server". Check the hosted project's signing mode at deploy.
+- **[FR-20 depends on how tokens are signed]** "Can't tell" during an Auth outage only happens while `getClaims()` needs the network. Group 8's browser check showed the local stack already signs access tokens with **ES256** (asymmetric keys, the Supabase CLI default), although `supabase/config.toml` has no `signing_keys_path` and ADR 0004 assumed a shared secret. So once the server has loaded Auth's signing keys, `getClaims()` verifies a still-valid token locally, and an Auth outage doesn't change that reader's state: they stay signed in, and a failing database shows FR-18's message. FR-20 appears when the session really can't be checked: the server can't load the keys (verified: Auth stopped, then a dev-server restart), or an expired token can't be refreshed. → Accepted: a valid token is a valid session. Task 10.3 reproduces FR-20 with "stop Auth, restart the server". Check the hosted project's signing mode at deploy.
 - **[Proxy gate drift]** The proxy redirects by path prefix, so an `(authorized)` page added outside `/account` gets no 307 until the prefix list is updated. → It still can't render data for a guest: the page gate stays (D9). Accepted.
 - **[`getClaims` per request on account pages and the owner link]** → Same cost profile as the header (ADR 0004). The public page body stays cached; only the small owner link is per request.
 - **[Server Action `File` serialization holds the whole file in memory]** → Bounded by the 6 MB limit.
 - **[CI builds without Supabase env produce empty `remotePatterns`]** → Builds don't render photos. A deploy with the env set gets the pattern. A missing env at deploy shows broken images rather than failing: `next/image` throws on an unconfigured host only at render, so Gate 3 checks a photo renders.
+- **[Write-limit numbers are a guess]** 10 writes a minute and 5 photos an hour are generous for a person editing four fields and tight for a script (FR-21). → They live in one SQL function; changing them is a new migration, with no app change.
+- **[The write limit adds one RPC per write]** → Only signed-in readers who passed the session check pay it, and a failed check fails closed (no write, whatever the failure kind), so an outage can't turn into unlimited writes.
+- **[Direct Storage uploads are not counted]** A reader's own token can still insert any number of objects into their folder through the Storage API: the insert policy checks the name, the bucket checks size and type, and nothing counts them (FR-21 Out of Scope). → They don't touch `photo_path` or the cache; the cost is Storage and bandwidth. Accepted for now; a server-only upload path is a separate change (`PROGRESS.md`).
+- **[The write limit needs a second migration at deploy]** → `npx supabase db push` applies both; the deploy checklist (task 10.4) names it.
 - **[`updateTag` only from Server Actions]** → All writes are Server Actions. A future admin or route-handler write must use `revalidateTag(tag, { expire: 0 })`.
 
 ## Migration Plan
@@ -651,7 +729,8 @@ sequenceDiagram
 4. Rollback:
    - revert the app deploy (the new routes disappear);
    - the table and bucket can stay, since nothing else reads them;
-   - a down migration (`drop table public.author_profiles; delete from storage.buckets where id = 'author-photos'`) is documented in the migration's header comment, not auto-run.
+   - a down migration (`drop table public.author_profiles; delete from storage.buckets where id = 'author-photos'`) is documented in the migration's header comment, not auto-run;
+   - the write-limit migration documents its own (`drop function public.consume_write_allowance(text); drop table public.write_rate_limits`). Without it, the actions fail closed with `unknown` (the function is missing, PostgREST `PGRST202`), so it goes after the app is reverted.
 
 ## Open Questions
 
@@ -670,8 +749,8 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `shared/config/supabase-image-patterns.ts` | `images.remotePatterns` from `NEXT_PUBLIC_SUPABASE_URL` (D8) | `buildSupabaseImagePatterns` |
 | `features/auth/dal/current-user.ts` | Who is signed in; the session gate (D1, D9; reworked by FR-20, see the row below) | `getCurrentUserId`, `requireUserId` (until FR-20) |
 | `features/auth/index.ts` | Public API, now with the session accessors | + `getCurrentUserId`, `requireUserId`; FR-20 (task 8.4): + `getSessionState`, `requireSession`, − `requireUserId` |
-| `features/authors/model/author.types.ts` | Domain types, DAL and action results, field form state, Markdown edit types | `NameField`, `ProfileField`, `AboutAlign`, `ProfileFailure`, `ImageType`, `PhotoFileCheck`, `AuthorProfile`, `PublicAuthor`, `ProfileRowPatch`, `MyProfileResult`, `ProfileWriteResult`, `PublicAuthorResult`, `PublicAuthorsResult`, `ProfileActionResult`, `ProfileActionResponse`, `FieldFormState`, `MarkdownFormat`, `TextSelection`, `FormattedText` |
-| `features/authors/model/author.constants.ts` | Limits, bucket, column lists, photo size | `NAME_MAX_LENGTH`, `ABOUT_MAX_LENGTH`, `PHOTO_MAX_BYTES`, `AUTHOR_PHOTOS_BUCKET`, `OWNER_PROFILE_COLUMNS`, `PUBLIC_AUTHOR_COLUMNS`, `PHOTO_WIDTH`, `PHOTO_HEIGHT` |
+| `features/authors/model/author.types.ts` | Domain types, DAL and action results, field form state, Markdown edit types | `NameField`, `ProfileField`, `AboutAlign`, `ProfileFailure`, `ImageType`, `PhotoFileCheck`, `AuthorProfile`, `PublicAuthor`, `ProfileRowPatch`, `MyProfileResult`, `ProfileWriteResult`, `PublicAuthorResult`, `PublicAuthorsResult`, `ProfileActionResult`, `ProfileActionResponse`, `FieldFormState`, `MarkdownFormat`, `TextSelection`, `FormattedText`; FR-21 (task 9.2): + `WriteFailure`, `WriteAllowance` |
+| `features/authors/model/author.constants.ts` | Limits, bucket, column lists, photo size | `NAME_MAX_LENGTH`, `ABOUT_MAX_LENGTH`, `PHOTO_MAX_BYTES`, `AUTHOR_PHOTOS_BUCKET`, `OWNER_PROFILE_COLUMNS`, `PUBLIC_AUTHOR_COLUMNS`, `PHOTO_WIDTH`, `PHOTO_HEIGHT`; FR-21 (task 9.2): + `WRITE_SCOPES` |
 | `features/authors/model/author-profile.schema.ts` | Action input schemas and the row schema (rules in 3.1) | `saveNameSchema`, `saveAboutSchema`, `savePhotoSchema`, `deleteProfileFieldSchema`, `profileRowSchema`, `ProfileRow` |
 | `features/authors/model/author-messages.ts` | Russian UI copy; failure → message | `getProfileFailureMessage` |
 | `features/authors/model/is-public-profile.ts` | FR-4 rule | `isPublicProfile` |
@@ -734,6 +813,8 @@ Files on disk after `opsx-scaffold` (signatures and stub bodies only). Each comp
 | `features/authors/components/AlignControl/`, `AboutViewTabs/` | About's alignment toggles and «Редактор»/«Просмотр» tabs (group 7) | `AlignControl`, `AboutViewTabs` |
 | `features/authors/components/AuthorEditorSkeleton/` | The editor's Suspense fallback: four field-row skeletons (group 7) | `AuthorEditorSkeleton` |
 | `shared/ui/TextField/text-field-classes.ts` | Class sets for `TextField`'s `stacked` and `columns` layouts (group 7) | `TEXT_FIELD_CLASSES` |
+| `supabase/migrations/<timestamp>_write_rate_limits.sql`, `supabase/tests/write_rate_limits.test.sql` | The FR-21 counter table and `consume_write_allowance(scope)`, and its pgTAP tests (D13, group 9) | — |
+| `features/authors/dal/write-allowance.ts` | One write-limit check per action call (D13, group 9) | `consumeWriteAllowance` |
 | `features/authors/index.ts` | Public API for route files | `AccountPage`, `AuthorDirectory`, `AuthorEditorPanel`, `AuthorPage`, `AuthorsNavLink` |
 | `app/(public)/authors/page.tsx` | `/authors` route | default |
 | `app/(public)/authors/[id]/page.tsx` | `/authors/[id]` route | default |

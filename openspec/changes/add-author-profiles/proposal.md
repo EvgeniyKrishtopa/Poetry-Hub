@@ -20,6 +20,7 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
   - raise the Server Action body limit so a 5 MB photo fits;
   - allow the Supabase Storage host for `next/image`.
 - Add the runtime dependency `react-markdown`.
+- Rate-limit the profile actions per user (FR-21): a small Postgres counter table, reached only through a security definer function that holds the limits.
 
 ## Requirements
 
@@ -105,6 +106,13 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
   - the header's session part SHALL show neither "Sign in" nor "Мастерская поэта"/"Sign out", only the same empty placeholder as while it loads;
   - a profile action SHALL fail with FR-9's "Сохранение сейчас недоступно. Попробуйте позже.", not the session-expired message.
 - **FR-18**: If the reader's own profile can't be read, `/account` and `/account/author` SHALL show "Не удалось загрузить профиль. Попробуйте позже." instead of the section or editor. `/authors/[id]` SHALL then show no "Редактировать профиль" link.
+- **FR-21**: The profile actions SHALL be rate-limited per user (user decision 2026-10-17, replacing the 2026-10-16 plan to do it as its own change). Why: every successful write expires the directory's and the author's cache (FR-17), so an unlimited save loop from one account keeps the public pages uncached, and every photo upload costs bandwidth, Storage, and a new image optimization.
+  - **Limits.** At most 10 profile writes per user in one minute window, where a profile write is a name save, an about save, or a field delete (photo included); and at most 5 photo uploads per user in one hour window. The two limits are counted separately. Each window is fixed, not sliding: it starts at the first counted attempt, and the count resets once the window has passed, so a burst across two windows can reach twice the limit in 60 seconds (design D13).
+  - **What counts.** Every attempt that passes the input schema and the session check counts, whether its write then succeeds or fails. An input the schema rejects (FR-8) or a failed session check (FR-9, FR-20) does not count. A photo whose content check fails (not PNG or JPEG by its bytes) does count: the limit is checked before its bytes are read (Gate 1, 2026-10-17). The browser's own check (FR-8) stops such a file before a request, so only a bypassed browser reaches it.
+  - **Order.** The limit SHALL be checked after the session check and before any other database or Storage call; for a photo, also before the server reads the file's bytes. The user is taken from the session, never from input (NFR-2).
+  - **Over the limit.** The action SHALL return a field error and make no write, no Storage call, and no cache expiry: «Слишком много сохранений. Попробуйте через минуту.» for a profile write, «Слишком много загрузок фото. Попробуйте через час.» for a photo. The field behaves as on any failed save or delete (FR-7, FR-10).
+  - **Check fails.** If the limit can't be checked, the action SHALL make no write and show FR-9's message for the failure kind: «Сохранение сейчас недоступно. Попробуйте позже.» when the database is unavailable or the config is missing, «Сессия истекла. Войдите снова.» when the session expired between the session check and the limit check, and «Что-то пошло не так. Попробуйте ещё раз.» for any other failure of the check (Gate 2, 2026-10-17).
+  - **Where it holds.** The limits SHALL be fixed in the database, so no client input can raise them, and a signed-in user calling the database API directly SHALL be unable to read or change their counters.
 
 ### Non-functional
 
@@ -143,6 +151,7 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
 | Toolbar placeholder word (empty selection) | «текст» |
 | Validation | «Обязательное поле.», «Не более 60 символов.», «Не более 1000 символов.», «Файл должен быть не больше 5 МБ.», «Допустимы только изображения PNG или JPEG.», «Недопустимое выравнивание.» |
 | Failures (FR-9) | «Сессия истекла. Войдите снова.», «Сохранение сейчас недоступно. Попробуйте позже.», «Что-то пошло не так. Попробуйте ещё раз.» |
+| Rate limit (FR-21) | «Слишком много сохранений. Попробуйте через минуту.», «Слишком много загрузок фото. Попробуйте через час.» |
 | Load failure (FR-18) | «Не удалось загрузить профиль. Попробуйте позже.» |
 | Session check unavailable (FR-20) | «Сервис временно недоступен. Попробуйте позже.»; button «Повторить» |
 | Directory | page heading «Наши авторы»; «Пока нет авторов.»; «Список авторов сейчас недоступен.» |
@@ -186,6 +195,7 @@ Each FR/NFR above is accepted by the scenarios in `specs/*/spec.md`, all written
 - **GIVEN** a signed-in user, **WHEN** they call the database API directly to set their `photo_path` to another profile's file, **THEN** the write is rejected.
 - **GIVEN** a public profile, **WHEN** its owner deletes the last name, **THEN** `/authors/<id>` returns 404 and the directory no longer lists it.
 - **GIVEN** about text containing `<script>alert(1)</script>`, **WHEN** the public page renders, **THEN** no `script` element is in the output.
+- **GIVEN** a reader who has made 10 profile writes in one fixed window, which started at their first counted write less than a minute ago, **WHEN** they save an 11th in that window, **THEN** «Слишком много сохранений. Попробуйте через минуту.» is shown under the field, nothing is written, and the directory's cache is not expired (FR-21).
 
 ## Capabilities
 
@@ -208,6 +218,8 @@ Each FR/NFR above is accepted by the scenarios in `specs/*/spec.md`, all written
 - Links and images inside about.
 - HttpOnly session cookies (a separate follow-up).
 - Returning to the requested page after sign-in (`/login?next=…`): the parameter must be validated against open redirects, so it is a separate feature (user decision 2026-10-16).
+- Request-flood and DDoS protection per IP: that belongs to the hosting layer (Vercel Firewall or Cloudflare rate rules), a deploy-checklist step, not app code (FR-21 limits signed-in writes only).
+- Rate-limiting direct database API or Storage calls made with a reader's own token, outside the app. Those bypass the actions, so they don't expire the cache (FR-21's first reason), and RLS and the bucket limits still apply. They do not answer FR-21's second reason: the bucket limits cap each file's size and type, not how many files there are, so a reader can still upload any number of objects into their own folder straight through the Storage API. Closing that (for example, dropping the direct-insert Storage policy in favour of a server-only upload path) is a separate change; recorded as a known limit in `PROGRESS.md` (Gate 2, 2026-10-17).
 
 ## Open Questions
 
@@ -229,8 +241,9 @@ None at proposal time. User decisions on 2026-10-15:
   - `src/app/layout.tsx` (header nav);
   - `src/proxy.ts` and `src/shared/lib/supabase/session.ts` (the account-route redirect, FR-19);
   - new `src/shared/lib/supabase/claims.ts` and `src/shared/config/account-paths.ts` (one reading of a session check; the account and sign-in paths);
+  - `src/features/authors/dal/write-allowance.ts` and the actions' limit check (FR-21);
   - `src/features/auth/` session states for FR-20: `getSessionState` and `requireSession` (replacing `requireUserId`), a three-state header with `HeaderAuthPlaceholder`, `isSignedIn()` removed; `src/features/authors/` gains `SessionUnavailableAlert`;
   - `next.config.ts`.
-- **Database:** first migration `supabase/migrations/<timestamp>_author_profiles.sql`, covering the table, RLS, bucket, and storage policies. It must be applied to the remote project at deploy (`supabase db push`). The local `supabase/config.toml` declares the bucket.
+- **Database:** first migration `supabase/migrations/<timestamp>_author_profiles.sql`, covering the table, RLS, bucket, and storage policies. A second migration `<timestamp>_write_rate_limits.sql` adds the FR-21 counter table and its function. It must be applied to the remote project at deploy (`supabase db push`). The local `supabase/config.toml` declares the bucket.
 - **Dependencies:** `react-markdown` (runtime).
 - **Risk:** high. The change touches the database schema, permissions (RLS), file uploads, and production config. It requires the deep review, manual RLS validation against a local Supabase, and Gate 3.

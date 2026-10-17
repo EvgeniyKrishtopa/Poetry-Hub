@@ -1,6 +1,6 @@
 # Tasks
 
-Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1 and 9. The scaffold (`opsx-scaffold`) lands before group 1 and creates the file map from design D1/D6 with stub bodies.
+Prerequisite: the local Supabase stack runs (`npx supabase start`), for groups 1, 9, and 10. The scaffold (`opsx-scaffold`) lands before group 1 and creates the file map from design D1/D6 with stub bodies.
 
 ## 1. Database: table, RLS, bucket, policies <!-- judgement-heavy -->
 
@@ -263,19 +263,47 @@ Added 2026-10-16 (user decision, PR #81 discussion): FR-19, design D9.
   - record ADR `docs/decisions/0006-proxy-redirect-and-session-states.md`, with `Supersedes: 0004 — only its first Decision bullet's boolean isSignedIn() and two-state AuthStatus; the rest stays in force`. The superseded part was replaced by FR-20's three-state read: the header and account pages say "can't tell" instead of "signed out", and only the state name, never the user id, reaches the header. The rest of ADR 0004 holds: the proxy is still the only token refresher, and "is the reader signed in?" for rendering stays auth's `dal/` question. The ADR says plainly that it narrows ADR 0004's rejected alternative ("put the check in `session.ts`") for routing only: the proxy routes on the result of the refresh it already runs, read by the same `readClaimsState` the DAL uses. It covers why the gate is optimistic, the Server Action exclusion, fail-open on an outage, and why a reader-triggered `router.refresh()` fits the retry when ADR 0004 rejected a client refresh after sign-out. One line notes that ADR 0005 point 2's `getCurrentUserId()` is now `getSessionState()` for actions, with the same principle (the user comes from the session, never from input);
   - mark ADR 0004's `## Status` with `Partially superseded by 0006` (the one edit the editing rule allows).
 
-## 9. Integration verification <!-- judgement-heavy -->
+## 9. Per-user write limit <!-- judgement-heavy -->
 
-- [ ] 9.1 (NFR-4, NFR-6) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`, all green. The build route table lists `/authors` and `/authors/[id]` as partially prerendered and `/account` and `/account/author` per request. With no Supabase env, the build still exits 0. Grep new components for color literals (none) and `src/` for `SUPABASE_SERVICE_ROLE|SUPABASE_SECRET` (none).
-- [ ] 9.2 (FR-4, FR-5, NFR-2) Manually validate against the local Supabase stack with two test users:
+Added 2026-10-17 (user decision): FR-21, design D13. Groups after 8 were renumbered: the integration verification group is now 10.
+
+- [ ] 9.1 (FR-21, NFR-2) Add `supabase/migrations/<timestamp>_write_rate_limits.sql` per design D13 (`language sql`, the argument written `consume_write_allowance.scope`): the `write_rate_limits` table (RLS on, no policies, all privileges revoked from `anon` and `authenticated`) and the security definer `consume_write_allowance(scope text) returns boolean` (empty `search_path`, the caller from `auth.uid()` only, limits fixed inside it, one atomic upsert, an unknown scope raises; execute revoked from `public` and `anon`, granted to `authenticated`). Document the down migration in its header comment. Add pgTAP tests in `supabase/tests/write_rate_limits.test.sql`:
+  - `profile_write`: calls 1–10 return true, the 11th false;
+  - `photo_upload`: calls 1–5 return true, the 6th false;
+  - the scopes are independent, and so are two users;
+  - a window that started longer ago than its length (set `window_start` back as `postgres`) restarts: the next call returns true and `hits` is 1;
+  - an unknown scope raises;
+  - `authenticated` can't select, insert, update, or delete counter rows; `anon` can't execute the function.
+
+  Verify `npx supabase db reset && npx supabase test db`: both test files pass.
+- [ ] 9.2 (FR-21, NFR-8) Model: add `WRITE_SCOPES` (`as const`: `profileWrite: "profile_write"`, `photoUpload: "photo_upload"`) to `author.constants.ts`, `WriteFailure = ProfileFailure | "too-many-saves" | "too-many-uploads"` (used by `WriteAllowance`, `ProfileActionResult`, and `FieldFormState`; reads and `classifyProfileError` keep `ProfileFailure`, design D13), a `WriteAllowance` result type (`{ ok: true } | { ok: false; failure: WriteFailure }`), and the two FR-21 strings to `author-messages.ts` through `getProfileFailureMessage`. Verify the messages test: each new failure maps to its copy-table string; typecheck passes with reads still on `ProfileFailure`.
+- [ ] 9.3 (FR-21, NFR-3) Implement `dal/write-allowance.ts` `consumeWriteAllowance(scope)` per design D13: the cookie client, `rpc("consume_write_allowance", { scope })`; exactly `true` → `{ ok: true }`; `false` → `too-many-saves` / `too-many-uploads` by scope; any other `data` with no error → `unknown`, logged; a Supabase error or `SupabaseConfigError` → `classifyProfileError`, logged by name only. Verify with `tests/dal/write-allowance.test.ts` (mock the server client): allowed, each scope over the limit, `null` and a non-boolean `data` → `unknown`, a 5xx error → `unavailable`, a 401 / JWT-expired error → `unauthenticated`, a `PGRST202` error → `unknown`, a config error → `unavailable`, the RPC name and argument.
+- [ ] 9.4 (FR-21, FR-17, NFR-2) Wire the actions (design D13): `runOwnerWrite` takes a scope and consumes the allowance after `checkWriteAccess` and before `writeAndExpire`; the save and delete actions pass `profile_write`; `savePhotoAction` consumes `photo_upload` after the session check and before `validatePhotoFile`. Verify in `tests/actions/author-profile.actions.test.ts`:
+  - over the limit, each action returns its failure with no DAL write and no `updateTag`;
+  - the photo action over the limit never calls `validatePhotoFile`;
+  - a photo that fails `validatePhotoFile` has already consumed its allowance (FR-21 "A photo with the wrong content counts");
+  - a failed check → the allowance's failure (`unavailable` or `unknown`), no DAL write;
+  - signed-out, unknown session, and invalid input → no allowance consumed;
+  - every existing action test still passes, with the allowance mocked as allowed.
+- [ ] 9.5 (FR-21) Docs:
+  - record ADR `docs/decisions/0007-per-user-write-limits-in-postgres.md`: per-user limits on reader writes as a Postgres function that holds the limits, checked by the action after the session and before any write; why not Redis; per-IP protection left to the hosting; poems are expected to add their own scope;
+  - `docs/state-management.md`'s "Supabase public reads" subsection: a write that expires a public cache tag goes through the write limit first.
+
+## 10. Integration verification <!-- judgement-heavy -->
+
+- [ ] 10.1 (NFR-4, NFR-6) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`, all green. The build route table lists `/authors` and `/authors/[id]` as partially prerendered and `/account` and `/account/author` per request. With no Supabase env, the build still exits 0. Grep new components for color literals (none) and `src/` for `SUPABASE_SERVICE_ROLE|SUPABASE_SECRET` (none).
+- [ ] 10.2 (FR-4, FR-5, NFR-2) Manually validate against the local Supabase stack with two test users:
   - A creates a first name only → not on `/authors`; adds a last name → listed;
   - B cannot see A's non-public row via the REST API with B's token;
   - B cannot upload into, or delete from, A's folder;
   - A cannot `PATCH` their own `photo_path` to point into B's folder, or `PATCH` `user_id`;
   - an anonymous REST call selecting `user_id` is denied;
-  - deleting A's last name → `/authors/<id>` shows the 404 page.
+  - deleting A's last name → `/authors/<id>` shows the 404 page;
+  - with A's token, a REST read or write of `write_rate_limits` is denied, and an anonymous `rpc/consume_write_allowance` call is denied (FR-21).
 
   Record the results in the group's commit body.
-- [ ] 9.3 (FR-1–FR-20, NFR-5, NFR-8) Gate 3 web-qa over the full change. Flows:
+- [ ] 10.3 (FR-1–FR-21, NFR-5, NFR-8) Gate 3 web-qa over the full change. Flows:
+  - rate limit (FR-21): starting from a fresh counter (no profile write in the last minute), make 10 profile writes within a minute of the first; the 11th save shows «Слишком много сохранений. Попробуйте через минуту.» under the field with the draft kept, and `/authors` still shows the last saved value; once a minute has passed since the first of those writes, a save succeeds;
   - signed-out `/account` and `/account/author` → `/login` with no flash of the page (the network tab shows a 307 from the proxy, FR-19);
   - with the editor open, sign out in another tab, then save a field: the error «Сессия истекла. Войдите снова.» shows under the field, with no redirect (FR-19, FR-9);
   - signed in, stop only Supabase Auth (`docker stop supabase_auth_Poetry-Hub`) and restart the dev server, so it can't load Auth's signing keys (tokens are ES256: with keys already loaded, a valid token stays signed in, design Risks), then open `/account`: «Сервис временно недоступен. Попробуйте позже.» with «Повторить», no redirect, and the header shows neither "Sign in" nor "Sign out"; `docker start supabase_auth_Poetry-Hub`, click «Повторить»: the author section renders and the header shows «Мастерская поэта» and "Sign out" (FR-20; passed in group 8's dev check);
@@ -289,4 +317,4 @@ Added 2026-10-16 (user decision, PR #81 discussion): FR-19, design D9.
   - an edit is reflected on `/authors` immediately;
   - header links for signed-in and signed-out visitors;
   - `lang="ru"` on the feature's content.
-- [ ] 9.4 (FR-5, NFR-6) Add the deploy steps to `PROGRESS.md`'s deploy checklist: `npx supabase db push`, verify the bucket's limits, and `NEXT_PUBLIC_SUPABASE_URL` set at build time. Verify the lines exist.
+- [ ] 10.4 (FR-5, FR-21, NFR-6) Add the deploy steps to `PROGRESS.md`'s deploy checklist: `npx supabase db push` (both migrations: profiles and write limits), verify the bucket's limits, `NEXT_PUBLIC_SUPABASE_URL` set at build time, and per-IP rate rules at the hosting layer (Vercel Firewall or Cloudflare), including Server Action POSTs. Verify the lines exist.

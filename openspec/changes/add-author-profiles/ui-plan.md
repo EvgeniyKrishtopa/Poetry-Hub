@@ -48,7 +48,7 @@ The spec wins in each case; Gate 3 checks the spec's version.
 | FR-2 | `/account/author`, plus the signed-out redirect on `/account` |
 | FR-3 | Header |
 | FR-4 | `/authors` and `/authors/[id]` (listed / 404), plus the editor's «Открыть публичную страницу» |
-| FR-6, FR-7, FR-8 (field errors and browser pre-check), FR-9, FR-10, FR-11, FR-12 | `/account/author` |
+| FR-6, FR-7, FR-8 (field errors and browser pre-check), FR-9, FR-10, FR-11, FR-12, FR-21 | `/account/author` |
 | FR-13 | `/authors` |
 | FR-14, FR-15, FR-16 | `/authors/[id]` |
 | FR-17 | `/authors` and `/authors/[id]` after an edit |
@@ -58,6 +58,8 @@ The spec wins in each case; Gate 3 checks the spec's version.
 | NFR-8 | Every row |
 
 No gap: every human-visible criterion lands on at least one screen.
+
+FR-21 (added 2026-10-17) adds no screen or state: its over-limit messages render in the existing field **error** state of the editor (artboard 3), the same as FR-9's failures, so no new mockup is needed.
 
 ## Note for implementation (reuse)
 
