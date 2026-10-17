@@ -19,6 +19,8 @@ export function PhotoPicker({ id, fileName, errorId, onFileChange }: PhotoPicker
         onChange={(event) => onFileChange(event.currentTarget)}
         aria-invalid={errorId ? true : undefined}
         aria-describedby={errorId}
+        // It mounts only with the photo's edit form, when the reader opens the field (NFR-5).
+        autoFocus
         className="peer sr-only"
       />
       <label

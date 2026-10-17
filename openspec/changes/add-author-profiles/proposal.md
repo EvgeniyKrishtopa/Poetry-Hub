@@ -128,7 +128,8 @@ Poetry Hub has sign-in, but a signed-in reader has nothing of their own yet. The
   - field errors are linked through `aria-describedby` and set `aria-invalid`;
   - toolbar buttons have accessible names;
   - the photo has alt text "Фото: <full name>", and the placeholder is `aria-hidden` with no alt text;
-  - the save notification is announced through `role="status"`.
+  - the save notification is announced through `role="status"`;
+  - (added by defect fix, Gate 3 2026-10-17) keyboard focus follows a field's mode. Opening a field focuses its control. «Отмена» and a settled save or delete focus that field's «Изменить», or its add prompt when the field is now empty. A name or about save that fails focuses the control again.
 - **NFR-6**: `npm run build` SHALL succeed with no Supabase env set. `/authors` and `/authors/[id]` SHALL be partially prerendered with cached content. `/account` and `/account/author` SHALL render per request.
 - **NFR-7**: Cached public reads SHALL keep a failure only briefly, so the page recovers without a deploy:
   - an unavailable read for seconds;

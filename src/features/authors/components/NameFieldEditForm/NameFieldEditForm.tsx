@@ -19,6 +19,8 @@ export function NameFieldEditForm({ field, draft, error, onDraftChange, onSubmit
             value={draft}
             onChange={(event) => onDraftChange(event.target.value)}
             error={error}
+            // The form mounts only when the reader opens the field, or a save sends them back to it (NFR-5).
+            autoFocus
           />
         }
       >

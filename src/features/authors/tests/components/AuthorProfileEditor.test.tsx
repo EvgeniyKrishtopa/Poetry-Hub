@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { Activity } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { deleteProfileFieldAction, saveNameAction } from "../../actions/author-profile.actions";
+import { deleteProfileFieldAction, saveAboutAction, saveNameAction } from "../../actions/author-profile.actions";
 import { AuthorProfileEditor } from "../../components/AuthorProfileEditor/AuthorProfileEditor";
 import type { AuthorProfile } from "../../model/author.types";
 
@@ -251,5 +251,94 @@ describe("AuthorProfileEditor", () => {
 
     expect(screen.getByRole("button", { name: "Добавить фамилию" })).toBeEnabled();
     expect(screen.getByRole("status")).toHaveTextContent("Сохранено");
+  });
+
+  // A switch replaces a field's subtree, so without these a keyboard user falls to the page body.
+  describe("keyboard focus", () => {
+    // implements NFR-5 of add-author-profiles
+    it("moves focus nowhere on a first render", () => {
+      render(<AuthorProfileEditor profile={PROFILE} />);
+
+      expect(document.body).toHaveFocus();
+    });
+
+    // implements NFR-5 of add-author-profiles
+    it("focuses the input on Enter at «Изменить», and «Изменить» again on «Отмена»", async () => {
+      const user = userEvent.setup();
+      render(<AuthorProfileEditor profile={PROFILE} />);
+
+      editButtons()[0].focus();
+      await user.keyboard("{Enter}");
+      expect(screen.getByRole("textbox", { name: "Имя" })).toHaveFocus();
+
+      await user.click(screen.getByRole("button", { name: "Отмена" }));
+      expect(editButtons()[0]).toHaveFocus();
+    });
+
+    // implements NFR-5 of add-author-profiles
+    it("focuses the field's «Изменить» once its save settles", async () => {
+      render(<AuthorProfileEditor profile={PROFILE} />);
+      const { save } = await startPendingFirstNameSave("Anya");
+
+      await act(async () => save.resolve(SAVED));
+
+      expect(editButtons()[0]).toHaveFocus();
+    });
+
+    // implements NFR-5 of add-author-profiles
+    it("focuses the input again, with its error, when a save fails", async () => {
+      render(<AuthorProfileEditor profile={PROFILE} />);
+      const { save } = await startPendingFirstNameSave("Anya");
+
+      await act(async () => save.resolve(UNAVAILABLE));
+
+      const input = screen.getByRole("textbox", { name: "Имя" });
+      expect(input).toHaveFocus();
+      expect(input).toHaveAttribute("aria-invalid", "true");
+    });
+
+    // implements NFR-5 of add-author-profiles
+    it("focuses the about textarea again when its save fails", async () => {
+      const save = deferred<Awaited<ReturnType<typeof saveAboutAction>>>();
+      vi.mocked(saveAboutAction).mockReturnValue(save.promise);
+      const user = userEvent.setup();
+      render(<AuthorProfileEditor profile={PROFILE} />);
+
+      await user.click(screen.getByRole("button", { name: "Добавить «О себе»" }));
+      await user.type(screen.getByLabelText("О себе"), "Поэт");
+      await user.click(screen.getByRole("button", { name: "Сохранить" }));
+      await act(async () => save.resolve(UNAVAILABLE));
+
+      expect(screen.getByLabelText("О себе")).toHaveFocus();
+    });
+
+    // implements NFR-5 of add-author-profiles
+    it("focuses the add prompt once a delete empties the field", async () => {
+      const remove = deferred<DeleteResponse>();
+      vi.mocked(deleteProfileFieldAction).mockReturnValue(remove.promise);
+      const user = userEvent.setup();
+      const { rerender } = render(<AuthorProfileEditor profile={PROFILE} />);
+
+      await user.click(screen.getAllByRole("button", { name: "Удалить" })[0]);
+      const emptied = { ...PROFILE, firstName: null };
+      await act(async () => remove.resolve({ data: { status: "saved", profile: emptied } }));
+      // The action's response re-renders the page with the cleared value (design D3).
+      rerender(<AuthorProfileEditor profile={emptied} />);
+
+      expect(screen.getByRole("button", { name: "Добавить имя" })).toHaveFocus();
+    });
+
+    // implements NFR-5 of add-author-profiles
+    it.each([
+      ["Добавить «О себе»", "О себе"],
+      ["Добавить фото", "Фото"],
+    ])("focuses the control when «%s» opens the field", async (prompt, label) => {
+      const user = userEvent.setup();
+      render(<AuthorProfileEditor profile={PROFILE} />);
+
+      await user.click(screen.getByRole("button", { name: prompt }));
+
+      expect(screen.getByLabelText(label)).toHaveFocus();
+    });
   });
 });

@@ -36,6 +36,11 @@ export interface ProfileField<Value, Draft> {
   readonly pendingKind: FieldActionKind | null;
   readonly error: string | undefined;
   readonly disabled: boolean;
+  /**
+   * The view's first button takes focus when it mounts: set by Cancel and by a settled action that
+   * leaves edit mode, so a keyboard user doesn't fall to the page body (NFR-5). Off on first load.
+   */
+  readonly restoreFocus: boolean;
   readonly startEditing: () => void;
   readonly cancelEditing: () => void;
   readonly submit: (draft: Draft) => void;
@@ -59,6 +64,7 @@ export function useProfileField<Value, Draft>({
   onSettled,
 }: ProfileFieldOptions<Value, Draft>): ProfileField<Value, Draft> {
   const [isEditing, setIsEditing] = useState(false);
+  const [restoreFocus, setRestoreFocus] = useState(false);
   const [shownValue, setShownValue] = useOptimistic(savedValue);
   const [pendingKind, setPendingKind] = useOptimistic<FieldActionKind | null>(null);
 
@@ -83,6 +89,16 @@ export function useProfileField<Value, Draft>({
     controls.onActionEnd(saved);
   }
 
+  /**
+   * Starts an action. The focus flag is set here, synchronously: set after the action's `await`, it
+   * would commit after the view's buttons have already remounted. A form that a failed save sends
+   * the reader back to focuses its own control instead.
+   */
+  function start(intent: FieldIntent<Draft>) {
+    setRestoreFocus(true);
+    startTransition(() => dispatch(intent));
+  }
+
   async function runAction(_previous: FieldFormState<Draft | null>, intent: FieldIntent<Draft>) {
     showPending(intent);
     const response = await settleProfileAction(() => callAction(intent));
@@ -101,15 +117,18 @@ export function useProfileField<Value, Draft>({
     pendingKind: isPending ? pendingKind : null,
     error,
     disabled: controls.disabled,
+    restoreFocus,
     startEditing: () => {
       dismiss();
+      setRestoreFocus(false);
       setEditing(true);
     },
     cancelEditing: () => {
       dismiss();
+      setRestoreFocus(true);
       setEditing(false);
     },
-    submit: (draft) => startTransition(() => dispatch({ kind: FIELD_ACTION.save, draft })),
-    remove: () => startTransition(() => dispatch({ kind: FIELD_ACTION.delete })),
+    submit: (draft) => start({ kind: FIELD_ACTION.save, draft }),
+    remove: () => start({ kind: FIELD_ACTION.delete }),
   };
 }

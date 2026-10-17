@@ -54,6 +54,7 @@ export function NameFieldEditor({ field, savedValue, ...controls }: NameFieldEdi
         disabled={editor.disabled}
         addPrompt={ADD_PROMPTS[field]}
         describedBy={editor.error ? errorId : undefined}
+        focusOnMount={editor.restoreFocus}
         onEdit={startEditing}
         onDelete={editor.remove}
       />

@@ -548,6 +548,16 @@ Every editor input SHALL have a visible label. Field errors SHALL be linked thro
 - **WHEN** the toolbar is queried by role
 - **THEN** buttons named "Жирный", "Курсив", "Заголовок", "Подзаголовок", "Маркированный список", "Нумерованный список", and "Цитата" exist
 
+#### Scenario: Keyboard focus follows the field's mode (NFR-5, added by defect fix)
+- **GIVEN** a keyboard user on the editor with a saved first name
+- **WHEN** they press Enter on the first name's «Изменить», or on an empty field's add prompt
+- **THEN** focus is in that field's control (the input, the about textarea, or the photo file input)
+- **AND WHEN** they press «Отмена», or the save or delete they started succeeds
+- **THEN** focus is on that field's «Изменить», or on its add prompt when the field is now empty
+- **AND WHEN** a name or about save fails
+- **THEN** focus is in that field's control, which shows the error
+- **AND** a first page load moves focus nowhere
+
 ### Requirement: Rendering modes (NFR-6)
 `npm run build` SHALL succeed with no Supabase environment variables set. `/authors` and `/authors/[id]` SHALL be partially prerendered with cached content, and `/account` and `/account/author` SHALL render per request.
 

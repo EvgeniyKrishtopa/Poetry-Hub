@@ -15,6 +15,8 @@ export function AboutTextarea({ ref, id, value, onChange, hidden, invalid, descr
       onChange={(event) => onChange(event.target.value)}
       aria-invalid={invalid ? true : undefined}
       aria-describedby={describedBy}
+      // It mounts only with about's edit form: when the reader opens the field, or a save sends them back (NFR-5).
+      autoFocus
       className={TEXTAREA_CLASS}
     />
   );

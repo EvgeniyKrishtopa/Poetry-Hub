@@ -291,8 +291,8 @@ Added 2026-10-17 (user decision): FR-21, design D13. Groups after 8 were renumbe
 
 ## 10. Integration verification <!-- judgement-heavy -->
 
-- [ ] 10.1 (NFR-4, NFR-6) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`, all green. The build route table lists `/authors` and `/authors/[id]` as partially prerendered and `/account` and `/account/author` per request. With no Supabase env, the build still exits 0. Grep new components for color literals (none) and `src/` for `SUPABASE_SERVICE_ROLE|SUPABASE_SECRET` (none).
-- [ ] 10.2 (FR-4, FR-5, NFR-2) Manually validate against the local Supabase stack with two test users:
+- [x] 10.1 (NFR-4, NFR-6) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`, all green. The build route table lists `/authors` and `/authors/[id]` as partially prerendered and `/account` and `/account/author` per request. With no Supabase env, the build still exits 0. Grep new components for color literals (none) and `src/` for `SUPABASE_SERVICE_ROLE|SUPABASE_SECRET` (none).
+- [x] 10.2 (FR-4, FR-5, NFR-2) Manually validate against the local Supabase stack with two test users:
   - A creates a first name only → not on `/authors`; adds a last name → listed;
   - B cannot see A's non-public row via the REST API with B's token;
   - B cannot upload into, or delete from, A's folder;
@@ -302,7 +302,7 @@ Added 2026-10-17 (user decision): FR-21, design D13. Groups after 8 were renumbe
   - with A's token, a REST read or write of `write_rate_limits` is denied, and an anonymous `rpc/consume_write_allowance` call is denied (FR-21).
 
   Record the results in the group's commit body.
-- [ ] 10.3 (FR-1–FR-21, NFR-5, NFR-8) Gate 3 web-qa over the full change. Flows:
+- [x] 10.3 (FR-1–FR-21, NFR-5, NFR-8) Gate 3 web-qa over the full change. Flows:
   - rate limit (FR-21): starting from a fresh counter (no profile write in the last minute), make 10 profile writes within a minute of the first; the 11th save shows «Слишком много сохранений. Попробуйте через минуту.» under the field with the draft kept, and `/authors` still shows the last saved value; once a minute has passed since the first of those writes, a save succeeds;
   - signed-out `/account` and `/account/author` → `/login` with no flash of the page (the network tab shows a 307 from the proxy, FR-19);
   - with the editor open, sign out in another tab, then save a field: the error «Сессия истекла. Войдите снова.» shows under the field, with no redirect (FR-19, FR-9);
@@ -317,4 +317,4 @@ Added 2026-10-17 (user decision): FR-21, design D13. Groups after 8 were renumbe
   - an edit is reflected on `/authors` immediately;
   - header links for signed-in and signed-out visitors;
   - `lang="ru"` on the feature's content.
-- [ ] 10.4 (FR-5, FR-21, NFR-6) Add the deploy steps to `PROGRESS.md`'s deploy checklist: `npx supabase db push` (both migrations: profiles and write limits), verify the bucket's limits, `NEXT_PUBLIC_SUPABASE_URL` set at build time, and per-IP rate rules at the hosting layer (Vercel Firewall or Cloudflare), including Server Action POSTs. Verify the lines exist.
+- [x] 10.4 (FR-5, FR-21, NFR-6) Add the deploy steps to `PROGRESS.md`'s deploy checklist: `npx supabase db push` (both migrations: profiles and write limits), verify the bucket's limits, `NEXT_PUBLIC_SUPABASE_URL` set at build time, and per-IP rate rules at the hosting layer (Vercel Firewall or Cloudflare), including Server Action POSTs. Verify the lines exist.

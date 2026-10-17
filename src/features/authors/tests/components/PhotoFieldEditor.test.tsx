@@ -87,7 +87,7 @@ describe("PhotoFieldEditor", () => {
     const input = screen.getByLabelText("Фото");
     expect(screen.getByText("Выбрать фото")).toHaveAttribute("for", input.id);
     expect(input).toHaveClass("sr-only");
-    await user.tab();
+    // Visually hidden yet focusable: opening the field puts focus on it (NFR-5).
     expect(input).toHaveFocus();
 
     await user.upload(input, pngFile());
