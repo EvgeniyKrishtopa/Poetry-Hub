@@ -59,12 +59,12 @@ light theme, below WCAG AA for text. Inside an `Alert` the tone colours only the
 
 | State | Name in this project | What it looks like |
 | --- | --- | --- |
-| loading | `Loading` (`src/app/loading.tsx`, route level) | skeleton blocks (`bg-surface animate-pulse`, off under reduced motion) plus a screen-reader-only "Loading…" status. Inside components there is no shared pattern (`PoemList` shows the text "Loading poems…"; the header's session part shows an empty `min-w-24` placeholder as its `<Suspense>` fallback, with neither "Sign in" nor "Sign out") |
-| error | `RootError` (`src/app/error.tsx`, route level) | heading "Something went wrong", muted explanation, optional error digest in mono, and a "Try again" `Button`. Inside components, a danger `Alert` (form-level and list errors) or an inline `text-danger` paragraph (field errors, the header's sign-out failure) |
-| empty | no named component | muted text, e.g. "No poems match your search." in `PoemList` |
+| loading | `Loading` (`src/app/loading.tsx`, route level) | skeleton blocks (`bg-surface animate-pulse`, off under reduced motion) plus a screen-reader-only "Загрузка…" status. Inside components there is no shared pattern (`PoemList` shows the text "Загрузка стихов…"; the header's session part shows an empty `min-w-24` placeholder as its `<Suspense>` fallback, with neither "Войти" nor "Выйти") |
+| error | `RootError` (`src/app/error.tsx`, route level) | heading "Что-то пошло не так", muted explanation, optional error digest in mono, and a "Попробовать снова" `Button`. Inside components, a danger `Alert` (form-level and list errors) or an inline `text-danger` paragraph (field errors, the header's sign-out failure) |
+| empty | no named component | muted text, e.g. "По вашему запросу стихов не найдено." in `PoemList` |
 | offline | none | not handled |
 
-Related route state: `NotFound` (`src/app/not-found.tsx`) shows the heading "Page not found",
+Related route state: `NotFound` (`src/app/not-found.tsx`) shows the heading "Страница не найдена",
 muted text, and an accent link back home.
 
 ## 5. Source

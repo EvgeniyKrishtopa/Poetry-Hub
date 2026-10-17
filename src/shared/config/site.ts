@@ -1,4 +1,4 @@
 export const siteConfig = {
-  name: "Poetry Hub",
-  description: "Discover, read, and collect poems.",
+  name: "Поэтический Хаб",
+  description: "Открывайте, читайте и собирайте стихи.",
 } as const;

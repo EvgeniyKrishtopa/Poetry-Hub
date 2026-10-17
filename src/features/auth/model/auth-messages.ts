@@ -1,29 +1,30 @@
 import { CONFIRM_FAILED_ERROR } from "./auth.constants";
 import type { AuthFailure, AuthFlow } from "./auth.types";
 
-export const GENERIC_SERVER_ERROR = "Something went wrong. Try again.";
+export const GENERIC_SERVER_ERROR = "Что-то пошло не так. Попробуйте ещё раз.";
 
 export const CONFIRM_FAILED_MESSAGE =
-  "That confirmation link is invalid or has expired. Sign in, or sign up again to get a new link.";
+  "Ссылка для подтверждения недействительна или устарела. Войдите или зарегистрируйтесь снова, чтобы получить новую ссылку.";
 
-export const SIGN_OUT_FAILED_MESSAGE = "Couldn't sign out. Try again.";
+export const SIGN_OUT_FAILED_MESSAGE = "Не удалось выйти. Попробуйте ещё раз.";
 
-/** The header's account link; Russian, like the authors pages it leads to (add-author-profiles NFR-8). */
+/** The header's account link to the authors' account page (add-author-profiles FR-3). */
 export const ACCOUNT_LINK_LABEL = "Мастерская поэта";
 
-export const CHECK_EMAIL_TITLE = "Check your email";
+export const CHECK_EMAIL_TITLE = "Проверьте почту";
 
 /** The `/login` alert for its `error` search param, or none for any other value. */
 export function getLoginErrorMessage(error: string | string[] | undefined): string | undefined {
   return error === CONFIRM_FAILED_ERROR ? CONFIRM_FAILED_MESSAGE : undefined;
 }
 
-const RATE_LIMITED_MESSAGE = "Too many attempts. Try again in a few minutes.";
+const RATE_LIMITED_MESSAGE = "Слишком много попыток. Попробуйте через несколько минут.";
 
 export const FIELD_MESSAGES = {
-  emailInvalid: "Enter a valid email address.",
-  passwordRequired: "Enter your password.",
-  passwordTooShort: (minLength: number) => `Use at least ${minLength} characters.`,
+  emailInvalid: "Введите корректный адрес электронной почты.",
+  passwordRequired: "Введите пароль.",
+  // The noun's plural form fits MIN_PASSWORD_LENGTH (8); a length of 1-4 or 21+ needs another form.
+  passwordTooShort: (minLength: number) => `Не менее ${minLength} символов.`,
 } as const;
 
 /**
@@ -32,15 +33,15 @@ export const FIELD_MESSAGES = {
  */
 const FAILURE_MESSAGES: Readonly<Record<AuthFlow, Readonly<Partial<Record<AuthFailure, string>>>>> = {
   "sign-in": {
-    "invalid-credentials": "Incorrect email or password.",
-    "email-not-confirmed": "Confirm your email first. Check your inbox for the link.",
+    "invalid-credentials": "Неверный адрес электронной почты или пароль.",
+    "email-not-confirmed": "Сначала подтвердите адрес электронной почты: ссылка в письме, которое мы отправили.",
     "rate-limited": RATE_LIMITED_MESSAGE,
-    unavailable: "Sign-in is unavailable right now.",
+    unavailable: "Вход сейчас недоступен.",
   },
   "sign-up": {
     "rate-limited": RATE_LIMITED_MESSAGE,
-    "weak-password": "Choose a stronger password.",
-    unavailable: "Sign-up is unavailable right now.",
+    "weak-password": "Придумайте пароль надёжнее.",
+    unavailable: "Регистрация сейчас недоступна.",
   },
 };
 

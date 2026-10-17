@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 const MATCHING_QUERY = "Road";
 const MATCHING_TITLE = "The Road Not Taken";
 const NON_MATCHING_QUERY = "xyzabc123nonsense";
-const EMPTY_STATE_TEXT = "No poems match your search.";
+const EMPTY_STATE_TEXT = "По вашему запросу стихов не найдено.";
 const HYDRATION_PROBE_TIMEOUT_MS = 1000;
 
 // implements FR-4 of migrate-to-cache-components: the cached `/` still hydrates, so client-side
@@ -12,8 +12,8 @@ test("home poem search filters the list and clearing restores it", async ({ page
   await page.goto("/");
 
   const poems = page.getByRole("main").getByRole("listitem");
-  const search = page.getByRole("searchbox", { name: "Search poems" });
-  const clear = page.getByRole("button", { name: "Clear" });
+  const search = page.getByRole("searchbox", { name: "Поиск стихов" });
+  const clear = page.getByRole("button", { name: "Очистить" });
   const initialCount = await poems.count();
   expect(initialCount).toBeGreaterThan(1);
 

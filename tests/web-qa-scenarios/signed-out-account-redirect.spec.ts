@@ -27,6 +27,6 @@ test(
 
     const header = page.getByRole("banner");
     await expect(header.getByRole("link", { name: "Наши авторы" })).toHaveAttribute("href", "/authors");
-    await expect(header.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
+    await expect(header.getByRole("link", { name: "Войти" })).toHaveAttribute("href", "/login");
   },
 );

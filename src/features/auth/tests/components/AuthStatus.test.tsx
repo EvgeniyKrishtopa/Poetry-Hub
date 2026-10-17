@@ -11,8 +11,8 @@ describe("AuthStatus", () => {
   it("shows a Sign in link to /login and no Sign out when signed out", () => {
     render(<AuthStatus session="signed-out" />);
 
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
-    expect(screen.queryByRole("button", { name: "Sign out" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Войти" })).toHaveAttribute("href", "/login");
+    expect(screen.queryByRole("button", { name: "Выйти" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Мастерская поэта" })).not.toBeInTheDocument();
   });
 
@@ -21,8 +21,8 @@ describe("AuthStatus", () => {
     const { container } = render(<AuthStatus session="signed-in" />);
 
     expect(screen.getByRole("link", { name: "Мастерская поэта" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeEnabled();
-    expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled();
+    expect(screen.queryByRole("link", { name: "Войти" })).not.toBeInTheDocument();
     expect(container).not.toHaveTextContent("@");
   });
 

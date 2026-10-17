@@ -26,8 +26,8 @@ describe("RootError", () => {
   it("shows the error heading and a generic explanation", () => {
     render(<RootError error={errorWith("boom")} retry={vi.fn()} />);
 
-    expect(screen.getByRole("heading", { level: 1, name: "Something went wrong" })).toBeInTheDocument();
-    expect(screen.getByText(/unexpected error occurred/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Что-то пошло не так" })).toBeInTheDocument();
+    expect(screen.getByText(/непредвиденная ошибка/i)).toBeInTheDocument();
   });
 
   // implements FR-3 of add-route-states
@@ -36,13 +36,13 @@ describe("RootError", () => {
 
     // innerHTML, not just text nodes: the message must not leak through attributes either.
     expect(container.innerHTML).not.toContain(SECRET_MESSAGE);
-    expect(screen.getByText(`Error reference: ${DIGEST}`)).toBeInTheDocument();
+    expect(screen.getByText(`Код ошибки: ${DIGEST}`)).toBeInTheDocument();
   });
 
   it("shows no reference line when the error has no digest", () => {
     render(<RootError error={errorWith("boom")} retry={vi.fn()} />);
 
-    expect(screen.queryByText(/Error reference/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Код ошибки/)).not.toBeInTheDocument();
   });
 
   // implements FR-4 of add-route-states
@@ -50,7 +50,7 @@ describe("RootError", () => {
     const retry = vi.fn();
     render(<RootError error={errorWith("boom")} retry={retry} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await userEvent.click(screen.getByRole("button", { name: "Попробовать снова" }));
 
     expect(retry).toHaveBeenCalledTimes(1);
   });

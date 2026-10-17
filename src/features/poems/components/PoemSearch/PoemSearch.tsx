@@ -15,12 +15,12 @@ export function PoemSearch() {
         type="search"
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
-        placeholder="Search by title or author"
-        aria-label="Search poems"
+        placeholder="Поиск по названию или автору"
+        aria-label="Поиск стихов"
         className="flex-1 rounded-full border border-border bg-background px-4 py-2 outline-none focus:border-accent"
       />
       <Button variant="ghost" onClick={resetSearch} disabled={!searchQuery}>
-        Clear
+        Очистить
       </Button>
     </div>
   );

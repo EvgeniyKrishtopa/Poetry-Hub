@@ -9,7 +9,7 @@ vi.mock("../../actions/auth.actions", () => ({ signOutAction: vi.fn() }));
 
 type SignOutResult = Awaited<ReturnType<typeof signOutAction>>;
 
-const FAILURE_TEXT = "Couldn't sign out. Try again.";
+const FAILURE_TEXT = "Не удалось выйти. Попробуйте ещё раз.";
 
 describe("SignOutButton", () => {
   afterEach(() => {
@@ -22,12 +22,12 @@ describe("SignOutButton", () => {
     vi.mocked(signOutAction).mockReturnValue(new Promise((resolve) => (settle = resolve)));
     render(<SignOutButton />);
 
-    await userEvent.setup().click(screen.getByRole("button", { name: "Sign out" }));
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeDisabled();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Выйти" }));
+    expect(screen.getByRole("button", { name: "Выйти" })).toBeDisabled();
     settle({ data: { ok: true } } as SignOutResult);
 
     // Enabled again means the transition has settled, so a failure alert would already show.
-    await vi.waitFor(() => expect(screen.getByRole("button", { name: "Sign out" })).toBeEnabled());
+    await vi.waitFor(() => expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled());
     expect(signOutAction).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -41,13 +41,13 @@ describe("SignOutButton", () => {
     arrange();
     render(<SignOutButton />);
 
-    await userEvent.setup().click(screen.getByRole("button", { name: "Sign out" }));
+    await userEvent.setup().click(screen.getByRole("button", { name: "Выйти" }));
 
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent(FAILURE_TEXT);
     expect(alert).toHaveClass("text-danger");
     expect(alert.tagName).toBe("P");
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled();
   });
 
   it("disables Sign out while the sign-out is pending", async () => {
@@ -55,12 +55,12 @@ describe("SignOutButton", () => {
     vi.mocked(signOutAction).mockReturnValue(new Promise((resolve) => (settle = resolve)));
     render(<SignOutButton />);
 
-    await userEvent.setup().click(screen.getByRole("button", { name: "Sign out" }));
+    await userEvent.setup().click(screen.getByRole("button", { name: "Выйти" }));
 
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Выйти" })).toBeDisabled();
     // React entangles pending async transitions, so a never-settling one would keep later tests pending.
     settle({ data: { ok: true } } as SignOutResult);
-    await vi.waitFor(() => expect(screen.getByRole("button", { name: "Sign out" })).toBeEnabled());
+    await vi.waitFor(() => expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled());
   });
 
   it("clears the alert when a retry succeeds", async () => {
@@ -70,10 +70,10 @@ describe("SignOutButton", () => {
     render(<SignOutButton />);
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await user.click(screen.getByRole("button", { name: "Выйти" }));
     expect(await screen.findByRole("alert")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await user.click(screen.getByRole("button", { name: "Выйти" }));
 
     await vi.waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
     expect(signOutAction).toHaveBeenCalledTimes(2);

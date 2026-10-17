@@ -75,7 +75,7 @@ When the home greeting can't be loaded for any reason, the home page SHALL rende
 #### Scenario: CMS unavailable
 - **GIVEN** the home greeting request fails with any failure kind
 - **WHEN** a visitor opens `/`
-- **THEN** the page's main heading reads "Poetry Hub"
+- **THEN** the page's main heading reads "Поэтический Хаб"
 - **AND** the static site description is shown beneath it
 - **AND** the poem list still renders
 

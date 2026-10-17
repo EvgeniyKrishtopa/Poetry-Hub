@@ -30,7 +30,7 @@ describe("SignInPanel", () => {
     expect(children.props.error).toBe(error);
 
     render(fallback);
-    expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Войти" })).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

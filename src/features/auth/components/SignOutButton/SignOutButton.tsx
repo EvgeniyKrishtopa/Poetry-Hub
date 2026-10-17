@@ -38,7 +38,7 @@ export function SignOutButton() {
         </p>
       )}
       <Button variant="ghost" onClick={signOut} disabled={signingOut}>
-        Sign out
+        Выйти
       </Button>
     </div>
   );

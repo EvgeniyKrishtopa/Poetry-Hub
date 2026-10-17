@@ -22,7 +22,7 @@ describe("SignInFormWithError", () => {
   it("shows the form without an alert for no or an unknown error param", async () => {
     await renderWithError("something-else");
 
-    expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Войти" })).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

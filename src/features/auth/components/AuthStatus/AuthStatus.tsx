@@ -29,7 +29,7 @@ export function AuthStatus({ session }: AuthStatusProps) {
 
   return (
     <Link href={SIGN_IN_PATH} className="text-sm font-medium text-accent">
-      Sign in
+      Войти
     </Link>
   );
 }

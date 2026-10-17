@@ -5,8 +5,8 @@
 export const IMAGE_QUALITY = 60;
 
 /**
- * `lang` of the product's Russian copy (the authors pages and the header links). The document itself
- * stays `lang="en"` while the auth screens are in English, so each Russian block carries this.
+ * `lang` of the product's copy, set on the document itself. The authors pages' blocks still carry it from
+ * when the rest of the UI was English (add-author-profiles NFR-8); there it is now redundant.
  */
 export const CONTENT_LANG = "ru";
 

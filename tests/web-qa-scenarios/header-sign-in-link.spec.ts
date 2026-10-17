@@ -1,7 +1,7 @@
 // pages: /
 import { expect, test } from "@playwright/test";
 
-// implements FR-1 of remove-browser-session-read: a signed-out request gets the "Sign in" link,
+// implements FR-1 of remove-browser-session-read: a signed-out request gets the "Войти" link,
 // read on the server and streamed into the header's Suspense boundary.
 test(
   "signed-out header shows the Sign in link and no Sign out button",
@@ -11,8 +11,8 @@ test(
     await page.goto("/");
 
     const header = page.getByRole("banner");
-    await expect(header.getByRole("link", { name: "Poetry Hub" })).toHaveAttribute("href", "/");
-    await expect(header.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
-    await expect(header.getByRole("button", { name: "Sign out" })).toHaveCount(0);
+    await expect(header.getByRole("link", { name: "Поэтический Хаб" })).toHaveAttribute("href", "/");
+    await expect(header.getByRole("link", { name: "Войти" })).toHaveAttribute("href", "/login");
+    await expect(header.getByRole("button", { name: "Выйти" })).toHaveCount(0);
   },
 );

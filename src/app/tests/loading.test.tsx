@@ -18,7 +18,7 @@ describe("Loading", () => {
   it("announces a status region with accessible text", () => {
     render(<Loading />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("Loading…");
+    expect(screen.getByRole("status")).toHaveTextContent("Загрузка…");
   });
 
   it("hides every skeleton block from assistive technology", () => {

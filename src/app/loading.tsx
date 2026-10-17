@@ -8,7 +8,7 @@ export default function Loading() {
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-6 py-16">
       <div role="status">
-        <span className="sr-only">Loading…</span>
+        <span className="sr-only">Загрузка…</span>
       </div>
       <div aria-hidden="true" data-skeleton className={`${SKELETON_BLOCK} h-10 w-1/2`} />
       {SKELETON_TEXT_LINE_WIDTHS.map((width) => (

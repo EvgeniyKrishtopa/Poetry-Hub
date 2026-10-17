@@ -20,9 +20,9 @@ function mockResult(result: SignUpActionResult) {
 
 async function submit(email = EMAIL, password = PASSWORD) {
   const user = userEvent.setup();
-  await user.type(screen.getByLabelText("Email"), email);
-  await user.type(screen.getByLabelText("Password"), password);
-  await user.click(screen.getByRole("button", { name: "Create account" }));
+  await user.type(screen.getByLabelText("Электронная почта"), email);
+  await user.type(screen.getByLabelText("Пароль"), password);
+  await user.click(screen.getByRole("button", { name: "Зарегистрироваться" }));
 }
 
 describe("SignUpForm feedback tones", () => {
@@ -38,7 +38,7 @@ describe("SignUpForm feedback tones", () => {
     await submit();
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Too many attempts. Try again in a few minutes.");
+    expect(alert).toHaveTextContent("Слишком много попыток. Попробуйте через несколько минут.");
     expect(alert).toHaveClass("border-danger", "border-l-4");
   });
 
@@ -51,7 +51,7 @@ describe("SignUpForm feedback tones", () => {
 
     const status = await screen.findByRole("status");
     expect(status).toHaveClass("border-success", "border-l-4");
-    expect(status).toHaveTextContent("Check your email");
+    expect(status).toHaveTextContent("Проверьте почту");
     expect(status).toHaveTextContent(EMAIL);
     // muted on surface is about 4.4:1 in light, below AA, so the body paragraph inherits foreground.
     expect(status.querySelector(".text-muted")).toBeNull();
@@ -68,13 +68,13 @@ describe("SignUpForm", () => {
   it("renders labelled inputs with the right autocomplete, a submit button, and a sign-in link", () => {
     render(<SignUpForm />);
 
-    const email = screen.getByRole("textbox", { name: "Email" });
+    const email = screen.getByRole("textbox", { name: "Электронная почта" });
     expect(email).toHaveAttribute("autocomplete", "email");
-    const password = screen.getByLabelText("Password");
+    const password = screen.getByLabelText("Пароль");
     expect(password).toHaveAttribute("type", "password");
     expect(password).toHaveAttribute("autocomplete", "new-password");
-    expect(screen.getByRole("button", { name: "Create account" })).toBeEnabled();
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("button", { name: "Зарегистрироваться" })).toBeEnabled();
+    expect(screen.getByRole("link", { name: "Войти" })).toHaveAttribute("href", "/login");
     expect(email.closest("form")).toHaveAttribute("novalidate");
   });
 
@@ -86,25 +86,25 @@ describe("SignUpForm", () => {
     await submit();
 
     const status = await screen.findByRole("status");
-    expect(status).toHaveTextContent("Check your email");
+    expect(status).toHaveTextContent("Проверьте почту");
     expect(status).toHaveTextContent(EMAIL);
-    expect(screen.queryByRole("button", { name: "Create account" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Зарегистрироваться" })).not.toBeInTheDocument();
     expect(signUpAction).toHaveBeenCalledWith({ email: EMAIL, password: PASSWORD });
   });
 
   // implements NFR-3 of add-supabase-auth
   it("shows a server validation error on the password field", async () => {
     mockResult({
-      validationErrors: { formErrors: [], fieldErrors: { password: ["Use at least 8 characters."] } },
+      validationErrors: { formErrors: [], fieldErrors: { password: ["Не менее 8 символов."] } },
     });
     render(<SignUpForm />);
 
     await submit(EMAIL, "1234567");
 
-    const password = await screen.findByLabelText("Password");
+    const password = await screen.findByLabelText("Пароль");
     expect(password).toHaveAttribute("aria-invalid", "true");
-    expect(password).toHaveAccessibleDescription("Use at least 8 characters.");
-    expect(screen.getByLabelText("Email")).not.toHaveAttribute("aria-invalid");
+    expect(password).toHaveAccessibleDescription("Не менее 8 символов.");
+    expect(screen.getByLabelText("Электронная почта")).not.toHaveAttribute("aria-invalid");
   });
 
   // implements FR-4 of add-supabase-auth
@@ -114,16 +114,16 @@ describe("SignUpForm", () => {
 
     await submit();
 
-    expect(await screen.findByLabelText("Password")).toHaveAccessibleDescription("Choose a stronger password.");
+    expect(await screen.findByLabelText("Пароль")).toHaveAccessibleDescription("Придумайте пароль надёжнее.");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   // implements FR-4 of add-supabase-auth
   it.each<[string, SignUpActionResult, string]>([
-    ["rate limit", { data: { status: "failed", failure: "rate-limited" } }, "Too many attempts. Try again in a few minutes."],
-    ["missing config", { data: { status: "failed", failure: "unavailable" } }, "Sign-up is unavailable right now."],
-    ["other failure", { data: { status: "failed", failure: "unknown" } }, "Something went wrong. Try again."],
-    ["serverError", { serverError: "Something went wrong. Try again." }, "Something went wrong. Try again."],
+    ["rate limit", { data: { status: "failed", failure: "rate-limited" } }, "Слишком много попыток. Попробуйте через несколько минут."],
+    ["missing config", { data: { status: "failed", failure: "unavailable" } }, "Регистрация сейчас недоступна."],
+    ["other failure", { data: { status: "failed", failure: "unknown" } }, "Что-то пошло не так. Попробуйте ещё раз."],
+    ["serverError", { serverError: "Что-то пошло не так. Попробуйте ещё раз." }, "Что-то пошло не так. Попробуйте ещё раз."],
   ])("shows the %s alert and keeps the email", async (_label, result, message) => {
     mockResult(result);
     render(<SignUpForm />);
@@ -131,8 +131,8 @@ describe("SignUpForm", () => {
     await submit();
 
     expect(await screen.findByRole("alert")).toHaveTextContent(message);
-    expect(screen.getByLabelText("Email")).toHaveValue(EMAIL);
-    expect(screen.getByLabelText("Password")).toHaveValue("");
+    expect(screen.getByLabelText("Электронная почта")).toHaveValue(EMAIL);
+    expect(screen.getByLabelText("Пароль")).toHaveValue("");
   });
 
   // implements NFR-3 of add-supabase-auth
@@ -142,6 +142,6 @@ describe("SignUpForm", () => {
 
     await submit();
 
-    expect(screen.getByRole("button", { name: "Create account" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Зарегистрироваться" })).toBeDisabled();
   });
 });
