@@ -1,7 +1,7 @@
 // pages: /
 import { expect, test } from "@playwright/test";
 
-// implements FR-1 of remove-browser-session-read: a signed-out request gets the "Войти" link,
+// implements FR-1 of remove-browser-session-read: a signed-out request gets the sign-in link,
 // read on the server and streamed into the header's Suspense boundary.
 test(
   "signed-out header shows the Sign in link and no Sign out button",
