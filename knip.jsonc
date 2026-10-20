@@ -3,7 +3,12 @@
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignore": [
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
-    ".ncurc.cjs"
+    ".ncurc.cjs",
+    // TEMPORARY (add-site-footer): scaffold model files that SiteFooter starts importing in task 1.3, which
+    // deletes these lines; task 2.3 runs knip clean.
+    "src/features/site-footer/model/copyright-years.ts",
+    "src/features/site-footer/model/site-footer-messages.ts",
+    "src/features/site-footer/model/site-footer.constants.ts"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.

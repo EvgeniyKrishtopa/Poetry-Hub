@@ -18,6 +18,9 @@
   `<footer>` with the copyright notice (`COPYRIGHT_SIGN`, `formatCopyrightYears`,
   `siteConfig.name`) and a `<nav>` of three `next/link`
   links built from the two model files. Token utilities only. Export it from `index.ts`.
+  Narrow the scaffold's `Promise<ReactNode>` return type to `Promise<ReactElement>`.
+  Remove the scaffold's TEMPORARY `site-footer` lines from `knip.jsonc`, since the component now
+  imports the three model files.
 - [ ] 1.4 (FR-2, FR-3, NFR-1) Write `tests/components/SiteFooter.test.tsx` per design D5:
   rely on the global `next/cache` mock in `vitest.setup.ts`, set the clock with `vi.setSystemTime`, render `await SiteFooter()`.
   - FR-2: the 2026-10-20, 2027-01-01T00:00:00Z, and 2030-06-15 scenarios.
@@ -28,7 +31,8 @@
 ## 2. Wire it into the root layout and verify <!-- judgement-heavy -->
 
 - [ ] 2.1 (FR-1) Render `<SiteFooter />` in `src/app/layout.tsx` after `{children}`, inside
-  `Providers`, imported from `@/features/site-footer`.
+  `Providers`, imported from `@/features/site-footer`. The scaffold already added this line
+  (approved file map, 2026-10-20); confirm it is still there and in that place.
 - [ ] 2.2 (NFR-6) Update `docs/architecture.md`: add `features/site-footer/` to the project tree and
   note the footer on the `layout.tsx` line. Update `docs/state-management.md`'s Server caching
   section: a component that reads no request data may own a `"use cache"` scope with a named

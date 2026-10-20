@@ -172,10 +172,15 @@ None. No data, config, or environment change; ships with the next deploy.
 
 ## Scaffold map
 
-| File | Stub |
-| --- | --- |
-| `src/features/site-footer/index.ts` | `export { SiteFooter } from "./components/SiteFooter/SiteFooter";` |
-| `src/features/site-footer/components/SiteFooter/SiteFooter.tsx` | `export async function SiteFooter(): Promise<ReactElement>` with `"use cache"` and `cacheLife("days")`, body returns an empty `<footer />` |
-| `src/features/site-footer/model/site-footer.constants.ts` | `FOOTER_LINK_PATHS` (`about`, `privacy`, `contact`), `SITE_FOUNDING_YEAR`, `YEAR_RANGE_SEPARATOR` |
-| `src/features/site-footer/model/copyright-years.ts` | `export function formatCopyrightYears(foundingYear: number, currentYear: number): string`, stub body |
-| `src/features/site-footer/model/site-footer-messages.ts` | `FOOTER_LINK_LABELS`, `FOOTER_NAV_LABEL`, `COPYRIGHT_SIGN` |
+Written after the scaffold files existed (`opsx-scaffold`, 2026-10-20); the user approved this
+file map, including the layout line.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/features/site-footer/index.ts` | Public API of the feature | `SiteFooter` |
+| `src/features/site-footer/components/SiteFooter/SiteFooter.tsx` | The footer the root layout renders on every page. Stub: `async`, returns `null`, typed `Promise<ReactNode>`; task 1.3 adds `"use cache"`, `cacheLife("days")`, and the markup, and narrows the return type to `Promise<ReactElement>` | `SiteFooter` |
+| `src/features/site-footer/model/site-footer.constants.ts` | Link paths, the founding year, the year-range separator (spec'd values) | `FOOTER_LINK_PATHS`, `SITE_FOUNDING_YEAR`, `YEAR_RANGE_SEPARATOR` |
+| `src/features/site-footer/model/site-footer-messages.ts` | The UI copy table, verbatim | `FOOTER_LINK_LABELS`, `FOOTER_NAV_LABEL`, `COPYRIGHT_SIGN` |
+| `src/features/site-footer/model/copyright-years.ts` | The years part of the copyright notice. Stub: throws "not implemented" | `formatCopyrightYears` |
+| `src/app/layout.tsx` | Renders `<SiteFooter />` after `{children}`, inside `Providers` (task 2.1's line, added early so knip sees the component) | — |
+| `knip.jsonc` | TEMPORARY ignore of the three model files until task 1.3 imports them | — |
