@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children, breadcrumbs }: LayoutProps<"/">) {
   return (
     <html
       lang={CONTENT_LANG}
@@ -44,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <HeaderAuthLinks />
             </nav>
           </header>
+          {breadcrumbs}
           {children}
           <SiteFooter />
         </Providers>
