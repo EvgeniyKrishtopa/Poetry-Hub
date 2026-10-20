@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { HeaderAuthLinks } from "@/features/auth";
 import { AuthorsNavLink } from "@/features/authors";
+import { SiteFooter } from "@/features/site-footer";
 
 import RootLayout from "../layout";
 
@@ -70,8 +71,12 @@ describe("RootLayout header", () => {
     const shell = pathTo(tree, "header")?.at(-2);
     expect(shell).toBeDefined();
     const siblings = Children.toArray(shell?.props.children) as ReactElement<{ "data-slot"?: string }>[];
-    const order = siblings.map((element) => (element.type === "header" ? "header" : element.props["data-slot"]));
-    expect(order).toEqual(["header", "breadcrumbs", "page"]);
+    const order = siblings.map((element) => {
+      if (element.type === "header") return "header";
+      if (element.type === SiteFooter) return "footer";
+      return element.props["data-slot"];
+    });
+    expect(order).toEqual(["header", "breadcrumbs", "page", "footer"]);
   });
 
   // implements FR-3, NFR-8 of add-author-profiles
