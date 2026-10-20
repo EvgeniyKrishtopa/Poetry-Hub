@@ -36,6 +36,14 @@ describe("@breadcrumbs slot", () => {
     expect(slotPages).toEqual(realPages);
   });
 
+  // implements FR-6 of add-breadcrumbs
+  it("has a default and no catch-all folder, so a URL with no page keeps its HTTP 404", () => {
+    const entries = readdirSync(SLOT_DIR, { recursive: true, encoding: "utf8" });
+
+    expect(entries).toContain("default.tsx");
+    expect(entries.filter((entry) => entry.split("/").some((part) => part.includes("[...")))).toEqual([]);
+  });
+
   // implements FR-2 of add-breadcrumbs
   it("passes each static slot page's own folder path as its segments", () => {
     for (const path of slotPages.filter((slotPath) => slotPath !== "" && !slotPath.includes("["))) {
