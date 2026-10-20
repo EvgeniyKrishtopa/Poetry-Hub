@@ -4,6 +4,10 @@ import { expect, test } from "@playwright/test";
 // /authors/<id> is left out: it needs a public profile in the local database.
 const SIGNED_OUT_PATHS = ["/", "/login", "/signup", "/authors", "/does-not-exist"] as const;
 
+// Mirrors SITE_FOUNDING_YEAR in src/features/site-footer/model/site-footer.constants.ts: change both together.
+const FOUNDING_YEAR = 2026;
+const COPYRIGHT_NOTICE = new RegExp(`© ${FOUNDING_YEAR}(–\\d{4})? Поэтический Хаб`);
+
 const FOOTER_LINKS = [
   ["О проекте", "/about"],
   ["Политика конфиденциальности", "/privacy"],
@@ -20,7 +24,7 @@ test("the site footer appears once, after main, on every page", { tag: ["@add-si
 
     const footer = page.getByRole("contentinfo");
     await expect(footer).toHaveCount(1);
-    await expect(footer).toContainText(/© 2026(–\d{4})? Поэтический Хаб/);
+    await expect(footer).toContainText(COPYRIGHT_NOTICE);
 
     const footerFollowsMain = await page.evaluate(() => {
       const main = document.querySelector("main");
