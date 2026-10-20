@@ -7,7 +7,9 @@ Read before adding a feature, adding a file to `shared/`, or importing across fe
 ```
 src/
 ├── app/                      # Routing only: pages, layouts, route handlers, providers
-│   ├── layout.tsx            # Root shell: html/body/Providers + header (site link; a <nav> with authors' `AuthorsNavLink` and auth's `HeaderAuthLinks`, which reads the session inside its own <Suspense>)
+│   ├── layout.tsx            # Root shell: html/body/Providers + header (site link; a <nav> with authors' `AuthorsNavLink` and auth's `HeaderAuthLinks`, which reads the session inside its own <Suspense>), then the `breadcrumbs` slot, then the page
+│   ├── @breadcrumbs/         # Parallel slot: the breadcrumb trail. Mirrors the page tree, one page.tsx per real page at the same URL path, each rendering breadcrumbs' `Breadcrumbs` with its own segments;
+│   │                         # page.tsx (home) and default.tsx (any 404) render nothing. No catch-all: it would turn missing URLs into HTTP 200. A new page needs its slot page too (app/tests/breadcrumbs-slot.test.ts checks)
 │   ├── error.tsx             # Client error boundary: generic copy + digest, retry() (covers both groups)
 │   ├── not-found.tsx         # 404 screen for unmatched URLs (covers both groups)
 │   ├── loading.tsx           # Neutral loading state for any segment (covers both groups)
@@ -33,6 +35,7 @@ src/
 │   │   └── …                 # dal/ (confirmSignUp, getSessionState, getCurrentUserId, requireSession), model/, components/, tests/, index.ts (roles as below)
 │   ├── authors/              # Author profiles: the directory, public author pages, the account section, the editor, the header's «Наши авторы» link
 │   │   └── …                 # actions/, dal/ (owner reads and writes, cached public reads), hooks/ (the editor's field hooks), model/, components/, tests/, index.ts
+│   ├── breadcrumbs/          # The breadcrumb trail under the header: model/ (the route table on the named path constants, trail building), components/ (Suspense wrapper, async loader, view, placeholder); server-only
 │   └── poems/                # The folder roles every feature can use:
 │       ├── api/              # Fetchers (*.api.ts) + query keys/options/hooks (*.queries.ts)
 │       ├── dal/              # Server-only data access for Server Components (no role suffix)
@@ -47,7 +50,7 @@ src/
     │   ├── contentful/       # Server-only Contentful GraphQL client, cached with "use cache" (every module: import "server-only")
     │   ├── safe-action/      # Server-only next-safe-action client factory (name-only logging, generic message); each feature builds its action client on it
     │   └── supabase/         # Supabase: index.ts client-safe (SupabaseConfigError); server.ts (server client), public.ts (cookie-less client for "use cache"), session.ts (proxy refresh, which also reports the session state) server-only; claims.ts (one reading of a getClaims() result, shared by the proxy and auth's DAL)
-    └── config/               # App-wide constants (constants.ts: IMAGE_QUALITY, CONTENT_LANG, SESSION_STATE), site config, the Supabase image-host helper, the account and sign-in paths (account-paths.ts)
+    └── config/               # App-wide constants (constants.ts: IMAGE_QUALITY, CONTENT_LANG, SESSION_STATE, HOME_PATH), site config, the Supabase image-host helper, the account, sign-in and sign-up paths (account-paths.ts)
 ```
 
 ## Boundary rules
@@ -56,7 +59,7 @@ src/
 - A new page goes in `app/(public)/` unless it needs a signed-in reader; then it goes in `app/(authorized)/`. The group's layout enforces nothing — placing a page there does not protect it. Each page's feature component calls `requireSession()` (from `@/features/auth`) inside its own Suspense boundary before reading any reader data: it redirects a signed-out reader to `/login`, and returns `unknown` when Supabase can't be reached, which the page shows as "service unavailable" instead of redirecting. Never a layout-only check, since a shared layout does not re-render on client navigation. On top of that, the proxy redirects a signed-out page request under `/account` before anything renders (ACCOUNT_PATH in `shared/config/account-paths.ts`; a page outside it gets only its own gate). That redirect is optimistic, so the page gate always stays. Route handlers under `app/api/` stay outside both groups.
 - Import a feature only through its public API: `@/features/poems`, never `@/features/poems/model/...` (enforced by `no-restricted-imports` in `eslint.config.mjs`).
 - Features must not import from other features' internals. If two features need the same thing, move it to `shared/` or compose them in `app/`.
-- A feature may import another feature's public API for a server-only accessor it needs, e.g. `authors` takes `getSessionState` / `getCurrentUserId` / `requireSession` from `@/features/auth`. Only through the index, only server-side, and never in both directions (no cycles).
+- A feature may import another feature's public API for a server-only accessor it needs, e.g. `authors` takes `getSessionState` / `getCurrentUserId` / `requireSession` from `@/features/auth`, and `breadcrumbs` takes `getPublicAuthorName`, `AUTHORS_PAGE_TITLES` and the authors path constants from `@/features/authors`. Only through the index, only server-side, and never in both directions (no cycles).
 - `shared/` never imports from `features/` or `app/`.
 - Inside a feature, use relative imports; across layers, use the `@/` alias.
 - Don't create a `shared/` abstraction until a second feature actually needs it. Exception: an infrastructure client for an external service (e.g. `shared/lib/contentful`, `shared/lib/supabase`) may live in `shared/lib` from its first consumer.
