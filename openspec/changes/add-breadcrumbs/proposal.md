@@ -9,7 +9,7 @@ Poetry Hub now has nested pages (`/authors/<id>`, `/account/author`), but nothin
 - Add a breadcrumb trail under the site header on every page except home. It is the same for every visitor, signed in or not.
 - The trail starts with «Главная» and ends with the current page. Every item before the last is a link; the last item is the current page, is not a link, and is highlighted in the accent color.
 - Add a new feature `src/features/breadcrumbs/`: the route → trail table and the trail component, Server Components only.
-- Add a parallel route slot `src/app/@breadcrumbs/` rendered by the root layout between the header and the page. The slot reads the URL segments as route params, so the trail stays a Server Component and still updates on client-side navigation.
+- Add a parallel route slot `src/app/@breadcrumbs/` rendered by the root layout between the header and the page. It holds one slot page per real page, at the same path, so the trail stays a Server Component, still updates on client-side navigation, and a URL with no page keeps its HTTP 404 with no trail.
 - `features/authors` exports its page titles, its path constants, and a server-only author-name read for the trail's last item on `/authors/<id>`. Every trail path comes from a named constant; `shared/config` gains `HOME_PATH` and `SIGN_UP_PATH`.
 
 ## Requirements
@@ -29,7 +29,7 @@ Poetry Hub now has nested pages (`/authors/<id>`, `/account/author`), but nothin
 - **FR-3**: Every trail item except the last SHALL be a link to its page. The last item SHALL be the current page: plain text, not a link, marked as the current page for assistive technology, and shown in the accent color. The other items SHALL use the regular text color.
 - **FR-4**: On `/authors/<id>` the last item SHALL be the author's first and last name, separated by a space, as on the author page heading. When the author can't be read because the service is unavailable, the last item SHALL read «Автор». When the author doesn't exist or isn't public, no trail SHALL be shown.
 - **FR-5**: The trail SHALL be identical for every visitor: signed out, signed in, author or not. It SHALL NOT depend on the session.
-- **FR-6**: A URL not listed in FR-2 (including any URL that shows the 404 page) SHALL show no trail.
+- **FR-6**: A URL not listed in FR-2, opened directly or by reload, SHALL keep its HTTP 404 response and show the 404 page with no trail. An in-app link to such a URL may keep the previous page's trail; the app has no such links (design, Risks).
 - **FR-7**: The trail SHALL follow client-side navigation: going from home to another page by an in-app link shows that page's trail, and going back to home by an in-app link (or the browser's Back button) hides it, without a full page reload.
 
 ### Non-functional
@@ -61,7 +61,7 @@ Approved Claude Design canvas: https://claude.ai/artifact/GCN2BZQF5eG454fA1PZG8z
 
 | Screen / state | Mockup section |
 | --- | --- |
-| `/authors`, loading (empty 20 px row holds the place) | «/authors · загрузка» |
+| `/authors/<id>`, loading (empty 20 px row holds the place; the static pages render their trail into the prerendered shell, so only this page shows it) | «/authors · загрузка» (drawn on `/authors`, applies to `/authors/<id>`) |
 | `/authors`, two items | «/authors · два пункта» |
 | `/authors/<id>`, three items | «/authors/<id> · три пункта» |
 | `/authors/<id>`, long name wrapping at 360 px | «/authors/<id> · длинное имя» |

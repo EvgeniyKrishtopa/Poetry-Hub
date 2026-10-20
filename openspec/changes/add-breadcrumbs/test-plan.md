@@ -12,7 +12,7 @@ Levels:
 | Requirement | Criterion (scenario) | Tests | Level |
 | --- | --- | --- | --- |
 | FR-1 | Home shows no trail | `matchRoute([])` → `none`; `buildTrail(none)` → `none`; browser: `/` has no «Навигационная цепочка» landmark | unit + end-to-end |
-| FR-1 | Another page shows the trail under the header | Root-layout test: the `breadcrumbs` slot renders after the header and before the children; browser: `/authors` shows the landmark between header and main | unit + end-to-end |
+| FR-1 | Another page shows the trail under the header | Root-layout test: the `breadcrumbs` slot renders after the header and before the children; slot-coverage test: every non-home page has a slot page at its path and no slot page lacks a real page (task 4.2); browser: `/authors` shows the landmark between header and main | unit + end-to-end |
 | FR-2 | Two-level trail (`/login`) | `matchRoute(["login"])` → [«Вход» current]; `buildTrail` prepends «Главная» | unit |
 | FR-2 | Three-level trail in the account area | `matchRoute(["account", "author"])` → [«Мастерская поэта» link to `ACCOUNT_PATH`, «Профиль автора» current], no «Главная»; browser: signed-in `/account/author` reads the three items | unit + end-to-end |
 | FR-2 | Signup trail | `matchRoute(["signup"])` → [«Регистрация» current]; every table row's path equals its named constant | unit |
@@ -22,8 +22,8 @@ Levels:
 | FR-4 | Author read unavailable | `getPublicAuthorName`: `unavailable` passes through; `buildTrail(author, unavailable)` → last item «Автор» | unit |
 | FR-4 | Unknown author | `getPublicAuthorName`: `not-found` passes through; `buildTrail(author, not-found)` → `none`; browser: `/authors/<unknown uuid>` has no trail | unit + end-to-end |
 | FR-5 | Signed-in and signed-out visitors see the same trail | Static check: nothing in `features/breadcrumbs` imports from `@/features/auth`; browser: `/authors` signed out and signed in shows the same trail | integration + end-to-end |
-| FR-6 | Unknown URL → 404, no trail | `matchRoute(["no-such-page"])` → `none`; `/no-such-page` on the dev server returns HTTP 404 with «Страница не найдена» (task 4.1); browser: no trail | unit + integration + end-to-end |
-| FR-6 | Extra segments under a known page | `matchRoute(["account", "author", "extra"])` and `matchRoute(["authors", "a", "b"])` → `none` | unit |
+| FR-6 | Unknown URL opened directly → HTTP 404, 404 page, no trail | `matchRoute(["no-such-page"])` → `none`; against the production server, `/no-such-page` answers HTTP 404 (task 4.1); browser: direct visit shows «Страница не найдена» and no trail | unit + integration + end-to-end |
+| FR-6 | Extra segments under a known page → HTTP 404, no trail | `matchRoute(["account", "author", "extra"])` and `matchRoute(["authors", "a", "b"])` → `none`; against the production server, `/authors/a/b` answers HTTP 404 (task 4.1; `/account/…` paths redirect a signed-out visitor to `/login` first) | unit + integration |
 | FR-7 | Leaving home shows the trail | Browser: from `/`, follow the header's «Наши авторы»: the trail appears with no full reload | end-to-end |
 | FR-7 | Returning home hides the trail | Browser: from `/authors`, the trail's «Главная» and the Back button both reach home with no trail | end-to-end |
 | NFR-1 | No client modules in the feature | Static search: no `"use client"` under `src/features/breadcrumbs` or `src/app/@breadcrumbs` | integration |

@@ -37,7 +37,7 @@ function pathTo(node: ReactNode, type: unknown): AnyElement[] | undefined {
 }
 
 function renderLayoutTree(): ReactNode {
-  return RootLayout({ children: null, params: Promise.resolve({}) });
+  return RootLayout({ children: null, breadcrumbs: null, params: Promise.resolve({}) });
 }
 
 describe("RootLayout header", () => {
