@@ -61,6 +61,19 @@ describe("RootLayout header", () => {
     expect(ancestors.some((element) => element.type === HeaderAuthLinks)).toBe(false);
   });
 
+  // implements FR-1 of add-breadcrumbs
+  it("renders the breadcrumbs slot between the header and the page", () => {
+    const breadcrumbs = <nav data-slot="breadcrumbs" />;
+    const page = <main data-slot="page" />;
+    const tree = RootLayout({ children: page, breadcrumbs, params: Promise.resolve({}) });
+
+    const shell = pathTo(tree, "header")?.at(-2);
+    expect(shell).toBeDefined();
+    const siblings = Children.toArray(shell?.props.children) as ReactElement<{ "data-slot"?: string }>[];
+    const order = siblings.map((element) => (element.type === "header" ? "header" : element.props["data-slot"]));
+    expect(order).toEqual(["header", "breadcrumbs", "page"]);
+  });
+
   // implements FR-3, NFR-8 of add-author-profiles
   it("links «Наши авторы» to /authors with lang=ru", () => {
     render(<AuthorsNavLink />);
