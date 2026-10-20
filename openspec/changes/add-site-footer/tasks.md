@@ -30,14 +30,14 @@
 
 ## 2. Wire it into the root layout and verify <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-1) Render `<SiteFooter />` in `src/app/layout.tsx` after `{children}`, inside
+- [x] 2.1 (FR-1) Render `<SiteFooter />` in `src/app/layout.tsx` after `{children}`, inside
   `Providers`, imported from `@/features/site-footer`. The scaffold already added this line
   (approved file map, 2026-10-20); confirm it is still there and in that place.
-- [ ] 2.2 (NFR-6) Update `docs/architecture.md`: add `features/site-footer/` to the project tree and
+- [x] 2.2 (NFR-6) Update `docs/architecture.md`: add `features/site-footer/` to the project tree and
   note the footer on the `layout.tsx` line. Update `docs/state-management.md`'s Server caching
   section: a component that reads no request data may own a `"use cache"` scope with a named
   `cacheLife` profile, with `SiteFooter`'s year as the example.
-- [ ] 2.3 (NFR-2, NFR-3, NFR-4, NFR-5) Verify statically and run the chain.
+- [x] 2.3 (NFR-2, NFR-3, NFR-4, NFR-5) Verify statically and run the chain.
   - `grep -rn '"use client"' src/features/site-footer` prints nothing (NFR-2).
   - The NFR-4 colour-literal search over `src/features/site-footer` (excluding `tests/`) prints
     nothing, and `SiteFooter.tsx` holds no path or copy literal (NFR-5).
@@ -45,7 +45,7 @@
     all pass.
   - The build route table: every route that is `○` on `main` is still `○`; no route is newly
     `ƒ` (NFR-3).
-- [ ] 2.4 (FR-1, FR-4, NFR-1, NFR-4) Gate 3 (`web-qa`) in both colour schemes:
+- [x] 2.4 (FR-1, FR-4, NFR-1, NFR-4) Gate 3 (`web-qa`) in both colour schemes:
   - FR-1: one `contentinfo` landmark after `main` on `/`, `/login`, `/signup`, `/authors`,
     `/authors/<id>` (an existing public profile), `/account` and `/account/author` (signed in),
     and `/does-not-exist`;
