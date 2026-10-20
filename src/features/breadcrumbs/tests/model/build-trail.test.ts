@@ -48,6 +48,14 @@ describe("buildTrail", () => {
   });
 
   // implements FR-4 of add-breadcrumbs
+  it("falls back to «Автор» when an author match comes with no name result", () => {
+    expect(buildTrail(AUTHOR_MATCH)).toEqual({
+      kind: "shown",
+      items: [HOME, AUTHORS, { kind: "current", label: "Автор" }],
+    });
+  });
+
+  // implements FR-4 of add-breadcrumbs
   it("shows no trail for an author that doesn't exist", () => {
     expect(buildTrail(AUTHOR_MATCH, { ok: false, reason: "not-found" })).toEqual({ kind: "none" });
   });
