@@ -26,10 +26,9 @@ test("the site footer appears once, after main, on every page", { tag: ["@add-si
     await expect(footer).toHaveCount(1);
     await expect(footer).toContainText(COPYRIGHT_NOTICE);
 
-    const footerFollowsMain = await page.evaluate(() => {
+    const footerFollowsMain = await footer.evaluate((footerElement) => {
       const main = document.querySelector("main");
-      const footer = document.querySelector("footer");
-      return main !== null && footer !== null && (main.compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+      return main !== null && (main.compareDocumentPosition(footerElement) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
     });
     expect(footerFollowsMain).toBe(true);
 
