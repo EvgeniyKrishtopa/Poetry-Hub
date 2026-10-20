@@ -36,16 +36,18 @@ describe("getHomeGreeting", () => {
   }
 
   // implements FR-5 of add-contentful-home-greeting
-  it("queries the `home` key with the client's cache defaults and returns the greeting", async () => {
+  it("queries the `home_greeting` key with the client's cache defaults and returns the greeting", async () => {
     queryMock.mockResolvedValue(
-      itemsResponse([{ key: "home", title: " Welcome to Poetry Hub ", message: "Hello, reader." }]),
+      itemsResponse([{ key: "home_greeting", title: " Welcome to Poetry Hub ", message: "Hello, reader." }]),
     );
 
     await expect(getHomeGreeting()).resolves.toEqual({
       ok: true,
-      greeting: { key: "home", title: "Welcome to Poetry Hub", message: "Hello, reader." },
+      greeting: { key: "home_greeting", title: "Welcome to Poetry Hub", message: "Hello, reader." },
     });
-    expect(queryMock).toHaveBeenCalledWith(expect.stringContaining("greetingCollection"), { key: "home" });
+    expect(queryMock).toHaveBeenCalledWith(expect.stringContaining("greetingCollection"), {
+      key: "home_greeting",
+    });
     expect(queryMock.mock.calls[0]).toHaveLength(2);
     expect(logSpy).not.toHaveBeenCalled();
   });
@@ -60,8 +62,8 @@ describe("getHomeGreeting", () => {
 
   // implements FR-4 of add-contentful-home-greeting
   it.each([
-    ["an item without a title", itemsResponse([{ key: "home", message: TOKEN }])],
-    ["a whitespace-only title", itemsResponse([{ key: "home", title: "   ", message: "Hello" }])],
+    ["an item without a title", itemsResponse([{ key: "home_greeting", message: TOKEN }])],
+    ["a whitespace-only title", itemsResponse([{ key: "home_greeting", title: "   ", message: "Hello" }])],
     ["data without the greeting collection", { somethingElse: TOKEN }],
   ])("returns a validation failure with no greeting for %s", async (_label, data) => {
     queryMock.mockResolvedValue(data);

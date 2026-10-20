@@ -4,15 +4,15 @@
 TBD - created by archiving change add-contentful-home-greeting. Update Purpose after archive.
 ## Requirements
 ### Requirement: Greeting retrieval (FR-5)
-The system SHALL load the greeting entry whose `key` is `home`, and SHALL report a not-found outcome when no such published entry exists.
+The system SHALL load the greeting entry whose `key` is `home_greeting`, and SHALL report a not-found outcome when no such published entry exists.
 
 #### Scenario: Home greeting exists
-- **GIVEN** a published greeting with key `home`, title "Welcome to Poetry Hub", and a message
+- **GIVEN** a published greeting with key `home_greeting`, title "Welcome to Poetry Hub", and a message
 - **WHEN** the home greeting is requested
 - **THEN** the result contains that title and message
 
 #### Scenario: Home greeting missing
-- **GIVEN** Contentful returns no greeting with key `home`
+- **GIVEN** Contentful returns no greeting with key `home_greeting`
 - **WHEN** the home greeting is requested
 - **THEN** the result is a not-found failure
 
@@ -20,12 +20,12 @@ The system SHALL load the greeting entry whose `key` is `home`, and SHALL report
 Every greeting response SHALL be validated against the expected shape (`key`, `title`, `message`, all strings that are non-empty after trimming leading and trailing whitespace; the trimmed values are what the page receives) before use. A response that doesn't match SHALL produce a validation failure, and no part of it SHALL reach the page.
 
 #### Scenario: Required field missing
-- **GIVEN** Contentful returns a `home` greeting without a `title`
+- **GIVEN** Contentful returns a `home_greeting` greeting without a `title`
 - **WHEN** the home greeting is requested
 - **THEN** the result is a validation failure and contains no greeting
 
 #### Scenario: Whitespace-only title
-- **GIVEN** Contentful returns a `home` greeting whose `title` is `"   "`
+- **GIVEN** Contentful returns a `home_greeting` greeting whose `title` is `"   "`
 - **WHEN** the home greeting is requested
 - **THEN** the result is a validation failure, and the page shows the static fallback
 
