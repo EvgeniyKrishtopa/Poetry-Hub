@@ -5,7 +5,7 @@ import { ContentfulError, contentfulQuery } from "@/shared/lib/contentful";
 import { greetingCollectionResponseSchema } from "../model/greeting.schema";
 import type { GreetingFailureReason, GreetingResult } from "../model/greeting.types";
 
-const HOME_GREETING_KEY = "home";
+const HOME_GREETING_KEY = "home_greeting";
 
 const HOME_GREETING_QUERY = /* GraphQL */ `
   query HomeGreeting($key: String!) {
@@ -31,7 +31,7 @@ function fail(reason: GreetingFailureReason, status?: number): GreetingResult {
 }
 
 /**
- * Loads and validates the greeting with key "home". Contentful failures become
+ * Loads and validates the greeting with key "home_greeting". Contentful failures become
  * `{ ok: false, reason }` results (logged once, without secrets); other errors are rethrown.
  */
 export async function getHomeGreeting(): Promise<GreetingResult> {
