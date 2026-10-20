@@ -44,8 +44,8 @@ Requirement markers (`implements <ID> of add-breadcrumbs`) go on the test that v
 
 ## 5. Integration verification <!-- judgement-heavy -->
 
-- [ ] 5.1 (all FR/NFR) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`. Verify each exits 0 and coverage stays at or above 80%.
-- [ ] 5.2 (FR-1–FR-7, NFR-3, NFR-4) Gate 3 (`web-qa`) against the dev server, signed out and signed in:
+- [x] 5.1 (all FR/NFR) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`. Verify each exits 0 and coverage stays at or above 80%.
+- [x] 5.2 (FR-1–FR-7, NFR-3, NFR-4) Gate 3 (`web-qa`) against the dev server, signed out and signed in:
   - `/` shows no trail; following «Наши авторы» shows «Главная › Наши авторы» without a full reload;
   - `/authors/<public author id>` shows the author's name last; «Наши авторы» goes back to `/authors`;
   - `/account/author` (signed in) shows «Главная › Мастерская поэта › Профиль автора»;
