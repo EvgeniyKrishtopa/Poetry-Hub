@@ -1,0 +1,2 @@
+full
+# more than one module: yes (new features/breadcrumbs, features/authors public API, app root layout + @breadcrumbs slot); data schema: no; contract: yes (features/authors index gains exports)

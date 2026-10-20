@@ -1,0 +1,3 @@
+{"ts":"2026-10-20T12:22:05Z","change":"add-breadcrumbs","kind":"finding","gate":"spec-clarify","finding":"Who adds «Главная»: matchRoute table vs buildTrail (tasks.md:16, design.md:92/94)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-20T12:22:05Z","change":"add-breadcrumbs","kind":"finding","gate":"spec-clarify","finding":"NFR-4 placeholder height: one line vs no shift at any width when the trail wraps","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-20T12:22:05Z","change":"add-breadcrumbs","kind":"finding","gate":"spec-clarify","finding":"NFR-2 token list: closed set of three vs examples (only hard-coded colors banned)","outcome":"fixed","ruleNumber":""}
