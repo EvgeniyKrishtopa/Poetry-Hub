@@ -16,3 +16,6 @@ export const SESSION_STATE = {
   signedOut: "signed-out",
   unknown: "unknown",
 } as const;
+
+/** The home page: the first item of every breadcrumb trail. */
+export const HOME_PATH = "/";

@@ -68,6 +68,11 @@ export type PublicAuthorResult =
   | { readonly ok: true; readonly author: PublicAuthor }
   | { readonly ok: false; readonly reason: "not-found" | "unavailable" };
 
+/** A public author's display name, for the breadcrumb trail; the failures are `PublicAuthorResult`'s. */
+export type PublicAuthorNameResult =
+  | { readonly ok: true; readonly name: string }
+  | { readonly ok: false; readonly reason: "not-found" | "unavailable" };
+
 export type PublicAuthorsResult =
   | { readonly ok: true; readonly authors: readonly PublicAuthor[] }
   | { readonly ok: false; readonly reason: "unavailable" };

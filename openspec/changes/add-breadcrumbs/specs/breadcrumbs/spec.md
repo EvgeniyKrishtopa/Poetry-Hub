@@ -76,7 +76,7 @@ The trail SHALL be identical for every visitor, signed in or not, and SHALL NOT 
 - **THEN** both see the same trail items, links, and highlight
 
 ### Requirement: No trail on unknown URLs (FR-6)
-A URL not listed in the trail table, including any URL that shows the 404 page, SHALL show no trail.
+A URL not listed in the trail table, opened directly or by reload, SHALL keep its HTTP 404 response and show the 404 page with no trail. An in-app link to such a URL MAY keep the previous page's trail.
 
 #### Scenario: Unknown URL
 - **GIVEN** any visitor
@@ -85,8 +85,8 @@ A URL not listed in the trail table, including any URL that shows the 404 page, 
 
 #### Scenario: Extra segments under a known page
 - **GIVEN** any visitor
-- **WHEN** they open `/account/author/extra`
-- **THEN** no trail is shown
+- **WHEN** they open `/authors/a/b`
+- **THEN** the response is HTTP 404 and no trail is shown
 
 ### Requirement: Trail follows client-side navigation (FR-7)
 The trail SHALL update on in-app navigation without a full page reload: it appears when leaving home, changes between pages, and disappears when returning home by an in-app link or the browser's Back button.

@@ -25,27 +25,36 @@ See `proposal.md` — Why. Constraints that shape the approach:
 
 ## Decisions
 
-### D1. A parallel route slot `@breadcrumbs` with a catch-all page
+### D1. A parallel route slot `@breadcrumbs` that mirrors the page tree
 
-The root layout gains a `breadcrumbs` slot and renders it between `</header>` and `{children}`. The slot has three files:
+The root layout gains a `breadcrumbs` slot and renders it between `</header>` and `{children}`. The slot holds one page per real page, at the same URL path, plus home and a default:
 
 | File | Matches | Renders |
 | --- | --- | --- |
 | `app/@breadcrumbs/page.tsx` | `/` | `null` (FR-1: no trail on home) |
-| `app/@breadcrumbs/[...segments]/page.tsx` | every other URL | `<Breadcrumbs segments={params.then(({ segments }) => segments)} />` |
-| `app/@breadcrumbs/default.tsx` | a hard navigation the slot can't match | `null` (required by Next 16) |
+| `app/@breadcrumbs/authors/page.tsx` | `/authors` | `<Breadcrumbs segments={Promise.resolve(["authors"])} />` |
+| `app/@breadcrumbs/authors/[id]/page.tsx` | `/authors/<id>` | `<Breadcrumbs segments={params.then(({ id }) => ["authors", id])} />` |
+| `app/@breadcrumbs/account/page.tsx` | `/account` | `<Breadcrumbs segments={Promise.resolve(["account"])} />` |
+| `app/@breadcrumbs/account/author/page.tsx` | `/account/author` | `<Breadcrumbs segments={Promise.resolve(["account", "author"])} />` |
+| `app/@breadcrumbs/login/page.tsx` | `/login` | `<Breadcrumbs segments={Promise.resolve(["login"])} />` |
+| `app/@breadcrumbs/signup/page.tsx` | `/signup` | `<Breadcrumbs segments={Promise.resolve(["signup"])} />` |
+| `app/@breadcrumbs/default.tsx` | a hard navigation the slot can't match (any 404) | `null` (required by Next 16; FR-6) |
 
-Because the catch-all matches every non-root URL and `page.tsx` matches `/`, the slot always has a match. That matters: on a soft navigation, Next keeps an unmatched slot's previous content, which would leave a stale trail on screen (FR-7). Route groups `(public)` and `(authorized)` add no URL segment, so the slot sees the same segments the browser shows.
+Each slot page passes the segments of its own folder path, so the slot page and its folder say the same thing; labels and hrefs still come only from the route table in `features/breadcrumbs` (D2), which stays the single source. Route groups `(public)` and `(authorized)` add no URL segment, so the slot folders mirror URLs, not groups.
 
-The slot page passes a promise, not awaited segments, so the route file stays a synchronous composer and the Suspense boundary lives in the feature component (`docs/code-style.md`, "Route files compose, features render").
+Every real page has a slot page, so the slot always matches on a soft navigation between real pages. That matters: on a soft navigation, Next keeps an unmatched slot's previous content, which would leave a stale trail on screen (FR-7). A URL with no page matches neither `children` nor the slot, so Next returns its normal 404 and the slot renders `default.tsx`, i.e. nothing (FR-6).
+
+The slot pages pass a promise, not awaited segments, so the route files stay synchronous composers and the Suspense boundary lives in the feature component (`docs/code-style.md`, "Route files compose, features render"). The static pages' promises carry no request data, so their trail can render into the prerendered shell; only `/authors/<id>` streams.
+
+A test in `src/app/tests/` lists the page routes under `(public)` and `(authorized)` and the pages under `@breadcrumbs`, and fails when a non-home page has no slot page, so a new page can't silently ship without a trail.
 
 Alternatives considered:
 
+- **One catch-all slot page** (`@breadcrumbs/[...segments]/page.tsx`). Tried in the scaffold build (2026-10-20): it adds a `/[...segments]` route to the build (breaks NFR-5), and an unknown URL like `/no-such-page` then answers HTTP 200 instead of 404 because the slot matches it, although the page still shows «Страница не найдена». Without the catch-all the same URL answers 404. Rejected by the user.
 - **Each page renders its own `<Breadcrumbs items={…} />`.** Simplest mechanics, but the trail definitions spread across six route files plus the author page, every new page must remember to add one, and `app/` would carry trail data. Rejected by the user in favor of one place.
-- **A mirror slot tree** (`@breadcrumbs/authors/page.tsx`, `@breadcrumbs/authors/[id]/page.tsx`, …). Static routes would prerender with no Suspense, but the slot would duplicate the route tree file by file and drift from it. The catch-all with one table is less code.
 - **A Client Component with `usePathname`.** Ruled out by NFR-1.
 
-### D2. Module layout: a new `features/breadcrumbs`; `authors` exports four things
+### D2. Module layout: a new `features/breadcrumbs`; `authors` exports four things (plus one type)
 
 ```
 src/features/breadcrumbs/
@@ -97,6 +106,7 @@ The table is a list of rows `{ path, label }` for the five static pages only (`/
 
 - `AUTHORS_PAGE_TITLES` — its existing `PAGE_TITLES`, re-exported under a feature-prefixed name, so the trail and the pages share one string (NFR-6).
 - `AUTHORS_PATH` and `AUTHOR_EDITOR_PATH` — its existing path constants.
+- the type `PublicAuthorNameResult`, which `buildTrail`'s signature takes.
 - `getPublicAuthorName(id): Promise<PublicAuthorNameResult>` in a new `dal/public-author-name.ts` (`import "server-only"`): calls `getPublicAuthor(id)` and maps `ok` through the existing `model/full-name.ts`. `PublicAuthorNameResult` = `{ ok: true; name } | { ok: false; reason: "not-found" | "unavailable" }`, declared in `model/author.types.ts` with the other domain results. No cache scope of its own: it reuses `getPublicAuthor`'s.
 - The index's header comment ("imported only by route files") is updated: route files and, server-side, the `breadcrumbs` feature (Gate 1 finding 3).
 
@@ -127,7 +137,7 @@ Dependency direction: `breadcrumbs` → `authors` public API, server-only, one w
 
 ### D4. Data and caching
 
-The only data read is the author name, through `getPublicAuthor`'s existing cache scope (hours for a hit, minutes for not-found, seconds for unavailable). An owner's name edit already calls `updateTag(authorTag(id))`, which expires the same entry, so the trail's name stays in step with the page heading. The breadcrumb components add no cache scope: the slot page is dynamic (it reads params), inside Suspense, and the static shell holds only the placeholder.
+The only data read is the author name, through `getPublicAuthor`'s existing cache scope (hours for a hit, minutes for not-found, seconds for unavailable). An owner's name edit already calls `updateTag(authorTag(id))`, which expires the same entry, so the trail's name stays in step with the page heading. The breadcrumb components add no cache scope. The five static slot pages pass a `Promise.resolve` with no request data, so their trail renders into the prerendered shell and their Suspense fallback never shows. Only `/authors/<id>` reads params (request data) and streams its trail into the shell's placeholder.
 
 No session read anywhere in the feature (FR-5).
 
@@ -142,7 +152,7 @@ No session read anywhere in the feature (FR-5).
 sequenceDiagram
   actor V as Visitor
   participant L as Root layout (header, slot, children)
-  participant S as @breadcrumbs/[...segments] page
+  participant S as @breadcrumbs/authors/[id] page
   participant B as Breadcrumbs (Suspense) → BreadcrumbsLoader
   participant M as matchRoute / buildTrail (pure)
   participant A as authors: getPublicAuthorName → getPublicAuthor
@@ -150,8 +160,8 @@ sequenceDiagram
   participant DB as PostgREST as anon
 
   V->>L: navigate to /authors/<id> (hard or soft)
-  L->>S: params promise { segments: ["authors", id] }
-  S->>B: segments promise
+  L->>S: params promise { id }
+  S->>B: segments promise ["authors", id]
   B-->>V: placeholder row (static shell / fallback)
   B->>M: matchRoute(segments)
   M-->>B: { kind: "author", id }
@@ -202,8 +212,9 @@ The slot itself does no I/O on this path, so its only failure mode is the framew
 
 ## Risks / Trade-offs
 
-- [The catch-all slot may change how an unknown URL resolves: the slot matches `/no-such-page` while `children` doesn't, so Next could render `children`'s default instead of `not-found.tsx`, or appear as a new `/[...segments]` entry in the build's route list] → Group 4 checks both before anything else: `/no-such-page` must still return HTTP 404 with «Страница не найдена», and the build's route list must match `main` (NFR-5). If `children` needs a default, add `app/default.tsx` calling `notFound()`. If the route list changes, fall back to the mirror slot tree from D1's alternatives.
-- [Every non-home page streams the trail after the shell, so a fallback row flashes on a cold load] → The placeholder holds the row's height (NFR-4); static routes resolve without I/O, so the gap is one stream chunk.
+- [An in-app link to a URL with no page is a soft navigation the slot can't match, so Next keeps the previous trail above the 404 page] → The app has no links to missing pages; a reload or any direct visit shows no trail (FR-6 is scoped to that). Accepted.
+- [A new page ships without a slot page and shows no trail, or keeps a stale one on soft navigation] → The `src/app/tests/` check in D1 fails the build's test run until the slot page and its route-table row exist.
+- [On `/authors/<id>` the trail streams after the shell, so the placeholder row shows on a cold load] → The placeholder holds the row's height (NFR-4); the name read is a cache hit after the page's own read of the same id.
 - [The route table can drift from the real routes when a page is added] → The table is one file next to its tests; proposal Out of Scope assigns each future page's row to its own change. A test lists the table's paths, so a reviewer sees it when a route is added.
 - [`breadcrumbs` depends on `authors`] → One-way, server-only, through the public index, like `authors` → `auth`.
 - [«Вход» and «Регистрация» now exist twice: in the login/signup page headings and in breadcrumbs' messages] → Accepted: moving the route files' headings is outside this change. Noted for a later copy tidy-up.
@@ -212,3 +223,29 @@ The slot itself does no I/O on this path, so its only failure mode is the framew
 ## Migration Plan
 
 No data or config migration. Rollback: revert the change; the layout loses the slot and pages render as before.
+
+## Scaffold map
+
+Files on disk after `opsx-scaffold` (signatures and stub bodies only; paths relative to `src/`). The slot pages, `default.tsx`, and the layout line are final as written.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `shared/config/constants.ts` | + the home path (D2) | + `HOME_PATH` |
+| `shared/config/account-paths.ts` | + the sign-up path (D2) | + `SIGN_UP_PATH` |
+| `features/authors/model/author.types.ts` | + the author-name read's result (D2) | + `PublicAuthorNameResult` |
+| `features/authors/dal/public-author-name.ts` | Author's full name through `getPublicAuthor`'s cache scope (D2, D4) | `getPublicAuthorName` |
+| `features/authors/index.ts` | Public API, now also for breadcrumbs (D2) | + `getPublicAuthorName`, `AUTHORS_PATH`, `AUTHOR_EDITOR_PATH`, `AUTHORS_PAGE_TITLES`, type `PublicAuthorNameResult` |
+| `features/breadcrumbs/model/breadcrumb.types.ts` | Trail item, route match, trail (D2) | `BreadcrumbItem`, `RouteMatch`, `Trail` |
+| `features/breadcrumbs/model/breadcrumbs-messages.ts` | The feature's UI copy (NFR-6) | `BREADCRUMBS_LANDMARK_LABEL`, `BREADCRUMB_LABELS`, `BREADCRUMB_SEPARATOR` |
+| `features/breadcrumbs/model/match-route.ts` | The route table: segments → match (FR-2, FR-6) | `matchRoute` |
+| `features/breadcrumbs/model/build-trail.ts` | Match + author name → trail with «Главная» (FR-3, FR-4) | `buildTrail` |
+| `features/breadcrumbs/components/Breadcrumbs/` (+ `.types.ts`) | Suspense boundary, placeholder fallback (NFR-4) | `Breadcrumbs`, `BreadcrumbsProps` |
+| `features/breadcrumbs/components/BreadcrumbsLoader/` (+ `.types.ts`) | Async: segments → match → name read → view or nothing | `BreadcrumbsLoader`, `BreadcrumbsLoaderProps` |
+| `features/breadcrumbs/components/BreadcrumbsView/` (+ `.types.ts`) | The nav landmark and list (FR-3, NFR-2, NFR-3) | `BreadcrumbsView`, `BreadcrumbsViewProps` |
+| `features/breadcrumbs/components/BreadcrumbsPlaceholder/` | Loading row (NFR-4) | `BreadcrumbsPlaceholder` |
+| `features/breadcrumbs/index.ts` | Public API | `Breadcrumbs` |
+| `app/@breadcrumbs/page.tsx`, `default.tsx` | Home and unmatched: no trail (FR-1, FR-6) | default exports |
+| `app/@breadcrumbs/{authors,authors/[id],account,account/author,login,signup}/page.tsx` | One slot page per real page (D1) | default exports |
+| `app/layout.tsx` | Renders `{breadcrumbs}` between the header and the page | (unchanged) |
+
+Temporary: `knip.jsonc` ignores the unused stubs and exports until tasks 1.3–3.3 import them; `app/tests/root-layout.test.tsx` passes `breadcrumbs: null` until task 4.3.
