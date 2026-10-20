@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import { cacheLife } from "next/cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SiteFooter } from "../../components/SiteFooter/SiteFooter";
@@ -38,6 +39,13 @@ describe("SiteFooter", () => {
     await renderFooterAt("2030-06-15T12:00:00Z");
 
     expect(screen.getByRole("contentinfo")).toHaveTextContent("© 2026–2030 Поэтический Хаб");
+  });
+
+  // A shorter profile would make the footer a short-lived cache in every page's shell (design D2, NFR-3).
+  it("caches the footer with the days profile", async () => {
+    await renderFooterAt("2026-10-20T12:00:00Z");
+
+    expect(cacheLife).toHaveBeenCalledWith("days");
   });
 
   // implements FR-3 of add-site-footer
