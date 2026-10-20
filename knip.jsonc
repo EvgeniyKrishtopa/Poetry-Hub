@@ -11,8 +11,7 @@
   "ignoreIssues": {
     "src/features/authors/index.ts": ["exports", "types"],
     "src/features/authors/dal/public-author-name.ts": ["exports"],
-    "src/shared/config/constants.ts": ["exports"],
-    "src/shared/config/account-paths.ts": ["exports"]
+    "src/features/breadcrumbs/model/breadcrumbs-messages.ts": ["exports"]
   },
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.

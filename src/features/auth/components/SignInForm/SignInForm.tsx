@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
+import { SIGN_UP_PATH } from "@/shared/config/account-paths";
 import { Alert, Button, TextField } from "@/shared/ui";
 
 import type { SignInFormState } from "../../model/auth.types";
@@ -44,7 +45,7 @@ export function SignInForm({ initialError }: SignInFormProps) {
       </Button>
       <p className="text-sm text-muted">
         Впервые здесь?{" "}
-        <Link href="/signup" className="text-accent underline">
+        <Link href={SIGN_UP_PATH} className="text-accent underline">
           Создать аккаунт
         </Link>
       </p>

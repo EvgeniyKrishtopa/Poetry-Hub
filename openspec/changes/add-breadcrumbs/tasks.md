@@ -4,20 +4,20 @@ Requirement markers (`implements <ID> of add-breadcrumbs`) go on the test that v
 
 ## 1. Path constants and the authors public API <!-- isolated -->
 
-- [ ] 1.1 (FR-2) Add `HOME_PATH = "/"` to `src/shared/config/constants.ts` and `SIGN_UP_PATH = "/signup"` to `src/shared/config/account-paths.ts`; replace the `/signup` literal in auth's `SignInForm.tsx` with `SIGN_UP_PATH`. Verify the existing `SignInForm` tests still pass and `grep -rn '"/signup"' src --include='*.tsx' --include='*.ts'` finds no production hit outside `account-paths.ts`.
-- [ ] 1.2 (FR-4) Add `PublicAuthorNameResult` to `features/authors/model/author.types.ts` and `getPublicAuthorName(id)` in a new `features/authors/dal/public-author-name.ts` (`import "server-only"`, built on `getPublicAuthor` and `model/full-name.ts`, no cache scope of its own; design D2). Verify with tests in `features/authors/tests/dal/`: `ok` → `{ ok: true, name: "Анна Ахматова" }`; `not-found` and `unavailable` pass through as `{ ok: false, reason }`.
-- [ ] 1.3 (FR-2, NFR-6) Export `AUTHORS_PAGE_TITLES` (the existing `PAGE_TITLES`), `AUTHORS_PATH`, `AUTHOR_EDITOR_PATH`, and `getPublicAuthorName` from `features/authors/index.ts`, and update its header comment to name the `breadcrumbs` feature as a server-side consumer (design D2). Verify `npm run typecheck`, `npm run lint`, and `npm run knip` pass. The scaffold already added these exports with temporary `knip.jsonc` ignores (`ignoreFiles`, `ignoreIssues`); remove each ignore in the group whose code first imports the export.
+- [x] 1.1 (FR-2) Add `HOME_PATH = "/"` to `src/shared/config/constants.ts` and `SIGN_UP_PATH = "/signup"` to `src/shared/config/account-paths.ts`; replace the `/signup` literal in auth's `SignInForm.tsx` with `SIGN_UP_PATH`. Verify the existing `SignInForm` tests still pass and `grep -rn '"/signup"' src --include='*.tsx' --include='*.ts'` finds no production hit outside `account-paths.ts`.
+- [x] 1.2 (FR-4) Add `PublicAuthorNameResult` to `features/authors/model/author.types.ts` and `getPublicAuthorName(id)` in a new `features/authors/dal/public-author-name.ts` (`import "server-only"`, built on `getPublicAuthor` and `model/full-name.ts`, no cache scope of its own; design D2). Verify with tests in `features/authors/tests/dal/`: `ok` → `{ ok: true, name: "Анна Ахматова" }`; `not-found` and `unavailable` pass through as `{ ok: false, reason }`.
+- [x] 1.3 (FR-2, NFR-6) Export `AUTHORS_PAGE_TITLES` (the existing `PAGE_TITLES`), `AUTHORS_PATH`, `AUTHOR_EDITOR_PATH`, and `getPublicAuthorName` from `features/authors/index.ts`, and update its header comment to name the `breadcrumbs` feature as a server-side consumer (design D2). Verify `npm run typecheck`, `npm run lint`, and `npm run knip` pass. The scaffold already added these exports with temporary `knip.jsonc` ignores (`ignoreFiles`, `ignoreIssues`); remove each ignore in the group whose code first imports the export.
 
 ## 2. Breadcrumbs model <!-- isolated -->
 
-- [ ] 2.1 (FR-2, FR-3) Create `src/features/breadcrumbs/model/breadcrumb.types.ts` (`BreadcrumbItem`, `RouteMatch`, `Trail`, design D2) and `model/breadcrumbs-messages.ts` with the UI copy table's strings that the feature owns: landmark name, «Главная», «Вход», «Регистрация», «Автор», separator «›». Verify `npm run typecheck`.
-- [ ] 2.2 (FR-2, FR-6) Implement `model/match-route.ts`: the route table written against the path constants (design D2 table), exact matching, parent items by path prefix, the one dynamic author row. Verify with tests in `features/breadcrumbs/tests/model/match-route.test.ts`:
+- [x] 2.1 (FR-2, FR-3) Create `src/features/breadcrumbs/model/breadcrumb.types.ts` (`BreadcrumbItem`, `RouteMatch`, `Trail`, design D2) and `model/breadcrumbs-messages.ts` with the UI copy table's strings that the feature owns: landmark name, «Главная», «Вход», «Регистрация», «Автор», separator «›». Verify `npm run typecheck`.
+- [x] 2.2 (FR-2, FR-6) Implement `model/match-route.ts`: the route table written against the path constants (design D2 table), exact matching, parent items by path prefix, the one dynamic author row. Verify with tests in `features/breadcrumbs/tests/model/match-route.test.ts`:
   - `[]` (home) → `none`;
   - each of the five static URLs from FR-2 → its items in order, without «Главная» (only `buildTrail` adds it), with parents as links and the last as current — e.g. `["account", "author"]` → [«Мастерская поэта» link to `ACCOUNT_PATH`, «Профиль автора» current];
   - `["authors", "<id>"]` → `{ kind: "author", id }`;
   - `["no-such-page"]`, `["account", "author", "extra"]`, `["authors", "a", "b"]` → `none`;
   - every row's path equals its named constant (no literal path in the table).
-- [ ] 2.3 (FR-3, FR-4) Implement `model/build-trail.ts`. Verify with tests in `tests/model/build-trail.test.ts`:
+- [x] 2.3 (FR-3, FR-4) Implement `model/build-trail.ts`. Verify with tests in `tests/model/build-trail.test.ts`:
   - `none` → `none`;
   - a static match → «Главная» (link to `HOME_PATH`) prepended, last item `current`;
   - author + `ok` → last item the name; author + `unavailable` → «Автор»; author + `not-found` → `none`;
