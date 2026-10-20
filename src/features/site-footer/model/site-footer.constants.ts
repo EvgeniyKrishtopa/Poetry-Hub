@@ -5,6 +5,11 @@ export const FOOTER_LINK_PATHS = {
   contact: "/contact",
 } as const;
 
+/** The order the footer lists its links in (FR-3). */
+export const FOOTER_LINK_ORDER = ["about", "privacy", "contact"] as const satisfies ReadonlyArray<
+  keyof typeof FOOTER_LINK_PATHS
+>;
+
 /** The year the site launched: the start of the copyright range. */
 export const SITE_FOUNDING_YEAR = 2026;
 
