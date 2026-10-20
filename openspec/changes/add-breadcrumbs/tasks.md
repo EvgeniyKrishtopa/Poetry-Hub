@@ -10,14 +10,14 @@ Requirement markers (`implements <ID> of add-breadcrumbs`) go on the test that v
 
 ## 2. Breadcrumbs model <!-- isolated -->
 
-- [ ] 2.1 (FR-2, FR-3) Create `src/features/breadcrumbs/model/breadcrumb.types.ts` (`BreadcrumbItem`, `RouteMatch`, `Trail`, design D2) and `model/breadcrumbs-messages.ts` with the UI copy table's strings that the feature owns: landmark name, «Главная», «Вход», «Регистрация», «Автор», separator «›». Verify `npm run typecheck`.
-- [ ] 2.2 (FR-2, FR-6) Implement `model/match-route.ts`: the route table written against the path constants (design D2 table), exact matching, parent items by path prefix, the one dynamic author row. Verify with tests in `features/breadcrumbs/tests/model/match-route.test.ts`:
+- [x] 2.1 (FR-2, FR-3) Create `src/features/breadcrumbs/model/breadcrumb.types.ts` (`BreadcrumbItem`, `RouteMatch`, `Trail`, design D2) and `model/breadcrumbs-messages.ts` with the UI copy table's strings that the feature owns: landmark name, «Главная», «Вход», «Регистрация», «Автор», separator «›». Verify `npm run typecheck`.
+- [x] 2.2 (FR-2, FR-6) Implement `model/match-route.ts`: the route table written against the path constants (design D2 table), exact matching, parent items by path prefix, the one dynamic author row. Verify with tests in `features/breadcrumbs/tests/model/match-route.test.ts`:
   - `[]` (home) → `none`;
   - each of the five static URLs from FR-2 → its items in order, without «Главная» (only `buildTrail` adds it), with parents as links and the last as current — e.g. `["account", "author"]` → [«Мастерская поэта» link to `ACCOUNT_PATH`, «Профиль автора» current];
   - `["authors", "<id>"]` → `{ kind: "author", id }`;
   - `["no-such-page"]`, `["account", "author", "extra"]`, `["authors", "a", "b"]` → `none`;
   - every row's path equals its named constant (no literal path in the table).
-- [ ] 2.3 (FR-3, FR-4) Implement `model/build-trail.ts`. Verify with tests in `tests/model/build-trail.test.ts`:
+- [x] 2.3 (FR-3, FR-4) Implement `model/build-trail.ts`. Verify with tests in `tests/model/build-trail.test.ts`:
   - `none` → `none`;
   - a static match → «Главная» (link to `HOME_PATH`) prepended, last item `current`;
   - author + `ok` → last item the name; author + `unavailable` → «Автор»; author + `not-found` → `none`;
