@@ -28,7 +28,8 @@ test("leaving home shows the trail; the trail's «Главная» and Back both
 
   await page.getByRole("banner").getByRole("link", { name: "Наши авторы" }).click();
   await expect(page).toHaveURL("/authors");
-  await expect(trail(page).getByRole("listitem")).toHaveText(["Главная", "›Наши авторы"]);
+  await expect(trail(page).getByRole("link", { name: "Главная" })).toHaveAttribute("href", "/");
+  await expect(trail(page).getByText("Наши авторы")).toHaveAttribute("aria-current", "page");
 
   await trail(page).getByRole("link", { name: "Главная" }).click();
   await expect(page).toHaveURL("/");
