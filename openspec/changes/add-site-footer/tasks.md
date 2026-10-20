@@ -2,17 +2,17 @@
 
 ## 1. The `site-footer` feature (`src/features/site-footer/`) <!-- judgement-heavy -->
 
-- [ ] 1.1 (NFR-5) Add `model/site-footer.constants.ts` with `FOOTER_LINK_PATHS`
+- [x] 1.1 (NFR-5) Add `model/site-footer.constants.ts` with `FOOTER_LINK_PATHS`
   (`about: "/about"`, `privacy: "/privacy"`, `contact: "/contact"`), `SITE_FOUNDING_YEAR`
   (`2026`), and `YEAR_RANGE_SEPARATOR` (the en dash, U+2013), and
   `model/site-footer-messages.ts` with the proposal's UI copy table verbatim: the three link
   labels, the navigation label «Информация о проекте», and the copyright sign `©`.
-- [ ] 1.2 (FR-2) Implement `model/copyright-years.ts` per design D2:
+- [x] 1.2 (FR-2) Implement `model/copyright-years.ts` per design D2:
   `formatCopyrightYears(foundingYear, currentYear)` returns the founding year alone when the
   current year is equal or earlier, and `<founding><en dash><current>` when it is later.
   - Verify with `tests/model/copyright-years.test.ts`: 2026/2026 → `2026`, 2026/2027 →
     `2026–2027`, 2026/2030 → `2026–2030`, 2026/2025 → `2026`.
-- [ ] 1.3 (FR-2, FR-3, NFR-1, NFR-2, NFR-4) Implement `components/SiteFooter/SiteFooter.tsx`
+- [x] 1.3 (FR-2, FR-3, NFR-1, NFR-2, NFR-4) Implement `components/SiteFooter/SiteFooter.tsx`
   per design D2 and D4: an async Server Component that starts with `"use cache"`, calls
   `cacheLife("days")`, reads the year with `new Date().getUTCFullYear()`, and renders a
   `<footer>` with the copyright notice (`COPYRIGHT_SIGN`, `formatCopyrightYears`,
@@ -21,7 +21,7 @@
   Narrow the scaffold's `Promise<ReactNode>` return type to `Promise<ReactElement>`.
   Remove the scaffold's TEMPORARY `site-footer` lines from `knip.jsonc`, since the component now
   imports the three model files.
-- [ ] 1.4 (FR-2, FR-3, NFR-1) Write `tests/components/SiteFooter.test.tsx` per design D5:
+- [x] 1.4 (FR-2, FR-3, NFR-1) Write `tests/components/SiteFooter.test.tsx` per design D5:
   rely on the global `next/cache` mock in `vitest.setup.ts`, set the clock with `vi.setSystemTime`, render `await SiteFooter()`.
   - FR-2: the 2026-10-20, 2027-01-01T00:00:00Z, and 2030-06-15 scenarios.
   - FR-3: the named navigation landmark holds exactly three links with the right names, order,
