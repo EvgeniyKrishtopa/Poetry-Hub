@@ -7,7 +7,7 @@ Read before adding a feature, adding a file to `shared/`, or importing across fe
 ```
 src/
 ├── app/                      # Routing only: pages, layouts, route handlers, providers
-│   ├── layout.tsx            # Root shell: html/body/Providers + header (site link; a <nav> with authors' `AuthorsNavLink` and auth's `HeaderAuthLinks`, which reads the session inside its own <Suspense>), then the `breadcrumbs` slot, then the page
+│   ├── layout.tsx            # Root shell: html/body/Providers + header (site link; a <nav> with authors' `AuthorsNavLink` and auth's `HeaderAuthLinks`, which reads the session inside its own <Suspense>), then the `breadcrumbs` slot, then the page, then site-footer's `SiteFooter`
 │   ├── @breadcrumbs/         # Parallel slot: the breadcrumb trail. Mirrors the page tree, one page.tsx per real page at the same URL path, each rendering breadcrumbs' `Breadcrumbs` with its own segments;
 │   │                         # page.tsx (home) and default.tsx (any 404) render nothing. No catch-all: it would turn missing URLs into HTTP 200. A new page needs its slot page too (app/tests/breadcrumbs-slot.test.ts checks)
 │   ├── error.tsx             # Client error boundary: generic copy + digest, retry() (covers both groups)
@@ -36,6 +36,8 @@ src/
 │   ├── authors/              # Author profiles: the directory, public author pages, the account section, the editor, the header's «Наши авторы» link
 │   │   └── …                 # actions/, dal/ (owner reads and writes, cached public reads), hooks/ (the editor's field hooks), model/, components/, tests/, index.ts
 │   ├── breadcrumbs/          # The breadcrumb trail under the header: model/ (the route table on the named path constants, trail building), components/ (Suspense wrapper, async loader, view, placeholder); server-only
+│   ├── site-footer/          # The footer on every page: copyright range (founding year to current year) and the about/privacy/contact links
+│   │   └── …                 # components/SiteFooter (owns its "use cache" scope for the year), model/ (link paths and order, founding year, copy, formatCopyrightYears), tests/, index.ts
 │   └── poems/                # The folder roles every feature can use:
 │       ├── api/              # Fetchers (*.api.ts) + query keys/options/hooks (*.queries.ts)
 │       ├── dal/              # Server-only data access for Server Components (no role suffix)

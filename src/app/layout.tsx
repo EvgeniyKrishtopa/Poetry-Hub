@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { HeaderAuthLinks } from "@/features/auth";
 import { AuthorsNavLink } from "@/features/authors";
+import { SiteFooter } from "@/features/site-footer";
 import { CONTENT_LANG } from "@/shared/config/constants";
 import { siteConfig } from "@/shared/config/site";
 
@@ -45,6 +46,7 @@ export default function RootLayout({ children, breadcrumbs }: LayoutProps<"/">) 
           </header>
           {breadcrumbs}
           {children}
+          <SiteFooter />
         </Providers>
       </body>
     </html>
