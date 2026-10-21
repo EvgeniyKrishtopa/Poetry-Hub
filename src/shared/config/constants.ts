@@ -19,3 +19,6 @@ export const SESSION_STATE = {
 
 /** The home page: the first item of every breadcrumb trail. */
 export const HOME_PATH = "/";
+
+/** The about page: the footer's «О проекте» link and its breadcrumb trail point here. */
+export const ABOUT_PATH = "/about";
