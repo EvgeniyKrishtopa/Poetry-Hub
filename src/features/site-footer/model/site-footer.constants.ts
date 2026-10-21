@@ -1,12 +1,12 @@
-import { ABOUT_PATH } from "@/shared/config/constants";
+import { ABOUT_PATH, PRIVACY_PATH } from "@/shared/config/constants";
 
 /**
- * Final paths of the footer's pages. `/about` has a page; until the other pages ship, each shows the
- * not-found screen (design D3).
+ * Final paths of the footer's pages. `/about` and `/privacy` have pages; until `/contact` ships, it shows
+ * the not-found screen (design D3).
  */
 export const FOOTER_LINK_PATHS = {
   about: ABOUT_PATH,
-  privacy: "/privacy",
+  privacy: PRIVACY_PATH,
   contact: "/contact",
 } as const;
 
