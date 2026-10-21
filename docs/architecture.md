@@ -8,7 +8,8 @@ Read before adding a feature, adding a file to `shared/`, or importing across fe
 src/
 ├── app/                      # Routing only: pages, layouts, route handlers, providers
 │   ├── layout.tsx            # Root shell: html/body/Providers + header (site link; a <nav> with authors' `AuthorsNavLink` and auth's `HeaderAuthLinks`, which reads the session inside its own <Suspense>), then the `breadcrumbs` slot, then the page, then site-footer's `SiteFooter`
-│   ├── @breadcrumbs/         # Parallel slot: the breadcrumb trail. Mirrors the page tree, one page.tsx per real page at the same URL path, each rendering breadcrumbs' `Breadcrumbs` with its own segments;
+│   ├── @breadcrumbs/         # Parallel slot: the breadcrumb trail. Mirrors the page tree, one page.tsx per real page at the same URL path, each rendering breadcrumbs' `Breadcrumbs` with its own segments
+│   │                         # (about/page.tsx, authors/page.tsx, authors/[id]/page.tsx, login/, signup/, account/, account/author/);
 │   │                         # page.tsx (home) and default.tsx (any 404) render nothing. No catch-all: it would turn missing URLs into HTTP 200. A new page needs its slot page too (app/tests/breadcrumbs-slot.test.ts checks)
 │   ├── error.tsx             # Client error boundary: generic copy + digest, retry() (covers both groups)
 │   ├── not-found.tsx         # 404 screen for unmatched URLs (covers both groups)
@@ -18,6 +19,7 @@ src/
 │   │   ├── page.tsx          # / (home)
 │   │   ├── login/page.tsx    # /login (passes ?error= to auth's `SignInPanel`, which awaits it inside <Suspense>)
 │   │   ├── signup/page.tsx   # /signup
+│   │   ├── about/page.tsx    # /about: the about page from Contentful's `about_page` entry (about's `AboutPage`)
 │   │   ├── authors/page.tsx  # /authors: the author directory (authors' `AuthorDirectory`)
 │   │   └── authors/[id]/page.tsx # /authors/<profile id>: a public author page (authors' `AuthorPage`)
 │   ├── (authorized)/         # Route group for pages that need a signed-in reader
@@ -30,6 +32,8 @@ src/
 │   ├── providers.tsx         # QueryClientProvider (+ devtools)
 │   └── globals.css           # Tailwind import + design tokens
 ├── features/                 # One folder per business feature
+│   ├── about/                # The about page: title and paragraphs from Contentful; any failure throws to app/error.tsx; server-only
+│   │   └── …                 # dal/about-page.ts (owns a result-dependent "use cache" scope), model/ (Zod schema, result types), components/ (Suspense wrapper, async loader, view, placeholder), tests/, index.ts
 │   ├── auth/                 # Sign-up, sign-in, sign-out, the header's «Войти» / «Выйти» part
 │   │   ├── actions/          # Server Actions ("use server", *.actions.ts) + the feature's action client
 │   │   └── …                 # dal/ (confirmSignUp, getSessionState, getCurrentUserId, requireSession), model/, components/, tests/, index.ts (roles as below)
@@ -49,10 +53,11 @@ src/
 └── shared/                   # Feature-agnostic code only
     ├── ui/                   # Reusable UI primitives (Button, …) + index.ts
     ├── lib/                  # Infrastructure helpers (query-client, …)
+    │   ├── split-paragraphs.ts # splitParagraphs(text): plain text into paragraphs on blank lines (home's greeting, the about page)
     │   ├── contentful/       # Server-only Contentful GraphQL client, cached with "use cache" (every module: import "server-only")
     │   ├── safe-action/      # Server-only next-safe-action client factory (name-only logging, generic message); each feature builds its action client on it
     │   └── supabase/         # Supabase: index.ts client-safe (SupabaseConfigError); server.ts (server client), public.ts (cookie-less client for "use cache"), session.ts (proxy refresh, which also reports the session state) server-only; claims.ts (one reading of a getClaims() result, shared by the proxy and auth's DAL)
-    └── config/               # App-wide constants (constants.ts: IMAGE_QUALITY, CONTENT_LANG, SESSION_STATE, HOME_PATH), site config, the Supabase image-host helper, the account, sign-in and sign-up paths (account-paths.ts)
+    └── config/               # App-wide constants (constants.ts: IMAGE_QUALITY, CONTENT_LANG, SESSION_STATE, HOME_PATH, ABOUT_PATH), site config, the Supabase image-host helper, the account, sign-in and sign-up paths (account-paths.ts)
 ```
 
 ## Boundary rules

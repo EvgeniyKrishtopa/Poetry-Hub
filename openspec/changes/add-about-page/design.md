@@ -120,7 +120,7 @@ inside a prerendered page scope at build time with no env would fail `npm run bu
 dynamic hole: a failed or expired read). Its look follows the approved mockup and the
 `app/loading.tsx` pattern: a `role="status"` with a visually hidden «Загрузка…», then
 `aria-hidden` skeleton blocks (`rounded bg-surface animate-pulse motion-reduce:animate-none`):
-a title bar `h-10` at 60% width (max 420 px), then a `max-w-prose` column of three paragraph
+a title bar one title line high (`h-9`, `sm:h-10`, matching D5's heading sizes) at 60% width (max 420 px), then a `max-w-prose` column of three paragraph
 groups (`gap-6`) of `h-4` lines (`gap-3`) with ragged last lines. With a cached
 success the shell already holds the article and the placeholder is never seen.
 
@@ -155,10 +155,12 @@ export async function AboutContent() {
 ### D5 — `AboutArticle`: plain-text paragraphs via a shared splitter
 
 - Props: `{ entry: Pick<AboutPageEntry, "title" | "message"> }`.
-- Renders the `<h1>{title}</h1>` (`text-4xl font-bold tracking-tight`, as home and the error
-  screen) and an `<article>` with one `<p className="whitespace-pre-line">` per paragraph.
+- Renders the `<h1>{title}</h1>` (`text-3xl font-bold tracking-tight` below 640 px and
+  `sm:text-4xl` above; home and the error screen keep `text-4xl`) and an `<article>` with one
+  `<p className="whitespace-pre-line">` per paragraph.
   From the approved mockup: the article is `max-w-prose` (65ch), `flex flex-col gap-6`,
-  `text-base leading-relaxed` below 640 px and `sm:text-lg` above, in `foreground` (not `muted`:
+  `text-prose-compact leading-relaxed` (15 px) below 640 px and `sm:text-lg` above (the mobile
+  sizes are smaller than the mockup: user decision, 2026-10-21), in `foreground` (not `muted`:
   long prose needs full contrast). The heading and the article sit in the route's
   `<main>` (`gap-8`, items start-aligned). Token utilities only (NFR-4).
 - Paragraphs come from `splitParagraphs(text)` in a new `src/shared/lib/split-paragraphs.ts`:

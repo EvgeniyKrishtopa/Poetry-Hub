@@ -17,7 +17,7 @@ export function AboutPlaceholder() {
       <span role="status" className="sr-only">
         {ABOUT_LOADING_LABEL}
       </span>
-      <div aria-hidden="true" data-skeleton className={`${SKELETON_BLOCK} h-10 w-3/5 max-w-105`} />
+      <div aria-hidden="true" data-skeleton className={`${SKELETON_BLOCK} h-9 w-3/5 max-w-105 sm:h-10`} />
       <div aria-hidden="true" className="flex w-full max-w-prose flex-col gap-6">
         {SKELETON_PARAGRAPHS.map((lineWidths, paragraphIndex) => (
           <div key={paragraphIndex} className="flex flex-col gap-3">

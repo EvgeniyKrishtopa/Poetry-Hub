@@ -11,8 +11,8 @@ export function AboutArticle({ entry }: AboutArticleProps) {
 
   return (
     <>
-      <h1 className="text-4xl font-bold tracking-tight">{entry.title}</h1>
-      <article className="flex max-w-prose flex-col gap-6 text-base leading-relaxed text-foreground sm:text-lg">
+      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{entry.title}</h1>
+      <article className="flex max-w-prose flex-col gap-6 text-prose-compact leading-relaxed text-foreground sm:text-lg">
         {paragraphs.map((paragraph, index) => (
           <p key={index} className="whitespace-pre-line">
             {paragraph}
