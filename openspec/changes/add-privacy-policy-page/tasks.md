@@ -11,13 +11,13 @@
 
 ## 2. The shared content-page feature (from `features/about`) <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-1, design R5) Check that the `privacy_policy` entry exists and is published in the
+- [x] 2.1 (FR-1, design R5) Check that the `privacy_policy` entry exists and is published in the
   Contentful space and environment that `.env.local` points at (the deployed environment is the
   Migration Plan's deploy item, not this task): run the about DAL's collection query with key
   `privacy_policy` in Contentful's GraphiQL or against the local dev server's settings, and
   confirm one item with a non-blank title and message. If it is missing there, mark this task
   blocked and ask the user.
-- [ ] 2.2 (FR-6, NFR-5, NFR-6) Move `src/features/about/` to `src/features/content-page/` with
+- [x] 2.2 (FR-6, NFR-5, NFR-6) Move `src/features/about/` to `src/features/content-page/` with
   `git mv` and rename per design D1 (`AboutPage` → `ContentPage`, `AboutContent` →
   `ContentPageContent`, `AboutArticle` → `ContentPageArticle`, `AboutPlaceholder` →
   `ContentPagePlaceholder`, `about-page.*` → `content-page.*`, `about-messages.ts` →
@@ -35,7 +35,7 @@
     after their renames; the scaffold's remaining temporary `knip.jsonc` entries (the two
     `.types.ts` files in `ignoreFiles`, the `content-page.types.ts` `ignoreIssues` entry, and both
     keys with their comment once empty) are removed; `npm run typecheck` and `npm run knip` pass.
-- [ ] 2.3 (FR-2, FR-6, NFR-1, NFR-2, NFR-3) Finish the keyed DAL and loader per design D2, D4,
+- [x] 2.3 (FR-2, FR-6, NFR-1, NFR-2, NFR-3) Finish the keyed DAL and loader per design D2, D4,
   and D6: a failure logs `[contentful] content page failed` with `{ key, reason }`, plus
   `status` only for `auth`/`http`; the thrown message is `CONTENT_PAGE_UNAVAILABLE`.
   - Verify with `tests/dal/content-page.test.ts` (mocked `contentfulQuery`, spies on the global
@@ -51,7 +51,7 @@
     any entry text.
   - Verify with `tests/components/ContentPageArticle.test.tsx`: FR-1's scenario with the privacy
     title (one heading, two paragraphs, the line break kept) and NFR-3's markup-as-text case.
-- [ ] 2.4 (FR-1, FR-6, design R5) Turn the moved integration test into
+- [x] 2.4 (FR-1, FR-6, design R5) Turn the moved integration test into
   `tests/dal/content-page.integration.test.ts`: for every key in `CONTENT_PAGE_KEYS`, a real
   request (no `fetch` or module mocks) expects `{ ok: true }` with a non-blank title and
   message; skipped with `describe.skipIf` when `CONTENTFUL_SPACE_ID` or

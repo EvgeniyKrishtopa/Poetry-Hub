@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getContentPage } from "../../dal/content-page";
+import { CONTENT_PAGE_KEYS } from "../../model/content-page.constants";
 
 // A real request: no `fetch` or module mocks. Vitest doesn't load `.env.local`, so run it with
 // `node --env-file=.env.local ./node_modules/vitest/vitest.mjs run <this file>`; without the
@@ -10,11 +11,11 @@ const hasContentfulSettings = Boolean(process.env.CONTENTFUL_SPACE_ID && process
 const NETWORK_TIMEOUT_MS = 15_000;
 
 describe.skipIf(!hasContentfulSettings)("getContentPage against the real Contentful space", () => {
-  // implements FR-1 of add-about-page
-  it(
-    "returns the published `about_page` entry with a non-blank title and message",
-    async () => {
-      const result = await getContentPage();
+  // implements FR-1, FR-6 of add-privacy-policy-page
+  it.each(Object.values(CONTENT_PAGE_KEYS))(
+    "returns the published `%s` entry with a non-blank title and message",
+    async (key) => {
+      const result = await getContentPage(key);
 
       expect(result).toMatchObject({ ok: true });
       if (!result.ok) return;
