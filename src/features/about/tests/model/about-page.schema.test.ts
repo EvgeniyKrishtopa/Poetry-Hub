@@ -22,6 +22,8 @@ describe("aboutPageCollectionResponseSchema", () => {
 
   // implements FR-2 of add-about-page
   it.each([
+    ["a missing key", { title: VALID_ENTRY.title, message: VALID_ENTRY.message }],
+    ["a whitespace-only key", { ...VALID_ENTRY, key: "  " }],
     ["a missing title", { key: VALID_ENTRY.key, message: VALID_ENTRY.message }],
     ["an empty title", { ...VALID_ENTRY, title: "" }],
     ["a whitespace-only title", { ...VALID_ENTRY, title: " \n\t " }],
