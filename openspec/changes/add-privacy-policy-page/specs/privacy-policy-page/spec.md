@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Privacy policy content from Contentful (FR-1)
-The application SHALL serve a public page at `/privacy` that shows the Contentful `greeting` entry with key `privacy_policy`: its `title`, trimmed, as the page's only level-1 heading, followed by its `message`, trimmed, as paragraphs in order. One or more blank lines (a line holding only whitespace counts as blank) SHALL separate paragraphs; a single line break inside a paragraph SHALL be kept as a line break. The text SHALL render as plain text, never parsed as Markdown or HTML (NFR-3).
+The application SHALL serve a public page at `/privacy` that shows the Contentful `greeting` entry with key `privacy_policy`: its `title`, trimmed, as the page's only level-1 heading, followed by its `message`, trimmed, as paragraphs in order. One or more blank lines (a line holding only whitespace counts as blank) SHALL separate paragraphs; a single line break inside a paragraph SHALL be kept as a line break. The text SHALL render as plain text, never parsed as Markdown or HTML (NFR-3); the only structure read from it is FR-7's numbered headings.
 
 #### Scenario: Title and paragraphs
 - **GIVEN** Contentful returns the `privacy_policy` entry with title `  Политика конфиденциальности  ` and message `Первый абзац.\nВторая строка.\n\n  \nВторой абзац.`
@@ -14,6 +14,15 @@ The application SHALL serve a public page at `/privacy` that shows the Contentfu
 - **WHEN** `/privacy` is rendered
 - **THEN** the paragraph text contains those characters literally
 - **AND** the content has no `<b>` or `<strong>` element
+
+### Requirement: Numbered headings (FR-7)
+Within the message, only the first line of each paragraph (FR-1's blank-line split) SHALL be checked for a heading, ignoring its leading whitespace. A first line that starts with `Раздел `, one or more digits, `.` and a space SHALL render as a level-2 heading; one that starts with one or more digits, `.`, one or more digits, `.` and a space SHALL render as a level-3 heading. The heading SHALL hold that line, trimmed, and SHALL be bold; the paragraph's remaining lines, if any, SHALL render right after it as one paragraph, line breaks kept. Every other line SHALL stay paragraph text, including a numbered line that isn't a paragraph's first line, `3.1 ` without the second dot, deeper numbering such as `2.1.3.`, and lines starting with `* `.
+
+#### Scenario: Section and subsection headings
+- **GIVEN** the message `Раздел 1. Введение\n\nТекст.\n2.2. Не заголовок\n\n2.1. Данные\n* Пункт\n\n3.1 Без точки\n\n2.1.3. Глубже`
+- **WHEN** `/privacy` is rendered
+- **THEN** the content holds, in order: a level-2 heading `Раздел 1. Введение`; a paragraph `Текст.` + line break + `2.2. Не заголовок`; a level-3 heading `2.1. Данные`; a paragraph `* Пункт`; a paragraph `3.1 Без точки`; a paragraph `2.1.3. Глубже`
+- **AND** both headings are bold, and the content has no other `h2` or `h3`
 
 ### Requirement: Error screen when the content can't be shown (FR-2)
 When the `privacy_policy` entry can't be shown, `/privacy` SHALL show the app's error screen (heading «Что-то пошло не так», button «Повторить») in place of the page content, with the header, the breadcrumb trail, and the footer present and no text from Contentful. This SHALL apply to every failure reason: `config`, `network`, `auth`, `graphql`, `http`, `validation` (a missing field, or an empty or whitespace-only `title` or `message`), and `not-found` (no entry with that key). Each failed read (a call that misses the content-page DAL's own cache scope and fails, including a failure replayed from `contentfulQuery`'s inner 60 s cache, so one outage may log a line per DAL miss) SHALL write exactly one server log line, `[contentful] content page failed`, holding the entry key, the reason, and, for `auth` and `http` only, the HTTP status, and nothing else.

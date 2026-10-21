@@ -1,5 +1,20 @@
 ## MODIFIED Requirements
 
+### Requirement: About page content from Contentful (FR-1)
+The application SHALL serve a public page at `/about` that shows the Contentful `greeting` entry with key `about_page`: its `title`, trimmed, as the page's only level-1 heading, followed by its `message`, trimmed, as paragraphs in order. One or more blank lines (a line holding only whitespace counts as blank) SHALL separate paragraphs; a single line break inside a paragraph SHALL be kept as a line break. The text SHALL render as plain text, never parsed as Markdown or HTML (NFR-3); the only structure read from it is the numbered-heading rule of `privacy-policy-page` FR-7, which applies to this page through the shared content-page feature (the current `about_page` text has no such line).
+
+#### Scenario: Title and paragraphs
+- **GIVEN** Contentful returns the `about_page` entry with title `  О проекте  ` and message `Первый абзац.\nВторая строка.\n\n  \nВторой абзац.`
+- **WHEN** `/about` is rendered
+- **THEN** the only level-1 heading reads `О проекте`
+- **AND** the content holds exactly two paragraphs: `Первый абзац.` + line break + `Вторая строка.`, then `Второй абзац.`
+
+#### Scenario: Markup stays text
+- **GIVEN** the message holds `<b>жирный</b>` and `**жирный**`
+- **WHEN** `/about` is rendered
+- **THEN** the paragraph text contains those characters literally
+- **AND** the content has no `<b>` or `<strong>` element
+
 ### Requirement: Error screen when the content can't be shown (FR-2)
 When the `about_page` entry can't be shown, `/about` SHALL show the app's error screen (heading «Что-то пошло не так», button «Повторить») in place of the page content, with the header, the breadcrumb trail, and the footer present and no text from Contentful. This SHALL apply to every failure reason: `config`, `network`, `auth`, `graphql`, `http`, `validation` (a missing field, or an empty or whitespace-only `title` or `message`), and `not-found` (no entry with that key). Each failed read (a call that misses the content-page DAL's own cache scope and fails, including a failure replayed from `contentfulQuery`'s inner 60 s cache, so one outage may log a line per DAL miss) SHALL write exactly one server log line, `[contentful] content page failed`, holding the entry key `about_page`, the reason, and, for `auth` and `http` only, the HTTP status, and nothing else.
 
