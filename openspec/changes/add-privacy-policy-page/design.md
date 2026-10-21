@@ -30,7 +30,7 @@
 - `/privacy` renders the `privacy_policy` entry's title and paragraphs, fully on the server, with
   every behaviour `/about` has (loading skeleton, error screen, webhook freshness, trail).
 - One implementation serves both pages; `/about` behaves exactly as before apart from its log
-  line.
+  line and FR-7's numbered headings (its current text has none, so it looks the same).
 - The CI build (no Contentful env) still passes.
 
 **Non-Goals**
@@ -48,12 +48,13 @@
 src/features/content-page/
 ├── dal/content-page.ts                     # getContentPage(key): Promise<ContentPageResult>, server-only, owns the cache scope (D2)
 ├── model/content-page.constants.ts         # CONTENT_PAGE_KEYS = { about: "about_page", privacyPolicy: "privacy_policy" } as const
-├── model/content-page.types.ts             # ContentPageKey, ContentPageFailureReason, ContentPageResult
+├── model/content-page.types.ts             # ContentPageKey, ContentPageFailureReason, ContentPageResult, ContentBlock (D5, FR-7)
+├── model/content-blocks.ts                 # toContentBlocks(message): numbered headings + paragraphs (D5, FR-7; added by task 4.3)
 ├── model/content-page.schema.ts            # Zod for the greetingCollection response; ContentPageEntry
 ├── model/content-page-messages.ts          # CONTENT_PAGE_LOADING_LABEL ("Загрузка…")
 ├── components/ContentPage/                 # Suspense boundary + fallback (D3); props { entryKey }
 ├── components/ContentPageContent/          # async loader: awaits the DAL, throws on failure (D4)
-├── components/ContentPageArticle/          # sync view: <h1> + paragraphs (D5)
+├── components/ContentPageArticle/          # sync view: <h1> + headings and paragraphs (D5)
 ├── components/ContentPagePlaceholder/      # Suspense fallback (D3)
 ├── tests/
 └── index.ts                                # exports ContentPage, CONTENT_PAGE_KEYS
@@ -142,12 +143,27 @@ export async function ContentPageContent({ entryKey }: ContentPageContentProps) 
 - A failed page may answer HTTP 200 (the shell was already streamed); FR-2 asserts the screen.
 - Tested by calling it as a function with a mocked DAL, as `AboutContent` is today.
 
-### D5 — `ContentPageArticle`: plain-text paragraphs via the shared splitter
+### D5 — `ContentPageArticle`: headings and paragraphs from plain text
 
 `AboutArticle` renamed: `<h1>` (`text-3xl font-bold tracking-tight sm:text-4xl`) and an
 `<article>` (`max-w-prose`, `flex flex-col gap-6`, `text-prose-compact leading-relaxed
 sm:text-lg`, `text-foreground`) with one `whitespace-pre-line` `<p>` per `splitParagraphs` item.
 No Markdown or HTML parsing (NFR-3). Token utilities only (NFR-4).
+
+FR-7 (added 2026-10-21, mid group 4): a pure function `toContentBlocks(message)` in
+`model/content-blocks.ts` turns the message into a list of blocks, a discriminated union
+`{ readonly kind: "section"; readonly text: string } | { readonly kind: "subsection"; … } |
+{ readonly kind: "paragraph"; … }` (`ContentBlock` in `content-page.types.ts`). It calls `splitParagraphs`, tests each paragraph's first line against
+two named regexes (`SECTION_HEADING_PATTERN` `^Раздел \d+\. `, `SUBSECTION_HEADING_PATTERN`
+`^\d+\.\d+\. `, matched after trimming leading whitespace), and emits the heading block plus,
+when lines remain, one paragraph block of the rest. `ContentPageArticle` maps blocks to
+`<h2 className="text-lg font-bold sm:text-xl">` (one type step above the body),
+`<h3 className="font-bold">` (body size), or the existing `<p>`; the article's `gap-6` spaces
+them all. The rule lives in the feature's `model/`, not in `shared/lib`: home's greeting has no
+use for it (architecture rule: no shared abstraction before a second consumer). It reads
+numbering only, never markup, so NFR-3 holds, and it applies to `/about` too (FR-6), whose
+current text has no matching line. The Claude Design mockup has no headings inside the text;
+the two heading sizes are the closest scale steps to the article body, not mockup values.
 
 ### D6 — The DAL's log line names the key
 
@@ -182,7 +198,11 @@ The about tests move with their files and become parameterized where the key mat
 - `tests/components/ContentPageContent.test.tsx`: passes `entryKey` through to the DAL; resolves
   to the article on success; rejects on failure with a message free of the key, reason, and
   entry text.
-- `tests/components/ContentPageArticle.test.tsx`: FR-1's example (privacy title); NFR-3.
+- `tests/components/ContentPageArticle.test.tsx`: FR-1's example (privacy title); NFR-3; FR-7's
+  example (one `h2`, one `h3`, both bold, the paragraphs in order).
+- `tests/model/content-blocks.test.ts` (added with FR-7): FR-7's example gives the six blocks in
+  order; a heading line with leading spaces is trimmed; text with no numbered first line gives
+  the same paragraphs as `splitParagraphs`.
 - `tests/components/ContentPagePlaceholder.test.tsx`: the about placeholder test, renamed.
 - `tests/dal/content-page.integration.test.ts`: the about integration test, run for every key in
   `CONTENT_PAGE_KEYS` against the real space, skipped without `CONTENTFUL_SPACE_ID` /
@@ -190,7 +210,7 @@ The about tests move with their files and become parameterized where the key mat
 - `breadcrumbs` tests: `matchRoute(["privacy"])` + `buildTrail` → Главная › Политика
   конфиденциальности.
 - Browser (Gate 3): FR-2 with a broken token on `/privacy`, FR-4, FR-5, FR-6 (both pages show
-  their own titles), NFR-1. FR-3 by `curl` to `/api/revalidate` against `npm run build &&
+  their own titles), FR-7 (bold headings; heading order recorded, a skipped level is an editors' note per R4), NFR-1. FR-3 by `curl` to `/api/revalidate` against `npm run build &&
   npm start`, as the about page did.
 
 ### D9 — Documentation (NFR-7)
@@ -251,7 +271,7 @@ sequenceDiagram
     alt build-time prerender and result is a failure
         Note over D,CC: "seconds" lifetime: a request-time hole; the throw never runs during prerender. The shell holds ContentPagePlaceholder.
     else ok
-        CC-->>B: <h1/> + <article> paragraphs (HTML, no client JS of its own)
+        CC-->>B: <h1/> + <article> headings and paragraphs (HTML, no client JS of its own)
     else failure (any reason), at request time
         CC->>E: throw Error(CONTENT_PAGE_UNAVAILABLE)
         E-->>B: «Что-то пошло не так» + «Повторить» (header, trail, footer stay)
@@ -291,9 +311,16 @@ sequenceDiagram
   (fallback, page-level scope), and `add-about-page` R7's trigger was a third copy.
 - **R3 — One cache tag for every Contentful page.** A publish of any entry expires all of them.
   Accepted: three small reads, and the webhook isn't deployed yet.
-- **R4 — Long policy text.** A legal text is often longer and structured (sections, lists). This
-  change shows plain paragraphs only; a heading-like line renders as a paragraph. If the editors
-  need real headings, that is a rich-text change of its own. The skeleton is the about page's
+- **R4 — Long policy text.** A legal text is often longer and structured (sections, lists).
+  Numbered section and subsection lines become headings (FR-7, D5); lists, other heading styles,
+  and real markup stay plain text, and need a rich-text change of their own. Two risks follow
+  from reading numbering: an ordinary paragraph whose first line starts with `2.1. ` turns into a
+  heading (accepted: the editors write the numbering, and the rule only checks a paragraph's
+  first line), and a text that opens with a subsection before any `Раздел N.` puts an `h3`
+  straight after the page `h1`, skipping a heading level (the current `privacy_policy` text
+  starts with `Раздел 1.`). Accepted as a content risk: the code emits the `h3` regardless;
+Gate 3 records the heading order and reports a skipped level as a note for the editors, not as a
+failure. The skeleton is the about page's
   three-paragraph shape regardless of length.
 - **R5 — The entry may not exist yet in a given Contentful environment.** Task 2.1 checks that
   `privacy_policy` exists and is published in the environment `.env.local` points at, before the

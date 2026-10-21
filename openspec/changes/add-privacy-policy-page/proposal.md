@@ -21,7 +21,8 @@ and now privacy). This change builds the privacy page and the about page on one 
 - `src/features/about/` becomes `src/features/content-page/`: one feature that renders "a
   Contentful page by entry key" (title + paragraphs, a loading skeleton, the error screen on any
   failure). `/about` and `/privacy` are two thin route files that pass it their entry key. The
-  about page looks and behaves as before; only its failure log line changes (below).
+  about page looks and behaves as before; only its failure log line changes, and FR-7's
+  numbered headings apply to its text too (it has none today, so it looks the same).
 - The data is read on the server only, through the feature's `dal/` module and the existing
   Contentful client. The browser receives the finished page and never calls Contentful.
 - Caching is the about page's: a result-dependent `"use cache"` scope in the DAL, tagged
@@ -77,8 +78,19 @@ The loading status (`Загрузка…`, screen readers only) and the error sc
 - **FR-5** — The footer's «Политика конфиденциальности» link opens the `/privacy` page with HTTP
   200. «Связаться с нами» keeps `site-footer` FR-4 behaviour (not-found screen, HTTP 404).
 - **FR-6** — `/about` keeps every `about-page` requirement (content, error screen, freshness,
-  trail), now served by the shared feature. The one change is its failure log line, which
-  becomes FR-2's line with key `about_page`.
+  trail), now served by the shared feature. The changes are its failure log line, which
+  becomes FR-2's line with key `about_page`, and FR-7's numbered headings, which apply to its
+  text too (the current `about_page` text has no such line, so it looks the same).
+- **FR-7** — Numbered headings (user request 2026-10-21, mid group 4; the privacy text numbers
+  its sections and subsections, and no CMS markup is added). Only the first line of each
+  paragraph (FR-1's blank-line split) is checked, after its leading whitespace is ignored. A
+  first line that starts with `Раздел `, one or
+  more digits, `.` and a space (`Раздел 1. Введение`) renders as a level-2 heading; one that
+  starts with digits, `.`, digits, `.` and a space (`2.1. Информация`) renders as a level-3
+  heading. The heading holds that line, trimmed; the paragraph's remaining lines, if any, render
+  right after it as one paragraph, as in FR-1. Headings are bold. Every other line stays
+  paragraph text: a numbered line that isn't a paragraph's first line, `3.1 ` without the
+  second dot, deeper numbering (`2.1.3.`), and list lines starting with `* `.
 - **NFR-1** — Server-only rendering: no file under `src/features/content-page/` has
   `"use client"`; the DAL module starts with `import "server-only"`; the browser makes no
   request to Contentful on `/privacy` or `/about`.
@@ -89,7 +101,8 @@ The loading status (`Загрузка…`, screen readers only) and the error sc
   `npm run build` succeeds with no Contentful environment variables set, and neither `/privacy`
   nor `/about` is reported as fully dynamic (`ƒ`).
 - **NFR-3** — The title and paragraphs render as plain text: nothing is parsed as Markdown or
-  HTML; React escapes the text.
+  HTML; React escapes the text. The only structure read from the text is FR-7's numbered
+  headings.
 - **NFR-4** — Styling uses named design-token utilities only. No colour literals, and no
   Tailwind arbitrary-value colour class at all (`text-[…]`, `bg-[…]`, `border-[…]`, …), even one
   that wraps a token variable.
@@ -140,6 +153,12 @@ The loading status (`Загрузка…`, screen readers only) and the error sc
   other's text), and `/about`'s trail still reads «Главная › О проекте». GIVEN the content-page
   DAL fails for key `about_page`, WHEN `/about` renders, THEN it shows the error screen and the
   log line is `[contentful] content page failed` with key `about_page`.
+- **FR-7:** GIVEN the message
+  `Раздел 1. Введение\n\nТекст.\n2.2. Не заголовок\n\n2.1. Данные\n* Пункт\n\n3.1 Без точки\n\n2.1.3. Глубже`,
+  WHEN the page is rendered, THEN the content holds, in order: a level-2 heading
+  `Раздел 1. Введение`; a paragraph `Текст.` + line break + `2.2. Не заголовок`; a level-3
+  heading `2.1. Данные`; a paragraph `* Пункт`; a paragraph `3.1 Без точки`; a paragraph
+  `2.1.3. Глубже`. Both headings are bold, and there is no other `h2` or `h3` in the content.
 - **NFR-1:** GIVEN the change is complete, WHEN `src/features/content-page/` is searched for
   `"use client"`, THEN there are no matches, and `dal/content-page.ts` starts with
   `import "server-only"`. GIVEN a browser opens `/privacy`, WHEN its network requests are
@@ -178,7 +197,8 @@ The loading status (`Загрузка…`, screen readers only) and the error sc
 
 ### Modified Capabilities
 
-- `about-page`: FR-2's log line becomes `[contentful] content page failed` with the entry key;
+- `about-page`: FR-1 reads `privacy-policy-page` FR-7's numbered headings from the text (shared
+  feature); FR-2's log line becomes `[contentful] content page failed` with the entry key;
   NFR-1/NFR-2 name the shared `content-page` feature instead of an about feature.
 - `breadcrumbs`: FR-2's route list gains `/privacy` → Главная › Политика конфиденциальности.
 - `site-footer`: FR-4 now covers only «Связаться с нами»; «Политика конфиденциальности» opens a
@@ -187,8 +207,8 @@ The loading status (`Загрузка…`, screen readers only) and the error sc
 ## Out of Scope
 
 - The «Связаться с нами» page.
-- Rich text, section headings, lists, links, or a "last updated" date inside the policy text
-  (plain paragraphs only, as on `/about`).
+- Rich text, headings written as markup, lists, links, or a "last updated" date inside the
+  policy text: paragraphs plus FR-7's numbered headings only.
 - Moving the home greeting onto the shared feature: home falls back instead of throwing, a
   different behaviour.
 - A per-page browser-tab title (`metadata`): no page sets one today.
@@ -201,7 +221,7 @@ The loading status (`Загрузка…`, screen readers only) and the error sc
 - `src/features/content-page/` (new, from `src/features/about/` moved with `git mv` and
   generalized): `dal/content-page.ts`, `model/content-page.schema.ts`,
   `model/content-page.types.ts`, `model/content-page.constants.ts`,
-  `model/content-page-messages.ts`, `components/ContentPage/`, `components/ContentPageContent/`,
+  `model/content-page-messages.ts`, `model/content-blocks.ts` (FR-7), `components/ContentPage/`, `components/ContentPageContent/`,
   `components/ContentPageArticle/`, `components/ContentPagePlaceholder/`, `tests/`, `index.ts`.
 - `src/features/about/` (removed).
 - `src/app/(public)/about/page.tsx` (switches to `ContentPage`), `src/app/(public)/privacy/page.tsx`

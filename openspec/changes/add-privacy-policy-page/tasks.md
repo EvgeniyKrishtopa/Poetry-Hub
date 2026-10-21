@@ -74,8 +74,8 @@
 
 ## 4. Documentation and verification <!-- judgement-heavy -->
 
-- [ ] 4.1 (NFR-7) Update `docs/architecture.md` and `docs/state-management.md` per design D9.
-- [ ] 4.2 (NFR-1, NFR-2, NFR-4, NFR-5, NFR-6) Verify statically and run the chain.
+- [x] 4.1 (NFR-7) Update `docs/architecture.md` and `docs/state-management.md` per design D9.
+- [x] 4.2 (NFR-1, NFR-2, NFR-4, NFR-5, NFR-6) Verify statically and run the chain.
   - `grep -rn '"use client"' src/features/content-page` prints nothing, and
     `dal/content-page.ts` starts with `import "server-only"` (NFR-1).
   - The NFR-4 search over `src/features/content-page` (excluding `tests/`) for colour literals
@@ -94,13 +94,35 @@
     `[contentful] content page failed` lines with reason `config` for both keys, and the route
     table marks neither `/about` nor `/privacy` as `ƒ` (NFR-2). A failure here stops the group
     and goes to `opsx-update-review`, not a workaround.
-- [ ] 4.3 (FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, NFR-1) Gate 3 (`web-qa`). The visual checks
-  (FR-1's mockup match, FR-4's trail, FR-6's `/about` look, and FR-2's error screen) run in both
+- [x] 4.3 (FR-7, NFR-3, NFR-4) Numbered headings per design D5 (user request 2026-10-21): add
+  `model/content-blocks.ts` (`toContentBlocks`, `SECTION_HEADING_PATTERN`,
+  `SUBSECTION_HEADING_PATTERN`) and the `ContentBlock` union in `model/content-page.types.ts`;
+  `ContentPageArticle` renders `section` as `h2`, `subsection` as `h3`, `paragraph` as the
+  existing `<p>`.
+  - Verify with `tests/model/content-blocks.test.ts`: FR-7's example message gives exactly the
+    six blocks in order; a heading line with leading spaces is trimmed; a message with no
+    numbered first line gives paragraphs only, same as `splitParagraphs`.
+  - Verify with `tests/components/ContentPageArticle.test.tsx`: FR-7's scenario (one `h2`, one
+    `h3`, both `font-bold`, the four paragraphs in order); FR-1's and NFR-3's cases pass
+    unchanged.
+  - Re-run every check of 4.2 (its static searches, the full chain, and the build with no
+    Contentful settings), since 4.2 ran before this code existed.
+  - Update `docs/architecture.md`'s `content-page/` line: "title, numbered headings, and
+    paragraphs" (NFR-7, follows 4.1).
+- [x] 4.4 (FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, NFR-1) Gate 3 (`web-qa`). The visual checks
+  (FR-1's mockup match, FR-7's bold headings, FR-4's trail, FR-6's `/about` look, and FR-2's error screen) run in both
   colour schemes; the behavioural and network checks (FR-3, FR-5's status codes, NFR-1, FR-2's
   log lines) run once:
   - FR-1: `/privacy` shows the entry's title as the only `h1` and its paragraphs, matching the
     approved mockup at 375 px and 1280 px in structure (block order, type scale, spacing
-    tokens, colour roles; a few pixels or a different line wrap is not a mismatch);
+    tokens, colour roles; a few pixels or a different line wrap is not a mismatch). FR-7's
+    `h2`/`h3` blocks are not in the mockup and are left out of this comparison; they are checked
+    against ui-plan's FR-7 sentence instead (bold, `text-lg sm:text-xl` for `h2`, body size for
+    `h3`);
+  - FR-7: on `/privacy` every paragraph whose first line starts «Раздел N. » shows that line as a
+    bold `h2`, and every one whose first line starts «N.N. » as a bold `h3`; the same patterns
+    anywhere else in a paragraph stay text; `/about` has no `h2`/`h3`; record the heading order, and report a skipped level
+    (`h3` before any `h2`) as a note for the editors, not a failure (design R4);
   - FR-4: the trail reads «Главная» (link to `/`) › «Политика конфиденциальности»
     (`aria-current="page"`);
   - FR-5: clicking the footer's «Политика конфиденциальности» shows the privacy page, and
@@ -116,6 +138,8 @@
   - FR-3, against `npm run build && npm start` with real settings: edit and publish the privacy
     entry's title, `curl -X POST` `/api/revalidate` with the local secret, reload `/privacy`,
     and see the new title; then publish another edit with no notification, wait 3 minutes,
-    reload twice, and see it on the second reload (then restore the original title);
+    reload twice a few seconds apart (the first reload starts the background refresh, which needs
+    a Contentful round trip; back-to-back reloads can both see the old text), and see it on the
+    second reload (then restore the original title);
   - no console errors or uncaught exceptions on the success path; replay the recorded
     scenarios.

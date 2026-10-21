@@ -1,0 +1,4 @@
+{"ts":"2026-10-21T17:00:13Z","kind":"finding","change":"add-privacy-policy-page","group":"4","gate":"spec-clarify","finding":"proposal.md Out of Scope: section headings vs FR-7","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T17:00:13Z","kind":"finding","change":"add-privacy-policy-page","group":"4","gate":"spec-clarify","finding":"design.md R4 / tasks 4.4: skipped heading level fails Gate 3 or is a content note","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T17:00:13Z","kind":"finding","change":"add-privacy-policy-page","group":"4","gate":"spec-clarify","finding":"tasks.md 4.4 FR-1: mockup block order vs new h2/h3 blocks","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T17:00:13Z","kind":"finding","change":"add-privacy-policy-page","group":"4","gate":"spec-clarify","finding":"tasks.md 4.4 FR-7: Раздел N. only as a paragraph's first line","outcome":"fixed","ruleNumber":""}
