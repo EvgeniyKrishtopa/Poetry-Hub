@@ -100,6 +100,7 @@ describe.each(Object.values(CONTENT_PAGE_KEYS))("getContentPage(%s)", (key) => {
     expectFailureCaching();
   });
 
+  // implements NFR-2 of add-privacy-policy-page
   it("rethrows errors that are not Contentful failures, without logging", async () => {
     const bug = new TypeError("programming bug");
     queryMock.mockRejectedValue(bug);
