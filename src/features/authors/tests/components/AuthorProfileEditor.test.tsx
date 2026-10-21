@@ -242,12 +242,18 @@ describe("AuthorProfileEditor", () => {
 
   // implements FR-10 of add-author-profiles
   it("shows the add prompt and «Сохранено» after a successful delete", async () => {
-    vi.mocked(deleteProfileFieldAction).mockResolvedValue({ data: { status: "saved", profile: PROFILE } });
+    const remove = deferred<DeleteResponse>();
+    vi.mocked(deleteProfileFieldAction).mockReturnValue(remove.promise);
     const user = userEvent.setup();
     const { rerender } = render(<AuthorProfileEditor profile={PROFILE} />);
 
     await user.click(screen.getAllByRole("button", { name: "Удалить" })[1]);
-    rerender(<AuthorProfileEditor profile={{ ...PROFILE, lastName: null }} />);
+    const emptied = { ...PROFILE, lastName: null };
+    // Settle the action before the new props arrive, as on the real page: a click doesn't wait for the
+    // transition, and a rerender during it could commit after the assertions on a loaded runner.
+    await act(async () => remove.resolve({ data: { status: "saved", profile: emptied } }));
+    // The action's response re-renders the page with the cleared value (design D3).
+    rerender(<AuthorProfileEditor profile={emptied} />);
 
     expect(screen.getByRole("button", { name: "Добавить фамилию" })).toBeEnabled();
     expect(screen.getByRole("status")).toHaveTextContent("Сохранено");
