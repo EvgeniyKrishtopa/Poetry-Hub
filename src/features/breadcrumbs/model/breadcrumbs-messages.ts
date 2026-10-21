@@ -8,6 +8,7 @@ export const BREADCRUMB_LABELS = {
   signIn: "Вход",
   signUp: "Регистрация",
   about: "О проекте",
+  privacyPolicy: "Политика конфиденциальности",
   authorFallback: "Автор",
 } as const;
 
