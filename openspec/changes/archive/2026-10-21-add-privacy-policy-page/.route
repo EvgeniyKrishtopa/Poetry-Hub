@@ -1,0 +1,2 @@
+full
+# more than one module: yes (new features/content-page replacing features/about, plus breadcrumbs, site-footer, shared/config, app routes); data schema: no; contract other code depends on: no (the about route switches to the new feature public API inside this change; PRIVACY_PATH is a new constant; FOOTER_LINK_PATHS keeps its shape)

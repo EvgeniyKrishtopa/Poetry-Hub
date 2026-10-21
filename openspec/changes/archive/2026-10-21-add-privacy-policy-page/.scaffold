@@ -1,0 +1,2 @@
+yes
+# new module: yes (src/features/content-page/); new boundary crossing: no new route handler or external client (a new page route reusing the existing Contentful client)

@@ -1,0 +1,4 @@
+{"ts":"2026-10-21T15:47:25Z","change":"add-privacy-policy-page","kind":"finding","gate":"spec-clarify","finding":"NFR-6: greetingCollection appears in exactly two non-test files (query vs any mention)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T15:47:25Z","change":"add-privacy-policy-page","kind":"finding","gate":"spec-clarify","finding":"Task 2.1: which Contentful environment the privacy_policy entry check targets","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T15:47:25Z","change":"add-privacy-policy-page","kind":"finding","gate":"spec-clarify","finding":"FR-2: which cache 'misses the cache' refers to for the one-log-line-per-failed-read rule","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T15:47:25Z","change":"add-privacy-policy-page","kind":"finding","gate":"spec-clarify","finding":"Task 4.3: what 'in both colour schemes' covers in Gate 3","outcome":"fixed","ruleNumber":""}
