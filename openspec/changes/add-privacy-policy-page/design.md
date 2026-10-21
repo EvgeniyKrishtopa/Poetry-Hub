@@ -313,21 +313,32 @@ deployed (until then it shows the error screen, R5).
 
 ## Scaffold map
 
-| File | Role | Exports |
+Written after the files existed (scaffold, 2026-10-21). `features/about/` was moved with `git mv`
+and renamed (identifiers and import paths only; the about key, log prefix, and thrown message
+stay until tasks 2.2 and 2.3), so `/about` keeps working; the rest are new types, constants, and
+stubs.
+
+| File | Responsibility | Exports |
 | --- | --- | --- |
 | `src/shared/config/constants.ts` | add the path constant | `PRIVACY_PATH` |
-| `src/features/content-page/model/content-page.constants.ts` | entry keys | `CONTENT_PAGE_KEYS` |
-| `src/features/content-page/model/content-page.types.ts` | key and result types | `ContentPageKey`, `ContentPageFailureReason`, `ContentPageResult` |
-| `src/features/content-page/model/content-page.schema.ts` | Zod for the collection response | `contentPageCollectionResponseSchema`, `ContentPageEntry` |
-| `src/features/content-page/model/content-page-messages.ts` | loading label | `CONTENT_PAGE_LOADING_LABEL` |
-| `src/features/content-page/dal/content-page.ts` | server-only read + keyed cache scope | `getContentPage` |
-| `src/features/content-page/components/ContentPage/ContentPage.tsx` (+ `.types.ts`) | Suspense wrapper | `ContentPage`, `ContentPageProps` |
-| `src/features/content-page/components/ContentPageContent/ContentPageContent.tsx` (+ `.types.ts`) | async loader, throws on failure | `ContentPageContent`, `ContentPageContentProps` |
-| `src/features/content-page/components/ContentPageArticle/ContentPageArticle.tsx` (+ `.types.ts`) | view | `ContentPageArticle`, `ContentPageArticleProps` |
-| `src/features/content-page/components/ContentPagePlaceholder/ContentPagePlaceholder.tsx` | Suspense fallback | `ContentPagePlaceholder` |
-| `src/features/content-page/index.ts` | public API | `ContentPage`, `CONTENT_PAGE_KEYS` |
-| `src/app/(public)/privacy/page.tsx` | route | default `PrivacyRoutePage` |
-| `src/app/@breadcrumbs/privacy/page.tsx` | breadcrumbs slot page | default `PrivacyBreadcrumbs` |
+| `src/features/content-page/model/content-page.constants.ts` | entry keys (new) | `CONTENT_PAGE_KEYS` |
+| `src/features/content-page/model/content-page.types.ts` | key and result types (moved; `ContentPageKey` new) | `ContentPageKey`, `ContentPageFailureReason`, `ContentPageResult` |
+| `src/features/content-page/model/content-page.schema.ts` | Zod for the collection response (moved) | `contentPageCollectionResponseSchema`, `ContentPageEntry` |
+| `src/features/content-page/model/content-page-messages.ts` | loading label (moved) | `CONTENT_PAGE_LOADING_LABEL` |
+| `src/features/content-page/dal/content-page.ts` | server-only read + cache scope (moved; `getContentPage()` takes no key until task 2.2) | `getContentPage` |
+| `src/features/content-page/components/ContentPage/ContentPage.tsx` | Suspense wrapper (moved; no props until task 2.2) | `ContentPage` |
+| `src/features/content-page/components/ContentPage/ContentPage.types.ts` | props (new, wired by task 2.2) | `ContentPageProps` |
+| `src/features/content-page/components/ContentPageContent/ContentPageContent.tsx` | async loader, throws on failure (moved) | `ContentPageContent` |
+| `src/features/content-page/components/ContentPageContent/ContentPageContent.types.ts` | props (new, wired by task 2.2) | `ContentPageContentProps` |
+| `src/features/content-page/components/ContentPageArticle/ContentPageArticle.tsx` (+ `.types.ts`) | view (moved) | `ContentPageArticle`, `ContentPageArticleProps` |
+| `src/features/content-page/components/ContentPagePlaceholder/ContentPagePlaceholder.tsx` | Suspense fallback (moved) | `ContentPagePlaceholder` |
+| `src/features/content-page/index.ts` | public API (`CONTENT_PAGE_KEYS` added by task 2.2) | `ContentPage` |
+| `src/features/content-page/tests/**` | the about tests, moved and renamed | — |
+| `src/app/(public)/about/page.tsx` | route (import switched to `@/features/content-page`) | default `AboutRoutePage` |
+| `src/app/(public)/privacy/page.tsx` | route (stub, returns `null`; task 3.1) | default `PrivacyRoutePage` |
+| `src/app/@breadcrumbs/privacy/page.tsx` | breadcrumbs slot page (final code, D7) | default `PrivacyBreadcrumbs` |
+| `knip.jsonc` | temporary ignores for the unwired exports; removed in tasks 1.1 and 2.2 | — |
 
-The scaffold moves `features/about/` into place (D1) rather than writing empty stubs: the about
-route must keep working, so its code is renamed, not stubbed.
+Git sees `AboutPage.tsx` and `AboutContent.tsx` as delete + add (the renamed lines push these
+small files under its similarity threshold), so `git log --follow` doesn't link them; the other
+moved files keep their history.
