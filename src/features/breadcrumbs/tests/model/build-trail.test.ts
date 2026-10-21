@@ -64,6 +64,14 @@ describe("buildTrail", () => {
     });
   });
 
+  // implements FR-4 of add-privacy-policy-page
+  it("builds «Главная» › «Политика конфиденциальности» for the privacy page", () => {
+    expect(buildTrail(matchRoute(["privacy"]))).toEqual({
+      kind: "shown",
+      items: [HOME, { kind: "current", label: "Политика конфиденциальности" }],
+    });
+  });
+
   // implements FR-4 of add-breadcrumbs
   it("shows no trail for an author that doesn't exist", () => {
     expect(buildTrail(AUTHOR_MATCH, { ok: false, reason: "not-found" })).toEqual({ kind: "none" });

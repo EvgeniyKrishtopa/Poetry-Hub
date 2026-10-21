@@ -61,7 +61,7 @@
 
 ## 3. The privacy page route and its breadcrumb <!-- isolated -->
 
-- [ ] 3.1 (FR-1, FR-4, FR-5, NFR-5) Add `src/app/(public)/privacy/page.tsx` (the `/about` route's
+- [x] 3.1 (FR-1, FR-4, FR-5, NFR-5) Add `src/app/(public)/privacy/page.tsx` (the `/about` route's
   `<main>` with `<ContentPage entryKey={CONTENT_PAGE_KEYS.privacyPolicy} />`, design D1) and
   `src/app/@breadcrumbs/privacy/page.tsx`
   (`<Breadcrumbs segments={Promise.resolve(["privacy"])} />`). Add
