@@ -5,8 +5,6 @@
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
     ".ncurc.cjs"
   ],
-  // Temporary, add-about-page scaffold: the about feature's stubs have no importer until task 3.2 wires them.
-  "ignoreFiles": ["src/features/about/**"],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
     "@fission-ai/openspec",

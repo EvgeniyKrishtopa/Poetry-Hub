@@ -55,13 +55,13 @@
 
 ## 3. The about page UI and its breadcrumb <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-1, NFR-3, NFR-4) Implement `components/AboutArticle/AboutArticle.tsx` (+
+- [x] 3.1 (FR-1, NFR-3, NFR-4) Implement `components/AboutArticle/AboutArticle.tsx` (+
   `AboutArticle.types.ts`) per design D5 and the approved mockup: `<article>`, `<h1>` with the
   title, one `whitespace-pre-line` paragraph per `splitParagraphs` item, token utilities only.
   - Verify with `tests/components/AboutArticle.test.tsx`: FR-1's scenario (one heading, two
     paragraphs, the line break kept) and NFR-3's (markup characters render as text, no `<b>`
     or `<strong>`).
-- [ ] 3.2 (FR-2) Implement `components/AboutContent/AboutContent.tsx` per design D4 (awaits
+- [x] 3.2 (FR-2) Implement `components/AboutContent/AboutContent.tsx` per design D4 (awaits
   `getAboutPage()`, throws `Error(ABOUT_CONTENT_UNAVAILABLE)` on failure, renders
   `AboutArticle` on success), `components/AboutPlaceholder/AboutPlaceholder.tsx` per the
   mockup (`aria-hidden`, token colours), and `components/AboutPage/AboutPage.tsx` (Suspense
@@ -71,7 +71,7 @@
   - Verify with `tests/components/AboutContent.test.tsx` (mocked DAL): on success
     `await AboutContent()` resolves to an element that renders the title; for each failure
     reason it rejects, and the error message contains neither the reason nor any entry text.
-- [ ] 3.3 (FR-1, FR-4, FR-5, NFR-5) Add `src/app/(public)/about/page.tsx` (a `<main>` with the
+- [x] 3.3 (FR-1, FR-4, FR-5, NFR-5) Add `src/app/(public)/about/page.tsx` (a `<main>` with the
   `/authors` page's wrapper classes plus `items-start`, per the mockup, rendering
   `<AboutPage />`) and
   `src/app/@breadcrumbs/about/page.tsx` (`<Breadcrumbs segments={Promise.resolve(["about"])} />`).

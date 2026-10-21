@@ -1,5 +1,6 @@
 import { AUTHOR_EDITOR_PATH, AUTHORS_PAGE_TITLES, AUTHORS_PATH } from "@/features/authors";
 import { ACCOUNT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
+import { ABOUT_PATH } from "@/shared/config/constants";
 
 import type { BreadcrumbItem, RouteMatch } from "./breadcrumb.types";
 import { BREADCRUMB_LABELS } from "./breadcrumbs-messages";
@@ -19,6 +20,7 @@ export const STATIC_ROUTES: readonly RouteRow[] = [
   { path: AUTHOR_EDITOR_PATH, label: AUTHORS_PAGE_TITLES.authorEditor },
   { path: SIGN_IN_PATH, label: BREADCRUMB_LABELS.signIn },
   { path: SIGN_UP_PATH, label: BREADCRUMB_LABELS.signUp },
+  { path: ABOUT_PATH, label: BREADCRUMB_LABELS.about },
 ];
 
 const AUTHOR_PAGE_PREFIX = `${AUTHORS_PATH}/`;
