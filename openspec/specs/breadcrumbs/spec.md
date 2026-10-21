@@ -17,7 +17,7 @@ Every page except home SHALL show a breadcrumb trail between the site header and
 - **THEN** a navigation landmark named «Навигационная цепочка» is rendered after the site header and before the page's main content
 
 ### Requirement: Trail items per route (FR-2)
-The trail SHALL list «Главная» first and then every level down to the current page: `/authors` → Главная › Наши авторы; `/authors/<id>` → Главная › Наши авторы › <author name>; `/account` → Главная › Мастерская поэта; `/account/author` → Главная › Мастерская поэта › Профиль автора; `/login` → Главная › Вход; `/signup` → Главная › Регистрация; `/about` → Главная › О проекте.
+The trail SHALL list «Главная» first and then every level down to the current page: `/authors` → Главная › Наши авторы; `/authors/<id>` → Главная › Наши авторы › <author name>; `/account` → Главная › Мастерская поэта; `/account/author` → Главная › Мастерская поэта › Профиль автора; `/login` → Главная › Вход; `/signup` → Главная › Регистрация; `/about` → Главная › О проекте; `/privacy` → Главная › Политика конфиденциальности.
 
 #### Scenario: Two-level trail
 - **GIVEN** any visitor
@@ -40,6 +40,13 @@ The trail SHALL list «Главная» first and then every level down to the c
 - **THEN** the trail items read, in order, «Главная», «О проекте»
 - **AND** «Главная» links to `/`, and «О проекте» is not a link and has `aria-current="page"`
 - **AND** the same trail is shown when the about content fails and the error screen replaces it
+
+#### Scenario: Privacy policy trail
+- **GIVEN** any visitor
+- **WHEN** they open `/privacy`
+- **THEN** the trail items read, in order, «Главная», «Политика конфиденциальности»
+- **AND** «Главная» links to `/`, and «Политика конфиденциальности» is not a link and has `aria-current="page"`
+- **AND** the same trail is shown when the privacy policy content fails and the error screen replaces it
 
 ### Requirement: Links and current-item highlight (FR-3)
 Every trail item except the last SHALL be a link to its page. The last item SHALL be plain text, not a link, carry `aria-current="page"`, and use the accent color; the other items SHALL use the regular text color.
