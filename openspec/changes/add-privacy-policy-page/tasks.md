@@ -6,7 +6,8 @@
   `ABOUT_PATH`, and set `FOOTER_LINK_PATHS.privacy` in
   `src/features/site-footer/model/site-footer.constants.ts` to `PRIVACY_PATH` (design D7). Update
   that file's doc comment: `/about` and `/privacy` have pages, `/contact` not yet.
-  - Verify: the existing `SiteFooter` tests pass unchanged, and `npm run knip` passes.
+  - Remove the scaffold's temporary `knip.jsonc` `ignoreIssues` entry for `src/shared/config/constants.ts`.
+  - Verify: the existing `SiteFooter` tests pass unchanged, and `npm run knip` passes without that ignore.
 
 ## 2. The shared content-page feature (from `features/about`) <!-- judgement-heavy -->
 
@@ -31,7 +32,9 @@
   `CONTENT_PAGE_KEYS` from `index.ts`. Switch `src/app/(public)/about/page.tsx` to
   `<ContentPage entryKey={CONTENT_PAGE_KEYS.about} />`.
   - Verify: `src/features/about/` no longer exists; the moved schema and placeholder tests pass
-    after their renames; `npm run typecheck` and `npm run knip` pass.
+    after their renames; the scaffold's remaining temporary `knip.jsonc` entries (the two
+    `.types.ts` files in `ignoreFiles`, the `content-page.types.ts` `ignoreIssues` entry, and both
+    keys with their comment once empty) are removed; `npm run typecheck` and `npm run knip` pass.
 - [ ] 2.3 (FR-2, FR-6, NFR-1, NFR-2, NFR-3) Finish the keyed DAL and loader per design D2, D4,
   and D6: a failure logs `[contentful] content page failed` with `{ key, reason }`, plus
   `status` only for `auth`/`http`; the thrown message is `CONTENT_PAGE_UNAVAILABLE`.

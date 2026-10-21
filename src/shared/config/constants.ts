@@ -22,3 +22,6 @@ export const HOME_PATH = "/";
 
 /** The about page: the footer's «О проекте» link and its breadcrumb trail point here. */
 export const ABOUT_PATH = "/about";
+
+/** The privacy policy page: the footer's «Политика конфиденциальности» link and its breadcrumb trail point here. */
+export const PRIVACY_PATH = "/privacy";
