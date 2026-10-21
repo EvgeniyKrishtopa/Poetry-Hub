@@ -19,11 +19,11 @@
 
 ## 2. The about data access (`src/features/about/`, server only) <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-1, R5) Check that the `about_page` entry exists and is published: run the
+- [x] 2.1 (FR-1, R5) Check that the `about_page` entry exists and is published: run the
   `AboutPage` query (design D1) in Contentful's GraphiQL, or against the local dev server's
   environment, and confirm one item with a non-blank title and message. If it is missing, mark
   this task blocked and ask the user.
-- [ ] 2.2 (FR-1, FR-2) Implement `model/about-page.schema.ts` (Zod for the `greetingCollection`
+- [x] 2.2 (FR-1, FR-2) Implement `model/about-page.schema.ts` (Zod for the `greetingCollection`
   response, `key`/`title`/`message` each `z.string().trim().min(1)`; `AboutPageEntry` via
   `z.infer`) and `model/about-page.types.ts` (`AboutPageFailureReason =
   ContentfulErrorKind | "validation" | "not-found"`, `AboutPageResult` as
@@ -31,7 +31,7 @@
   - Verify with `tests/model/about-page.schema.test.ts`: a valid payload parses with
     whitespace trimmed; a missing, empty, or whitespace-only `title` or `message` fails; a
     missing collection fails.
-- [ ] 2.3 (FR-2, FR-3, NFR-1, NFR-2, NFR-5) Implement `dal/about-page.ts` per design D1 and D2:
+- [x] 2.3 (FR-2, FR-3, NFR-1, NFR-2, NFR-5) Implement `dal/about-page.ts` per design D1 and D2:
   `import "server-only"`; `ABOUT_PAGE_KEY = "about_page"`; `readAboutPage()` maps
   `ContentfulError` kinds, `validation`, and `not-found` to failure values with one log line
   each (`[contentful] about page failed`, status only for `auth`/`http`) and rethrows any other
@@ -45,7 +45,7 @@
     `CONTENTFUL_CACHE_TAG`; `cacheLife` gets `"minutes"` on success and `"seconds"` on every
     failure.
 
-- [ ] 2.4 (FR-1, R5) Write `tests/dal/about-page.integration.test.ts` per design D7: a real
+- [x] 2.4 (FR-1, R5) Write `tests/dal/about-page.integration.test.ts` per design D7: a real
   request to Contentful (no `fetch` or module mocks) that expects `{ ok: true }` with a
   non-blank title and message, skipped with `describe.skipIf` when `CONTENTFUL_SPACE_ID` or
   `CONTENTFUL_ACCESS_TOKEN` is unset.
