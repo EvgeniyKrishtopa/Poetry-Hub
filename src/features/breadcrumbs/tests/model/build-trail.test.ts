@@ -5,6 +5,7 @@ import { ACCOUNT_PATH } from "@/shared/config/account-paths";
 import { HOME_PATH } from "@/shared/config/constants";
 
 import { buildTrail } from "../../model/build-trail";
+import { matchRoute } from "../../model/match-route";
 
 const ANNA_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
 const AUTHOR_MATCH = { kind: "author", id: ANNA_ID } as const;
@@ -52,6 +53,14 @@ describe("buildTrail", () => {
     expect(buildTrail(AUTHOR_MATCH)).toEqual({
       kind: "shown",
       items: [HOME, AUTHORS, { kind: "current", label: "Автор" }],
+    });
+  });
+
+  // implements FR-4 of add-about-page
+  it("builds «Главная» › «О проекте» for the about page", () => {
+    expect(buildTrail(matchRoute(["about"]))).toEqual({
+      kind: "shown",
+      items: [HOME, { kind: "current", label: "О проекте" }],
     });
   });
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { AUTHOR_EDITOR_PATH, AUTHORS_PATH } from "@/features/authors";
 import { ACCOUNT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
+import { ABOUT_PATH } from "@/shared/config/constants";
 
 import { matchRoute, STATIC_ROUTES } from "../../model/match-route";
 
@@ -51,6 +52,12 @@ describe("matchRoute", () => {
       AUTHOR_EDITOR_PATH,
       SIGN_IN_PATH,
       SIGN_UP_PATH,
+      ABOUT_PATH,
     ]);
+  });
+
+  // implements FR-4 of add-about-page
+  it("maps the about page to «О проекте» as the current item", () => {
+    expect(matchRoute(["about"])).toEqual({ kind: "static", items: [{ kind: "current", label: "О проекте" }] });
   });
 });
