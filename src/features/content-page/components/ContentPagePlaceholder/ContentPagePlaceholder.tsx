@@ -9,7 +9,7 @@ const SKELETON_PARAGRAPHS = [
   ["w-full", "w-3/4"],
 ] as const;
 
-/** The skeleton shown while the about content streams (design D3). */
+/** The skeleton shown while a content page's entry streams (design D3). */
 export function ContentPagePlaceholder() {
   return (
     <>

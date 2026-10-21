@@ -5,15 +5,6 @@
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
     ".ncurc.cjs"
   ],
-  // Temporary, add-privacy-policy-page scaffold: these stubs and exports have no importer until the groups wire them.
-  // The entryKey props and ContentPageKey are wired by task 2.2.
-  "ignoreFiles": [
-    "src/features/content-page/components/ContentPage/ContentPage.types.ts",
-    "src/features/content-page/components/ContentPageContent/ContentPageContent.types.ts"
-  ],
-  "ignoreIssues": {
-    "src/features/content-page/model/content-page.types.ts": ["types"]
-  },
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
     "@fission-ai/openspec",

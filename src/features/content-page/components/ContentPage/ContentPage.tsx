@@ -3,11 +3,13 @@ import { Suspense } from "react";
 import { ContentPageContent } from "../ContentPageContent/ContentPageContent";
 import { ContentPagePlaceholder } from "../ContentPagePlaceholder/ContentPagePlaceholder";
 
-/** The about page's Suspense boundary around its content (design D3). */
-export function ContentPage() {
+import type { ContentPageProps } from "./ContentPage.types";
+
+/** A content page's Suspense boundary around its content (design D3). */
+export function ContentPage({ entryKey }: ContentPageProps) {
   return (
     <Suspense fallback={<ContentPagePlaceholder />}>
-      <ContentPageContent />
+      <ContentPageContent entryKey={entryKey} />
     </Suspense>
   );
 }

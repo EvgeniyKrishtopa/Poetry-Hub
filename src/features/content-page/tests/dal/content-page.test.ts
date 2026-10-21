@@ -10,13 +10,14 @@ import {
 } from "@/shared/lib/contentful";
 
 import { getContentPage } from "../../dal/content-page";
+import { CONTENT_PAGE_KEYS } from "../../model/content-page.constants";
 
 vi.mock("@/shared/lib/contentful", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/lib/contentful")>()),
   contentfulQuery: vi.fn(),
 }));
 
-const LOG_PREFIX = "[contentful] about page failed";
+const LOG_PREFIX = "[contentful] content page failed";
 const SECRET = "secret-token-should-never-leak";
 const queryMock = vi.mocked(contentfulQuery);
 
@@ -24,7 +25,7 @@ function itemsResponse(items: unknown[]) {
   return { greetingCollection: { items } };
 }
 
-describe("getContentPage", () => {
+describe.each(Object.values(CONTENT_PAGE_KEYS))("getContentPage(%s)", (key) => {
   let logSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
@@ -39,7 +40,7 @@ describe("getContentPage", () => {
   });
 
   function expectSingleLog(expected: { reason: string; status?: number }) {
-    expect(logSpy).toHaveBeenCalledExactlyOnceWith(LOG_PREFIX, expected);
+    expect(logSpy).toHaveBeenCalledExactlyOnceWith(LOG_PREFIX, { key, ...expected });
     expect(JSON.stringify(logSpy.mock.calls)).not.toContain(SECRET);
   }
 
@@ -48,25 +49,21 @@ describe("getContentPage", () => {
     expect(cacheLife).toHaveBeenCalledExactlyOnceWith("seconds");
   }
 
-  // implements FR-1, NFR-2 of add-about-page
-  it("queries the `about_page` key and returns the trimmed entry, cached for minutes", async () => {
-    queryMock.mockResolvedValue(
-      itemsResponse([{ key: "about_page", title: "  About  ", message: " First.\n\nSecond. " }]),
-    );
+  // implements FR-1, FR-6, NFR-2 of add-privacy-policy-page
+  it("queries its own key and returns the trimmed entry, cached for minutes", async () => {
+    queryMock.mockResolvedValue(itemsResponse([{ key, title: "  Title  ", message: " First.\n\nSecond. " }]));
 
-    await expect(getContentPage()).resolves.toEqual({
+    await expect(getContentPage(key)).resolves.toEqual({
       ok: true,
-      entry: { key: "about_page", title: "About", message: "First.\n\nSecond." },
+      entry: { key, title: "Title", message: "First.\n\nSecond." },
     });
-    expect(queryMock).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("greetingCollection"), {
-      key: "about_page",
-    });
+    expect(queryMock).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("greetingCollection"), { key });
     expect(logSpy).not.toHaveBeenCalled();
     expect(cacheTag).toHaveBeenCalledExactlyOnceWith(CONTENTFUL_CACHE_TAG);
     expect(cacheLife).toHaveBeenCalledExactlyOnceWith("minutes");
   });
 
-  // implements FR-2, NFR-2 of add-about-page
+  // implements FR-2, FR-6, NFR-2 of add-privacy-policy-page
   it.each<[ContentfulErrorKind, number | undefined, { reason: string; status?: number }]>([
     ["config", undefined, { reason: "config" }],
     ["network", undefined, { reason: "network" }],
@@ -76,38 +73,39 @@ describe("getContentPage", () => {
   ])("maps a `%s` ContentfulError to its failure reason", async (kind, status, expectedLog) => {
     queryMock.mockRejectedValue(new ContentfulError(kind, `failed near ${SECRET}`, { status }));
 
-    await expect(getContentPage()).resolves.toEqual({ ok: false, reason: kind });
+    await expect(getContentPage(key)).resolves.toEqual({ ok: false, reason: kind });
     expectSingleLog(expectedLog);
     expectFailureCaching();
   });
 
-  // implements FR-2, NFR-2 of add-about-page
+  // implements FR-2, FR-6, NFR-2 of add-privacy-policy-page
   it.each([
-    ["an item with a whitespace-only title", itemsResponse([{ key: "about_page", title: "  ", message: SECRET }])],
-    ["an item without a message", itemsResponse([{ key: "about_page", title: SECRET }])],
+    ["an item with a whitespace-only title", itemsResponse([{ key, title: "  ", message: SECRET }])],
+    ["an item without a message", itemsResponse([{ key, title: SECRET }])],
     ["data without the greeting collection", { somethingElse: SECRET }],
   ])("returns a validation failure for %s", async (_label, data) => {
     queryMock.mockResolvedValue(data);
 
-    await expect(getContentPage()).resolves.toEqual({ ok: false, reason: "validation" });
+    await expect(getContentPage(key)).resolves.toEqual({ ok: false, reason: "validation" });
     expectSingleLog({ reason: "validation" });
     expectFailureCaching();
   });
 
-  // implements FR-2, NFR-2 of add-about-page
+  // implements FR-2, FR-6, NFR-2 of add-privacy-policy-page
   it("returns not-found for an empty items list", async () => {
     queryMock.mockResolvedValue(itemsResponse([]));
 
-    await expect(getContentPage()).resolves.toEqual({ ok: false, reason: "not-found" });
+    await expect(getContentPage(key)).resolves.toEqual({ ok: false, reason: "not-found" });
     expectSingleLog({ reason: "not-found" });
     expectFailureCaching();
   });
 
+  // implements NFR-2 of add-privacy-policy-page
   it("rethrows errors that are not Contentful failures, without logging", async () => {
     const bug = new TypeError("programming bug");
     queryMock.mockRejectedValue(bug);
 
-    await expect(getContentPage()).rejects.toBe(bug);
+    await expect(getContentPage(key)).rejects.toBe(bug);
     expect(logSpy).not.toHaveBeenCalled();
     expect(cacheTag).toHaveBeenCalledExactlyOnceWith(CONTENTFUL_CACHE_TAG);
     expect(cacheLife).not.toHaveBeenCalled();
