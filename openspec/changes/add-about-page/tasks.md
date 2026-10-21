@@ -2,14 +2,14 @@
 
 ## 1. Shared groundwork: the about path and the paragraph splitter <!-- isolated -->
 
-- [ ] 1.1 (NFR-5) Add `ABOUT_PATH = "/about"` to `src/shared/config/constants.ts` next to
+- [x] 1.1 (NFR-5) Add `ABOUT_PATH = "/about"` to `src/shared/config/constants.ts` next to
   `HOME_PATH`, and set `FOOTER_LINK_PATHS.about` in
   `src/features/site-footer/model/site-footer.constants.ts` to `ABOUT_PATH` (design D6). Update
   that file's doc comment: `/about` now has a page.
   - Remove the scaffold's temporary `knip.jsonc` ignore for `src/shared/config/constants.ts`.
   - Verify: the existing `SiteFooter` tests pass unchanged (FR-3 of `site-footer` still holds),
     and `npm run knip` passes without that ignore.
-- [ ] 1.2 (FR-1) Add `src/shared/lib/split-paragraphs.ts` exporting `splitParagraphs(text)` with
+- [x] 1.2 (FR-1) Add `src/shared/lib/split-paragraphs.ts` exporting `splitParagraphs(text)` with
   the regex `/\n\s*\n/` (design D5), and switch `features/home`'s `HomeGreeting` to it,
   removing its local `PARAGRAPH_SEPARATOR`. Remove `src/shared/lib/split-paragraphs.ts` from the
   scaffold's temporary `knip.jsonc` `ignoreFiles`.
