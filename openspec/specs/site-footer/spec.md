@@ -3,9 +3,7 @@
 ## Purpose
 Defines the site footer shown on every page: its placement, the copyright notice (founding year to current year),
 and the links to the about, privacy, and contact pages.
-
 ## Requirements
-
 ### Requirement: Footer on every page (FR-1)
 The root layout SHALL render exactly one site footer after the page content on every page it
 wraps, including the not-found, error, and loading screens. The error and loading screens are covered
@@ -61,12 +59,18 @@ links, in this order: «О проекте» to `/about`, «Политика ко
   with `href="/privacy"`, and «Связаться с нами» with `href="/contact"`
 
 ### Requirement: Placeholder targets until the pages exist (FR-4)
-While no page answers a footer link's path, following that link SHALL show the app's existing
-not-found screen with HTTP status 404, inside the root layout with the header and the footer.
+While no page answers a footer link's path, following that link SHALL show the app's existing not-found screen with HTTP status 404, inside the root layout with the header and the footer. «О проекте» SHALL open the `/about` page (`about-page` FR-1) with HTTP 200; «Политика конфиденциальности» and «Связаться с нами» still have no page.
 
 #### Scenario: Following a link to a page that does not exist yet
-- **GIVEN** the app is running and no `/about` page exists
-- **WHEN** the reader activates «О проекте» in the footer
-- **THEN** the response status is 404
-- **AND** the heading «Страница не найдена» is shown
+- **GIVEN** the app is running and no `/privacy` page exists
+- **WHEN** the reader activates «Политика конфиденциальности» in the footer
+- **THEN** the heading «Страница не найдена» is shown
+- **AND** a direct document request for `/privacy` answers with status 404
 - **AND** the footer is still present
+
+#### Scenario: Following the about link
+- **GIVEN** the app is running with valid Contentful settings
+- **WHEN** the reader activates «О проекте» in the footer
+- **THEN** the about page's title from Contentful is shown
+- **AND** a direct document request for `/about` answers with status 200
+
