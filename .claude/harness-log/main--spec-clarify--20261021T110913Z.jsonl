@@ -1,0 +1,7 @@
+{"ts":"2026-10-21T11:09:13Z","kind":"finding","change":"add-about-page","gate":"spec-clarify","finding":"design.md:185 integration test against real Contentful is optional (\"if ... applies\")","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T11:09:13Z","kind":"finding","change":"add-about-page","gate":"spec-clarify","finding":"proposal.md:61 freshness without a webhook: page cache lifetime plus 60 s, one value or two","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T11:09:13Z","kind":"finding","change":"add-about-page","gate":"spec-clarify","finding":"proposal.md:57 one log line per failure: per failed read, or once per scenario","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T11:09:13Z","kind":"finding","change":"add-about-page","gate":"spec-clarify","finding":"proposal.md:52 vs :105 breadcrumb trail on the error screen","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T11:09:13Z","kind":"finding","change":"add-about-page","gate":"spec-clarify","finding":"proposal.md:78 arbitrary-value colour classes wrapping a token variable","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T11:09:13Z","kind":"finding","change":"add-about-page","gate":"spec-clarify","finding":"proposal.md:108 footer link status code read from the click or a direct load","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T11:09:13Z","kind":"finding","change":"add-about-page","gate":"spec-clarify","finding":"tasks.md:89 matching the approved mockup: structural or pixel comparison","outcome":"fixed","ruleNumber":""}

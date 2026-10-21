@@ -1,0 +1,2 @@
+full
+# more than one module: yes (new features/about, plus breadcrumbs, site-footer, shared/config, shared/lib, home); data schema: no; contract other code depends on: no (ABOUT_PATH is a new constant; FOOTER_LINK_PATHS keeps its shape)

@@ -1,0 +1,24 @@
+# Test Plan
+
+One row per acceptance criterion (each Then in `proposal.md`).
+
+| Requirement | Tests | Level |
+| --- | --- | --- |
+| FR-1 — title trimmed as the only `h1`; two paragraphs, the single line break kept | `AboutArticle` renders the proposal's example entry: one level-1 heading `О проекте`, exactly two paragraphs with the expected text and line break (`features/about/tests/components/AboutArticle.test.tsx`); `splitParagraphs` cases: one/several blank lines, whitespace-only line, single break kept, no separator (`shared/lib/tests/split-paragraphs.test.ts`); the schema trims `title`/`message` (`features/about/tests/model/about-page.schema.test.ts`) | unit |
+| FR-1 — the real `about_page` entry exists with a non-blank title and message | `getAboutPage()` against the real Contentful space returns `{ ok: true }`, skipped without `CONTENTFUL_*` settings (`features/about/tests/dal/about-page.integration.test.ts`) | integration |
+| FR-2 — any failure reason makes the content throw, without the reason or entry text in the message | DAL maps each of `config`, `network`, `auth`, `graphql`, `http` to its reason, invalid payload to `validation`, empty items to `not-found`, logs one line per failed read with a status only for `auth`/`http`, rethrows a non-Contentful error (`features/about/tests/dal/about-page.test.ts`); `await AboutContent()` rejects for every reason with a message free of the reason and entry text, and resolves to the article on success (`features/about/tests/components/AboutContent.test.tsx`) | unit |
+| FR-2 — with an invalid token, the browser shows «Что-то пошло не так» + «Повторить», with header, trail «Главная › О проекте», and footer; every DAL log line carries reason `auth`, status 401, no token | Gate 3 browser pass on the dev server with `CONTENTFUL_ACCESS_TOKEN` set to an invalid value, plus a read of the server log (task 4.3) | end-to-end |
+| FR-3 — after an accepted notification, the next `/about` request shows title B | Gate 3 against `npm run build && npm start` with real settings: publish an edit, `curl -X POST /api/revalidate` with the local secret, reload (task 4.3); the DAL test asserts `cacheTag(CONTENTFUL_CACHE_TAG)` on every read, which is what the webhook expires | end-to-end |
+| FR-3 — with no notification, the second reload at least 3 minutes after publishing shows title B | Gate 3 against `npm run build && npm start`: publish another edit, no `curl`, wait 3 minutes, reload twice (task 4.3) | end-to-end |
+| FR-4 — the trail lists «Главная» (link to `/`) then «О проекте» (current, `aria-current="page"`), on success and on the error screen | `matchRoute(["about"])` + `buildTrail` give «Главная» link + «О проекте» current (breadcrumbs model tests); the slot test finds `@breadcrumbs/about/page.tsx` mirroring `(public)/about/page.tsx` with segments `["about"]` (`app/tests/breadcrumbs-slot.test.ts`) | unit |
+| FR-4 — the trail is shown in the browser, also above the error screen | Gate 3: the trail on `/about` with valid settings and with an invalid token (task 4.3) | end-to-end |
+| FR-5 — clicking «О проекте» in the footer shows the about title; clicking «Политика конфиденциальности» shows «Страница не найдена» | Gate 3 click-through from the footer (task 4.3) | end-to-end |
+| FR-5 — a direct load of `/about` answers 200 and of `/privacy` 404 | Gate 3 direct document loads or `curl -I` (task 4.3); the existing `SiteFooter` test keeps `href="/about"` now built from `ABOUT_PATH` | end-to-end |
+| NFR-1 — no `"use client"` under `features/about`; the DAL starts with `import "server-only"` | Static search in task 4.2 | unit |
+| NFR-1 — the browser makes no request to a `contentful.com` host | Gate 3 network list for `/about` (task 4.3) | end-to-end |
+| NFR-2 — `npm run build` with empty `CONTENTFUL_*` succeeds, logs `[contentful] about page failed` with reason `config`, and doesn't mark `/about` as `ƒ` | Build check in task 4.2 | end-to-end |
+| NFR-2 — `cacheTag(CONTENTFUL_CACHE_TAG)` always; `cacheLife("minutes")` on success, `"seconds"` on failure | Spies on the global `next/cache` mock in `features/about/tests/dal/about-page.test.ts` | unit |
+| NFR-3 — `<b>…</b>` and `**…**` render literally; no `<b>`/`<strong>` in the content | `AboutArticle` markup-as-text case (`features/about/tests/components/AboutArticle.test.tsx`) | unit |
+| NFR-4 — no colour literal or colour arbitrary value under `features/about` (outside `tests/`) | Static search with the proposal's regex in task 4.2 | unit |
+| NFR-5 — the only `"/about"` literal in `src/` (outside `tests/`) is `ABOUT_PATH`'s definition | Static search in task 4.2 | unit |
+| NFR-6 — `architecture.md` lists the feature, route, and slot page; `state-management.md` names the about DAL's scope as the exception | Doc read in task 4.1 (reviewed in code-review) | unit |

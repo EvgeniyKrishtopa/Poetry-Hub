@@ -1,6 +1,11 @@
-/** Final paths of the footer's pages; until those pages ship, each shows the not-found screen (design D3). */
+import { ABOUT_PATH } from "@/shared/config/constants";
+
+/**
+ * Final paths of the footer's pages. `/about` has a page; until the other pages ship, each shows the
+ * not-found screen (design D3).
+ */
 export const FOOTER_LINK_PATHS = {
-  about: "/about",
+  about: ABOUT_PATH,
   privacy: "/privacy",
   contact: "/contact",
 } as const;
