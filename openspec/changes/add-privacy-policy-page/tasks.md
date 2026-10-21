@@ -2,7 +2,7 @@
 
 ## 1. Shared groundwork: the privacy path <!-- isolated -->
 
-- [ ] 1.1 (NFR-5) Add `PRIVACY_PATH = "/privacy"` to `src/shared/config/constants.ts` after
+- [x] 1.1 (NFR-5) Add `PRIVACY_PATH = "/privacy"` to `src/shared/config/constants.ts` after
   `ABOUT_PATH`, and set `FOOTER_LINK_PATHS.privacy` in
   `src/features/site-footer/model/site-footer.constants.ts` to `PRIVACY_PATH` (design D7). Update
   that file's doc comment: `/about` and `/privacy` have pages, `/contact` not yet.
