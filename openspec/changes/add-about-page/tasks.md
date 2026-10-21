@@ -83,8 +83,8 @@
 
 ## 4. Documentation and verification <!-- judgement-heavy -->
 
-- [ ] 4.1 (NFR-6) Update `docs/architecture.md` and `docs/state-management.md` per design D8.
-- [ ] 4.2 (NFR-1, NFR-2, NFR-4, NFR-5) Verify statically and run the chain.
+- [x] 4.1 (NFR-6) Update `docs/architecture.md` and `docs/state-management.md` per design D8.
+- [x] 4.2 (NFR-1, NFR-2, NFR-4, NFR-5) Verify statically and run the chain.
   - `grep -rn '"use client"' src/features/about` prints nothing, and `dal/about-page.ts` starts
     with `import "server-only"` (NFR-1).
   - The NFR-4 search over `src/features/about` (excluding `tests/`) for colour literals,
@@ -100,7 +100,7 @@
     `[contentful] about page failed` line with reason `config`, and the route table does not
     mark `/about` as `ƒ` (NFR-2, design R1). A failure here stops the
     group and goes to `opsx-update-review` (R1's fallback), not a workaround.
-- [ ] 4.3 (FR-1, FR-2, FR-3, FR-4, FR-5, NFR-1) Gate 3 (`web-qa`) in both colour schemes:
+- [x] 4.3 (FR-1, FR-2, FR-3, FR-4, FR-5, NFR-1) Gate 3 (`web-qa`) in both colour schemes:
   - FR-1: `/about` shows the entry's title as the only `h1` and its paragraphs, matching the
     approved mockup at 375 px and 1280 px in structure: the same block order, type scale,
     spacing tokens, and colour roles; a few pixels or a different line wrap is not a mismatch

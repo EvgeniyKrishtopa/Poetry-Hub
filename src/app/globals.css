@@ -43,6 +43,8 @@
   --color-success: var(--success);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Long prose on phones (below 640 px): one step under text-base, the about page. */
+  --text-prose-compact: 0.9375rem;
 }
 
 body {

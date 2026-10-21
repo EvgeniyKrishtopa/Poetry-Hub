@@ -21,7 +21,7 @@ shared primitives so far are `Button` and `Alert` in `src/shared/ui`.
 | success | `#15803d` / `#4ade80` | `--success` → Tailwind `success` (`border-success`) |
 | muted | `#71717a` / `#a1a1aa` | `--muted` → Tailwind `muted` (`text-muted`) |
 | spacing step | Tailwind's default scale (0.25rem per step); no project step defined. Most used: page `px-6 py-16`, stacks `gap-4`, controls `px-3 py-2` | no name yet |
-| text-size step | Tailwind's default scale; no project step defined. Used: `text-sm`, `text-lg`, `text-xl`, `text-2xl`, `text-4xl` | no name yet |
+| text-size step | Tailwind's default scale, plus one project step: `prose-compact` (15 px), long prose below 640 px. Used: `text-sm`, `text-prose-compact`, `text-lg`, `text-xl`, `text-2xl`, `text-3xl`, `text-4xl` | `--text-prose-compact` in `globals.css` `@theme` → `text-prose-compact` |
 
 Other tokens in the code, outside the four roles:
 
