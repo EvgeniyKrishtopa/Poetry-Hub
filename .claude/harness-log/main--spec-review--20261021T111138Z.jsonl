@@ -1,0 +1,2 @@
+{"ts":"2026-10-21T11:11:38Z","change":"add-about-page","kind":"finding","gate":"spec-review","finding":"SR-03: proposal.md Impact omitted components/AboutPlaceholder/ defined in design D1/D3 and task 3.2","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-21T11:11:38Z","change":"add-about-page","group":"full","gate":"spec-review","verdict":"confirmed","skipReason":"","durationMs":76618,"tokensTotal":54321,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}
