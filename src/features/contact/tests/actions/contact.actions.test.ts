@@ -109,8 +109,10 @@ describe("sendContactMessageAction", () => {
   // implements FR-11 of add-contact-form
   it("imports nothing from auth or Supabase", () => {
     const source = readFileSync(ACTION_SOURCE, "utf8");
+    // Every module specifier, whether single- or multi-line, relative or aliased.
+    const specifiers = [...source.matchAll(/(?:\bfrom|\bimport)\s*["']([^"']+)["']/g)].map((match) => match[1]);
 
-    expect(source).not.toContain("@/features/auth");
-    expect(source).not.toContain("@/shared/lib/supabase");
+    expect(specifiers).toContain("@/shared/lib/telegram");
+    expect(specifiers.filter((specifier) => /auth|supabase/i.test(specifier))).toEqual([]);
   });
 });
