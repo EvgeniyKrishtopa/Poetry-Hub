@@ -7,11 +7,20 @@ import { FOOTER_LINK_CLASS } from "../../model/site-footer.constants";
 
 const NAV_NAME = "Информация о проекте";
 
-const SLOT_LABEL = "Слот";
+const CONTACT_STUB_LABEL = "Contact stub";
+
+// The real dialog has its own tests; this stand-in shows which class the footer hands it.
+vi.mock("@/features/contact", () => ({
+  ContactDialog: ({ triggerClassName }: { readonly triggerClassName: string }) => (
+    <button type="button" className={triggerClassName}>
+      {CONTACT_STUB_LABEL}
+    </button>
+  ),
+}));
 
 async function renderFooterAt(isoDate: string) {
   vi.setSystemTime(new Date(isoDate));
-  render(await SiteFooter({ contactControl: <button type="button">{SLOT_LABEL}</button> }));
+  render(await SiteFooter());
 }
 
 describe("SiteFooter", () => {
@@ -53,7 +62,7 @@ describe("SiteFooter", () => {
 
   // implements FR-3 of add-site-footer
   // implements FR-1, FR-12 of add-contact-form
-  it("lists the about and privacy links in order with the shared link class, then the slot", async () => {
+  it("lists the about and privacy links in order with the shared link class, then the contact button with the same class", async () => {
     await renderFooterAt("2026-10-20T12:00:00Z");
 
     const nav = screen.getByRole("navigation", { name: NAV_NAME });
@@ -67,7 +76,8 @@ describe("SiteFooter", () => {
 
     const items = within(nav).getAllByRole("listitem");
     expect(items).toHaveLength(links.length + 1);
-    expect(within(items[items.length - 1]).getByRole("button", { name: SLOT_LABEL })).toBeInTheDocument();
+    const contactButton = within(items[items.length - 1]).getByRole("button", { name: CONTACT_STUB_LABEL });
+    expect(contactButton).toHaveClass(...FOOTER_LINK_CLASS.split(" "));
   });
 
   // implements FR-12 of add-contact-form

@@ -23,10 +23,10 @@ check (user request, 2026-10-23).
   that keeps what was typed on failure.
 - A hidden honeypot field turns away simple bots: a submission that fills it gets the normal
   thank-you message, and nothing is sent.
-- **BREAKING** for `SiteFooter`'s callers: it gains a `contactControl` slot prop, which the root
-  layout fills with the contact feature's dialog. `FOOTER_LINK_PATHS`, `FOOTER_LINK_ORDER`, and
+- `SiteFooter` renders the contact feature's dialog button itself, through `@/features/contact`;
+  its callers don't change. `FOOTER_LINK_PATHS`, `FOOTER_LINK_ORDER`, and
   `FOOTER_LINK_LABELS` drop `contact`. The footer itself stays a cached Server Component, and
-  its link look becomes one exported class, `FOOTER_LINK_CLASS`, which the button uses too.
+  its link look becomes one class, `FOOTER_LINK_CLASS`, which the button uses too.
 - `/contact` is no longer planned (user decision, 2026-10-23): every placeholder for it goes,
   namely the path constant, the link, the footer test's expectation, and the two recorded
   browser scenarios that check its 404. Nothing on the site refers to it any more.
@@ -144,13 +144,13 @@ The Telegram message the owner receives (not shown on the site) is plain text:
   Tailwind arbitrary-value colour class (`text-[…]`, `bg-[…]`, `border-[…]`, …), even one that
   wraps a token variable.
 - **NFR-5** — `SiteFooter` stays a Server Component with its own `"use cache"` scope and no
-  `"use client"`; the contact UI enters it only through the `contactControl` slot, which the
-  cached body never reads. `npm run build` reports no route as fully dynamic (`ƒ`) that wasn't
+  `"use client"`; it renders the contact Client Component with a constant prop only, so the
+  cache key does not change. `npm run build` reports no route as fully dynamic (`ƒ`) that wasn't
   before.
 - **NFR-6** — Named constants: the length limits, the request timeout, the honeypot field name,
   and the environment variable names are named constants; no magic values.
 - **NFR-7** — Documentation: `docs/architecture.md` lists `features/contact/`,
-  `shared/lib/telegram/`, and the footer's `contactControl` slot; `docs/environment.md`
+  `shared/lib/telegram/`, and `site-footer`'s import of the contact dialog; `docs/environment.md`
   describes `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`, how to get them, and the hosting-level
   rate limit as a deploy step.
 
@@ -239,7 +239,7 @@ The Telegram message the owner receives (not shown on the site) is plain text:
   Tailwind class), THEN each appears only in a constant's definition in a `*.constants.ts` file;
   the error messages that mention a limit interpolate its constant.
 - **NFR-7:** GIVEN the change is complete, WHEN the two docs are read, THEN `architecture.md`
-  lists `features/contact/`, `shared/lib/telegram/`, and the `contactControl` slot, and
+  lists `features/contact/`, `shared/lib/telegram/`, and `site-footer`'s import of the contact dialog, and
   `environment.md` describes both variables, how to obtain them, and the per-IP rate limit
   deploy step.
 
@@ -274,11 +274,9 @@ The Telegram message the owner receives (not shown on the site) is plain text:
 - `src/features/contact/` (new): `actions/`, `model/`, `components/ContactDialog/`,
   `components/ContactForm/`, `tests/`, `index.ts`.
 - `src/shared/lib/telegram/` (new): server-only config reader and `sendTelegramMessage`.
-- `src/features/site-footer/`: `SiteFooter` takes `contactControl`; constants and messages
-  drop `contact`; `FOOTER_LINK_CLASS` (new, exported); its doc comment and tests updated.
+- `src/features/site-footer/`: `SiteFooter` renders `ContactDialog`; constants and messages
+  drop `contact`; `FOOTER_LINK_CLASS` (new); its doc comment and tests updated.
 - `src/app/globals.css`: a new `--backdrop` token for each colour scheme (FR-13).
-- `src/app/layout.tsx`: passes `<ContactDialog triggerClassName={FOOTER_LINK_CLASS} />` as the
-  footer's `contactControl`.
 - `tests/web-qa-scenarios/about-footer-links.spec.ts` and `site-footer-on-every-page.spec.ts`:
   their `/contact` expectations are removed or replaced by the button.
 - `.env.example`: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (names only).

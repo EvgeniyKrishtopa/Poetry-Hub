@@ -4,7 +4,7 @@ import { useActionState, useEffect, useId, useRef } from "react";
 
 import { Alert, Button, FIELD_INPUT_CLASS, TextField } from "@/shared/ui";
 
-import { HONEYPOT_FIELD } from "../../model/contact.constants";
+import { CONTACT_STATUS, HONEYPOT_FIELD } from "../../model/contact.constants";
 import { CONTACT_COPY } from "../../model/contact-messages";
 import type { ContactFieldErrors, ContactFormState } from "../../model/contact.types";
 
@@ -13,7 +13,7 @@ import { focusFirstInvalidField } from "./focus-first-invalid-field";
 import { submitContact } from "./submit-contact";
 
 const INITIAL_STATE: ContactFormState = {
-  status: "idle",
+  status: CONTACT_STATUS.idle,
   values: { name: "", email: "", message: "", [HONEYPOT_FIELD]: "" },
 };
 
@@ -34,19 +34,19 @@ export function ContactForm({ onClose, onSent }: ContactFormProps) {
   const messageErrorId = `${messageId}-error`;
 
   useEffect(() => {
-    if (state.status === "sent") {
+    if (state.status === CONTACT_STATUS.sent) {
       onSent();
       return;
     }
     // The disabled fieldset dropped focus while sending: give it back where the visitor acts next.
-    if (state.status === "failed") {
+    if (state.status === CONTACT_STATUS.failed) {
       submitRef.current?.focus();
       return;
     }
-    if (state.status === "invalid") focusFirstInvalidField(formRef.current, state.fieldErrors);
+    if (state.status === CONTACT_STATUS.invalid) focusFirstInvalidField(formRef.current, state.fieldErrors);
   }, [state, onSent]);
 
-  if (state.status === "sent") {
+  if (state.status === CONTACT_STATUS.sent) {
     return (
       <div className="flex flex-col items-start gap-4">
         <Alert tone="success" className="self-stretch">
@@ -60,8 +60,8 @@ export function ContactForm({ onClose, onSent }: ContactFormProps) {
   }
 
   // useActionState keeps the previous result until the next one arrives; hide it from the moment of submit.
-  const fieldErrors = !pending && state.status === "invalid" ? state.fieldErrors : NO_FIELD_ERRORS;
-  const failed = !pending && state.status === "failed";
+  const fieldErrors = !pending && state.status === CONTACT_STATUS.invalid ? state.fieldErrors : NO_FIELD_ERRORS;
+  const failed = !pending && state.status === CONTACT_STATUS.failed;
   const { values } = state;
 
   return (

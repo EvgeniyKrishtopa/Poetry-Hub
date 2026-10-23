@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { sendContactMessageAction } from "../../actions/contact.actions";
+import { CONTACT_STATUS } from "../../model/contact.constants";
 import { contactMessageSchema } from "../../model/contact.schema";
 import type { ContactFormState } from "../../model/contact.types";
 import { readContactValues, toContactFormState } from "../../model/form-state";
@@ -23,6 +24,6 @@ export async function submitContact(_previous: ContactFormState, formData: FormD
     // online flag tells a visitor's dropped connection from a refusal on the way to the server.
     const errorType = error instanceof Error ? error.name : typeof error;
     console.error(`[contact] action call rejected: ${errorType} (online: ${navigator.onLine})`);
-    return { status: "failed", values };
+    return { status: CONTACT_STATUS.failed, values };
   }
 }

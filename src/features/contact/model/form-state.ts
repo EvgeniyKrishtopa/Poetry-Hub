@@ -1,4 +1,4 @@
-import { CONTACT_FIELDS, HONEYPOT_FIELD } from "./contact.constants";
+import { CONTACT_FIELDS, CONTACT_STATUS, HONEYPOT_FIELD } from "./contact.constants";
 import type {
   ContactActionResult,
   ContactField,
@@ -37,11 +37,11 @@ function firstFieldErrors(fieldErrors: ActionFieldErrors): ContactFieldErrors {
 /** Maps the action's result to the form's next state (design D5). */
 export function toContactFormState(result: ContactActionResult, values: ContactFormValues): ContactFormState {
   if (result.validationErrors) {
-    return { status: "invalid", values, fieldErrors: firstFieldErrors(result.validationErrors.fieldErrors) };
+    return { status: CONTACT_STATUS.invalid, values, fieldErrors: firstFieldErrors(result.validationErrors.fieldErrors) };
   }
   if (result.serverError !== undefined || result.data === undefined) {
-    return { status: "failed", values };
+    return { status: CONTACT_STATUS.failed, values };
   }
-  if (result.data.status === "sent") return { status: "sent" };
-  return { status: "failed", values };
+  if (result.data.status === CONTACT_STATUS.sent) return { status: CONTACT_STATUS.sent };
+  return { status: CONTACT_STATUS.failed, values };
 }

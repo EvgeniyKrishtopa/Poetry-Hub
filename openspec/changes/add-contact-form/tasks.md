@@ -57,7 +57,8 @@
     wrapper with `aria-hidden="true"` and `sr-only` (FR-10, design D5).
 - [x] 3.2 (FR-1, FR-2, FR-4, FR-8, FR-13, NFR-4) Add the `--backdrop` token to `src/app/globals.css`
   for both colour schemes (design D6) and `components/ContactDialog/` (`ContactDialog.tsx`,
-  `ContactDialog.module.css`, and the scaffolded `ContactDialog.types.ts`) per design D6, and export `ContactDialog` from
+  `ContactDialog.module.css`, and the scaffolded `ContactDialog.types.ts`; the PR #124 review moved
+  the dialog box and its stylesheet to `src/shared/ui/Dialog/`) per design D6, and export `ContactDialog` from
   `src/features/contact/index.ts`.
   - Verify with `tests/components/ContactDialog.test.tsx` (stubs `showModal`/`close` on
     `HTMLDialogElement.prototype` when jsdom lacks them): the trigger has `aria-haspopup="dialog"`
@@ -66,10 +67,10 @@
     close/open (FR-4); after success, close/open shows an empty form; a success that resolves
     while the dialog is closed shows the thank-you view on the next open and an empty form on
     the open after that (FR-8, design R7).
-- [x] 3.3 (FR-1, FR-12, NFR-5) Footer slot per design D7: `SiteFooter` takes `contactControl`
-  (props in `SiteFooter.types.ts`) and renders it in a last `<li>`, keeping `"use cache"`;
-  move the links' class string into an exported `FOOTER_LINK_CLASS`; `src/app/layout.tsx`
-  passes `<ContactDialog triggerClassName={FOOTER_LINK_CLASS} />`. Remove every `/contact`
+- [x] 3.3 (FR-1, FR-12, NFR-5) Footer contact button per design D7: `SiteFooter` renders
+  `<ContactDialog triggerClassName={FOOTER_LINK_CLASS} />` in a last `<li>`, keeping `"use cache"`;
+  move the links' class string into `FOOTER_LINK_CLASS`; `src/app/layout.tsx` keeps
+  `<SiteFooter />`. (Revised in the PR #124 review: first done as a `contactControl` slot.) Remove every `/contact`
   placeholder (design D7, FR-12): `contact` in `FOOTER_LINK_PATHS`, `FOOTER_LINK_ORDER`, and
   `FOOTER_LINK_LABELS`; the constants' and `SiteFooter`'s doc comments; the footer test's
   `/contact` row; the contact part of `tests/web-qa-scenarios/about-footer-links.spec.ts`
@@ -77,7 +78,7 @@
   `tests/web-qa-scenarios/site-footer-on-every-page.spec.ts`, which checks the «Связаться с
   нами» button after the two links instead.
   - Verify with `SiteFooter.test.tsx`: exactly two links in order with `FOOTER_LINK_CLASS`,
-    then the slot content inside the nav; no `href="/contact"`. `grep -rn "/contact" src
+    then the contact button with the same class inside the nav; no `href="/contact"`. `grep -rn "/contact" src
     tests/web-qa-scenarios` prints nothing.
   - Remove the remaining add-contact-form `ignoreFiles` entries from `knip.jsonc`
     (`src/features/contact/**`, `SiteFooter.types.ts`) and the `ignoreFiles` key with its
@@ -89,8 +90,8 @@
 - [ ] 4.1 (NFR-7) Update the Purpose line of `openspec/specs/site-footer/spec.md` (a delta
   can't change it) to "…and the links to the about and privacy pages, plus the button that
   opens the contact dialog". Update `docs/architecture.md` per design D8 (`features/contact/`,
-  `shared/lib/telegram/`, the footer slot, the layout line), and its `site-footer/` line
-  ("about/privacy/contact links" → about and privacy links plus the contact slot).
+  `shared/lib/telegram/`, `site-footer`'s import of `ContactDialog`), and its `site-footer/` line
+  ("about/privacy/contact links" → about and privacy links plus the contact button).
 - [ ] 4.2 (NFR-1, NFR-3, NFR-4, NFR-5, NFR-6) Verify statically and run the chain.
   - `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are read only under `src/shared/lib/telegram/`
     (excluding tests); every module there starts with `import "server-only"`; no

@@ -2,6 +2,7 @@ import { cacheLife } from "next/cache";
 import Link from "next/link";
 import type { ReactElement } from "react";
 
+import { ContactDialog } from "@/features/contact";
 import { siteConfig } from "@/shared/config/site";
 
 import { formatCopyrightYears } from "../../model/copyright-years";
@@ -13,12 +14,10 @@ import {
   SITE_FOUNDING_YEAR,
 } from "../../model/site-footer.constants";
 
-import type { SiteFooterProps } from "./SiteFooter.types";
-
 // implements NFR-2, NFR-3, NFR-4 of add-site-footer: a Server Component with no client JS, token utilities only,
 // and the year read inside its own cache scope so every page stays prerendered.
-/** The site footer the root layout renders on every page: copyright notice, the about and privacy links, and the contact slot. */
-export async function SiteFooter({ contactControl }: SiteFooterProps): Promise<ReactElement> {
+/** The site footer the root layout renders on every page: copyright notice, the about and privacy links, and the contact button. */
+export async function SiteFooter(): Promise<ReactElement> {
   "use cache";
   // Cache Components allows `new Date()` during prerender only inside a cache scope. "days" re-renders the
   // footer within a day of 1 January, the lag the spec accepts, and is longer than any page's own lifetime.
@@ -41,8 +40,10 @@ export async function SiteFooter({ contactControl }: SiteFooterProps): Promise<R
                 </Link>
               </li>
             ))}
-            {/* Passed through, never read here, so it stays out of the cache key ("use cache" interleaving). */}
-            <li>{contactControl}</li>
+            {/* A Client Component with a constant prop: the cache key stays the same. */}
+            <li>
+              <ContactDialog triggerClassName={FOOTER_LINK_CLASS} />
+            </li>
           </ul>
         </nav>
       </div>
