@@ -1,4 +1,4 @@
 import "server-only";
 
 export { sendTelegramMessage } from "./client";
-export type { TelegramFailureReason, TelegramSendResult } from "./telegram.types";
+export type { TelegramSendResult } from "./telegram.types";
