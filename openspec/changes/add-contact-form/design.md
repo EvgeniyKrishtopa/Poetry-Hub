@@ -457,7 +457,7 @@ CSS Module, the recorded browser scenarios, docs, and `.env.example` are left to
 
 | File | Responsibility | Exports |
 | --- | --- | --- |
-| `src/shared/lib/telegram/telegram.constants.ts` | env var names, API base, timeout, token and chat-id patterns | `TELEGRAM_ENV`, `TELEGRAM_API_BASE`, `TELEGRAM_REQUEST_TIMEOUT_MS`, `TELEGRAM_TOKEN_PATTERN`, `TELEGRAM_CHAT_ID_PATTERN` |
+| `src/shared/lib/telegram/telegram.constants.ts` | env var names, API base, timeout, token and chat-id patterns | `TELEGRAM_ENV`, `TELEGRAM_API_BASE`, `TELEGRAM_REQUEST_TIMEOUT_MS`, `TIMEOUT_ERROR_NAME`, `TELEGRAM_TOKEN_PATTERN`, `TELEGRAM_CHAT_ID_PATTERN` |
 | `src/shared/lib/telegram/telegram.types.ts` | config and send result types (`TelegramConfig` and `TelegramFailureReason` stay internal: no importer needs the names, task 1.1) | `TelegramConfigResult`, `TelegramSendResult` |
 | `src/shared/lib/telegram/config.ts` | reads the token and chat id (stub) | `readTelegramConfig` |
 | `src/shared/lib/telegram/client.ts` | sends one message (stub) | `sendTelegramMessage` |

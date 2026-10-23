@@ -1,10 +1,8 @@
 import "server-only";
 
 import { readTelegramConfig } from "./config";
-import { TELEGRAM_API_BASE, TELEGRAM_REQUEST_TIMEOUT_MS } from "./telegram.constants";
+import { TELEGRAM_API_BASE, TELEGRAM_REQUEST_TIMEOUT_MS, TIMEOUT_ERROR_NAME } from "./telegram.constants";
 import type { TelegramSendResult } from "./telegram.types";
-
-const TIMEOUT_ERROR_NAME = "TimeoutError";
 
 /**
  * Sends one plain-text message to the configured chat. Failures come back as values; the URL
