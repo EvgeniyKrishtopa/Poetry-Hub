@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { sendTelegramMessage } from "../client";
-import { TELEGRAM_ENV } from "../telegram.constants";
+import { TELEGRAM_ENV, TELEGRAM_REQUEST_TIMEOUT_MS } from "../telegram.constants";
 import type { TelegramSendResult } from "../telegram.types";
 
 const BOT_TOKEN = "123456:known-Secret_token";
@@ -34,6 +34,7 @@ describe("sendTelegramMessage", () => {
 
   afterEach(() => {
     fetchMock.mockReset();
+    vi.restoreAllMocks();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
@@ -68,9 +69,13 @@ describe("sendTelegramMessage", () => {
   describe("request", () => {
     // implements FR-6 of add-contact-form
     it("POSTs chat_id and text once to the bot's sendMessage endpoint, with no parse_mode and a timeout signal", async () => {
+      const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
       respondJson({ ok: true });
 
       await sendTelegramMessage(TEXT);
+
+      expect(timeoutSpy).toHaveBeenCalledWith(TELEGRAM_REQUEST_TIMEOUT_MS);
+      expect(fetchMock.mock.calls[0]?.[1]?.signal).toBe(timeoutSpy.mock.results[0]?.value);
 
       expect(fetchMock).toHaveBeenCalledTimes(1);
       const [url, init] = fetchMock.mock.calls[0] ?? [];
