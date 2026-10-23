@@ -94,6 +94,19 @@ describe("ContactForm", () => {
   });
 
   // implements FR-5 of add-contact-form
+  it("focuses «Ваше сообщение» when only the message is invalid", async () => {
+    const { user } = renderForm();
+
+    await fill(user, { name: NAME, email: EMAIL });
+    await user.click(messageInput());
+    await user.paste("б".repeat(MESSAGE_MAX_LENGTH + 1));
+    await user.click(submitButton());
+
+    await waitFor(() => expect(messageInput()).toHaveFocus());
+    expect(sendContactMessageAction).not.toHaveBeenCalled();
+  });
+
+  // implements FR-5 of add-contact-form
   it("shows the length-limit errors under their fields", async () => {
     const { user } = renderForm();
 
