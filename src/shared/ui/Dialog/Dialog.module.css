@@ -1,0 +1,52 @@
+/*
+ * Fade and an 8 px rise, both ways (add-contact-form FR-2). `display` and `overlay` transition discretely so the
+ * closing state stays visible in the top layer until the fade ends; browsers without an
+ * `overlay` transition close without it (add-contact-form design R3).
+ */
+.dialog {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 200ms ease-out,
+    transform 200ms ease-out,
+    overlay 200ms ease-out allow-discrete,
+    display 200ms ease-out allow-discrete;
+}
+
+.dialog[open] {
+  opacity: 1;
+  transform: none;
+}
+
+@starting-style {
+  .dialog[open] {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.dialog::backdrop {
+  background: var(--backdrop);
+  opacity: 0;
+  transition:
+    opacity 200ms ease-out,
+    overlay 200ms ease-out allow-discrete,
+    display 200ms ease-out allow-discrete;
+}
+
+.dialog[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  .dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog,
+  .dialog::backdrop {
+    transition: none;
+  }
+}

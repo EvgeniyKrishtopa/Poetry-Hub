@@ -1,7 +1,7 @@
-import type { HONEYPOT_FIELD } from "./contact.constants";
+import type { CONTACT_STATUS, HONEYPOT_FIELD } from "./contact.constants";
 
 /** The action's answer: success is explicit, never "no error". */
-export type ContactSendResult = { readonly status: "sent" } | { readonly status: "failed" };
+export type ContactSendResult = { readonly status: typeof CONTACT_STATUS.sent } | { readonly status: typeof CONTACT_STATUS.failed };
 
 /** The raw values read from the form, kept so the inputs can be refilled after an answer. */
 export interface ContactFormValues {
@@ -17,10 +17,10 @@ export type ContactField = "name" | "email" | "message";
 export type ContactFieldErrors = Readonly<Partial<Record<ContactField, string>>>;
 
 export type ContactFormState =
-  | { readonly status: "idle"; readonly values: ContactFormValues }
-  | { readonly status: "invalid"; readonly values: ContactFormValues; readonly fieldErrors: ContactFieldErrors }
-  | { readonly status: "failed"; readonly values: ContactFormValues }
-  | { readonly status: "sent" };
+  | { readonly status: typeof CONTACT_STATUS.idle; readonly values: ContactFormValues }
+  | { readonly status: typeof CONTACT_STATUS.invalid; readonly values: ContactFormValues; readonly fieldErrors: ContactFieldErrors }
+  | { readonly status: typeof CONTACT_STATUS.failed; readonly values: ContactFormValues }
+  | { readonly status: typeof CONTACT_STATUS.sent };
 
 /**
  * The part of a next-safe-action result the form reads, with the client's `"flattened"`

@@ -208,14 +208,22 @@ type ContactFormState =
 ### D6 — Dialog (FR-1, FR-2, FR-4)
 
 - `ContactDialog` (`"use client"`) renders the trigger `<button type="button" aria-haspopup="dialog">`
-  and a native `<dialog aria-labelledby={titleId}>`. Native `showModal()` gives the modal
+  and the shared `Dialog` primitive (`src/shared/ui/Dialog/`) holding `ContactForm`. `Dialog`
+  owns the native `<dialog aria-labelledby={titleId}>`, the heading, the optional description,
+  the corner close button, the backdrop close, and the animation; `ContactDialog` owns the
+  trigger, the ref it opens and closes, the form key, and the `sent` flag. (Revised 2026-10-23
+  in the PR #124 review: the dialog box first lived inside `ContactDialog`. It went to
+  `shared/ui` before a second feature needs it, as a design-system primitive, at the user's
+  choice.) Native `showModal()` gives the modal
   behaviour for free: the rest of the page becomes inert, focus stays inside, Escape closes it,
   and on close the browser returns focus to the element that had it (the trigger).
 - Open: `dialogRef.current?.showModal()`. Initial focus: `autoFocus` on the «Имя» input
   (dialog focusing steps honour it); while the success view is shown, its «Закрыть» button
   has `autoFocus` instead.
-- Close: the corner «Закрыть» button (`aria-label`, visible `×`) and the success «Закрыть» call
-  `dialogRef.current?.close()`; Escape is native; backdrop: an `onClick` on the `<dialog>` that
+- Close: `Dialog`'s corner «Закрыть» button (`closeLabel` as its `aria-label`, visible `×`) and the success «Закрыть» call
+  `dialogRef.current?.close()`; the corner button comes last in the DOM (drawn in the corner by
+  absolute positioning), so the dialog reads in FR-3's order and the browser's own dialog focusing
+  lands on «Имя» (user decision 2026-10-23); Escape is native; backdrop: an `onClick` on the `<dialog>` that
   closes when `event.target === event.currentTarget`. The dialog's padding lives on an inner
   wrapper, so every click inside the box lands on a descendant, never on the `<dialog>`
   itself.
@@ -224,7 +232,7 @@ type ContactFormState =
 - Fresh form after success (FR-8): `ContactDialog` keeps `formKey` and a `sent` flag. `onSent`
   sets `sent`; the dialog's `close` event, when `sent` is set, increments `formKey` (remounting
   `ContactForm` with an empty initial state) and clears `sent`.
-- Animation (FR-2), in `ContactDialog.module.css` (custom effect, so a CSS Module per
+- Animation (FR-2), in `src/shared/ui/Dialog/Dialog.module.css` (custom effect, so a CSS Module per
   `docs/styling.md`):
 
   ```css
@@ -261,27 +269,27 @@ type ContactFormState =
   `w-full max-w-lg` (32rem), `rounded-2xl` (16 px), `p-5` below 600 px and `p-6` from 600 px,
   `gap-4` between header, form, and button, and a 16 px gutter to the viewport edge at 375 px.
 - The trigger looks exactly like the footer links (FR-1, user request 2026-10-23): it takes a
-  `triggerClassName` prop, which the root layout fills with `site-footer`'s exported
-  `FOOTER_LINK_CLASS` (D7), the same class the links use. `ContactDialog` adds only a reset for
+  `triggerClassName` prop, which `SiteFooter` fills with its own `FOOTER_LINK_CLASS` (D7), the same class the links use. `ContactDialog` adds only a reset for
   button defaults (`cursor-pointer`; Tailwind's preflight already clears the background,
   border, and padding), so there is one source for the look.
 
-### D7 — Footer slot (FR-1, FR-12, NFR-5)
+### D7 — Footer contact button (FR-1, FR-12, NFR-5)
 
-- `SiteFooter({ contactControl }: SiteFooterProps)` with `SiteFooterProps = { readonly contactControl: ReactNode }`
-  in `SiteFooter.types.ts`. The body keeps `"use cache"` and `cacheLife("days")` and renders
-  `<li>{contactControl}</li>` after the mapped links; it never reads the slot, so it stays out
-  of the cache key ("Interleaving").
+- `SiteFooter()` takes no props. It imports `ContactDialog` from `@/features/contact` (the
+  public API) and renders `<li><ContactDialog triggerClassName={FOOTER_LINK_CLASS} /></li>` after
+  the mapped links. The body keeps `"use cache"` and `cacheLife("days")`: a Client Component
+  with a constant prop adds nothing to the cache key. (Revised 2026-10-23 in the PR #124 review:
+  the footer always shows the button, so the slot the root layout filled was indirection with
+  one fixed value. The first version passed it as a `contactControl` slot from `app/layout.tsx`.)
 - `FOOTER_LINK_PATHS` and `FOOTER_LINK_ORDER` drop `contact`; `FOOTER_LINK_LABELS` drops
   `contact`. The label «Связаться с нами» moves to `contact-messages.ts` (copy belongs to the
   feature that shows it).
 - The links' class string moves out of `SiteFooter.tsx` into `FOOTER_LINK_CLASS` in
-  `model/site-footer.constants.ts`, used by the links and exported from `site-footer`'s
-  `index.ts`.
-- `app/layout.tsx`:
-  `<SiteFooter contactControl={<ContactDialog triggerClassName={FOOTER_LINK_CLASS} />} />`.
-  Composition happens in `app/`, so neither feature imports the other (architecture boundary
-  rules), and the look has one source (D6).
+  `model/site-footer.constants.ts`, used by the links and the contact button, so the look has
+  one source (D6). It stays internal to `site-footer`.
+- `app/layout.tsx` renders `<SiteFooter />` as before. `site-footer` depends on `contact`'s
+  public API in one direction only; `contact` never imports `site-footer` (no cycle).
+  `docs/architecture.md` records this as the one client-side cross-feature import.
 - `/contact` is not planned (FR-12, user decision 2026-10-23). Every placeholder for it goes:
   `FOOTER_LINK_PATHS.contact`, the constants' doc comment about it, `SiteFooter`'s doc comment
   ("about/privacy/contact links"), the footer test's `["Связаться с нами", "/contact"]` row,
@@ -298,8 +306,8 @@ type ContactFormState =
   the token (BotFather) and the chat id; what happens when unset (every submit shows the
   failure alert, log reason `config`); the hosting-level per-IP rule for Server Action POSTs as
   a deploy step; rotation (revoke in BotFather, update the env).
-- `docs/architecture.md`: `features/contact/`, `shared/lib/telegram/`, the footer's
-  `contactControl` slot, and the layout line.
+- `docs/architecture.md`: `features/contact/`, `shared/lib/telegram/`, and `site-footer`'s
+  import of `ContactDialog` (D7).
 
 ### D9 — Testing
 
@@ -328,8 +336,11 @@ type ContactFormState =
   `close`; the test stubs them on the prototype when missing (toggling `open` and dispatching
   `close`).
 - `site-footer` `SiteFooter.test.tsx`: two links in order, both with `FOOTER_LINK_CLASS`, then
-  the slot content inside the nav; no `href="/contact"`.
+  the contact button (a mocked `ContactDialog`) with the same class inside the nav; no `href="/contact"`.
 - `ContactDialog.test.tsx`: the trigger carries the `triggerClassName` it was given.
+- `shared/ui/tests/Dialog.test.tsx`: labelled by its heading; description only when given; the
+  corner button is last and closes; a backdrop press closes, a press that starts inside or a
+  click on the content does not; `onClose` runs once per close.
 - The two recorded browser scenarios are updated per D7 and replayed in Gate 3.
 - Gate 3 covers what jsdom can't: the animation and reduced motion, the focus trap and focus
   return, the backdrop, and a real delivery to the configured chat.

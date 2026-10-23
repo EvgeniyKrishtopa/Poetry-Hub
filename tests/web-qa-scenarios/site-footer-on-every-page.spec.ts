@@ -11,11 +11,11 @@ const COPYRIGHT_NOTICE = new RegExp(`© ${FOUNDING_YEAR}(–\\d{4})? Поэти�
 const FOOTER_LINKS = [
   ["О проекте", "/about"],
   ["Политика конфиденциальности", "/privacy"],
-  ["Связаться с нами", "/contact"],
 ] as const;
+const CONTACT_BUTTON_NAME = "Связаться с нами";
 
-// implements FR-1, FR-3, NFR-1 of add-site-footer: one footer after the page content on every page,
-// with the copyright notice and the three links in order.
+// implements FR-1, FR-3, NFR-1 of add-site-footer and FR-1 of add-contact-form: one footer after the page
+// content on every page, with the copyright notice, the two links in order, then the contact button.
 test("the site footer appears once, after main, on every page", { tag: ["@add-site-footer"] }, async ({ page }) => {
   await page.context().clearCookies();
 
@@ -32,11 +32,17 @@ test("the site footer appears once, after main, on every page", { tag: ["@add-si
     });
     expect(footerFollowsMain).toBe(true);
 
-    const links = footer.getByRole("navigation", { name: "Информация о проекте" }).getByRole("link");
+    const nav = footer.getByRole("navigation", { name: "Информация о проекте" });
+    const links = nav.getByRole("link");
     await expect(links).toHaveCount(FOOTER_LINKS.length);
     for (const [index, [name, href]] of FOOTER_LINKS.entries()) {
       await expect(links.nth(index)).toHaveText(name);
       await expect(links.nth(index)).toHaveAttribute("href", href);
     }
+
+    const items = nav.getByRole("listitem");
+    await expect(items).toHaveCount(FOOTER_LINKS.length + 1);
+    const contactButton = items.last().getByRole("button", { name: CONTACT_BUTTON_NAME });
+    await expect(contactButton).toHaveAttribute("aria-haspopup", "dialog");
   }
 });

@@ -5,7 +5,6 @@ import type { FOOTER_LINK_PATHS } from "./site-footer.constants";
 export const FOOTER_LINK_LABELS: Readonly<Record<keyof typeof FOOTER_LINK_PATHS, string>> = {
   about: "О проекте",
   privacy: "Политика конфиденциальности",
-  contact: "Связаться с нами",
 };
 
 /** Accessible name of the footer's navigation landmark. */

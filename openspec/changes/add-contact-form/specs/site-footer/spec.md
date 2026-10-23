@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Footer links (FR-3)
-The footer SHALL contain a navigation landmark named «Информация о проекте» holding, in this order: the link «О проекте» to `/about`, the link «Политика конфиденциальности» to `/privacy`, and the «Связаться с нами» button that opens the contact dialog (`contact-form` FR-1). The footer SHALL render that button from a slot filled by the root layout, and it SHALL look exactly like the two links, using the same exported link class. «О проекте» SHALL open the `/about` page (`about-page` FR-1) and «Политика конфиденциальности» the `/privacy` page (`privacy-policy-page` FR-1), each with HTTP 200. No footer item SHALL link to `/contact`.
+The footer SHALL contain a navigation landmark named «Информация о проекте» holding, in this order: the link «О проекте» to `/about`, the link «Политика конфиденциальности» to `/privacy`, and the «Связаться с нами» button that opens the contact dialog (`contact-form` FR-1). The footer SHALL render that button itself, through the contact feature's public API, and it SHALL look exactly like the two links, using the same exported link class. «О проекте» SHALL open the `/about` page (`about-page` FR-1) and «Политика конфиденциальности» the `/privacy` page (`privacy-policy-page` FR-1), each with HTTP 200. No footer item SHALL link to `/contact`.
 
 #### Scenario: Links, order, and targets
 - **GIVEN** the footer renders

@@ -52,7 +52,7 @@ src/
 │       ├── tests/            # Tests, mirroring the feature (tests/model/…, tests/components/<Name>.test.tsx)
 │       └── index.ts          # Public API of the feature
 └── shared/                   # Feature-agnostic code only
-    ├── ui/                   # Reusable UI primitives (Button, …) + index.ts
+    ├── ui/                   # Reusable UI primitives (Button, Dialog, …) + index.ts
     ├── lib/                  # Infrastructure helpers (query-client, …)
     │   ├── split-paragraphs.ts # splitParagraphs(text): plain text into paragraphs on blank lines (home's greeting, the content pages: /about, /privacy)
     │   ├── contentful/       # Server-only Contentful GraphQL client, cached with "use cache" (every module: import "server-only")
@@ -67,7 +67,7 @@ src/
 - A new page goes in `app/(public)/` unless it needs a signed-in reader; then it goes in `app/(authorized)/`. The group's layout enforces nothing — placing a page there does not protect it. Each page's feature component calls `requireSession()` (from `@/features/auth`) inside its own Suspense boundary before reading any reader data: it redirects a signed-out reader to `/login`, and returns `unknown` when Supabase can't be reached, which the page shows as "service unavailable" instead of redirecting. Never a layout-only check, since a shared layout does not re-render on client navigation. On top of that, the proxy redirects a signed-out page request under `/account` before anything renders (ACCOUNT_PATH in `shared/config/account-paths.ts`; a page outside it gets only its own gate). That redirect is optimistic, so the page gate always stays. Route handlers under `app/api/` stay outside both groups.
 - Import a feature only through its public API: `@/features/poems`, never `@/features/poems/model/...` (enforced by `no-restricted-imports` in `eslint.config.mjs`).
 - Features must not import from other features' internals. If two features need the same thing, move it to `shared/` or compose them in `app/`.
-- A feature may import another feature's public API for a server-only accessor it needs, e.g. `authors` takes `getSessionState` / `getCurrentUserId` / `requireSession` from `@/features/auth`, and `breadcrumbs` takes `getPublicAuthorName`, `AUTHORS_PAGE_TITLES` and the authors path constants from `@/features/authors`. Only through the index, only server-side, and never in both directions (no cycles).
+- A feature may import another feature's public API for a server-only accessor it needs, e.g. `authors` takes `getSessionState` / `getCurrentUserId` / `requireSession` from `@/features/auth`, and `breadcrumbs` takes `getPublicAuthorName`, `AUTHORS_PAGE_TITLES` and the authors path constants from `@/features/authors`. Only through the index, only server-side, and never in both directions (no cycles). One client-side exception: `site-footer` renders `contact`'s `ContactDialog`, because the footer always shows that button (`add-contact-form` design D7); `contact` never imports `site-footer`.
 - `shared/` never imports from `features/` or `app/`.
 - Inside a feature, use relative imports; across layers, use the `@/` alias.
 - Don't create a `shared/` abstraction until a second feature actually needs it. Exception: an infrastructure client for an external service (e.g. `shared/lib/contentful`, `shared/lib/supabase`) may live in `shared/lib` from its first consumer.
