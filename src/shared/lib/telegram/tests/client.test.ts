@@ -100,6 +100,15 @@ describe("sendTelegramMessage", () => {
       expectNoSecret(result);
     });
 
+    it("reads the body of an error answer, so its connection is released", async () => {
+      const response = new Response(JSON.stringify({ ok: false }), { status: HTTP_SERVER_ERROR });
+      fetchMock.mockResolvedValueOnce(response);
+
+      await sendTelegramMessage(TEXT);
+
+      expect(response.bodyUsed).toBe(true);
+    });
+
     it("reports http 200 when Telegram answers 200 with ok: false", async () => {
       respondJson({ ok: false });
 

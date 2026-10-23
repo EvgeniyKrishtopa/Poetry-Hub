@@ -29,14 +29,22 @@ export async function sendTelegramMessage(text: string): Promise<TelegramSendRes
     return { ok: false, reason: isTimeout ? "timeout" : "network" };
   }
 
-  const accepted = response.ok && (await readOkFlag(response));
+  // Read the body on every status, so an error answer releases its connection too.
+  let bodyText: string;
+  try {
+    bodyText = await response.text();
+  } catch {
+    bodyText = "";
+  }
+
+  const accepted = response.ok && hasOkFlag(bodyText);
   return accepted ? { ok: true } : { ok: false, reason: "http", status: response.status };
 }
 
 /** Telegram's own `ok` flag from the body; a body that isn't JSON counts as not ok. */
-async function readOkFlag(response: Response): Promise<boolean> {
+function hasOkFlag(bodyText: string): boolean {
   try {
-    const body: unknown = await response.json();
+    const body: unknown = JSON.parse(bodyText);
     return typeof body === "object" && body !== null && "ok" in body && body.ok === true;
   } catch {
     return false;
