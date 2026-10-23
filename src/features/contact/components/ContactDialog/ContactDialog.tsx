@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type MouseEvent } from "react";
+import { useId, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 
 import { CONTACT_COPY } from "../../model/contact-messages";
 import { ContactForm } from "../ContactForm/ContactForm";
@@ -17,6 +17,7 @@ const CLOSE_BUTTON_CLASS =
 /** The footer's contact button and the native modal dialog it opens (design D6). */
 export function ContactDialog({ triggerClassName }: ContactDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const pressStartedOnBackdrop = useRef(false);
   const titleId = useId();
   // The form stays mounted while closed, so typed values and errors survive (FR-4); a new key after a
   // success remounts it empty, once the dialog has closed.
@@ -31,9 +32,17 @@ export function ContactDialog({ triggerClassName }: ContactDialogProps) {
     dialogRef.current?.close();
   }
 
-  // The padding lives on the inner box, so only a backdrop click targets the dialog itself.
+  // The padding lives on the inner box, so only the backdrop targets the dialog itself. A drag that
+  // starts inside (selecting typed text) and ends on the backdrop also clicks the dialog, so the press
+  // must have started there too.
+  function handleDialogPointerDown(event: PointerEvent<HTMLDialogElement>) {
+    pressStartedOnBackdrop.current = event.target === event.currentTarget;
+  }
+
   function handleDialogClick(event: MouseEvent<HTMLDialogElement>) {
-    if (event.target === event.currentTarget) close();
+    const closesDialog = pressStartedOnBackdrop.current && event.target === event.currentTarget;
+    pressStartedOnBackdrop.current = false;
+    if (closesDialog) close();
   }
 
   function handleClosed() {
@@ -54,6 +63,7 @@ export function ContactDialog({ triggerClassName }: ContactDialogProps) {
       <dialog
         ref={dialogRef}
         aria-labelledby={titleId}
+        onPointerDown={handleDialogPointerDown}
         onClick={handleDialogClick}
         onClose={handleClosed}
         className={DIALOG_CLASS}

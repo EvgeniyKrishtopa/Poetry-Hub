@@ -128,14 +128,28 @@ describe("ContactDialog", () => {
     await user.click(trigger());
     await user.type(nameInput(), NAME);
 
-    fireEvent.click(within(dialog()).getByRole("heading", { name: CONTACT_COPY.title }));
+    const heading = within(dialog()).getByRole("heading", { name: CONTACT_COPY.title });
+    fireEvent.pointerDown(heading);
+    fireEvent.click(heading);
     expect(dialog()).toHaveAttribute("open");
 
+    fireEvent.pointerDown(dialog());
     fireEvent.click(dialog());
     expect(dialog()).not.toHaveAttribute("open");
 
     await user.click(trigger());
     expect(nameInput()).toHaveValue(NAME);
+  });
+
+  // implements FR-4 of add-contact-form
+  it("stays open when a press starts inside the box and ends on the backdrop", async () => {
+    const user = renderDialog();
+    await user.click(trigger());
+
+    fireEvent.pointerDown(nameInput());
+    fireEvent.click(dialog());
+
+    expect(dialog()).toHaveAttribute("open");
   });
 
   // implements FR-8 of add-contact-form
