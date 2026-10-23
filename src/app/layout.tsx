@@ -4,7 +4,8 @@ import Link from "next/link";
 
 import { HeaderAuthLinks } from "@/features/auth";
 import { AuthorsNavLink } from "@/features/authors";
-import { SiteFooter } from "@/features/site-footer";
+import { ContactDialog } from "@/features/contact";
+import { FOOTER_LINK_CLASS, SiteFooter } from "@/features/site-footer";
 import { CONTENT_LANG } from "@/shared/config/constants";
 import { siteConfig } from "@/shared/config/site";
 
@@ -46,7 +47,8 @@ export default function RootLayout({ children, breadcrumbs }: LayoutProps<"/">) 
           </header>
           {breadcrumbs}
           {children}
-          <SiteFooter />
+          {/* Composed here, so neither feature imports the other; one class gives both the same look. */}
+          <SiteFooter contactControl={<ContactDialog triggerClassName={FOOTER_LINK_CLASS} />} />
         </Providers>
       </body>
     </html>

@@ -6,12 +6,19 @@ import { siteConfig } from "@/shared/config/site";
 
 import { formatCopyrightYears } from "../../model/copyright-years";
 import { COPYRIGHT_SIGN, FOOTER_LINK_LABELS, FOOTER_NAV_LABEL } from "../../model/site-footer-messages";
-import { FOOTER_LINK_ORDER, FOOTER_LINK_PATHS, SITE_FOUNDING_YEAR } from "../../model/site-footer.constants";
+import {
+  FOOTER_LINK_CLASS,
+  FOOTER_LINK_ORDER,
+  FOOTER_LINK_PATHS,
+  SITE_FOUNDING_YEAR,
+} from "../../model/site-footer.constants";
+
+import type { SiteFooterProps } from "./SiteFooter.types";
 
 // implements NFR-2, NFR-3, NFR-4 of add-site-footer: a Server Component with no client JS, token utilities only,
 // and the year read inside its own cache scope so every page stays prerendered.
-/** The site footer the root layout renders on every page: copyright notice and the about/privacy/contact links. */
-export async function SiteFooter(): Promise<ReactElement> {
+/** The site footer the root layout renders on every page: copyright notice, the about and privacy links, and the contact slot. */
+export async function SiteFooter({ contactControl }: SiteFooterProps): Promise<ReactElement> {
   "use cache";
   // Cache Components allows `new Date()` during prerender only inside a cache scope. "days" re-renders the
   // footer within a day of 1 January, the lag the spec accepts, and is longer than any page's own lifetime.
@@ -29,14 +36,13 @@ export async function SiteFooter(): Promise<ReactElement> {
           <ul className="flex flex-wrap gap-x-4 gap-y-2 min-[600px]:justify-end">
             {FOOTER_LINK_ORDER.map((key) => (
               <li key={key}>
-                <Link
-                  href={FOOTER_LINK_PATHS[key]}
-                  className="text-muted transition-colors duration-150 hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                >
+                <Link href={FOOTER_LINK_PATHS[key]} className={FOOTER_LINK_CLASS}>
                   {FOOTER_LINK_LABELS[key]}
                 </Link>
               </li>
             ))}
+            {/* Passed through, never read here, so it stays out of the cache key ("use cache" interleaving). */}
+            <li>{contactControl}</li>
           </ul>
         </nav>
       </div>

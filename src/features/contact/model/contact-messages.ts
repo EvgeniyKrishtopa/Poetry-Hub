@@ -15,6 +15,8 @@ export const CONTACT_COPY = {
   title: "Связаться с нами",
   intro: "Напишите нам, и мы ответим на указанную почту.",
   close: "Закрыть",
+  /** The corner close button's visible mark; its accessible name is `close`. */
+  closeGlyph: "×",
   nameLabel: "Имя",
   emailLabel: "Электронная почта",
   messageLabel: "Ваше сообщение",

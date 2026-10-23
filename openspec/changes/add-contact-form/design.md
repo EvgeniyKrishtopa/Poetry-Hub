@@ -215,7 +215,9 @@ type ContactFormState =
   (dialog focusing steps honour it); while the success view is shown, its «Закрыть» button
   has `autoFocus` instead.
 - Close: the corner «Закрыть» button (`aria-label`, visible `×`) and the success «Закрыть» call
-  `dialogRef.current?.close()`; Escape is native; backdrop: an `onClick` on the `<dialog>` that
+  `dialogRef.current?.close()`; the corner button comes last in the DOM (drawn in the corner by
+  absolute positioning), so the dialog reads in FR-3's order and the browser's own dialog focusing
+  lands on «Имя» (user decision 2026-10-23); Escape is native; backdrop: an `onClick` on the `<dialog>` that
   closes when `event.target === event.currentTarget`. The dialog's padding lives on an inner
   wrapper, so every click inside the box lands on a descendant, never on the `<dialog>`
   itself.

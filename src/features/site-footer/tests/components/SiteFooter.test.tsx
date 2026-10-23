@@ -3,12 +3,15 @@ import { cacheLife } from "next/cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SiteFooter } from "../../components/SiteFooter/SiteFooter";
+import { FOOTER_LINK_CLASS } from "../../model/site-footer.constants";
 
 const NAV_NAME = "Информация о проекте";
 
+const SLOT_LABEL = "Слот";
+
 async function renderFooterAt(isoDate: string) {
   vi.setSystemTime(new Date(isoDate));
-  render(await SiteFooter());
+  render(await SiteFooter({ contactControl: <button type="button">{SLOT_LABEL}</button> }));
 }
 
 describe("SiteFooter", () => {
@@ -49,16 +52,29 @@ describe("SiteFooter", () => {
   });
 
   // implements FR-3 of add-site-footer
-  it("lists the about, privacy, and contact links in order", async () => {
+  // implements FR-1, FR-12 of add-contact-form
+  it("lists the about and privacy links in order with the shared link class, then the slot", async () => {
     await renderFooterAt("2026-10-20T12:00:00Z");
 
-    const links = within(screen.getByRole("navigation", { name: NAV_NAME })).getAllByRole("link");
+    const nav = screen.getByRole("navigation", { name: NAV_NAME });
+    const links = within(nav).getAllByRole("link");
 
     expect(links.map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
       ["О проекте", "/about"],
       ["Политика конфиденциальности", "/privacy"],
-      ["Связаться с нами", "/contact"],
     ]);
+    for (const link of links) expect(link).toHaveClass(...FOOTER_LINK_CLASS.split(" "));
+
+    const items = within(nav).getAllByRole("listitem");
+    expect(items).toHaveLength(links.length + 1);
+    expect(within(items[items.length - 1]).getByRole("button", { name: SLOT_LABEL })).toBeInTheDocument();
+  });
+
+  // implements FR-12 of add-contact-form
+  it("renders no link to /contact", async () => {
+    await renderFooterAt("2026-10-20T12:00:00Z");
+
+    expect(screen.getByRole("contentinfo").querySelector('[href="/contact"]')).toBeNull();
   });
 
   // implements NFR-1 of add-site-footer

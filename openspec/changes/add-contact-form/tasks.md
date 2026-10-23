@@ -42,7 +42,7 @@
 
 ## 3. Contact dialog, form, and footer slot <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-3, FR-5, FR-7, FR-8, FR-9, FR-10, NFR-4) Add `components/ContactForm/`
+- [x] 3.1 (FR-3, FR-5, FR-7, FR-8, FR-9, FR-10, NFR-4) Add `components/ContactForm/`
   (`ContactForm.tsx`, `ContactForm.types.ts`, `submit-contact.ts`) per design D5, styled from
   the approved mockup with token utilities only.
   - Verify with `tests/components/ContactForm.test.tsx` (mocked action): FR-5's invalid case
@@ -55,7 +55,7 @@
     `console.error` gets only the error's name (FR-9, NFR-2, design D5 step 4); the honeypot input
     (`name` = `HONEYPOT_FIELD`) has `tabIndex=-1` and `autoComplete="off"` and sits inside a
     wrapper with `aria-hidden="true"` and `sr-only` (FR-10, design D5).
-- [ ] 3.2 (FR-1, FR-2, FR-4, FR-8, FR-13, NFR-4) Add the `--backdrop` token to `src/app/globals.css`
+- [x] 3.2 (FR-1, FR-2, FR-4, FR-8, FR-13, NFR-4) Add the `--backdrop` token to `src/app/globals.css`
   for both colour schemes (design D6) and `components/ContactDialog/` (`ContactDialog.tsx`,
   `ContactDialog.module.css`, and the scaffolded `ContactDialog.types.ts`) per design D6, and export `ContactDialog` from
   `src/features/contact/index.ts`.
@@ -66,7 +66,7 @@
     close/open (FR-4); after success, close/open shows an empty form; a success that resolves
     while the dialog is closed shows the thank-you view on the next open and an empty form on
     the open after that (FR-8, design R7).
-- [ ] 3.3 (FR-1, FR-12, NFR-5) Footer slot per design D7: `SiteFooter` takes `contactControl`
+- [x] 3.3 (FR-1, FR-12, NFR-5) Footer slot per design D7: `SiteFooter` takes `contactControl`
   (props in `SiteFooter.types.ts`) and renders it in a last `<li>`, keeping `"use cache"`;
   move the links' class string into an exported `FOOTER_LINK_CLASS`; `src/app/layout.tsx`
   passes `<ContactDialog triggerClassName={FOOTER_LINK_CLASS} />`. Remove every `/contact`

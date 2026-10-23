@@ -1,4 +1,4 @@
-import { HONEYPOT_FIELD } from "./contact.constants";
+import { CONTACT_FIELDS, HONEYPOT_FIELD } from "./contact.constants";
 import type {
   ContactActionResult,
   ContactField,
@@ -23,8 +23,6 @@ export function readContactValues(formData: FormData): ContactFormValues {
     [HONEYPOT_FIELD]: readField(formData, HONEYPOT_FIELD),
   };
 }
-
-const CONTACT_FIELDS: readonly ContactField[] = ["name", "email", "message"];
 
 /** The first message of each field, the only one the form shows. */
 function firstFieldErrors(fieldErrors: ActionFieldErrors): ContactFieldErrors {
