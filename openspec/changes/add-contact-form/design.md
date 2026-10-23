@@ -448,3 +448,34 @@ including inside `sendTelegramMessage` (which returns failures as values and sho
    reason `config`.
 4. Rollback: revert the change (the footer returns to its previous three links). Revoke the bot
    token in BotFather if it is no longer needed.
+
+## Scaffold map
+
+Written after the files existed (scaffold, 2026-10-23). Stubs throw `not implemented`; components
+return `null`. `SiteFooter.tsx`, the footer constants, `app/layout.tsx`, `globals.css`, the dialog's
+CSS Module, the recorded browser scenarios, docs, and `.env.example` are left to their tasks.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/shared/lib/telegram/telegram.constants.ts` | env var names, API base, timeout, token and chat-id patterns | `TELEGRAM_ENV`, `TELEGRAM_API_BASE`, `TELEGRAM_REQUEST_TIMEOUT_MS`, `TELEGRAM_TOKEN_PATTERN`, `TELEGRAM_CHAT_ID_PATTERN` |
+| `src/shared/lib/telegram/telegram.types.ts` | config and send result types | `TelegramConfig`, `TelegramConfigResult`, `TelegramFailureReason`, `TelegramSendResult` |
+| `src/shared/lib/telegram/config.ts` | reads the token and chat id (stub) | `readTelegramConfig` |
+| `src/shared/lib/telegram/client.ts` | sends one message (stub) | `sendTelegramMessage` |
+| `src/shared/lib/telegram/index.ts` | server-only public entry | `sendTelegramMessage`, `TelegramFailureReason`, `TelegramSendResult` |
+| `src/features/contact/model/contact.constants.ts` | length limits, honeypot field name | `NAME_MAX_LENGTH`, `EMAIL_MAX_LENGTH`, `MESSAGE_MAX_LENGTH`, `HONEYPOT_FIELD` |
+| `src/features/contact/model/contact-messages.ts` | UI copy, limit messages interpolate the constants | `CONTACT_FIELD_ERRORS`, `CONTACT_COPY` |
+| `src/features/contact/model/contact.schema.ts` | field shape only; task 2.1 adds trimming and limits | `contactMessageSchema`, `ContactMessageInput` |
+| `src/features/contact/model/contact.types.ts` | action result, form values and state, the action-result shape the form reads | `ContactSendResult`, `ContactFormValues`, `ContactField`, `ContactFieldErrors`, `ContactFormState`, `ContactActionResult` |
+| `src/features/contact/model/format-contact-message.ts` | Telegram text (stub) | `formatContactMessage` |
+| `src/features/contact/model/form-state.ts` | read the form, map the action result (stubs) | `readContactValues`, `toContactFormState` |
+| `src/features/contact/actions/action-client.ts` | the shared log-and-mask action client | `contactActionClient` |
+| `src/features/contact/actions/contact.actions.ts` | the Server Action, schema wired, body stub | `sendContactMessageAction` |
+| `src/features/contact/components/ContactForm/ContactForm.tsx` (+ `.types.ts`) | the form (returns `null`) | `ContactForm`, `ContactFormProps` |
+| `src/features/contact/components/ContactForm/submit-contact.ts` | browser check, action call, rejection handling (stub) | `submitContact` |
+| `src/features/contact/components/ContactDialog/ContactDialog.tsx` (+ `.types.ts`) | trigger and dialog (returns `null`) | `ContactDialog`, `ContactDialogProps` |
+| `src/features/contact/index.ts` | public API | `ContactDialog` |
+| `src/features/site-footer/components/SiteFooter/SiteFooter.types.ts` | the footer's slot prop | `SiteFooterProps` |
+| `knip.jsonc` | temporary `ignoreFiles` for the unwired stubs; telegram removed in task 2.2, the rest in task 3.3 | — |
+
+`ContactActionResult` lives in `model/contact.types.ts`, mirroring `AuthActionResult`, so `model/`
+names no next-safe-action type (Gate 1 PLAUSIBLE note).
