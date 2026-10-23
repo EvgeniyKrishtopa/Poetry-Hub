@@ -1,0 +1,3 @@
+{"ts":"2026-10-23T11:26:22Z","kind":"finding","change":"add-contact-form","gate":"spec-clarify","finding":"FR-8 next open after a success that arrived while closed: thank-you view vs empty form","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-23T11:26:22Z","kind":"finding","change":"add-contact-form","gate":"spec-clarify","finding":"FR-7/FR-9 fields editable while sending; edits lost on failure reset","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-23T11:26:22Z","kind":"finding","change":"add-contact-form","gate":"spec-clarify","finding":"FR-9 focus after a failed send unspecified","outcome":"fixed","ruleNumber":""}
