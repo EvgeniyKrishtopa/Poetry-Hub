@@ -141,6 +141,28 @@ describe("sendTelegramMessage", () => {
       expectNoSecret(result);
     });
 
+    // implements FR-9, NFR-1 of add-contact-form
+    it("reports timeout when the timeout fires while the body is being read", async () => {
+      const response = new Response(null, { status: HTTP_OK });
+      vi.spyOn(response, "text").mockRejectedValueOnce(
+        new DOMException(`aborted bot${BOT_TOKEN}`, "TimeoutError"),
+      );
+      fetchMock.mockResolvedValueOnce(response);
+
+      const result = await sendTelegramMessage(TEXT);
+
+      expect(result).toEqual({ ok: false, reason: "timeout" });
+      expectNoSecret(result);
+    });
+
+    it("reports network when reading the body fails for another reason", async () => {
+      const response = new Response(null, { status: HTTP_OK });
+      vi.spyOn(response, "text").mockRejectedValueOnce(new TypeError("terminated"));
+      fetchMock.mockResolvedValueOnce(response);
+
+      expect(await sendTelegramMessage(TEXT)).toEqual({ ok: false, reason: "network" });
+    });
+
     it("never throws when fetch rejects with a non-error value", async () => {
       fetchMock.mockRejectedValueOnce(BOT_TOKEN);
 

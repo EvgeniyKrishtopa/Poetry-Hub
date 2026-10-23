@@ -24,21 +24,27 @@ export async function sendTelegramMessage(text: string): Promise<TelegramSendRes
       cache: "no-store",
     });
   } catch (error) {
-    // The error may carry the URL (and so the token): only its name is inspected.
-    const isTimeout = error instanceof DOMException && error.name === TIMEOUT_ERROR_NAME;
-    return { ok: false, reason: isTimeout ? "timeout" : "network" };
+    return toThrownFailure(error);
   }
 
-  // Read the body on every status, so an error answer releases its connection too.
+  // Read the body on every status, so an error answer releases its connection too. The timeout
+  // signal still covers this read, so a slow body is a `timeout`, not an `http` failure.
   let bodyText: string;
   try {
     bodyText = await response.text();
-  } catch {
-    bodyText = "";
+  } catch (error) {
+    return toThrownFailure(error);
   }
 
   const accepted = response.ok && hasOkFlag(bodyText);
   return accepted ? { ok: true } : { ok: false, reason: "http", status: response.status };
+}
+
+/** A thrown request or body read: `timeout` when the signal fired, `network` for anything else. */
+function toThrownFailure(error: unknown): TelegramSendResult {
+  // The error may carry the URL (and so the token): only its name is inspected.
+  const isTimeout = error instanceof DOMException && error.name === TIMEOUT_ERROR_NAME;
+  return { ok: false, reason: isTimeout ? "timeout" : "network" };
 }
 
 /** Telegram's own `ok` flag from the body; a body that isn't JSON counts as not ok. */
