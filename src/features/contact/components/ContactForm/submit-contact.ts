@@ -19,8 +19,10 @@ export async function submitContact(_previous: ContactFormState, formData: FormD
     return toContactFormState(await sendContactMessageAction(values), values);
   } catch (error) {
     // Without this, useActionState rethrows during render and the global error screen loses the
-    // typed text. The error's type only: its message could echo what was submitted (NFR-2).
-    console.error(`[contact] action call rejected: ${error instanceof Error ? error.name : typeof error}`);
+    // typed text. The error's type only: its message could echo what was submitted (NFR-2). The
+    // online flag tells a visitor's dropped connection from a refusal on the way to the server.
+    const errorType = error instanceof Error ? error.name : typeof error;
+    console.error(`[contact] action call rejected: ${errorType} (online: ${navigator.onLine})`);
     return { status: "failed", values };
   }
 }

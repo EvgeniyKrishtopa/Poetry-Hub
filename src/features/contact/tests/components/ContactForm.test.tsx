@@ -235,6 +235,7 @@ describe("ContactForm", () => {
     expect(consoleError).toHaveBeenCalledTimes(1);
     const logged = consoleError.mock.calls.flat().join(" ");
     expect(logged).toContain("TypeError");
+    expect(logged).toContain(`online: ${navigator.onLine}`);
     for (const value of [SECRET_IN_ERROR, NAME, EMAIL, MESSAGE]) expect(logged).not.toContain(value);
   });
 
