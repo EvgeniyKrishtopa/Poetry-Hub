@@ -2,14 +2,14 @@
 
 ## 1. Telegram client in `shared/lib/telegram` <!-- judgement-heavy -->
 
-- [ ] 1.1 (FR-6, FR-9, NFR-1, NFR-6) Add `src/shared/lib/telegram/` per design D1 and D2:
+- [x] 1.1 (FR-6, FR-9, NFR-1, NFR-6) Add `src/shared/lib/telegram/` per design D1 and D2:
   `telegram.constants.ts` (env var names, API base URL, `TELEGRAM_REQUEST_TIMEOUT_MS`, token and
   chat-id patterns), `telegram.types.ts`, `config.ts` (`readTelegramConfig`), `client.ts`
   (`sendTelegramMessage`), and `index.ts`; every module starts with `import "server-only"`.
   - Verify with `src/shared/lib/telegram/tests/client.test.ts` (mocked `fetch`, env set per
     test): every case in design D9's first bullet, including that no result and no thrown error
     holds the token.
-- [ ] 1.2 (NFR-1, NFR-7) Add `TELEGRAM_BOT_TOKEN=` and `TELEGRAM_CHAT_ID=` (names only) to
+- [x] 1.2 (NFR-1, NFR-7) Add `TELEGRAM_BOT_TOKEN=` and `TELEGRAM_CHAT_ID=` (names only) to
   `.env.example`, and the Telegram section to `docs/environment.md` per design D8 (BotFather
   token, getting the chat id, server-only, behaviour when unset, per-IP hosting rule as a
   deploy step, rotation).

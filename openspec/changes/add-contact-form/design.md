@@ -457,11 +457,11 @@ CSS Module, the recorded browser scenarios, docs, and `.env.example` are left to
 
 | File | Responsibility | Exports |
 | --- | --- | --- |
-| `src/shared/lib/telegram/telegram.constants.ts` | env var names, API base, timeout, token and chat-id patterns | `TELEGRAM_ENV`, `TELEGRAM_API_BASE`, `TELEGRAM_REQUEST_TIMEOUT_MS`, `TELEGRAM_TOKEN_PATTERN`, `TELEGRAM_CHAT_ID_PATTERN` |
-| `src/shared/lib/telegram/telegram.types.ts` | config and send result types | `TelegramConfig`, `TelegramConfigResult`, `TelegramFailureReason`, `TelegramSendResult` |
+| `src/shared/lib/telegram/telegram.constants.ts` | env var names, API base, timeout, token and chat-id patterns | `TELEGRAM_ENV`, `TELEGRAM_API_BASE`, `TELEGRAM_REQUEST_TIMEOUT_MS`, `TIMEOUT_ERROR_NAME`, `TELEGRAM_TOKEN_PATTERN`, `TELEGRAM_CHAT_ID_PATTERN` |
+| `src/shared/lib/telegram/telegram.types.ts` | config and send result types (`TelegramConfig` and `TelegramFailureReason` stay internal: no importer needs the names, task 1.1) | `TelegramConfigResult`, `TelegramSendResult` |
 | `src/shared/lib/telegram/config.ts` | reads the token and chat id (stub) | `readTelegramConfig` |
 | `src/shared/lib/telegram/client.ts` | sends one message (stub) | `sendTelegramMessage` |
-| `src/shared/lib/telegram/index.ts` | server-only public entry | `sendTelegramMessage`, `TelegramFailureReason`, `TelegramSendResult` |
+| `src/shared/lib/telegram/index.ts` | server-only public entry | `sendTelegramMessage`, `TelegramSendResult` |
 | `src/features/contact/model/contact.constants.ts` | length limits, honeypot field name | `NAME_MAX_LENGTH`, `EMAIL_MAX_LENGTH`, `MESSAGE_MAX_LENGTH`, `HONEYPOT_FIELD` |
 | `src/features/contact/model/contact-messages.ts` | UI copy, limit messages interpolate the constants | `CONTACT_FIELD_ERRORS`, `CONTACT_COPY` |
 | `src/features/contact/model/contact.schema.ts` | field shape only; task 2.1 adds trimming and limits | `contactMessageSchema`, `ContactMessageInput` |
