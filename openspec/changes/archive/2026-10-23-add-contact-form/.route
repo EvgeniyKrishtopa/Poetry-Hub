@@ -1,0 +1,2 @@
+full
+# more than one module: yes (new features/contact, shared/lib/telegram, site-footer, app/layout); data schema: no (submissions are not stored); contract other code depends on: yes (SiteFooter gains a contact slot prop; FOOTER_LINK_PATHS/ORDER drop contact; new Server Action endpoint)
