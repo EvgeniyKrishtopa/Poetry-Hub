@@ -48,6 +48,8 @@ describe("sendTelegramMessage", () => {
       ["a token with whitespace", TELEGRAM_ENV.botToken, "123456:two words"],
       ["a missing chat id", TELEGRAM_ENV.chatId, undefined],
       ["a non-numeric chat id", TELEGRAM_ENV.chatId, "@my_channel"],
+      ["a non-integer chat id", TELEGRAM_ENV.chatId, "12.5"],
+      ["a whitespace-padded chat id", TELEGRAM_ENV.chatId, " 987654 "],
     ])("fails with reason config and sends nothing for %s", async (_case, name, value) => {
       vi.stubEnv(name, value);
 
@@ -114,6 +116,16 @@ describe("sendTelegramMessage", () => {
       expect(response.bodyUsed).toBe(true);
     });
 
+    it("reports http when the status is an error even though the body says ok: true", async () => {
+      respondJson({ ok: true }, HTTP_SERVER_ERROR);
+
+      expect(await sendTelegramMessage(TEXT)).toEqual({
+        ok: false,
+        reason: "http",
+        status: HTTP_SERVER_ERROR,
+      });
+    });
+
     it("reports http 200 when Telegram answers 200 with ok: false", async () => {
       respondJson({ ok: false });
 
@@ -134,6 +146,12 @@ describe("sendTelegramMessage", () => {
 
       expect(result).toEqual({ ok: false, reason: "timeout" });
       expectNoSecret(result);
+    });
+
+    it("reports network for an abort that isn't the timeout", async () => {
+      fetchMock.mockRejectedValueOnce(new DOMException("aborted", "AbortError"));
+
+      expect(await sendTelegramMessage(TEXT)).toEqual({ ok: false, reason: "network" });
     });
 
     // implements FR-9, NFR-1 of add-contact-form
