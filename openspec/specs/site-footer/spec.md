@@ -47,26 +47,14 @@ one day after 1 January (UTC).
 - **THEN** it contains the text `© 2026–2030 Поэтический Хаб`
 
 ### Requirement: Footer links (FR-3)
-The footer SHALL contain a navigation landmark named «Информация о проекте» holding exactly three
-links, in this order: «О проекте» to `/about`, «Политика конфиденциальности» to `/privacy`,
-«Связаться с нами» to `/contact`.
+The footer SHALL contain a navigation landmark named «Информация о проекте» holding, in this order: the link «О проекте» to `/about`, the link «Политика конфиденциальности» to `/privacy`, and the «Связаться с нами» button that opens the contact dialog (`contact-form` FR-1). The footer SHALL render that button itself, through the contact feature's public API, and it SHALL look exactly like the two links, using the same exported link class. «О проекте» SHALL open the `/about` page (`about-page` FR-1) and «Политика конфиденциальности» the `/privacy` page (`privacy-policy-page` FR-1), each with HTTP 200. No footer item SHALL link to `/contact`.
 
 #### Scenario: Links, order, and targets
 - **GIVEN** the footer renders
-- **WHEN** the navigation landmark «Информация о проекте» is queried for links
-- **THEN** it holds exactly three links
-- **AND** they are, in order, «О проекте» with `href="/about"`, «Политика конфиденциальности»
-  with `href="/privacy"`, and «Связаться с нами» with `href="/contact"`
-
-### Requirement: Placeholder targets until the pages exist (FR-4)
-While no page answers a footer link's path, following that link SHALL show the app's existing not-found screen with HTTP status 404, inside the root layout with the header and the footer. «О проекте» SHALL open the `/about` page (`about-page` FR-1) and «Политика конфиденциальности» the `/privacy` page (`privacy-policy-page` FR-1), each with HTTP 200; «Связаться с нами» still has no page.
-
-#### Scenario: Following a link to a page that does not exist yet
-- **GIVEN** the app is running and no `/contact` page exists
-- **WHEN** the reader activates «Связаться с нами» in the footer
-- **THEN** the heading «Страница не найдена» is shown
-- **AND** a direct document request for `/contact` answers with status 404
-- **AND** the footer is still present
+- **WHEN** the navigation landmark «Информация о проекте» is queried
+- **THEN** it holds exactly two links, in order, «О проекте» with `href="/about"` and «Политика конфиденциальности» with `href="/privacy"`
+- **AND** after them, the button «Связаться с нами» with `aria-haspopup="dialog"`, carrying the same link class as the two links
+- **AND** no element in the footer has `href="/contact"`
 
 #### Scenario: Following the about link
 - **GIVEN** the app is running with valid Contentful settings
