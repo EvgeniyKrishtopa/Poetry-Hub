@@ -12,7 +12,7 @@ Web app for discovering, reading, and collecting poems.
 - **Tailwind CSS v4** (layout, basic styling) + **CSS Modules** (custom element styles)
 - npm as package manager
 
-Next.js 16 differs from older versions — check `node_modules/next/dist/docs/` before using an API you're unsure of (see AGENTS.md).
+Next.js 16 differs from older versions — before using an API you're unsure of, look it up in the current Next.js docs via context7 (library `next`); do not read `node_modules/` (denied in `.claude/settings.json`). See AGENTS.md.
 
 ## Commands
 
