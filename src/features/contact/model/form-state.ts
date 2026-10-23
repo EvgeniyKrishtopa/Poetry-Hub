@@ -1,14 +1,49 @@
-import type { ContactActionResult, ContactFormState, ContactFormValues } from "./contact.types";
+import { HONEYPOT_FIELD } from "./contact.constants";
+import type {
+  ContactActionResult,
+  ContactField,
+  ContactFieldErrors,
+  ContactFormState,
+  ContactFormValues,
+} from "./contact.types";
+
+type ActionFieldErrors = NonNullable<ContactActionResult["validationErrors"]>["fieldErrors"];
+
+function readField(formData: FormData, name: string): string {
+  const value = formData.get(name);
+  return typeof value === "string" ? value : "";
+}
 
 /** The submitted values as raw strings, a missing field read as empty. */
 export function readContactValues(formData: FormData): ContactFormValues {
-  void formData;
-  throw new Error("not implemented");
+  return {
+    name: readField(formData, "name"),
+    email: readField(formData, "email"),
+    message: readField(formData, "message"),
+    [HONEYPOT_FIELD]: readField(formData, HONEYPOT_FIELD),
+  };
+}
+
+const CONTACT_FIELDS: readonly ContactField[] = ["name", "email", "message"];
+
+/** The first message of each field, the only one the form shows. */
+function firstFieldErrors(fieldErrors: ActionFieldErrors): ContactFieldErrors {
+  const errors: Partial<Record<ContactField, string>> = {};
+  for (const field of CONTACT_FIELDS) {
+    const first = fieldErrors[field]?.[0];
+    if (first !== undefined) errors[field] = first;
+  }
+  return errors;
 }
 
 /** Maps the action's result to the form's next state (design D5). */
 export function toContactFormState(result: ContactActionResult, values: ContactFormValues): ContactFormState {
-  void result;
-  void values;
-  throw new Error("not implemented");
+  if (result.validationErrors) {
+    return { status: "invalid", values, fieldErrors: firstFieldErrors(result.validationErrors.fieldErrors) };
+  }
+  if (result.serverError !== undefined || result.data === undefined) {
+    return { status: "failed", values };
+  }
+  if (result.data.status === "sent") return { status: "sent" };
+  return { status: "failed", values };
 }
