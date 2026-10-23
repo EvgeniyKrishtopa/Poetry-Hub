@@ -36,6 +36,9 @@
     error, no submitted value in any log line; FR-11: a valid call succeeds with no auth or
     Supabase module mocked or set up, and `contact.actions.ts` imports nothing from
     `@/features/auth` or `@/shared/lib/supabase`.
+  - Remove the `src/shared/lib/telegram/**` entry from `knip.jsonc`'s `ignoreFiles` (scaffold);
+    `npm run knip` passes without it. Triage any unused-export finding it surfaces (remove the
+    export or use it) instead of adding an ignore back.
 
 ## 3. Contact dialog, form, and footer slot <!-- judgement-heavy -->
 
@@ -54,7 +57,7 @@
     wrapper with `aria-hidden="true"` and `sr-only` (FR-10, design D5).
 - [ ] 3.2 (FR-1, FR-2, FR-4, FR-8, FR-13, NFR-4) Add the `--backdrop` token to `src/app/globals.css`
   for both colour schemes (design D6) and `components/ContactDialog/` (`ContactDialog.tsx`,
-  `ContactDialog.module.css`) per design D6, and export `ContactDialog` from
+  `ContactDialog.module.css`, and the scaffolded `ContactDialog.types.ts`) per design D6, and export `ContactDialog` from
   `src/features/contact/index.ts`.
   - Verify with `tests/components/ContactDialog.test.tsx` (stubs `showModal`/`close` on
     `HTMLDialogElement.prototype` when jsdom lacks them): the trigger has `aria-haspopup="dialog"`
@@ -76,6 +79,10 @@
   - Verify with `SiteFooter.test.tsx`: exactly two links in order with `FOOTER_LINK_CLASS`,
     then the slot content inside the nav; no `href="/contact"`. `grep -rn "/contact" src
     tests/web-qa-scenarios` prints nothing.
+  - Remove the remaining add-contact-form `ignoreFiles` entries from `knip.jsonc`
+    (`src/features/contact/**`, `SiteFooter.types.ts`) and the `ignoreFiles` key with its
+    comment; `npm run knip` passes. Triage any unused-export finding instead of re-adding an
+    ignore.
 
 ## 4. Documentation and verification <!-- judgement-heavy -->
 
