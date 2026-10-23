@@ -258,6 +258,21 @@ describe("ContactForm", () => {
     for (const value of [SECRET_IN_ERROR, NAME, EMAIL, MESSAGE]) expect(logged).not.toContain(value);
   });
 
+  // implements FR-9 of add-contact-form
+  // implements NFR-2 of add-contact-form
+  it("logs only the type of a rejection that is not an Error", async () => {
+    vi.mocked(sendContactMessageAction).mockRejectedValue(SECRET_IN_ERROR);
+    const { user } = renderForm();
+
+    await fill(user, { name: NAME, email: EMAIL });
+    await user.click(submitButton());
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(CONTACT_COPY.sendFailed);
+    const logged = consoleError.mock.calls.flat().join(" ");
+    expect(logged).toContain("rejected: string");
+    expect(logged).not.toContain(SECRET_IN_ERROR);
+  });
+
   // implements FR-10 of add-contact-form
   it("hides the honeypot from people and assistive tech", () => {
     const { container } = render(<ContactForm onClose={vi.fn()} onSent={vi.fn()} />);
