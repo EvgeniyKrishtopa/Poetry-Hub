@@ -133,11 +133,14 @@ describe("ContactForm", () => {
   });
 
   // implements FR-7 of add-contact-form
-  it("while pending, shows the sending label, disables the fields and the button, and sends once", async () => {
-    const resolve = holdAction();
+  it("while pending, shows the sending label, disables everything, sends once, and hides the last result", async () => {
+    vi.mocked(sendContactMessageAction).mockResolvedValueOnce({ data: { status: "failed" } });
     const { user } = renderForm();
-
     await fill(user, { name: NAME, email: EMAIL, message: MESSAGE });
+    await user.click(submitButton());
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+
+    const resolve = holdAction();
     await user.click(submitButton());
 
     const pendingButton = await screen.findByRole("button", { name: CONTACT_COPY.submitting });
@@ -145,8 +148,10 @@ describe("ContactForm", () => {
     expect(nameInput()).toBeDisabled();
     expect(emailInput()).toBeDisabled();
     expect(messageInput()).toBeDisabled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    for (const input of [nameInput(), emailInput(), messageInput()]) expect(input).not.toHaveAttribute("aria-invalid");
     await user.click(pendingButton);
-    expect(sendContactMessageAction).toHaveBeenCalledTimes(1);
+    expect(sendContactMessageAction).toHaveBeenCalledTimes(2);
 
     resolve({ data: { status: "failed" } });
     expect(await screen.findByRole("alert")).toBeInTheDocument();
