@@ -24,10 +24,7 @@ export function ContactDialog({ triggerClassName }: ContactDialogProps) {
   const [formKey, setFormKey] = useState(0);
   const [sent, setSent] = useState(false);
 
-  function open() {
-    dialogRef.current?.showModal();
-  }
-
+  // Shared by the corner button, the thank-you view, and the backdrop.
   function close() {
     dialogRef.current?.close();
   }
@@ -51,13 +48,14 @@ export function ContactDialog({ triggerClassName }: ContactDialogProps) {
     setSent(false);
   }
 
-  function handleSent() {
-    setSent(true);
-  }
-
   return (
     <>
-      <button type="button" aria-haspopup="dialog" onClick={open} className={`${triggerClassName} cursor-pointer`}>
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        onClick={() => dialogRef.current?.showModal()}
+        className={`${triggerClassName} cursor-pointer`}
+      >
         {CONTACT_COPY.trigger}
       </button>
       <dialog
@@ -75,7 +73,7 @@ export function ContactDialog({ triggerClassName }: ContactDialogProps) {
             </h2>
             {!sent && <p className="text-sm text-muted">{CONTACT_COPY.intro}</p>}
           </div>
-          <ContactForm key={formKey} onClose={close} onSent={handleSent} />
+          <ContactForm key={formKey} onClose={close} onSent={() => setSent(true)} />
           {/* Last in the DOM, drawn in the corner: the dialog reads heading first and opens with focus on
               the first field (user decision 2026-10-23). */}
           <button type="button" aria-label={CONTACT_COPY.close} onClick={close} className={CLOSE_BUTTON_CLASS}>
