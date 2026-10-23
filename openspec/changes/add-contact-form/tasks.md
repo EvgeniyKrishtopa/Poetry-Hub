@@ -87,12 +87,12 @@
 
 ## 4. Documentation and verification <!-- judgement-heavy -->
 
-- [ ] 4.1 (NFR-7) Update the Purpose line of `openspec/specs/site-footer/spec.md` (a delta
+- [x] 4.1 (NFR-7) Update the Purpose line of `openspec/specs/site-footer/spec.md` (a delta
   can't change it) to "…and the links to the about and privacy pages, plus the button that
   opens the contact dialog". Update `docs/architecture.md` per design D8 (`features/contact/`,
   `shared/lib/telegram/`, `site-footer`'s import of `ContactDialog`), and its `site-footer/` line
   ("about/privacy/contact links" → about and privacy links plus the contact button).
-- [ ] 4.2 (NFR-1, NFR-3, NFR-4, NFR-5, NFR-6) Verify statically and run the chain.
+- [x] 4.2 (NFR-1, NFR-3, NFR-4, NFR-5, NFR-6) Verify statically and run the chain.
   - `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are read only under `src/shared/lib/telegram/`
     (excluding tests); every module there starts with `import "server-only"`; no
     `NEXT_PUBLIC_TELEGRAM` anywhere (NFR-1).
@@ -109,7 +109,7 @@
     all pass.
   - With a dummy `TELEGRAM_BOT_TOKEN` set for the build, a search of `.next/static` for that
     value finds nothing (NFR-1).
-- [ ] 4.3 (FR-1, FR-2, FR-13, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, FR-10, FR-11, FR-12, NFR-1)
+- [x] 4.3 (FR-1, FR-2, FR-13, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, FR-10, FR-11, FR-12, NFR-1)
   Gate 3 (`web-qa`), with a real bot configured in `.env.local`, in both colour schemes at
   375 px and 1280 px against the approved mockup:
   - FR-1/FR-3: the footer order, the dialog opens from click and from keyboard, focus on «Имя»,

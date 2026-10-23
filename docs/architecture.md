@@ -38,11 +38,13 @@ src/
 │   │   └── …                 # dal/ (confirmSignUp, getSessionState, getCurrentUserId, requireSession), model/, components/, tests/, index.ts (roles as below)
 │   ├── authors/              # Author profiles: the directory, public author pages, the account section, the editor, the header's «Наши авторы» link
 │   │   └── …                 # actions/, dal/ (owner reads and writes, cached public reads), hooks/ (the editor's field hooks), model/, components/, tests/, index.ts
+│   ├── contact/              # The contact dialog behind the footer's «Связаться с нами» button: a form that sends name, email and message to the team's Telegram chat; no sign-in needed
+│   │   └── …                 # actions/ (sendContactMessageAction, honeypot check, a failure log with the reason and never a submitted value), model/ (Zod schema shared by form and action, limits, copy, form state, the Telegram text), components/ (ContactDialog on shared/ui's Dialog, ContactForm), tests/, index.ts (ContactDialog only)
 │   ├── breadcrumbs/          # The breadcrumb trail under the header: model/ (the route table on the named path constants, trail building), components/ (Suspense wrapper, async loader, view, placeholder); server-only
 │   ├── content-page/         # Editorial text pages (/about, /privacy): one Contentful `greeting` entry per page, by key; title, numbered headings (model/content-blocks.ts), and paragraphs; any failure throws to app/error.tsx; server-only
 │   │   └── …                 # dal/content-page.ts (owns a result-dependent "use cache" scope keyed by the entry key), model/ (CONTENT_PAGE_KEYS, Zod schema, result types), components/ (Suspense wrapper, async loader, view, placeholder), tests/, index.ts
-│   ├── site-footer/          # The footer on every page: copyright range (founding year to current year) and the about/privacy/contact links
-│   │   └── …                 # components/SiteFooter (owns its "use cache" scope for the year), model/ (link paths and order, founding year, copy, formatCopyrightYears), tests/, index.ts
+│   ├── site-footer/          # The footer on every page: copyright range (founding year to current year), the about and privacy links, and the contact button
+│   │   └── …                 # components/SiteFooter (owns its "use cache" scope for the year; renders contact's ContactDialog as its last item), model/ (link paths and order, founding year, copy, formatCopyrightYears), tests/, index.ts
 │   └── poems/                # The folder roles every feature can use:
 │       ├── api/              # Fetchers (*.api.ts) + query keys/options/hooks (*.queries.ts)
 │       ├── dal/              # Server-only data access for Server Components (no role suffix)
@@ -56,6 +58,7 @@ src/
     ├── lib/                  # Infrastructure helpers (query-client, …)
     │   ├── split-paragraphs.ts # splitParagraphs(text): plain text into paragraphs on blank lines (home's greeting, the content pages: /about, /privacy)
     │   ├── contentful/       # Server-only Contentful GraphQL client, cached with "use cache" (every module: import "server-only")
+    │   ├── telegram/         # Server-only Telegram Bot API client (every module: import "server-only"): reads TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID, sendTelegramMessage returns ok or a failure reason (config, http, timeout, network) and never the token
     │   ├── safe-action/      # Server-only next-safe-action client factory (name-only logging, generic message); each feature builds its action client on it
     │   └── supabase/         # Supabase: index.ts client-safe (SupabaseConfigError); server.ts (server client), public.ts (cookie-less client for "use cache"), session.ts (proxy refresh, which also reports the session state) server-only; claims.ts (one reading of a getClaims() result, shared by the proxy and auth's DAL)
     └── config/               # App-wide constants (constants.ts: IMAGE_QUALITY, CONTENT_LANG, SESSION_STATE, HOME_PATH, ABOUT_PATH, PRIVACY_PATH), site config, the Supabase image-host helper, the account, sign-in and sign-up paths (account-paths.ts)

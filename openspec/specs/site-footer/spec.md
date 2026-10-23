@@ -2,7 +2,7 @@
 
 ## Purpose
 Defines the site footer shown on every page: its placement, the copyright notice (founding year to current year),
-and the links to the about, privacy, and contact pages.
+and the links to the about and privacy pages, plus the button that opens the contact dialog.
 ## Requirements
 ### Requirement: Footer on every page (FR-1)
 The root layout SHALL render exactly one site footer after the page content on every page it
