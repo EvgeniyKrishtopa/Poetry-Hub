@@ -17,7 +17,7 @@
 
 ## 2. Contact model and Server Action <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-5, FR-10, NFR-3, NFR-6) Add `src/features/contact/model/`: `contact.constants.ts`,
+- [x] 2.1 (FR-5, FR-10, NFR-3, NFR-6) Add `src/features/contact/model/`: `contact.constants.ts`,
   `contact-messages.ts` (every string of the proposal's UI copy table, plus the footer button
   label), `contact.schema.ts` (design D3), `contact.types.ts`, `format-contact-message.ts`
   (FR-6), and `form-state.ts` (`readContactValues`, `toContactFormState`, design D5).
@@ -25,7 +25,7 @@
     300/301; empty and whitespace-only values, an empty message passing; each message, whose limit numbers come from
     the length constants, NFR-6), `tests/model/format-contact-message.test.ts`
     (FR-6's exact text, with and without a message), and `tests/model/form-state.test.ts` (every branch).
-- [ ] 2.2 (FR-6, FR-9, FR-10, FR-11, NFR-2) Add `actions/action-client.ts`
+- [x] 2.2 (FR-6, FR-9, FR-10, FR-11, NFR-2) Add `actions/action-client.ts`
   (`contactActionClient`, `logPrefix: "contact"`) and `actions/contact.actions.ts`
   (`sendContactMessageAction`, design D4).
   - Verify with `tests/actions/contact.actions.test.ts` (mocked `sendTelegramMessage`, spied

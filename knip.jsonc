@@ -6,8 +6,8 @@
     ".ncurc.cjs"
   ],
   // Temporary, add-contact-form scaffold: these stubs have no importer until the groups wire them.
-  // shared/lib/telegram goes in task 2.2 (the action imports it), the contact feature and the footer's props type in task 3.3.
-  "ignoreFiles": ["src/shared/lib/telegram/**", "src/features/contact/**", "src/features/site-footer/components/SiteFooter/SiteFooter.types.ts"],
+  // The contact feature and the footer's props type go in task 3.3.
+  "ignoreFiles": ["src/features/contact/**", "src/features/site-footer/components/SiteFooter/SiteFooter.types.ts"],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
     "@fission-ai/openspec",
