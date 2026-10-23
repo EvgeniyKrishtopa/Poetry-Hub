@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,6 +17,7 @@ const NAME = "Анна";
 const EMAIL = "anna@example.com";
 const MESSAGE = "Здравствуйте!";
 const SECRET_IN_ERROR = "anna@example.com leaked";
+const HONEYPOT_VALUE = "http://spam.example";
 
 const nameInput = () => screen.getByLabelText(CONTACT_COPY.nameLabel);
 const emailInput = () => screen.getByLabelText(CONTACT_COPY.emailLabel);
@@ -266,5 +267,24 @@ describe("ContactForm", () => {
     expect(honeypot).toHaveAttribute("autocomplete", "off");
     expect(honeypot?.parentElement).toHaveAttribute("aria-hidden", "true");
     expect(honeypot?.parentElement).toHaveClass("sr-only");
+  });
+
+  // implements FR-10 of add-contact-form
+  it("sends a filled honeypot to the action, so the action can drop the message", async () => {
+    vi.mocked(sendContactMessageAction).mockResolvedValue({ data: { status: "sent" } });
+    const { user } = renderForm();
+    const honeypot = nameInput().closest("form")?.querySelector(`input[name="${HONEYPOT_FIELD}"]`);
+    if (!(honeypot instanceof HTMLInputElement)) throw new Error("honeypot input not rendered");
+
+    fireEvent.change(honeypot, { target: { value: HONEYPOT_VALUE } });
+    await fill(user, { name: NAME, email: EMAIL });
+    await user.click(submitButton());
+
+    expect(sendContactMessageAction).toHaveBeenCalledWith({
+      name: NAME,
+      email: EMAIL,
+      message: "",
+      [HONEYPOT_FIELD]: HONEYPOT_VALUE,
+    });
   });
 });
