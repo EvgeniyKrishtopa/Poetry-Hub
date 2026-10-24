@@ -5,12 +5,29 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { createSupabasePublicClient } from "@/shared/lib/supabase/public";
 
+import { getPublicAuthorName } from "../../dal/public-author-name";
 import { getPublicAuthor, listPublicAuthors } from "../../dal/public-authors";
 import { PUBLIC_AUTHOR_COLUMNS } from "../../model/author.constants";
 
 import { createFakeSupabase, errorResponse, okResponse, PUBLIC_URL_BASE, type FakeSupabase } from "./fake-supabase";
 
 vi.mock("@/shared/lib/supabase/public", () => ({ createSupabasePublicClient: vi.fn() }));
+
+// Vitest runs the client React build, whose `cache` doesn't memoize. Stand in a memo whose stores
+// are cleared before each test, so one test is one request.
+const memoStores = vi.hoisted(() => [] as Map<string, unknown>[]);
+vi.mock("react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react")>()),
+  cache: <A extends unknown[], R>(fn: (...args: A) => R) => {
+    const store = new Map<string, R>();
+    memoStores.push(store as Map<string, unknown>);
+    return (...args: A): R => {
+      const key = JSON.stringify(args);
+      if (!store.has(key)) store.set(key, fn(...args));
+      return store.get(key) as R;
+    };
+  },
+}));
 
 const ANNA_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
 const BORIS_ID = "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f";
@@ -24,6 +41,7 @@ let supabase: FakeSupabase;
 
 describe("public authors", () => {
   beforeEach(() => {
+    for (const store of memoStores) store.clear();
     supabase = createFakeSupabase();
     vi.mocked(createSupabasePublicClient).mockReturnValue(supabase.client);
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -110,7 +128,7 @@ describe("public authors", () => {
   });
 
   describe("getPublicAuthor", () => {
-    // implements FR-14, FR-17, NFR-7 of add-author-profiles
+    // implements FR-14, FR-17, NFR-7 of add-author-profiles, FR-14 of add-author-poems
     it("returns the public row by id, tagged with that author's tag only and cached for hours", async () => {
       supabase.queueQuery(okResponse(row(ANNA_ID, "Анна", "Ахматова")));
 
@@ -134,6 +152,7 @@ describe("public authors", () => {
       expect(cacheTag).not.toHaveBeenCalled();
     });
 
+    // implements FR-14 of add-author-poems
     it("returns not-found, cached for minutes, for a missing or non-public row", async () => {
       supabase.queueQuery(okResponse(null));
 
@@ -147,13 +166,47 @@ describe("public authors", () => {
       await expect(getPublicAuthor(ANNA_ID)).resolves.toEqual({ ok: false, reason: "not-found" });
     });
 
-    // implements NFR-3, NFR-7 of add-author-profiles
-    it("returns unavailable, cached for seconds and logged by name, on a Supabase error", async () => {
+    // implements NFR-3, NFR-7 of add-author-profiles, FR-14 of add-author-poems
+    it("returns unavailable, cached for seconds and logged once by name, on a Supabase error", async () => {
       supabase.queueQuery(errorResponse("PGRST000", 503));
 
       await expect(getPublicAuthor(ANNA_ID)).resolves.toEqual({ ok: false, reason: "unavailable" });
       expect(cacheLife).toHaveBeenCalledExactlyOnceWith("seconds");
-      expect(console.error).toHaveBeenCalledWith("[authors] read public author failed: PostgrestError PGRST000");
+      expect(console.error).toHaveBeenCalledExactlyOnceWith("[authors] read public author failed: PostgrestError PGRST000");
+    });
+
+    // implements FR-12 of add-author-poems
+    it("reads Supabase once per request for the same id and gives every caller the same result", async () => {
+      supabase.queueQuery(okResponse(row(ANNA_ID, "Анна", "Ахматова")));
+
+      const [first, second] = await Promise.all([getPublicAuthor(ANNA_ID), getPublicAuthor(ANNA_ID)]);
+
+      expect(supabase.queries).toHaveLength(1);
+      expect(second).toBe(first);
+    });
+
+    // implements FR-12 of add-author-poems
+    it("serves getPublicAuthorName from the same read", async () => {
+      supabase.queueQuery(okResponse(row(ANNA_ID, "Анна", "Ахматова")));
+
+      await getPublicAuthor(ANNA_ID);
+      await expect(getPublicAuthorName(ANNA_ID)).resolves.toEqual({ ok: true, name: "Анна Ахматова" });
+
+      expect(supabase.queries).toHaveLength(1);
+    });
+
+    // implements FR-12 of add-author-poems
+    it("returns one failed read to both callers instead of reading again", async () => {
+      supabase.queueQuery(errorResponse("PGRST000", 503));
+
+      const results = await Promise.all([getPublicAuthor(ANNA_ID), getPublicAuthorName(ANNA_ID)]);
+
+      expect(results).toEqual([
+        { ok: false, reason: "unavailable" },
+        { ok: false, reason: "unavailable" },
+      ]);
+      expect(supabase.queries).toHaveLength(1);
+      expect(console.error).toHaveBeenCalledOnce();
     });
 
     it("returns unavailable for a malformed row", async () => {

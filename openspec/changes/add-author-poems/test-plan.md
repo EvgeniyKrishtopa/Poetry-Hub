@@ -47,12 +47,10 @@ deltas. "Existing" means a test already on `main` that must keep passing unchang
 | FR-13 (breadcrumbs) | Two clicks before the URL changes end on the second author | Browser, throttled network: directory → two author clicks; also list → poem and author page → poem list | end-to-end |
 | FR-13 (breadcrumbs) | Second click while the first page's content is in flight: second target only, first never appears | Browser, throttled network: click, skeleton, Back, other link; for directory → author, list → poem, author page → list | end-to-end |
 | FR-13 (breadcrumbs) | Two quick clicks between poems end on the second poem and its trail | Same browser scenario on a poem list | end-to-end |
-| FR-14 (author-profiles NFR-7) | Unavailable heals: next request lists the authors, no lifetime to wait | Wrapper returns `unavailable` without `cacheLife("seconds")` and calls `connection` (unit); browser on a local production build: Supabase stopped → message, restarted → list on the next load | unit, end-to-end |
-| FR-14 (author-profiles NFR-7) | Failure is not stored: each request reads again | Unit: a failing read never calls `cacheLife`; a non-marker rejection also gives `unavailable`; a Next control-flow error propagates; one log line per failure | unit |
-| FR-14 | Loading state until the read finishes; concurrent requests share one read | Browser on a local production build, slowed reads, no cache: skeleton shows; two tabs on the same author → one read in the server log | end-to-end |
-| FR-14 (author-profiles NFR-7) | Build without a database: exits 0, `/authors` renders the message at request time, not prerendered | `npm run build` without Supabase variables, then `npm run start`: the message comes at request time; the built `/authors` shell holds the skeleton | integration |
-| FR-15 (author-profiles NFR-7) | Failed refresh keeps the last good data (page and trail keep the name) | Throwaway probe in task 1.3: local build, short revalidate, Supabase stopped after the first load, reload past the window → the author still shows; one log line per failed read | integration |
-| FR-15 (author-profiles NFR-7) | Stale not-found is kept: 404, not the error screen | Same probe with a not-found id | integration |
+| FR-14 (author-profiles NFR-7) | Lifetimes: unavailable kept for seconds, not-found for minutes, success for hours; a failure logged once | `public-authors` DAL tests: a database error → `unavailable` with `cacheLife("seconds")` and one log line; not-found → `"minutes"`; success → `"hours"` (list and single read) | unit |
+| FR-14 (author-profiles NFR-7) | Unavailable heals: a little over one second after the database is back, the page lists the authors; «Повторить» on `/authors/<id>` brings the author back | Browser on a local production build built with Supabase stopped: `/authors` shows the message; restart the stack, reload after about a second → list; same with «Повторить» on an author page (task 6.4) | end-to-end |
+| FR-14 (author-profiles NFR-7) | Loading state and one shared read: both tabs show the skeleton until the content arrives, one database read | Browser on a local production build, no cache, REST container paused then unpaused: two tabs on one author show the skeleton, then the page; one `author_profiles` request in the REST container's log (task 6.4) | end-to-end |
+| FR-14 (author-profiles NFR-7) | Build without a database: exits 0, `/authors` not prerendered with the message, renders it at request time | `npm run build` with Supabase variables empty exits 0 and the built `/authors` shell holds the skeleton, not the message (task 1.3); `npm run start` on it renders the message at request time | integration |
 | NFR-1 | No `"use client"`, no auth/Supabase import, no `redirect` import in the poems feature | `src/features/poems/tests/boundaries.test.ts` | unit |
 | NFR-2 | No `@/features/poems` import in the authors feature | `boundaries.test.ts` | unit |
 | NFR-3 | Mock modules imported only by `dal/author-poems.ts` | `boundaries.test.ts` | unit |
@@ -61,6 +59,6 @@ deltas. "Existing" means a test already on `main` that must keep passing unchang
 | NFR-6 | `main` of the list page: one h1, one list whose every item holds one link | `AuthorPoemList` role queries; browser check scoped to `main` | unit, end-to-end |
 | NFR-7 | Copy matches the table | `poems-messages` test compares every string with the proposal's UI copy table; view tests assert the exact texts | unit |
 
-Coverage: 55 rows; every scenario in the seven spec deltas has at least one row, and no
-criterion is left without a test. Checks that depend on the cache run on a local production
+Coverage: 53 rows; every scenario in the seven spec deltas has at least one row, and no
+criterion is left without a test. FR-15 is withdrawn (2026-10-24) and has no rows. Checks that depend on the cache run on a local production
 build (`npm run build && npm run start`), each from a fresh server start (task 6.4).
