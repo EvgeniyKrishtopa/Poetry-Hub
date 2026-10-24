@@ -94,8 +94,10 @@ describe("PoemPage", () => {
     expect(children.type).toBe(PoemPageContent);
     expect(children.props).toEqual({ authorId, poemId });
     const { container } = render(fallback);
-    expect(container.querySelectorAll("[data-skeleton]")).toHaveLength(5);
-    expect(container.querySelector("[data-skeleton]")).toHaveClass("aspect-video");
+    const skeletons = [...container.querySelectorAll("[data-skeleton]")];
+    expect(skeletons).toHaveLength(5);
+    expect(skeletons[0]).toHaveClass("aspect-video");
+    for (const skeleton of skeletons) expect(skeleton.closest('[aria-hidden="true"]')).not.toBeNull();
     expect(screen.getByRole("status")).toHaveTextContent("Загрузка…");
   });
 });
