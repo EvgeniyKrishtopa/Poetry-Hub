@@ -38,12 +38,13 @@ on the site and lead nowhere (user request, 2026-10-24).
   error screen, or «Автор» above a loaded page. This covers the author page too.
 - Fast clicking stays consistent: when a visitor follows one author or poem link and then
   another before the first page arrives, the last click wins for both the page and the trail.
-- Failed author reads are never cached (user request, 2026-10-24). With no cache yet, the
-  visitor sees the loading state, one read serves everyone waiting, and a failure shows the
-  error state without being stored, so the next request tries again. When a cached entry has
-  expired and its refresh fails, visitors keep the last good data instead of an error. Today a
-  failed refresh is cached for seconds and replaces the good entry: this fixes that for the
-  author directory, the author page, and the two poem pages.
+- Author reads with no cache entry behave predictably on the author directory, the author page,
+  and the two poem pages: the visitor sees the loading state, one read serves everyone waiting,
+  and a failure shows the error state and is kept for seconds only, so a request after that
+  short window tries again. Failed reads keep their existing seconds-long lifetime
+  (`author-profiles` NFR-7): a 2026-10-24 probe showed that not storing a failure at all fails
+  an env-less build and does not keep the last good data when a refresh fails (user decision,
+  2026-10-24).
 - Creating, editing, and deleting poems is out of scope: a separate change.
 
 ## UI copy
@@ -153,17 +154,16 @@ FR-3: the digest shows only when Next provides one), the mockup simply shows a c
   first page's trail with the second page, and never a mix of the two.
 - **FR-14** — No cache yet. When a public author read (the directory list, or one author) has
   no cache entry: the page shows its loading state until the read finishes; concurrent requests
-  for the same read share one read; a successful read is cached (directory and author: hours;
+  for the same read on one server instance share one read; a successful read is cached (directory and author: hours;
   not-found: minutes); a failed read (`unavailable`) shows the error state (the directory's
   «Список авторов сейчас недоступен.», or the error screen on the author and poem pages) and is
-  not stored, so the next request or «Повторить» reads again.
-- **FR-15** — Expired cache, failed refresh. When a cached public author read has gone stale
-  and its refresh fails, the stale entry is kept and served: visitors see the last good data,
-  not an error state, and a later request tries the refresh again. "Good data" is any stored
-  result, a not-found one included: a stale not-found entry keeps showing the 404 page while
-  the refresh fails (user decision, 2026-10-24). Only when no good entry is
-  left (never cached, expired past its cache lifetime's expiry, or expired by the owner's own
-  edit) does a failure reach the visitor, as FR-14 describes.
+  cached for seconds only (`author-profiles` NFR-7, unchanged): a request or «Повторить» about
+  one second later (the `"seconds"` profile's revalidate time, with Next's default cache) reads
+  again (user decision, 2026-10-24). The failure is never frozen into a prerendered page: a
+  build with no database still exits 0 and the page renders the failure at request time.
+- FR-15 is withdrawn (2026-10-24): the task 1.3 probe showed that a stale `"use cache"` entry is
+  not served once its refresh fails, so "keep the last good data" is not achievable with
+  Next's default cache. The identifier is not reused.
 - **NFR-1** — Server-rendered and session-free. The new pages, the FR-1 entry, and the poems
   feature contain no `"use client"` module, and the poems feature imports nothing from
   `@/features/auth` or `@/shared/lib/supabase`; it reads authors only through
@@ -202,8 +202,8 @@ FR-3: the digest shows only when Next provides one), the mockup simply shows a c
   identical to `main`" clause goes (this change adds routes on purpose; NFR-4 states the new
   list).
 - `route-states`: FR-4's retry runs one attempt at a time (FR-11).
-- `author-profiles`: NFR-7 (failed public reads cached for seconds) is replaced: failures are
-  never cached, and a failed refresh keeps the last good entry (FR-14, FR-15).
+- `author-profiles`: NFR-7 keeps its lifetimes (unavailable: seconds) and gains the loading
+  state, the shared read, and the request-time-only failure (FR-14).
 - `feedback-tones`: FR-4 is replaced by a form-only requirement of the same number; its
   `PoemList` scenario goes with `PoemList`.
 
@@ -214,8 +214,6 @@ FR-3: the digest shows only when Next provides one), the mockup simply shows a c
   `model/` (types, paths, copy, date format, count rule), components for the list page, the
   poem page, and the author page entry.
 - `src/features/authors/`: `getPublicAuthor` is memoized per request with `React.cache` (FR-12);
-  both public reads throw `unavailable` inside their cache scope and turn it into a request-time
-  result outside it (FR-14, FR-15);
   `AuthorPage` → `AuthorPageContent` → `AuthorProfileView` pass a new
   `poems` slot through; `authorPagePath` is exported.
 - `src/features/breadcrumbs/`: two dynamic routes; it now also reads `@/features/poems`.
@@ -226,9 +224,9 @@ FR-3: the digest shows only when Next provides one), the mockup simply shows a c
 - `public/mock-poems/`: four SVG illustrations.
 - `tests/web-qa-scenarios/`: `home-search-filter.spec.ts` deleted, `home-renders.spec.ts`
   updated.
-- Docs: `docs/decisions/0008-*.md` (new ADR: failed public reads are never cached; supersedes
-  ADR 0005 Decision 3's `seconds` lifetime) and 0005's status line, `docs/architecture.md`,
-  `docs/state-management.md` (its TanStack example no longer exists in code; the Supabase
-  public reads rule changes), `docs/design-system.md` (`PoemCard` gone, new components).
+- Docs: `docs/decisions/0008-*.md` (new ADR: a public read shared by a page and its trail is
+  memoized per request), `docs/architecture.md`, `docs/state-management.md` (its TanStack example
+  no longer exists in code; the Supabase public reads section gains the per-request memo rule),
+  `docs/design-system.md` (`PoemCard` gone, new components).
 - No new dependency, no schema change, no environment variable. `PROGRESS.md` follow-up 28's
   home overflow at 375 px goes away with the search row.

@@ -23,32 +23,23 @@ per real page; their trail logic lands in group 5.
 - [ ] 1.2 (FR-12) Memoize the per-request reads (design D12): wrap `getPublicAuthor` in
   `src/features/authors/dal/public-authors.ts` with React's `cache` (`getAuthorPoem` gets the
   same wrapper in task 3.2, where it is created).
-  - Verify with `src/features/authors/tests/dal/public-authors.test.ts` and
-    `src/features/poems/tests/dal/author-poems.test.ts` (implements FR-12 of add-author-poems),
+  - Verify with `src/features/authors/tests/dal/public-authors.test.ts` (implements FR-12 of
+    add-author-poems; `getAuthorPoem`'s own memo case lands with task 3.2),
     with `react`'s `cache` mocked by a per-test memo (Vitest runs the client React build, whose
     `cache` doesn't memoize): two `getPublicAuthor(id)` calls query Supabase once and return the
     same result; `getPublicAuthorName` reuses that read; a failed read is returned to both callers.
     The existing public-authors cases still pass.
-- [ ] 1.3 (FR-14, FR-15) Throw `unavailable` inside the public reads' cache scopes and return it
-  outside them (design D14): split `listPublicAuthors` and `getPublicAuthor` into a `"use cache"`
-  function that throws `new Error(UNAVAILABLE_MARKER)` on `unavailable` and an uncached wrapper
-  whose catch calls `unstable_rethrow(error)`, then `connection()`, and returns
-  `{ ok: false, reason: "unavailable" }` without inspecting the error's class; drop the
-  `"seconds"` lifetime. Record ADR 0008 with the `record-decision` skill (failed public reads are
-  thrown inside the scope and never cached; supersedes ADR 0005 Decision 3's `seconds` lifetime)
-  and set ADR 0005's status to name 0008; rewrite `docs/state-management.md`'s "Supabase public
-  reads" section to the new rule (design D12, D14). Update `AuthorDirectory`'s comment (the boundary now exists because a failure is
-  request-time only).
+- [ ] 1.3 (FR-14) Keep the public reads' failure lifetime and record the per-request read rule
+  (design D12, D14, revised 2026-10-24 after the probe): `listPublicAuthors` and
+  `cachedPublicAuthor` keep returning `unavailable` with `cacheLife("seconds")`. Record ADR 0008
+  with the `record-decision` skill (a public read that a page and its breadcrumb trail both call
+  is memoized per request with React's `cache`; it supersedes nothing, ADR 0005 and its status
+  line stay unchanged), and add that rule to `docs/state-management.md`'s "Supabase public reads"
+  section, keeping its `"seconds"` lifetime text and adding a note not to throw inside the scope
+  (design D14's probe findings).
   - Verify with `src/features/authors/tests/dal/public-authors.test.ts` (implements FR-14 of
-    add-author-poems): a database error → `unavailable` from the wrapper, `connection` called,
-    `cacheLife` never called with `"seconds"`; success → `"hours"`; not-found → `"minutes"`,
-    no `connection` call; a rejection that is not the marker (e.g. a plain `Error`) also gives
-    `unavailable`; a Next control-flow error (mocked `unstable_rethrow` throwing) propagates; the
-    failure is logged once by the read.
-  - Verify FR-15 once with the throwaway probe in design D14's risk (local build, short
-    revalidate, Supabase stopped): the stale author page keeps showing, and each failed read
-    writes exactly one server log line. Record the outcome in the
-    group's commit body; on failure, stop and ask.
+    add-author-poems): a database error → `unavailable` with `cacheLife("seconds")`, logged once;
+    success → `"hours"`; not-found → `"minutes"`.
   - Verify: `npm run typecheck && npm run lint && npm run test:coverage && npm run knip` pass,
     and `npm run build` with no Supabase variables exits 0; `npm run start` on that build then
     renders «Список авторов сейчас недоступен.» on `/authors` at request time (not from the
@@ -164,7 +155,7 @@ per real page; their trail logic lands in group 5.
   two routes and their slot pages, `poems` → `authors` and `breadcrumbs` → `poems` imports),
   `docs/state-management.md` (no feature uses TanStack Query today; the conventions stay for the
   next one; the poems mock DAL needs no cache scope until a database replaces it; the "Supabase public
-  reads" section is already rewritten by task 1.3), and
+  reads" section is already updated by task 1.3), and
   `docs/design-system.md` (drop `PoemCard` and the `PoemList` state examples; add the banner,
   `AuthorPoemList`, `PoemView`, and the empty text as the empty-state example). Remove follow-up
   28's home overflow note from `PROGRESS.md` with the progress script.
@@ -186,11 +177,18 @@ per real page; their trail logic lands in group 5.
   author read made unavailable, the page shows the error screen while the trail reads «Автор»
   (FR-12); on the error screen, a double click on «Повторить» leaves the button disabled until
   the attempt finishes, and after recovery the trail shows the author's name, not «Автор»
-  (FR-11, FR-12, design D11's risk); with the local Supabase stack stopped and
-  no cache, `/authors` shows «Список авторов сейчас недоступен.», and after the stack restarts the
-  next load lists the authors (FR-14); with the author read slowed down and no cache, the author
+  (FR-11, FR-12, design D11's risk); with the local Supabase stack stopped before
+  `npm run build` (the usual variables set, so nothing about the list is baked into the build),
+  then `npm run start`, `/authors` shows «Список авторов сейчас недоступен.», and after the stack restarts a
+  load a little over one second later lists the authors; likewise on `/authors/<id>`, «Повторить»
+  pressed a little over one second after the restart brings back the author page (FR-14); with the author read slowed down
+  on the server → Supabase hop (`docker pause supabase_rest_Poetry-Hub`, open the tabs, then
+  `docker unpause` a few seconds later; not browser throttling, which leaves that hop fast; user
+  decision, 2026-10-24) and no cache, the author
   page shows its skeleton until the content arrives, and two tabs opened at once on the same
-  author produce one Supabase read in the server log (FR-14's loading state and shared read).
+  author produce one `author_profiles` request in the local Supabase REST container's log
+  (`docker logs supabase_rest_Poetry-Hub`; the app logs only failures, so no app code changes;
+  user decision, 2026-10-24) (FR-14's loading state and shared read).
   - Where (user decision, 2026-10-24): the FR-12 and FR-14 checks (anything that depends on the
     cache) run on a local production build, `npm run build && npm run start`, each from a fresh
     server start so no earlier entry is cached; the other checks run on the dev server as usual.

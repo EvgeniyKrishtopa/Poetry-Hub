@@ -306,10 +306,10 @@ with React's `cache`, wrapping the existing UUID check and the `"use cache"` cal
 `@breadcrumbs` slot of the same request) get one shared promise per id. `getAuthorPoem` (poems
 DAL) gets the same `cache` wrapper.
 
-Why it is needed although `"use cache"` exists: after D14 a failed read is never stored, so two
-separate calls in one request are two separate chances to fail — one can fail while the other
-succeeds (or reads a stale entry that a just-finished refresh replaced). One shared promise per
-request rules that out, independent of how the framework schedules concurrent cache fills. `React.cache` is
+Why it is needed although `"use cache"` exists: two separate calls in one request are two
+separate cache lookups, and an entry can expire or be replaced between them (a failure lives for
+seconds only), so one can fail while the other succeeds. One shared promise per request rules
+that out, independent of how the framework schedules concurrent cache fills. `React.cache` is
 scoped to one request (Next.js docs, "Reusing data with React.cache"), so nothing leaks between
 visitors, and it adds no cache lifetime of its own.
 
@@ -321,73 +321,38 @@ added for this; FR-13 is a guarantee checked in the browser (Gate 3) and recorde
 end-to-end scenario, so a later change (for example, client-side fetching on these pages) can't
 break it unnoticed.
 
-### D14 — Failures are thrown inside the cache, returned outside it (FR-14, FR-15)
+### D14 — Failures stay returned values with the seconds lifetime (FR-14)
 
-Today `listPublicAuthors` and `cachedPublicAuthor` return `unavailable` from inside their
-`"use cache"` scope with `cacheLife("seconds")`. A returned value is a cache entry, so when a
-stale `"hours"` entry is refreshed in the background and the read fails, the failure replaces
-it. Next.js does not store a `"use cache"` function's thrown error: the wrapper rejects, drops
-its in-flight entry, and a stale entry stays (`use-cache-wrapper.ts`; the same rule the ISR docs
-state: "the last successfully generated data will continue to be served").
+Revised 2026-10-24 after task 1.3's probe (user decision). `listPublicAuthors` and
+`cachedPublicAuthor` keep returning `unavailable` from inside their `"use cache"` scope with
+`cacheLife("seconds")`, as ADR 0005 Decision 3 says; the only change to the reads is D12's
+`React.cache` around `getPublicAuthor`.
 
-New shape, per read (`features/authors/dal/public-authors.ts`):
-
-```ts
-async function cachedPublicAuthor(id) {                  // "use cache" scope
-  "use cache";
-  cacheTag(authorTag(id));
-  const result = await readPublicAuthor(id);             // logs the failure once, as today
-  if (!result.ok && result.reason === "unavailable") throw new Error(UNAVAILABLE_MARKER); // not cached
-  cacheLife(result.ok ? "hours" : "minutes");            // success / not-found only
-  return result;
-}
-
-export const getPublicAuthor = cache(async (id) => {     // D12: one call per request
-  if (!authorIdSchema.safeParse(id).success) return NOT_FOUND;
-  try {
-    return await cachedPublicAuthor(id);
-  } catch (error) {
-    unstable_rethrow(error);                             // Next's own control flow passes through
-    await connection();                                  // request-time only: never prerendered
-    return UNAVAILABLE;
-  }
-});
-```
-
-`listPublicAuthors` gets the same split (`cachedPublicAuthors` + an uncached exported wrapper).
-`cacheForResult` loses its `"seconds"` branch.
-
-- **No cache yet (FR-14).** Concurrent callers in one process join the leader's in-flight
-  invocation (`use-cache-wrapper.ts` dedup), and `React.cache` joins the page and the trail
-  (D12): one read. A failure rejects all of them, is not stored, and the wrapper's
-  `connection()` makes the result request-time, so an env-less build or a database outage during
-  the build leaves a dynamic hole instead of a baked-in failure (the reason the `"seconds"`
-  lifetime existed). The next request reads again.
-- **Expired, refresh fails (FR-15).** The stale entry keeps being served; the failed refresh
-  logs once and is retried on a later request. The window ends at the profile's `expire`
-  (`"hours"`: 1 day): past that, or after the owner's `updateTag`, there is no good entry and the
-  visitor gets FR-14's failure path.
+- **No cache yet (FR-14).** Concurrent callers in one server instance join the leader's in-flight
+  invocation (`"use cache"` dedup; not documented, so Gate 3 checks it on a local production
+  build, task 6.4), and `React.cache` joins the page and the trail (D12): one read per instance. A failure is stored for seconds only; the `"seconds"` profile is short-lived, so it is
+  left out of the prerendered shell and an env-less build or an outage during the build leaves a
+  dynamic hole instead of a baked-in failure. A request after that window reads again.
 - `not-found` stays a cached value (`"minutes"`), so random UUIDs still cost one read per
   minute, not one per request.
-- **No reliance on error identity.** A value crossing a `"use cache"` boundary is serialized,
-  so whether a thrown class instance keeps its identity is a framework detail this project does
-  not depend on (migrate-to-cache-components design D1, `shared/lib/contentful/client.ts`). The
-  wrapper never inspects what it caught: `unstable_rethrow` (`next/navigation`) passes Next's
-  control-flow errors (`notFound`, postpone, hanging-promise and prerender-interrupted
-  rejections) back up, and every other rejection means "the read did not produce a cacheable
-  result", which is `unavailable`. That is exact today: `readPublicAuthor` / `readPublicAuthors`
-  already catch and log every error of their own and return a value, so the only rejections
-  the cached function can produce are the marker and the framework's. The marker's message
-  (`UNAVAILABLE_MARKER`, a named constant) is for logs and readability only.
-- **Accepted decisions.** This replaces ADR 0005 Decision 3's "`seconds` for unavailable" and
-  `docs/state-management.md`'s "Failures are returned as plain values, never thrown" for public
-  reads. Task 1.3 records ADR 0008 (superseding that point of 0005, whose status line then names
-  0008) and rewrites the doc's "Supabase public reads" section in the same group, so the next
-  public read (the poems database read in the CRUD change) follows the new rule.
 
-Rejected: keeping a last-good copy in module memory (per-instance, unbounded, duplicates the
-framework's cache); `revalidateTag(…, "max")` tricks (they govern invalidation, not failed
-refreshes).
+**What the probe found** (local `next build && next start`, Next 16.4.2, `cacheLife({ revalidate:
+5 })` on the author read, Supabase REST stopped after the first load) for the first version of
+this decision, which threw `unavailable` inside the scope and returned it from an uncached
+wrapper (`unstable_rethrow`, then `connection()`):
+
+1. A stale entry is not served once its refresh fails: past the window the author page showed
+   the error screen. Next's default cache treats an entry past `revalidate` as a miss, so "keep
+   the last good data" (the withdrawn FR-15) is not reachable by throwing.
+2. Next logs an error thrown inside `"use cache"` itself, so each failure wrote two log lines.
+3. `npm run build` with no Supabase variables failed: a throw inside `"use cache"` during
+   prerender is a build error even when the uncached caller catches it.
+
+Rejected: throwing inside the scope (the three findings above); a near-zero custom lifetime for
+failures instead of `"seconds"` (needs another probe for a difference of about a second, user
+decision); keeping a last-good copy in module memory (per-instance, unbounded, duplicates the
+framework's cache); a custom cache handler that serves stale entries on a failed refresh (its own
+change, if ever needed).
 
 ### Sequence diagrams
 
@@ -499,7 +464,7 @@ Public author read and the cache (D12, D14):
 ```mermaid
 sequenceDiagram
     participant P as Page or trail (server component)
-    participant W as authors getPublicAuthor (React.cache, uncached wrapper)
+    participant W as authors getPublicAuthor (React.cache)
     participant C as cachedPublicAuthor ("use cache" scope)
     participant DB as Supabase (anon, public rows)
 
@@ -510,17 +475,9 @@ sequenceDiagram
         W-->>P: the same promise (page and trail share it)
     else first call in this request
         W->>C: cachedPublicAuthor(id)
-        alt fresh entry
+        alt live entry
             C-->>W: cached result
-        else stale entry
-            C-->>W: stale result now; background refresh starts
-            C->>DB: select (refresh)
-            alt refresh ok / not-found
-                DB-->>C: rows → entry replaced (hours / minutes)
-            else refresh fails
-                DB--xC: error → logged once, marker thrown, entry NOT replaced (stale kept)
-            end
-        else no entry (cold, expired past expire, or after updateTag)
+        else no entry (cold, past its revalidate window, or after updateTag)
             C->>DB: select
             alt ok
                 DB-->>C: row → cacheLife("hours"), stored
@@ -529,10 +486,8 @@ sequenceDiagram
                 DB-->>C: no row → cacheLife("minutes"), stored
                 C-->>W: { ok: false, not-found }
             else unavailable
-                DB--xC: error → logged once, marker thrown, nothing stored
-                C--xW: rejection
-                W->>W: unstable_rethrow(error); await connection()
-                W-->>P: { ok: false, unavailable } (request-time only)
+                DB--xC: error → logged once
+                C-->>W: { ok: false, unavailable } → cacheLife("seconds"), kept out of the prerender
             end
         end
         W-->>P: result
@@ -545,15 +500,16 @@ sequenceDiagram
   boundary and refreshes the trail is the documented pre-`retry` pattern, but Gate 3 confirms it
   in the browser: make the author read fail, restore it, click «Повторить» twice, and check the
   button stays disabled until the page and the trail («Анна Ахматова», not «Автор») both show.
-- **Unverified framework behaviour (D14).** That a failed background refresh keeps the stale
-  `"use cache"` entry is read from Next's source and the ISR docs, not from the `use cache` page
-  itself, and an hour-long revalidate window can't be waited out in a browser pass. Task 1.3
-  checks it once with a throwaway probe: a temporary short `cacheLife({ revalidate: 5 })` on the
-  author read in a local `next build && next start`, the local Supabase stack stopped after the
-  first load, the page reloaded past the window. The probe also checks that each failed read
-  writes exactly one server log line (Next might log a rejected `"use cache"` call itself). It is
-  backed up and restored by copy, never committed. If the stale entry isn't kept, or a failure
-  logs twice, the change pauses for a decision.
+- **Undocumented shared read (D14).** If Gate 3 sees two concurrent cold requests read
+  Supabase twice, the `"use cache"` dedup doesn't hold: FR-14's and NFR-7's "share one read"
+  SHALL goes back to the user to weaken or accept, before the last group commits. Page and trail
+  within one request still share one read through `React.cache` (D12) either way.
+- **No last-good fallback (D14).** When an author's entry has passed its revalidate window and
+  the database is down, the visitor gets the error state, not the last good data, and a failure
+  is cached under the `"seconds"` profile: in practice re-read after about a second, because
+  Next's default cache treats an entry past its revalidate window as a miss (probe finding 1); a
+  different cache handler could keep it up to the profile's 60-second expiry. Accepted (user decision, 2026-10-24); a custom cache handler
+  could serve stale entries later, as its own change.
 - **Memoized failure (D12).** With `React.cache`, a failed author read stays failed for the
   whole request: page and trail fail together, which is the point; the next request reads again.
 
