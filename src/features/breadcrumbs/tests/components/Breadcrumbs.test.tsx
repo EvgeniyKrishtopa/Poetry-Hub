@@ -132,6 +132,27 @@ describe("BreadcrumbsLoader", () => {
   });
 
   // implements FR-8 of add-author-poems
+  it("renders nothing for a poem page whose poem isn't the author's", async () => {
+    vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Анна Ахматова" });
+    vi.mocked(getAuthorPoem).mockResolvedValue({ ok: false, reason: "not-found" });
+
+    await expect(load(["authors", ANNA_ID, "poems", "no-such-poem"])).resolves.toBeNull();
+    expect(getAuthorPoem).toHaveBeenCalledWith(ANNA_ID, "no-such-poem");
+  });
+
+  // implements FR-8, FR-12 of add-author-poems
+  it("ends on «Автор» for a poem page when the author is unavailable and the poem isn't found", async () => {
+    vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: false, reason: "unavailable" });
+    vi.mocked(getAuthorPoem).mockResolvedValue({ ok: false, reason: "not-found" });
+
+    const element = (await load(["authors", ANNA_ID, "poems", "no-such-poem"])) as ReactElement<{
+      items: { label: string }[];
+    }>;
+
+    expect(element.props.items.map((item) => item.label)).toEqual(["Главная", "Наши авторы", "Автор"]);
+  });
+
+  // implements FR-8 of add-author-poems
   it("reads no poem on an author page", async () => {
     vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Анна Ахматова" });
 
