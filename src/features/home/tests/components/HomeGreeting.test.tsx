@@ -36,6 +36,20 @@ describe("HomeGreeting", () => {
     expect(paragraphs[1].textContent).toBe("Second paragraph");
   });
 
+  // implements FR-9 of add-author-poems
+  it.each([
+    ["CMS greeting", "Welcome to Poetry Hub", "Hello, reader."],
+    ["static fallback", "Поэтический Хаб", "Discover, read, and collect poems."],
+  ])("draws the %s as a banner around the heading and text", (_case, title, message) => {
+    renderGreeting(message, title);
+
+    const heading = screen.getByRole("heading", { level: 1, name: title });
+    const banner = heading.parentElement;
+    expect(banner?.tagName).toBe("SECTION");
+    expect(banner).toHaveClass("bg-surface", "border", "border-border", "rounded-2xl");
+    expect(banner).toContainElement(screen.getByText(message));
+  });
+
   // implements FR-6 of add-contentful-home-greeting
   it("renders Markdown and HTML literally", () => {
     const { container } = renderGreeting("**Bold** <b>tag</b>");

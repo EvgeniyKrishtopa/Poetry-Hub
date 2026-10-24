@@ -47,20 +47,20 @@ per real page; their trail logic lands in group 5.
 
 ## 2. Home: welcome banner, remove the search and mock poem list (UI) <!-- isolated -->
 
-- [ ] 2.1 (FR-9, NFR-5) Restyle `src/features/home/components/HomeGreeting/HomeGreeting.tsx` as
+- [x] 2.1 (FR-9, NFR-5) Restyle `src/features/home/components/HomeGreeting/HomeGreeting.tsx` as
   the banner (design D8): a `section` with the surface background, border, and rounded corners
   around the same h1 and paragraphs, values from the approved mockup, token utilities only.
   - Verify with `src/features/home/tests/components/HomeGreeting.test.tsx`: the existing cases
     still pass (heading, paragraphs, line breaks, literal markup), plus the banner container
     carries `bg-surface`, a `border` utility, and a rounded utility (implements FR-9 of
     add-author-poems).
-- [ ] 2.2 (FR-9, FR-10) Rewrite `src/app/(public)/page.tsx` to render only the banner (design D8):
+- [x] 2.2 (FR-9, FR-10) Rewrite `src/app/(public)/page.tsx` to render only the banner (design D8):
   keep `"use cache"`, `cacheLife("minutes")`, `cacheTag(CONTENTFUL_CACHE_TAG)`; drop the
   TanStack prefetch and `HydrationBoundary`.
   - Verify: `npm run typecheck && npm run lint` pass; the home page test (add one under
     `src/app/tests/` if none renders the page) shows the h1 and no `searchbox`, no «Очистить»
     button, and no list in `main` (implements FR-9 of add-author-poems).
-- [ ] 2.3 (FR-10) Delete the old poems code: `src/features/poems/api/`,
+- [x] 2.3 (FR-10) Delete the old poems code: `src/features/poems/api/`,
   `components/{PoemSearch,PoemList,PoemCard}`, `model/{filter-poems,poems-ui.store,poem.types}`,
   `index.ts`, and their tests (the folder is empty afterwards; group 3 recreates it). Delete
   `tests/web-qa-scenarios/home-search-filter.spec.ts`; update `home-renders.spec.ts` to assert the
