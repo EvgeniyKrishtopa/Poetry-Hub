@@ -32,8 +32,6 @@ Validate with `npm run typecheck && npm run lint && npm run test:coverage && npm
 
 CI (`.github/workflows/ci.yml`) runs six checks (all of the above except `deps:outdated`) on every PR as separate status checks; a ruleset on `main` blocks merging until all six pass and rejects direct pushes, with no bypass for anyone. `deps:outdated` runs weekly and on manual dispatch (`.github/workflows/deps-outdated.yml`), not on PRs.
 
-`.nvmrc` pins Node 24; bumping it means bumping `@types/node` too (held to its major in `.ncurc.cjs`).
-
 ## Shell
 
 - The session cwd is already the repo root. Never prefix Bash commands with `cd <repo>` — a compound `cd … && <write>` always forces a manual permission prompt. Use relative paths.
