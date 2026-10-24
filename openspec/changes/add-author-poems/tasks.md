@@ -136,7 +136,7 @@ per real page; their trail logic lands in group 5.
 
 ## 5. Breadcrumbs for the poem routes <!-- judgement-heavy -->
 
-- [ ] 5.1 (FR-8, FR-12) Extend `src/features/breadcrumbs/` per design D7: `RouteMatch`'s two new kinds,
+- [x] 5.1 (FR-8, FR-12) Extend `src/features/breadcrumbs/` per design D7: `RouteMatch`'s two new kinds,
   `matchRoute` over the segments after `/authors`, `BreadcrumbsLoader`'s reads (author name; poem
   in parallel for a poem page), `buildTrail`'s new trails. Add `getAuthorPoem`,
   `authorPoemsPath`, `POEMS_SEGMENT`, `POEMS_PAGE_TITLE` to `@/features/poems`' index.

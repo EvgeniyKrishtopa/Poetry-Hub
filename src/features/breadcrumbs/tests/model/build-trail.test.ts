@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { AUTHORS_PATH } from "@/features/authors";
+import type { AuthorPoemResult } from "@/features/poems";
 import { ACCOUNT_PATH } from "@/shared/config/account-paths";
 import { HOME_PATH } from "@/shared/config/constants";
 
@@ -75,5 +76,105 @@ describe("buildTrail", () => {
   // implements FR-4 of add-breadcrumbs
   it("shows no trail for an author that doesn't exist", () => {
     expect(buildTrail(AUTHOR_MATCH, { ok: false, reason: "not-found" })).toEqual({ kind: "none" });
+  });
+});
+
+describe("buildTrail on the poem routes", () => {
+  const POEM_ID = "osenniy-sad";
+  const LIST_MATCH = { kind: "author-poems", authorId: ANNA_ID } as const;
+  const POEM_MATCH = { kind: "author-poem", authorId: ANNA_ID, poemId: POEM_ID } as const;
+
+  const ANNA = { ok: true, name: "Анна Ахматова" } as const;
+  const AUTHOR_UNAVAILABLE = { ok: false, reason: "unavailable" } as const;
+  const AUTHOR_NOT_FOUND = { ok: false, reason: "not-found" } as const;
+  const POEM_FOUND: AuthorPoemResult = {
+    ok: true,
+    poem: {
+      id: POEM_ID,
+      title: "Осенний сад",
+      text: "Строка",
+      illustrationSrc: `/mock-poems/${POEM_ID}.svg`,
+      publishedAt: "2026-03-12",
+      genre: "Лирика",
+    },
+  };
+  const POEM_NOT_FOUND: AuthorPoemResult = { ok: false, reason: "not-found" };
+
+  const AUTHOR_HREF = `/authors/${ANNA_ID}`;
+  const LIST_HREF = `/authors/${ANNA_ID}/poems`;
+
+  // implements FR-8 of add-author-poems
+  it("ends the list trail on «Произведения», after the author's name linking to the author page", () => {
+    expect(buildTrail(LIST_MATCH, ANNA)).toEqual({
+      kind: "shown",
+      items: [
+        HOME,
+        AUTHORS,
+        { kind: "link", label: "Анна Ахматова", href: AUTHOR_HREF },
+        { kind: "current", label: "Произведения" },
+      ],
+    });
+  });
+
+  // implements FR-8 of add-author-poems
+  it("ends the poem trail on the poem's title, after «Произведения» linking to the list", () => {
+    expect(buildTrail(POEM_MATCH, ANNA, POEM_FOUND)).toEqual({
+      kind: "shown",
+      items: [
+        HOME,
+        AUTHORS,
+        { kind: "link", label: "Анна Ахматова", href: AUTHOR_HREF },
+        { kind: "link", label: "Произведения", href: LIST_HREF },
+        { kind: "current", label: "Осенний сад" },
+      ],
+    });
+  });
+
+  // implements FR-8 of add-author-poems
+  it("keeps «Автор» as a link to the author page when the author read is unavailable", () => {
+    expect(buildTrail(LIST_MATCH, AUTHOR_UNAVAILABLE)).toEqual({
+      kind: "shown",
+      items: [
+        HOME,
+        AUTHORS,
+        { kind: "link", label: "Автор", href: AUTHOR_HREF },
+        { kind: "current", label: "Произведения" },
+      ],
+    });
+    expect(buildTrail(POEM_MATCH, AUTHOR_UNAVAILABLE, POEM_FOUND)).toEqual({
+      kind: "shown",
+      items: [
+        HOME,
+        AUTHORS,
+        { kind: "link", label: "Автор", href: AUTHOR_HREF },
+        { kind: "link", label: "Произведения", href: LIST_HREF },
+        { kind: "current", label: "Осенний сад" },
+      ],
+    });
+  });
+
+  // implements FR-8 of add-author-poems
+  it("shows no trail for an author that doesn't exist, on either poem route", () => {
+    expect(buildTrail(LIST_MATCH, AUTHOR_NOT_FOUND)).toEqual({ kind: "none" });
+    expect(buildTrail(POEM_MATCH, AUTHOR_NOT_FOUND, POEM_FOUND)).toEqual({ kind: "none" });
+    expect(buildTrail(POEM_MATCH, AUTHOR_NOT_FOUND, POEM_NOT_FOUND)).toEqual({ kind: "none" });
+  });
+
+  // implements FR-8 of add-author-poems
+  it("shows no trail for a poem that isn't the author's", () => {
+    expect(buildTrail(POEM_MATCH, ANNA, POEM_NOT_FOUND)).toEqual({ kind: "none" });
+  });
+
+  // implements FR-8, FR-12 of add-author-poems
+  it("ends on «Автор» as the current item when the author is unavailable and the poem isn't found", () => {
+    expect(buildTrail(POEM_MATCH, AUTHOR_UNAVAILABLE, POEM_NOT_FOUND)).toEqual({
+      kind: "shown",
+      items: [HOME, AUTHORS, { kind: "current", label: "Автор" }],
+    });
+  });
+
+  // implements FR-8 of add-author-poems
+  it("shows no trail for a poem match that comes with no poem result", () => {
+    expect(buildTrail(POEM_MATCH, ANNA)).toEqual({ kind: "none" });
   });
 });
