@@ -29,7 +29,9 @@ describe("AuthorPoemList", () => {
   it("shows the h1 «Произведения» over title links, in the given order, with poem hrefs", () => {
     render(<AuthorPoemList authorId={AUTHOR_ID} poems={[NIGHT_STATION, AUTUMN_GARDEN]} />);
 
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(screen.getByRole("heading", { level: 1, name: "Произведения" })).toBeInTheDocument();
+    for (const item of screen.getAllByRole("listitem")) expect(within(item).getAllByRole("link")).toHaveLength(1);
     const links = within(screen.getByRole("list")).getAllByRole("link");
     expect(links.map((link) => link.textContent)).toEqual(["Ночной вокзал", "Осенний сад"]);
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
