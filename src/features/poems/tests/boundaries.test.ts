@@ -44,7 +44,8 @@ describe("poems feature boundaries", () => {
 
   // implements FR-6 of add-author-poems
   it("never redirects, so no visitor is sent to sign in", () => {
-    expect(filesMatching(poemsFiles, /import\s*\{[^}]*\bredirect\b[^}]*\}\s*from ["']next\/navigation["']/)).toEqual([]);
+    // Any mention, not only a named import: `import * as navigation` would slip past an import pattern.
+    expect(filesMatching(poemsFiles, /\bredirect\b/)).toEqual([]);
   });
 
   // implements NFR-2 of add-author-poems
