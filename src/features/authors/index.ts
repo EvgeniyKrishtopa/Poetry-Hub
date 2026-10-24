@@ -8,5 +8,6 @@ export { AuthorPage } from "./components/AuthorPage/AuthorPage";
 export { AuthorsNavLink } from "./components/AuthorsNavLink/AuthorsNavLink";
 export { getPublicAuthorName } from "./dal/public-author-name";
 export { AUTHOR_EDITOR_PATH, AUTHORS_PATH } from "./model/author.constants";
+export { authorPagePath } from "./model/author-page-path";
 export { PAGE_TITLES as AUTHORS_PAGE_TITLES } from "./model/author-messages";
 export type { PublicAuthorNameResult } from "./model/author.types";

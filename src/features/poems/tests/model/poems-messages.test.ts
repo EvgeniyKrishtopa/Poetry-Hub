@@ -1,0 +1,24 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  AUTHOR_POEMS_LINK_LABEL,
+  formatGenreLine,
+  getIllustrationAlt,
+  NO_POEMS_TEXT,
+  POEMS_PAGE_TITLE,
+} from "../../model/poems-messages";
+
+describe("poems messages", () => {
+  // implements NFR-7 of add-author-poems
+  it("match the proposal's UI copy table verbatim", () => {
+    expect(AUTHOR_POEMS_LINK_LABEL).toBe("Произведения автора");
+    expect(NO_POEMS_TEXT).toBe("У автора пока ещё нет публикаций.");
+    expect(POEMS_PAGE_TITLE).toBe("Произведения");
+  });
+
+  // implements FR-4, NFR-7 of add-author-poems
+  it("build the illustration alt text and the genre line", () => {
+    expect(getIllustrationAlt("Осенний сад")).toBe("Иллюстрация: Осенний сад");
+    expect(formatGenreLine("Лирика")).toBe("Жанр: Лирика");
+  });
+});
