@@ -10,7 +10,7 @@ per real page; their trail logic lands in group 5.
 
 ## 1. Cache and race protection on the existing pages (no new visuals) <!-- judgement-heavy -->
 
-- [ ] 1.1 (FR-11, FR-12) Lock the error screen's retry and refresh page and trail together (design
+- [x] 1.1 (FR-11, FR-12) Lock the error screen's retry and refresh page and trail together (design
   D11): `src/app/error.tsx` runs `startTransition(() => { router.refresh(); reset(); })` and
   disables «Повторить» while pending; `RootErrorProps` gains `reset`.
   - Verify with `src/app/tests/error.test.tsx` (mocked `useRouter`; implements FR-11 of
@@ -20,7 +20,7 @@ per real page; their trail logic lands in group 5.
     once the attempt settles with the error screen still shown, the button is enabled and a click
     refreshes again. Update the existing FR-4 case (it asserted one `retry` call) to the new
     contract in route-states' modified FR-4.
-- [ ] 1.2 (FR-12) Memoize the per-request reads (design D12): wrap `getPublicAuthor` in
+- [x] 1.2 (FR-12) Memoize the per-request reads (design D12): wrap `getPublicAuthor` in
   `src/features/authors/dal/public-authors.ts` with React's `cache` (`getAuthorPoem` gets the
   same wrapper in task 3.2, where it is created).
   - Verify with `src/features/authors/tests/dal/public-authors.test.ts` (implements FR-12 of
@@ -29,7 +29,7 @@ per real page; their trail logic lands in group 5.
     `cache` doesn't memoize): two `getPublicAuthor(id)` calls query Supabase once and return the
     same result; `getPublicAuthorName` reuses that read; a failed read is returned to both callers.
     The existing public-authors cases still pass.
-- [ ] 1.3 (FR-14) Keep the public reads' failure lifetime and record the per-request read rule
+- [x] 1.3 (FR-14) Keep the public reads' failure lifetime and record the per-request read rule
   (design D12, D14, revised 2026-10-24 after the probe): `listPublicAuthors` and
   `cachedPublicAuthor` keep returning `unavailable` with `cacheLife("seconds")`. Record ADR 0008
   with the `record-decision` skill (a public read that a page and its breadcrumb trail both call
