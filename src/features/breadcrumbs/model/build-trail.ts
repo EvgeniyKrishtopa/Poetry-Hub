@@ -32,9 +32,14 @@ export function buildTrail(match: RouteMatch, authorName?: PublicAuthorNameResul
   if (match.kind === "static") return { kind: "shown", items: [HOME_ITEM, ...match.items] };
 
   if (authorName?.ok === false && authorName.reason === "not-found") return NO_TRAIL;
+  // A switch over the reasons, not a check of `ok` alone: a new failure reason falls through to the poem
+  // title below and fails to compile until it gets its own rule here.
   if (poem?.ok === false) {
-    if (authorName?.ok === false) return shown([{ kind: "current", label: BREADCRUMB_LABELS.authorFallback }]);
-    return NO_TRAIL;
+    switch (poem.reason) {
+      case "not-found":
+        if (authorName?.ok === false) return shown([{ kind: "current", label: BREADCRUMB_LABELS.authorFallback }]);
+        return NO_TRAIL;
+    }
   }
 
   const label = authorLabel(authorName);
