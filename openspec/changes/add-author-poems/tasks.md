@@ -47,20 +47,20 @@ per real page; their trail logic lands in group 5.
 
 ## 2. Home: welcome banner, remove the search and mock poem list (UI) <!-- isolated -->
 
-- [ ] 2.1 (FR-9, NFR-5) Restyle `src/features/home/components/HomeGreeting/HomeGreeting.tsx` as
+- [x] 2.1 (FR-9, NFR-5) Restyle `src/features/home/components/HomeGreeting/HomeGreeting.tsx` as
   the banner (design D8): a `section` with the surface background, border, and rounded corners
   around the same h1 and paragraphs, values from the approved mockup, token utilities only.
   - Verify with `src/features/home/tests/components/HomeGreeting.test.tsx`: the existing cases
     still pass (heading, paragraphs, line breaks, literal markup), plus the banner container
     carries `bg-surface`, a `border` utility, and a rounded utility (implements FR-9 of
     add-author-poems).
-- [ ] 2.2 (FR-9, FR-10) Rewrite `src/app/(public)/page.tsx` to render only the banner (design D8):
+- [x] 2.2 (FR-9, FR-10) Rewrite `src/app/(public)/page.tsx` to render only the banner (design D8):
   keep `"use cache"`, `cacheLife("minutes")`, `cacheTag(CONTENTFUL_CACHE_TAG)`; drop the
   TanStack prefetch and `HydrationBoundary`.
   - Verify: `npm run typecheck && npm run lint` pass; the home page test (add one under
     `src/app/tests/` if none renders the page) shows the h1 and no `searchbox`, no «Очистить»
     button, and no list in `main` (implements FR-9 of add-author-poems).
-- [ ] 2.3 (FR-10) Delete the old poems code: `src/features/poems/api/`,
+- [x] 2.3 (FR-10) Delete the old poems code: `src/features/poems/api/`,
   `components/{PoemSearch,PoemList,PoemCard}`, `model/{filter-poems,poems-ui.store,poem.types}`,
   `index.ts`, and their tests (the folder is empty afterwards; group 3 recreates it). Delete
   `tests/web-qa-scenarios/home-search-filter.spec.ts`; update `home-renders.spec.ts` to assert the
@@ -73,7 +73,7 @@ per real page; their trail logic lands in group 5.
 
 ## 3. Poems model and mock data (no new visuals) <!-- isolated -->
 
-- [ ] 3.1 (FR-4, FR-7, NFR-3, NFR-7) Add `src/features/poems/model/` per design D1/D3/D5:
+- [x] 3.1 (FR-4, FR-7, NFR-3, NFR-7) Add `src/features/poems/model/` per design D1/D3/D5:
   `poem.types.ts`, `poem.constants.ts`, `poems-messages.ts` (every UI copy string;
   `getIllustrationAlt`, `formatGenreLine`), `poem-paths.ts` (on `authorPagePath`, newly
   exported from `@/features/authors`), `compare-poems.ts`, `format-published-date.ts`.
@@ -81,7 +81,7 @@ per real page; their trail logic lands in group 5.
     2026 г.»; `2026-01-01` → «1 января 2026 г.» with `process.env.TZ` behind UTC, implements
     FR-4), `compare-poems` (newest first), `poem-paths`, `poems-messages` helpers (text equals
     the copy table, NFR-7).
-- [ ] 3.2 (FR-5, FR-7, FR-12, NFR-3) Add `dal/mock-poems.ts` (four original Russian placeholder poems, design
+- [x] 3.2 (FR-5, FR-7, FR-12, NFR-3) Add `dal/mock-poems.ts` (four original Russian placeholder poems, design
   D9), `dal/mock-poem-count.ts` (design D2), `dal/author-poems.ts` (`listAuthorPoems`,
   `getAuthorPoem`, design D3; `getAuthorPoem` wrapped in React's `cache`, design D12), and `public/mock-poems/<id>.svg` (four 800 × 450 abstract
   illustrations, no text, no scripts, no external references).
@@ -93,7 +93,7 @@ per real page; their trail logic lands in group 5.
     a `cache`-memo case for `getAuthorPoem` (two calls, one lookup; FR-12), and
     `tests/dal/mock-poems.test.ts` (four poems, unique lowercase-slug ids, valid ISO dates not
     after 2026-10-24, every `illustrationSrc` file exists under `public/`, no `<script` in any SVG).
-- [ ] 3.3 (NFR-1, NFR-2, NFR-3) Add the static test `src/features/poems/tests/boundaries.test.ts`:
+- [x] 3.3 (NFR-1, NFR-2, NFR-3) Add the static test `src/features/poems/tests/boundaries.test.ts`:
   no `"use client"` and no `@/features/auth` / `@/shared/lib/supabase` import under
   `src/features/poems/` (NFR-1); no `@/features/poems` import under `src/features/authors/`
   (NFR-2, already true before group 4 adds the slot); `dal/mock-poems` and `dal/mock-poem-count`
