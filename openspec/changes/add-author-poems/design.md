@@ -159,6 +159,12 @@ and three line blocks; poem: an illustration block at the illustration's aspect 
 block, three line blocks). Params are awaited only inside the boundary, so both routes are
 partially prerendered (NFR-4).
 
+Unlike `AuthorPage`, both skeletons also hold a `role="status"` `sr-only` «Загрузка…»
+(`POEMS_LOADING_LABEL`), as `ui-plan.md`'s poem list row and the root `loading.tsx` do, so a
+screen reader hears that the page is loading (user decision, 2026-10-24, group 4). Rejected:
+skeleton blocks only, as on the author page (silent for screen readers). The author page's own
+skeleton stays unchanged in this change.
+
 ### D5 — Views (FR-2, FR-3, FR-4, NFR-6)
 
 - `AuthorPoemList({ authorId, poems })`: h1 «Произведения» (`text-4xl font-bold tracking-tight`,

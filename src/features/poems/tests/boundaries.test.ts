@@ -42,6 +42,12 @@ describe("poems feature boundaries", () => {
     expect(filesMatching(poemsFiles, /from ["']@\/shared\/lib\/supabase(\/[^"']*)?["']/)).toEqual([]);
   });
 
+  // implements FR-6 of add-author-poems
+  it("never redirects, so no visitor is sent to sign in", () => {
+    // Any mention, not only a named import: `import * as navigation` would slip past an import pattern.
+    expect(filesMatching(poemsFiles, /\bredirect\b/)).toEqual([]);
+  });
+
   // implements NFR-2 of add-author-poems
   it("is never imported by the authors feature, so there is no cycle", () => {
     expect(filesMatching(sourceFiles(AUTHORS_DIR), /from ["']@\/features\/poems(\/[^"']*)?["']/)).toEqual([]);

@@ -103,13 +103,13 @@ per real page; their trail logic lands in group 5.
 
 ## 4. Poem pages and the author page entry (UI) <!-- judgement-heavy -->
 
-- [ ] 4.1 (FR-2, FR-3, FR-4, NFR-5, NFR-6) Add the sync views `components/AuthorPoemList/` and
+- [x] 4.1 (FR-2, FR-3, FR-4, NFR-5, NFR-6) Add the sync views `components/AuthorPoemList/` and
   `components/PoemView/` (design D5), styled from the approved mockup.
   - Verify with `tests/components/AuthorPoemList.test.tsx` (h1 «Произведения»; links in order with
     hrefs; empty text and no list; implements FR-2, FR-3, NFR-6) and
     `tests/components/PoemView.test.tsx` (image alt first, then h1, paragraphs with kept line
     breaks, literal markup, footer `<time datetime>` and «Жанр: …»; implements FR-4, NFR-6).
-- [ ] 4.2 (FR-2, FR-3, FR-4, FR-5, FR-6) Add `AuthorPoemsPage` + `AuthorPoemsPageContent` and `PoemPage` +
+- [x] 4.2 (FR-2, FR-3, FR-4, FR-5, FR-6) Add `AuthorPoemsPage` + `AuthorPoemsPageContent` and `PoemPage` +
   `PoemPageContent` (design D4) with their skeletons, and the routes
   `src/app/(public)/authors/[id]/poems/page.tsx` and `…/poems/[poemId]/page.tsx`. Add the slot
   pages `src/app/@breadcrumbs/authors/[id]/poems/page.tsx` and `…/poems/[poemId]/page.tsx`
@@ -119,7 +119,7 @@ per real page; their trail logic lands in group 5.
     `tests/components/PoemPageContent.test.tsx` (mocked `@/features/authors` and DAL): author
     not-found → `notFound()`; unavailable → throws; poem not-found → `notFound()`; ok → the view
     (implements FR-5). `app/tests/breadcrumbs-slot.test.ts` passes unchanged.
-- [ ] 4.3 (FR-1, FR-6, NFR-2) Add `components/AuthorPoemsEntry/` (design D5) and the `poems` slot
+- [x] 4.3 (FR-1, FR-6, NFR-2) Add `components/AuthorPoemsEntry/` (design D5) and the `poems` slot
   through `AuthorPage` → `AuthorPageContent` → `AuthorProfileView` (design D6); the author route
   composes `<AuthorPoemsEntry authorId={id} />`. Export from `src/features/poems/index.ts` only
   `AuthorPoemsEntry`, `AuthorPoemsPage`, `PoemPage`.
@@ -127,7 +127,7 @@ per real page; their trail logic lands in group 5.
     автора» with the list href; 0 → the empty text, no link; implements FR-1) and an added case
     in `src/features/authors/tests/components/AuthorPage.test.tsx` (the slot renders after the
     about section, and after the photo when about is empty).
-- [ ] 4.4 (FR-6) Verify public access with `tests/components/public-access.test.tsx`: with no
+- [x] 4.4 (FR-6) Verify public access with `tests/components/public-access.test.tsx`: with no
   session, auth, or Supabase module mocked or set up, `AuthorPoemsEntry`, `AuthorPoemsPageContent`,
   and `PoemPageContent` render their content, call no `redirect`, and give the same output on two
   renders (implements FR-6 of add-author-poems); the boundaries test (3.3) also finds no import
