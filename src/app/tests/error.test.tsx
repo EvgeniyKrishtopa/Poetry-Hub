@@ -121,6 +121,8 @@ describe("RootError", () => {
 
     await user.click(retryButton());
     await user.click(retryButton());
+    // The key press only means something while the disabled button still holds focus.
+    expect(retryButton()).toHaveFocus();
     await user.keyboard("{Enter}");
 
     expect(refresh).toHaveBeenCalledTimes(1);
