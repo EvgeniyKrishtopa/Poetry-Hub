@@ -1,0 +1,2 @@
+full
+# more than one module: yes (poems, authors, breadcrumbs, home, app routes); data schema: no (poems are in-code mocks, no table); contract other code depends on: yes (AuthorPage gains a poems slot prop, the poems public API is replaced, breadcrumbs gains two dynamic routes)
