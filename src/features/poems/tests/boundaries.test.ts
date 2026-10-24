@@ -42,6 +42,11 @@ describe("poems feature boundaries", () => {
     expect(filesMatching(poemsFiles, /from ["']@\/shared\/lib\/supabase(\/[^"']*)?["']/)).toEqual([]);
   });
 
+  // implements FR-6 of add-author-poems
+  it("never redirects, so no visitor is sent to sign in", () => {
+    expect(filesMatching(poemsFiles, /import\s*\{[^}]*\bredirect\b[^}]*\}\s*from ["']next\/navigation["']/)).toEqual([]);
+  });
+
   // implements NFR-2 of add-author-poems
   it("is never imported by the authors feature, so there is no cycle", () => {
     expect(filesMatching(sourceFiles(AUTHORS_DIR), /from ["']@\/features\/poems(\/[^"']*)?["']/)).toEqual([]);
