@@ -39,3 +39,16 @@ test("an author's poems are reachable from the author page and the trail leads b
   await expect(page).toHaveURL(POEMS_PATH);
   await expect(main.getByRole("heading", { level: 1, name: "Произведения" })).toBeVisible();
 });
+
+// implements FR-6 of add-author-poems: a signed-out visitor opens a poem page directly, with no redirect.
+test("a signed-out visitor opens a poem page directly", {
+  tag: ["@add-author-poems"],
+}, async ({ page }) => {
+  const response = await page.goto(POEM_PATH);
+
+  expect(response?.ok()).toBe(true);
+  expect(response?.request().redirectedFrom()).toBeNull();
+  await expect(page).toHaveURL(POEM_PATH);
+  await expect(page.getByRole("banner").getByRole("link", { name: "Войти" })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("heading", { level: 1, name: "Осенний сад" })).toBeVisible();
+});
