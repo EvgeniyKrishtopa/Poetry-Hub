@@ -26,7 +26,7 @@ PR. The column drop (group 3) lands with the code that stops reading it, never b
 
 ## 2. Contact dialog auto-close (no new visuals) <!-- isolated -->
 
-- [ ] 2.1 (FR-1) Add `SENT_AUTO_CLOSE_MS = 3000` to `contact.constants.ts` and the `isOpen`
+- [x] 2.1 (FR-1) Add `SENT_AUTO_CLOSE_MS = 3000` to `contact.constants.ts` and the `isOpen`
   state and timer effect to `ContactDialog` (design D1): `open()` sets `isOpen`;
   `handleClosed` clears it first, before its `if (!sent) return;`; the effect closes the dialog
   through `dialogRef` 3 s after `sent && isOpen` and clears the timer on cleanup.

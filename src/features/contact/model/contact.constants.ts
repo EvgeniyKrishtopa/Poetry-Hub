@@ -9,6 +9,9 @@ export const EMAIL_MAX_LENGTH = 254;
 /** Longest message accepted, counted after trimming; the message itself is optional. */
 export const MESSAGE_MAX_LENGTH = 300;
 
+/** How long the thank-you view stays in the open dialog before the dialog closes by itself. */
+export const SENT_AUTO_CLOSE_MS = 3000;
+
 /** Name of the hidden field that only bots fill in. */
 export const HONEYPOT_FIELD = "website";
 
