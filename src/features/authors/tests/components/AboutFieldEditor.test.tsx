@@ -114,7 +114,8 @@ describe("AboutFieldEditor", () => {
     await user.click(screen.getByRole("button", { name: "Сохранить" }));
 
     expect(saveAboutAction).toHaveBeenCalledWith({ about: "**Поэт**", align: "center" });
-    const field = screen.getByRole("textbox", { name: "О себе" });
+    // The field comes back only once the save's answer arrives; under a loaded full run that can be after the click.
+    const field = await screen.findByRole("textbox", { name: "О себе" });
     expect(field).toHaveAttribute("aria-invalid", "true");
     expect(field).toHaveAccessibleDescription(/Не более 1000 символов\./);
   });
