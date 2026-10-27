@@ -5,8 +5,6 @@ export type NameField = "first_name" | "last_name";
 /** The four editor fields; each is saved and deleted on its own. */
 export type ProfileField = NameField | "about" | "photo";
 
-export type AboutAlign = "left" | "center" | "right";
-
 /** Why a profile read or write failed, in the terms the editor shows (FR-9). */
 export type ProfileFailure = "unauthenticated" | "unavailable" | "unknown";
 
@@ -33,7 +31,6 @@ export interface AuthorProfile {
   readonly firstName: string | null;
   readonly lastName: string | null;
   readonly about: string | null;
-  readonly aboutAlign: AboutAlign;
   readonly photoUrl: string | null;
 }
 
@@ -43,7 +40,6 @@ export interface PublicAuthor {
   readonly firstName: string;
   readonly lastName: string;
   readonly about: string | null;
-  readonly aboutAlign: AboutAlign;
   readonly photoUrl: string | null;
 }
 
@@ -53,7 +49,6 @@ export type ProfileRowPatch = Readonly<
     first_name: string | null;
     last_name: string | null;
     about: string | null;
-    about_align: AboutAlign;
   }>
 >;
 

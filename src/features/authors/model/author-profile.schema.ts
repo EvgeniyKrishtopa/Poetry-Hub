@@ -4,8 +4,6 @@ import { VALIDATION_MESSAGES } from "./author-messages";
 import { ABOUT_MAX_LENGTH, NAME_MAX_LENGTH, PHOTO_MAX_BYTES } from "./author.constants";
 import { trimmedLength } from "./trimmed-length";
 
-const alignSchema = z.enum(["left", "center", "right"], { error: VALIDATION_MESSAGES.invalidAlign });
-
 /** Trimmed, non-empty, and at most `max` code points: what is stored is the trimmed value (FR-8). */
 function trimmedText(max: number, tooLongMessage: string) {
   return z
@@ -20,9 +18,9 @@ export const saveNameSchema = z.object({
   value: trimmedText(NAME_MAX_LENGTH, VALIDATION_MESSAGES.nameTooLong),
 });
 
+// A plain (stripping) object: any other key in the request, such as a stale `align`, never reaches the write.
 export const saveAboutSchema = z.object({
   about: trimmedText(ABOUT_MAX_LENGTH, VALIDATION_MESSAGES.aboutTooLong),
-  align: alignSchema,
 });
 
 // Only the size is checked here; the type is checked by content in `validatePhotoFile` (design D4).
@@ -45,7 +43,6 @@ export const profileRowSchema = z.object({
   first_name: z.string().nullable(),
   last_name: z.string().nullable(),
   about: z.string().nullable(),
-  about_align: alignSchema,
   photo_path: z.string().nullable(),
 });
 

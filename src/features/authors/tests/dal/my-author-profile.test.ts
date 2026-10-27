@@ -19,11 +19,10 @@ const ROW = {
   first_name: "Анна",
   last_name: "Ахматова",
   about: "## Поэт",
-  about_align: "center",
   photo_path: PHOTO_PATH,
 };
 
-const EMPTY_ROW = { ...ROW, first_name: null, last_name: null, about: null, about_align: "left", photo_path: null };
+const EMPTY_ROW = { ...ROW, first_name: null, last_name: null, about: null, photo_path: null };
 
 let supabase: FakeSupabase;
 
@@ -51,7 +50,6 @@ describe("getMyAuthorProfile", () => {
         firstName: "Анна",
         lastName: "Ахматова",
         about: "## Поэт",
-        aboutAlign: "center",
         photoUrl: `${PUBLIC_URL_BASE}/${PHOTO_PATH}`,
       },
     });
@@ -131,7 +129,7 @@ describe("getMyAuthorProfile", () => {
 
   it("returns unknown, logged by name, for a malformed row", async () => {
     supabase.onRpc("my_author_profile_id", okResponse(PROFILE_ID));
-    supabase.queueQuery(okResponse({ ...ROW, about_align: "justify" }));
+    supabase.queueQuery(okResponse({ ...ROW, about: 42 }));
 
     await expect(getMyAuthorProfile()).resolves.toEqual({ ok: false, failure: "unknown" });
     expect(console.error).toHaveBeenCalledWith("[authors] read own profile failed: ZodError");

@@ -16,17 +16,9 @@ function nameError(value: unknown): string | undefined {
   return result.success ? undefined : result.error.issues[0]?.message;
 }
 
-function aboutSchemaError(input: { about: unknown; align: unknown }): string | undefined {
-  const result = saveAboutSchema.safeParse(input);
-  return result.success ? undefined : result.error.issues[0]?.message;
-}
-
 function aboutError(about: unknown): string | undefined {
-  return aboutSchemaError({ about, align: "left" });
-}
-
-function alignError(align: unknown): string | undefined {
-  return aboutSchemaError({ about: "О себе", align });
+  const result = saveAboutSchema.safeParse({ about });
+  return result.success ? undefined : result.error.issues[0]?.message;
 }
 
 function fileOfSize(size: number): File {
@@ -87,18 +79,16 @@ describe("saveAboutSchema", () => {
   it("trims before counting and stores the trimmed value", () => {
     const about = "а".repeat(1000);
 
-    expect(saveAboutSchema.parse({ about: `\n  ${about}  \n`, align: "center" })).toEqual({
-      about,
-      align: "center",
-    });
+    expect(saveAboutSchema.parse({ about: `\n  ${about}  \n` })).toEqual({ about });
   });
 
   it("rejects a blank about as required", () => {
     expect(aboutError("   ")).toBe("Обязательное поле.");
   });
 
-  it.each(["justify", "", undefined])("rejects the alignment %j", (align) => {
-    expect(alignError(align)).toBe("Недопустимое выравнивание.");
+  // implements FR-4 of refine-author-page-and-contact
+  it("drops any field other than about", () => {
+    expect(saveAboutSchema.parse({ about: "Текст", align: "justify" })).toEqual({ about: "Текст" });
   });
 });
 

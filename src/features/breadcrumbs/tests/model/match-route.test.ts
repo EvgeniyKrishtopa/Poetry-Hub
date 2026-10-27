@@ -36,9 +36,9 @@ describe("matchRoute", () => {
     expect(matchRoute(["authors", ANNA_ID])).toEqual({ kind: "author", id: ANNA_ID });
   });
 
-  // implements FR-8 of add-author-poems
-  it("matches an author's poem list by the author id", () => {
-    expect(matchRoute(["authors", ANNA_ID, "poems"])).toEqual({ kind: "author-poems", authorId: ANNA_ID });
+  // implements FR-6 of refine-author-page-and-contact
+  it("matches nothing for the removed poem list route, so it gets no trail", () => {
+    expect(matchRoute(["authors", ANNA_ID, "poems"])).toEqual({ kind: "none" });
   });
 
   // implements FR-8 of add-author-poems

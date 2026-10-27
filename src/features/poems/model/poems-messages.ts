@@ -1,12 +1,9 @@
 // Every string of the proposal's UI copy table, verbatim and in Russian (NFR-7).
 
-/** The poem list's heading; also the breadcrumb item for the list. */
+/** The heading of the author page's poems section. */
 export const POEMS_PAGE_TITLE = "Произведения";
 
-/** The author page's link to the poem list. */
-export const AUTHOR_POEMS_LINK_LABEL = "Произведения автора";
-
-/** Shown on the author page and the poem list when the author has no poems. */
+/** Shown in the author page's poems section when the author has no poems. */
 export const NO_POEMS_TEXT = "У автора пока ещё нет публикаций.";
 
 /**

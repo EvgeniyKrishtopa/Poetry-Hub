@@ -1,0 +1,2 @@
+full
+# more than one module: yes (contact, authors, poems, breadcrumbs, app routes, supabase); data schema: yes (drops author_profiles.about_align, new seed); contract other code depends on: yes (saveAboutAction input loses align, poems public API loses authorPoemsPath/POEMS_PAGE_TITLE/AuthorPoemsPage, route /authors/[id]/poems removed)

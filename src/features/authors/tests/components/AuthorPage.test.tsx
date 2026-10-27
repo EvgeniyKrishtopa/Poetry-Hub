@@ -32,8 +32,7 @@ const ANNA: PublicAuthor = {
   id: PROFILE_ID,
   firstName: "Anna",
   lastName: "Akhmatova",
-  about: "## Poet",
-  aboutAlign: "center",
+  about: "## Poet\n\n- first\n- second",
   photoUrl: PHOTO_URL,
 };
 
@@ -46,14 +45,15 @@ afterEach(() => {
 });
 
 describe("AuthorProfileView", () => {
-  // implements FR-14, NFR-8 of add-author-profiles
-  it("renders the full-name h1, the photo with its alt, and the centred about on a lang=ru root", () => {
+  // implements FR-14, NFR-8 of add-author-profiles; FR-3 of refine-author-page-and-contact
+  it("renders the full-name h1, the photo with its alt, and the left-aligned about on a lang=ru root", () => {
     const { container } = render(<AuthorProfileView author={ANNA} ownerLink={null} poems={null} />);
 
     expect(screen.getByRole("heading", { level: 1, name: "Anna Akhmatova" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Фото: Anna Akhmatova" })).toBeInTheDocument();
     const subheading = screen.getByRole("heading", { level: 2, name: "Poet" });
-    expect(subheading.closest(".text-center")).not.toBeNull();
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect(subheading.closest(".text-center, .text-right")).toBeNull();
     expect(container.firstElementChild).toHaveAttribute("lang", "ru");
   });
 

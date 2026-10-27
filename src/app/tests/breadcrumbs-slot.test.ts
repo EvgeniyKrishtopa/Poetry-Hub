@@ -36,6 +36,14 @@ describe("@breadcrumbs slot", () => {
     expect(slotPages).toEqual(realPages);
   });
 
+  // implements NFR-5 of add-breadcrumbs
+  // implements FR-6 of refine-author-page-and-contact
+  it("keeps the poem page and has no poem list page, in either set", () => {
+    expect(realPages).toContain("authors/[id]/poems/[poemId]");
+    expect(realPages).not.toContain("authors/[id]/poems");
+    expect(slotPages).not.toContain("authors/[id]/poems");
+  });
+
   // implements FR-6 of add-breadcrumbs
   it("has a default and no catch-all folder, so a URL with no page keeps its HTTP 404", () => {
     const entries = readdirSync(SLOT_DIR, { recursive: true, encoding: "utf8" });

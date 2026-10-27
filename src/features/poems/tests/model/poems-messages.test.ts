@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  AUTHOR_POEMS_LINK_LABEL,
   formatGenreLine,
   getIllustrationAlt,
   NO_POEMS_TEXT,
@@ -12,7 +11,6 @@ import {
 describe("poems messages", () => {
   // implements NFR-7 of add-author-poems
   it("match the proposal's UI copy table verbatim", () => {
-    expect(AUTHOR_POEMS_LINK_LABEL).toBe("Произведения автора");
     expect(NO_POEMS_TEXT).toBe("У автора пока ещё нет публикаций.");
     expect(POEMS_PAGE_TITLE).toBe("Произведения");
   });

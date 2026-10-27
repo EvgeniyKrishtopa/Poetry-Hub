@@ -91,3 +91,17 @@ Archived at `openspec/changes/archive/2026-10-27-add-author-poems/`.
 - **Verified instead:** every case passed by hand in Gate 3 on 2026-10-27, recorded in commit 86d4552's body. FR-13 ran on `next dev` with the REST container paused, using a second public author made temporarily from the local QA row (last name set, then reset to NULL). FR-11, FR-12 and FR-14 ran on a local production build, with the REST container stopped or paused, and requests counted in the Kong access log.
 - **Decision:** user, 2026-10-27 (Gate 4/5 finding CR-06/CR-13 on group 6).
 - **Status:** open. To record them: add a second public author to the local seed data, and write the cases as `@local-stack` scenarios that pause the REST container and run against a production build. Both need a `tests.integration` health check, so the replay doesn't exclude them.
+
+## refine-author-page-and-contact
+
+Archived at `openspec/changes/archive/2026-10-27-refine-author-page-and-contact/`.
+
+### refine-author-page-and-contact · 5.4 — contact dialog flows not recorded as scenarios
+
+- **State:** skipped
+- **Requirement:** FR-1
+- **What is missing:** recorded `@playwright/test` scenarios for the contact dialog's auto-close (closes 3 s after the thank-you view, focus on «Связаться с нами», empty fields on reopen) and for «Закрыть» before 3 s cancelling it. The author page flows are recorded (`tests/web-qa-scenarios/author-page-sections.spec.ts`, plus the updated `author-poems-reading-path.spec.ts`).
+- **Why:** both flows submit the contact form, and a scenario that touches a form must wait for hydration (web-qa recording rule 2), but the app has no hydration marker yet. Each successful send also reaches the real Telegram API, so the scenario would be `@external`.
+- **Verified instead:** Gate 3 on 2026-10-27 passed both flows by hand: the thank-you view appeared at 986 ms and the dialog closed at about 3 995 ms with focus on «Связаться с нами»; «Закрыть» at about 0.85 s closed it at once, and a reopen at about 2.1 s stayed open past 12 s with an empty form. Unit tests in `src/features/contact/tests/components/ContactDialog.test.tsx` cover the timer cases.
+- **Decision:** user, 2026-10-27 (Gate 3 recording question).
+- **Status:** open. To record them: add the hydration marker (`PROGRESS.md` follow-up on the contact dialog scenarios), then record both flows as `@external` scenarios that wait for hydration before filling the form.
