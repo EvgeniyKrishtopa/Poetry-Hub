@@ -151,7 +151,7 @@ per real page; their trail logic lands in group 5.
 
 ## 6. Docs and verification <!-- judgement-heavy -->
 
-- [ ] 6.1 (FR-10) Update `docs/architecture.md` (the poems feature's new role and folders, the
+- [x] 6.1 (FR-10) Update `docs/architecture.md` (the poems feature's new role and folders, the
   two routes and their slot pages, `poems` → `authors` and `breadcrumbs` → `poems` imports),
   `docs/state-management.md` (no feature uses TanStack Query today; the conventions stay for the
   next one; the poems mock DAL needs no cache scope until a database replaces it; the "Supabase public
@@ -161,13 +161,13 @@ per real page; their trail logic lands in group 5.
   28's home overflow note from `PROGRESS.md` with the progress script.
   - Verify: the docs name no deleted file (`grep` for `PoemSearch`, `PoemList`, `PoemCard`,
     `poems-ui.store` under `docs/` finds nothing).
-- [ ] 6.2 (NFR-4) Run `npm run build` with no Supabase or Contentful variables set and compare its
+- [x] 6.2 (NFR-4) Run `npm run build` with no Supabase or Contentful variables set and compare its
   route list with `main`'s: exactly `/authors/[id]/poems` and `/authors/[id]/poems/[poemId]`
   added, both with the same render-mode marker as `/authors/[id]`, no route newly fully dynamic.
   Record the result in the group's commit body.
-- [ ] 6.3 (NFR-5) Search the new and changed component files for hex, `rgb(`, `hsl(` literals and
+- [x] 6.3 (NFR-5) Search the new and changed component files for hex, `rgb(`, `hsl(` literals and
   `text-[`, `bg-[`, `border-[` classes; expect none.
-- [ ] 6.4 (FR-11, FR-12, FR-13, FR-14) In the Gate 3 browser pass, check the race guarantees and save the
+- [x] 6.4 (FR-11, FR-12, FR-13, FR-14) In the Gate 3 browser pass, check the race guarantees and save the
   passing flows as `@playwright/test` scenarios under `tests/web-qa-scenarios/`: FR-13's two cases,
   each for directory → author and list → poem, with the reads slowed down (a throttled network
   in the browser): two clicks before the URL changes, and Back plus the other link while the
@@ -192,6 +192,6 @@ per real page; their trail logic lands in group 5.
   - Where (user decision, 2026-10-24): the FR-12 and FR-14 checks (anything that depends on the
     cache) run on a local production build, `npm run build && npm run start`, each from a fresh
     server start so no earlier entry is cached; the other checks run on the dev server as usual.
-- [ ] 6.5 (NFR-1, NFR-2, NFR-3, NFR-4) Run the full validation: `npm run typecheck && npm run lint &&
+- [x] 6.5 (NFR-1, NFR-2, NFR-3, NFR-4) Run the full validation: `npm run typecheck && npm run lint &&
   npm run test:coverage && npm run build && npm run knip` (the boundary tests close NFR-1..3,
   the build closes NFR-4).

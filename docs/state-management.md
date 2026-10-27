@@ -13,7 +13,9 @@ Read before fetching data, adding a store, or passing data from a Server Compone
 
 ## TanStack Query conventions
 
-- Define a key factory per feature (`poemsKeys`) and export `queryOptions(...)` objects; hooks wrap those options.
+No feature uses TanStack Query today: the home page's poem list was its only consumer and was removed in `add-author-poems`. `app/providers.tsx` still mounts the client, and these conventions stay for the next feature that fetches on the client.
+
+- Define a key factory per feature (`<name>Keys`) and export `queryOptions(...)` objects; hooks wrap those options.
 - The same `queryOptions` are used for server prefetching (`prefetchQuery` + `HydrationBoundary` in a Server Component page) and for client hooks.
 - Use `getQueryClient()` from `@/shared/lib/query-client` — per-request on the server, singleton in the browser.
 - Fetchers in `*.api.ts` are plain async functions returning typed data; they know nothing about React.
@@ -22,6 +24,7 @@ Read before fetching data, adding a store, or passing data from a Server Compone
 
 - Data that needs a secret and is consumed only by Server Components goes through a module in `features/<name>/dal/` (e.g. `dal/home-greeting.ts` — the folder names the role, so no `.dal.ts` suffix): starts with `import "server-only"`, validates the response with a Zod schema from `model/`, and returns a typed result. Never wrap it in `queryOptions` or client hooks — a client refetch would need the secret.
 - The page awaits the DAL and passes plain values to synchronous presentational components (Vitest can't render async Server Components).
+- A mock DAL that reads no data and no clock needs no cache scope: `features/poems/dal/author-poems.ts` serves in-code placeholder poems and only memoizes `getAuthorPoem` per request with React's `cache` (page and trail share it). When a database replaces the mock, the DAL adds its own result-dependent scope and an `unavailable` reason, per the Supabase public reads below.
 
 ## Server caching (Cache Components)
 
