@@ -34,7 +34,7 @@ test("the public about text is left-aligned with list markers at the left edge",
 
   const heading = main.getByRole("heading", { level: 2, name: ABOUT_HEADING });
   await expect(heading).toBeVisible();
-  await expect(heading).not.toHaveCSS("text-align", /center|right|justify/);
+  await expect(heading).toHaveCSS("text-align", /^(start|left)$/);
 
   const aboutList = main.getByRole("listitem").filter({ hasText: "элегии" }).locator("xpath=..");
   await expect(aboutList).toHaveCSS("padding-left", "0px");
