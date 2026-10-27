@@ -36,7 +36,8 @@ describe("@breadcrumbs slot", () => {
     expect(slotPages).toEqual(realPages);
   });
 
-  // implements NFR-5 of add-breadcrumbs, FR-6 of refine-author-page-and-contact
+  // implements NFR-5 of add-breadcrumbs
+  // implements FR-6 of refine-author-page-and-contact
   it("keeps the poem page and has no poem list page, in either set", () => {
     expect(realPages).toContain("authors/[id]/poems/[poemId]");
     expect(realPages).not.toContain("authors/[id]/poems");

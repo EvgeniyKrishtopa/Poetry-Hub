@@ -11,8 +11,9 @@ const POEM_TITLES_NEWEST_FIRST = ["Утренний двор", "Ночной в�
 /** The poem page's trail, with no poem list item between the author and the poem. */
 const POEM_TRAIL = ["Главная", "Наши авторы", AUTHOR_NAME, POEM_TITLE];
 
-// implements FR-1, FR-4, FR-8 of add-author-poems and FR-5, FR-7 of refine-author-page-and-contact:
-// author page's poems section → poem, with the short trail, and back by the trail.
+// implements FR-1, FR-4, FR-8 of add-author-poems
+// implements FR-5, FR-7 of refine-author-page-and-contact
+// Author page's poems section → poem, with the short trail, and back by the trail.
 test("an author's poems are listed on the author page and the trail leads back", {
   tag: ["@add-author-poems", "@refine-author-page-and-contact"],
 }, async ({ page }) => {

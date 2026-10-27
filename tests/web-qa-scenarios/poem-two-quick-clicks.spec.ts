@@ -11,8 +11,9 @@ const NO_THROTTLING = -1;
 /** Several throttled round trips: the second navigation's page and trail. */
 const SETTLE_TIMEOUT_MS = 20_000;
 
-// implements FR-13 of add-author-poems and FR-5 of refine-author-page-and-contact: the last of two quick
-// clicks in the author page's poems section wins, and the first poem never shows.
+// implements FR-13 of add-author-poems
+// implements FR-5 of refine-author-page-and-contact
+// The last of two quick clicks in the author page's poems section wins, and the first poem never shows.
 test("two quick clicks in the author page's poems section end on the second poem", {
   tag: ["@add-author-poems", "@refine-author-page-and-contact"],
 }, async ({ page }) => {

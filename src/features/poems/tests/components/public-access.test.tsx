@@ -63,6 +63,7 @@ describe("public access to the poems views", () => {
   });
 
   // implements FR-6 of add-author-poems
+  // implements NFR-2 of refine-author-page-and-contact
   it.each(PUBLIC_VIEWS)(
     "%s renders its content with no session, without redirecting",
     async (_name, renderView, contentMarkup) => {

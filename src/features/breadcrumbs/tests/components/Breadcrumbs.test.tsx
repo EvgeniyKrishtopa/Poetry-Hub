@@ -91,7 +91,8 @@ describe("BreadcrumbsLoader", () => {
     expect(getAuthorPoem).not.toHaveBeenCalled();
   });
 
-  // implements FR-8, FR-12 of add-author-poems, FR-7 of refine-author-page-and-contact
+  // implements FR-8, FR-12 of add-author-poems
+  // implements FR-7 of refine-author-page-and-contact
   it("reads the author's name and the poem for a poem page", async () => {
     vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Анна Ахматова" });
     vi.mocked(getAuthorPoem).mockResolvedValue({
