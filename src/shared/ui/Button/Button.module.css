@@ -37,8 +37,3 @@
 .ghost:hover {
   background: var(--color-surface);
 }
-
-/* A toggle button's on state (`aria-pressed`), e.g. the about editor's alignment control. */
-.ghost[aria-pressed="true"] {
-  background: var(--color-surface);
-}
