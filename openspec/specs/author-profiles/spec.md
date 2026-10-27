@@ -56,7 +56,7 @@ Each user SHALL own at most one profile. Only its owner SHALL create or change i
 - **THEN** the request is rejected; the user reaches their own profile only through functions that resolve them from the session and return the profile id
 
 ### Requirement: Database integrity under direct writes (FR-5, NFR-2)
-The database SHALL enforce the profile rules even when the application is bypassed and its API is called with the publishable key and the owner's own session. It SHALL reject writes to a profile's id, owner, or creation time, a photo path outside the profile's own folder, and a name or about that is empty or whitespace-only.
+The database SHALL enforce the profile rules even when the application is bypassed and its API is called with the publishable key and the owner's own session. It SHALL reject writes to a profile's id, owner, or creation time, a photo path outside the profile's own folder, and a name or about that is empty or whitespace-only. `public.author_profiles` SHALL have no `about_align` column (refine-author-page-and-contact FR-4).
 
 #### Scenario: Pointing at another author's photo
 - **GIVEN** user A owns profile `<idA>` and user B owns `<idB>` with a stored photo
@@ -82,6 +82,11 @@ The database SHALL enforce the profile rules even when the application is bypass
 - **GIVEN** user A owns profile `<idA>`
 - **WHEN** A uploads directly through the storage API an object under `<idA>/` whose name is not `<uuid>.png` or `<uuid>.jpg` (for example `<idA>/page.html`, `<idA>/sub/<uuid>.png`, or a path with `..` segments)
 - **THEN** the upload is rejected, so the public photo bucket holds only files in the same format a profile's photo path allows
+
+#### Scenario: No alignment column
+- **GIVEN** the migrations are applied
+- **WHEN** the columns of `public.author_profiles` are listed
+- **THEN** `about_align` is not among them
 
 ### Requirement: Editor field states (FR-2, FR-6)
 `/account/author` SHALL show four fields: first name, last name, about, and photo. A field without a value SHALL show an add prompt ("Добавить имя", "Добавить фамилию", "Добавить «О себе»", "Добавить фото"); the empty photo field SHALL also show the user-icon placeholder. A field with a value SHALL show it with "Изменить" and "Удалить" buttons. A field being edited SHALL show its input with "Сохранить" and "Отмена" buttons. At most one field SHALL be in edit mode at a time; while one is, the other fields' "Изменить", "Удалить", and add prompts SHALL be disabled. When the profile is public, a "Открыть публичную страницу" link SHALL appear at the top.
@@ -163,30 +168,6 @@ First name and last name SHALL each be trimmed and SHALL be 1–60 characters lo
 - **GIVEN** a first name of exactly 60 characters, surrounded by spaces
 - **WHEN** it is saved
 - **THEN** the trimmed 60-character value is stored
-
-### Requirement: About validation and alignment (FR-8)
-About SHALL be trimmed and the trimmed Markdown source SHALL be what is stored; it SHALL be 1–1000 characters long, counted in Unicode code points and including Markdown syntax. Alignment SHALL be one of left, center, right. A violation SHALL be a field error under about, without any database call.
-
-#### Scenario: Over the limit
-- **GIVEN** an about text of 1001 characters
-- **WHEN** it is saved
-- **THEN** an error under about reads "Не более 1000 символов."
-- **AND** no database write happened
-
-#### Scenario: Surrounding whitespace is trimmed before storing
-- **GIVEN** an about text of 1000 characters surrounded by spaces and blank lines
-- **WHEN** it is saved
-- **THEN** it is accepted and the stored value has no leading or trailing whitespace
-
-#### Scenario: Markdown syntax counts
-- **GIVEN** an about text of 996 visible characters wrapped in `**…**`
-- **WHEN** it is saved
-- **THEN** it is accepted (1000 characters)
-
-#### Scenario: Invalid alignment
-- **GIVEN** a save request with alignment "justify"
-- **WHEN** the action runs
-- **THEN** it returns a validation error and makes no database write
 
 ### Requirement: Photo validation (FR-8)
 A photo SHALL be a PNG or JPEG file of at most 5 × 1024 × 1024 bytes, typed by its content, not its name or declared type. The browser SHALL check this when the file is chosen and before sending, and on a violation show the field error and send nothing. The server SHALL repeat the check; a violation there is the same field error, with nothing uploaded.
@@ -318,12 +299,13 @@ The profile actions SHALL limit each signed-in user to 10 profile writes (name s
 - **AND** an anonymous caller cannot call the allowance function
 
 ### Requirement: Deleting a field (FR-10)
-"Удалить" SHALL clear that field through its server action at once, with no confirmation, with the same pending, notification, and error behavior as saving. Afterwards the field SHALL show its add prompt. While pending, the field SHALL show its empty state at once with a disabled add prompt reading "Удаление…"; on failure the previous value SHALL return. Deleting about SHALL reset alignment to left. Deleting the photo SHALL remove the stored file and show the user-icon placeholder again, as before a photo was added.
+"Удалить" SHALL clear that field through its server action at once, with no confirmation, with the same pending, notification, and error behavior as saving. Afterwards the field SHALL show its add prompt. While pending, the field SHALL show its empty state at once with a disabled add prompt reading "Удаление…"; on failure the previous value SHALL return. Deleting about SHALL clear only the about text. Deleting the photo SHALL remove the stored file and show the user-icon placeholder again, as before a photo was added.
 
 #### Scenario: Delete about
-- **GIVEN** about is saved with center alignment
+- **GIVEN** about is saved
 - **WHEN** the reader clicks about's "Удалить" and the action succeeds
-- **THEN** the field shows "Добавить «О себе»", "Сохранено" is announced, and a later about save starts with left alignment
+- **THEN** the field shows "Добавить «О себе»" and "Сохранено" is announced
+- **AND** the database write sets only `about` to null
 
 #### Scenario: Delete photo
 - **GIVEN** a photo is saved
@@ -348,7 +330,7 @@ The profile actions SHALL limit each signed-in user to 10 profile writes (name s
 - **THEN** the field shows "Akhmatova" with "Изменить" and "Удалить" again, and the error under the field
 
 ### Requirement: About editor toolbar (FR-11)
-The about editor SHALL offer toolbar buttons that insert Markdown around the selection: «Жирный», «Курсив», «Заголовок», «Подзаголовок», «Маркированный список», «Нумерованный список», «Цитата». It SHALL also offer an alignment control («По левому краю», «По центру», «По правому краю»), a «Редактор»/«Просмотр» toggle, and a live character count out of 1000, measured as validation measures (code points after trimming). It can exceed 1000, and over the limit it is shown in the danger colour. Inputs SHALL NOT cap typing or truncate pastes.
+The about editor SHALL offer toolbar buttons that insert Markdown around the selection: «Жирный», «Курсив», «Заголовок», «Подзаголовок», «Маркированный список», «Нумерованный список», «Цитата». It SHALL also offer a «Редактор»/«Просмотр» toggle and a live character count out of 1000, measured as validation measures (code points after trimming). It can exceed 1000, and over the limit it is shown in the danger colour. Inputs SHALL NOT cap typing or truncate pastes. It SHALL offer no alignment control, in either tab (refine-author-page-and-contact FR-2), and the «Просмотр» tab SHALL render about left-aligned, as the public page does (refine-author-page-and-contact FR-3).
 
 #### Scenario: Bold wraps the selection
 - **GIVEN** the about text "hello world" with "world" selected
@@ -380,6 +362,11 @@ The about editor SHALL offer toolbar buttons that insert Markdown around the sel
 - **GIVEN** the about text is "  hi  " (two characters after trimming)
 - **WHEN** the editor renders
 - **THEN** the counter reads "2 / 1000"
+
+#### Scenario: No alignment control
+- **GIVEN** the about editor is open
+- **WHEN** the «Редактор» tab and then the «Просмотр» tab render
+- **THEN** neither has a button named «По левому краю», «По центру», or «По правому краю»
 
 ### Requirement: Photo replacement (FR-12)
 Saving a new photo over an existing one SHALL leave only the new file stored for that profile, and every page SHALL show the new photo.
@@ -413,12 +400,13 @@ Saving a new photo over an existing one SHALL leave only the new file stored for
 - **THEN** it shows "Список авторов сейчас недоступен."
 
 ### Requirement: Public author page (FR-14)
-`/authors/[id]` SHALL render a public profile without signing in: the full name as the page heading, the photo (or a user-icon placeholder), and the about section rendered from Markdown with its alignment, or no about section when about is empty. An `id` that is not a UUID or names no public profile SHALL render the 404 page (its UI; the streamed status may be 200).
+`/authors/[id]` SHALL render a public profile without signing in: the full name as the page heading, the photo (or a user-icon placeholder), and the about section rendered from Markdown, left-aligned, with list markers at the left edge inside the text block and no indent (refine-author-page-and-contact FR-3), or no about section when about is empty. An `id` that is not a UUID or names no public profile SHALL render the 404 page (its UI; the streamed status may be 200).
 
 #### Scenario: Full profile
-- **GIVEN** a public profile "Anna Akhmatova" with a photo and about "## Poet" aligned center
+- **GIVEN** a public profile "Anna Akhmatova" with a photo and about "## Poet\n\n- first\n- second"
 - **WHEN** an anonymous visitor opens `/authors/<id>`
-- **THEN** a level-1 heading "Anna Akhmatova", an image with alt "Фото: Anna Akhmatova", and a centered level-2 heading "Poet" are shown
+- **THEN** a level-1 heading "Anna Akhmatova", an image with alt "Фото: Anna Akhmatova", a level-2 heading "Poet", and a two-item list are shown
+- **AND** the about section carries no centre or right alignment, and its list markers sit inside the text block at its left edge, with no indent
 
 #### Scenario: No photo
 - **GIVEN** a public profile without a photo
@@ -573,4 +561,47 @@ Every editor input SHALL have a visible label. Field errors SHALL be linked thro
 - **GIVEN** no `NEXT_PUBLIC_SUPABASE_*` variables are set
 - **WHEN** `npm run build` runs
 - **THEN** it exits 0 and its route table lists `/authors`, `/authors/[id]`, `/account`, and `/account/author`
+
+### Requirement: About validation (FR-8)
+About SHALL be trimmed and the trimmed Markdown source SHALL be what is stored; it SHALL be 1–1000 characters long, counted in Unicode code points and including Markdown syntax. A violation SHALL be a field error under about, without any database call. The about save SHALL accept only the about text: no alignment is validated or stored (refine-author-page-and-contact FR-4), and any other field in the request is ignored.
+
+#### Scenario: Over the limit
+- **GIVEN** an about text of 1001 characters
+- **WHEN** it is saved
+- **THEN** an error under about reads "Не более 1000 символов."
+- **AND** no database write happened
+
+#### Scenario: Surrounding whitespace is trimmed before storing
+- **GIVEN** an about text of 1000 characters surrounded by spaces and blank lines
+- **WHEN** it is saved
+- **THEN** it is accepted and the stored value has no leading or trailing whitespace
+
+#### Scenario: Markdown syntax counts
+- **GIVEN** an about text of 996 visible characters wrapped in `**…**`
+- **WHEN** it is saved
+- **THEN** it is accepted (1000 characters)
+
+#### Scenario: Invalid alignment
+- **GIVEN** a save request with about "Текст" and an extra field `align` = "justify"
+- **WHEN** the action runs
+- **THEN** it succeeds and the database write holds only `about` = "Текст"
+
+### Requirement: Local test data seed (FR-22)
+`supabase/seed.sql` SHALL create, on `npx supabase db reset`, five test readers with confirmed emails who can sign in, each owning a public author profile (first name, last name, and a Markdown about text holding a heading and a list), whose profile ids give them mock poems in email order (`author1@example.test` 0, `author2@example.test` 1, `author3@example.test` 2, `author4@example.test` 3, `author5@example.test` 4), and one more test reader whose profile has no name and is therefore not public (refine-author-page-and-contact FR-8). The seed SHALL use `.test` email addresses and a placeholder password documented as local-only, and SHALL run only on a local reset, never on a plain `db push` (`--include-seed`, `supabase bootstrap`, and Branching preview branches would load it, so the docs forbid them against a hosted project).
+
+#### Scenario: Reset loads exactly the seed
+- **GIVEN** the local Supabase stack holds older hand-made test records
+- **WHEN** `npx supabase db reset` runs
+- **THEN** `auth.users` holds exactly the six seeded readers and `public.author_profiles` exactly their six profiles
+- **AND** `/authors` lists exactly the five public seeded authors
+
+#### Scenario: Every poem count is covered
+- **GIVEN** the five public seeded profile ids
+- **WHEN** the mock poem count is computed for each
+- **THEN** `author1@example.test`'s profile gets 0, `author2` 1, `author3` 2, `author4` 3, and `author5` 4
+
+#### Scenario: A seeded reader can sign in
+- **GIVEN** the seed is loaded
+- **WHEN** `author1@example.test` signs in on `/login` with the seed's placeholder password
+- **THEN** sign-in succeeds and `/account/author` shows that reader's profile
 

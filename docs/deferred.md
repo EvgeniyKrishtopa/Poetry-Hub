@@ -94,6 +94,8 @@ Archived at `openspec/changes/archive/2026-10-27-add-author-poems/`.
 
 ## refine-author-page-and-contact
 
+Archived at `openspec/changes/archive/2026-10-27-refine-author-page-and-contact/`.
+
 ### refine-author-page-and-contact · 5.4 — contact dialog flows not recorded as scenarios
 
 - **State:** skipped
