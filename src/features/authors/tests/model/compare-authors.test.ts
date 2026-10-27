@@ -4,7 +4,7 @@ import type { PublicAuthor } from "../../model/author.types";
 import { compareAuthors } from "../../model/compare-authors";
 
 function author(id: string, firstName: string, lastName: string): PublicAuthor {
-  return { id, firstName, lastName, about: null, aboutAlign: "left", photoUrl: null };
+  return { id, firstName, lastName, about: null, photoUrl: null };
 }
 
 function order(authors: readonly PublicAuthor[]): string[] {

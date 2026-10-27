@@ -34,7 +34,7 @@ const BORIS_ID = "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f";
 const PHOTO_PATH = `${ANNA_ID}/0b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d.jpg`;
 
 function row(id: string, first: string, last: string, photoPath: string | null = null) {
-  return { id, first_name: first, last_name: last, about: null, about_align: "left", photo_path: photoPath };
+  return { id, first_name: first, last_name: last, about: null, photo_path: photoPath };
 }
 
 let supabase: FakeSupabase;
@@ -67,10 +67,9 @@ describe("public authors", () => {
             firstName: "Анна",
             lastName: "Ахматова",
             about: null,
-            aboutAlign: "left",
             photoUrl: `${PUBLIC_URL_BASE}/${PHOTO_PATH}`,
           },
-          { id: BORIS_ID, firstName: "Борис", lastName: "Пастернак", about: null, aboutAlign: "left", photoUrl: null },
+          { id: BORIS_ID, firstName: "Борис", lastName: "Пастернак", about: null, photoUrl: null },
         ],
       });
       expect(supabase.queries[0]).toEqual([

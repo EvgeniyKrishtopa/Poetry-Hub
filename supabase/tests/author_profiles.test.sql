@@ -26,6 +26,9 @@ insert into public.author_profiles (id, user_id, first_name, last_name, photo_pa
 insert into storage.objects (bucket_id, name) values
   ('author-photos', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/cccccccc-cccc-4ccc-8ccc-cccccccccccc.jpg');
 
+-- implements FR-4 of refine-author-page-and-contact
+select hasnt_column('public', 'author_profiles', 'about_align', 'author_profiles has no about_align column');
+
 -- ---------- anon ----------
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
@@ -82,8 +85,8 @@ select is(
 select results_eq(
   $$update public.author_profiles set last_name = 'Akhmatova'
     where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
-    returning id::text, first_name, last_name, about, about_align, photo_path$$,
-  $$values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Anna'::text, 'Akhmatova'::text, null::text, 'left'::text, null::text)$$,
+    returning id::text, first_name, last_name, about, photo_path$$,
+  $$values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Anna'::text, 'Akhmatova'::text, null::text, null::text)$$,
   'the owner updates a content field and reads it back with the explicit column list'
 );
 
@@ -270,12 +273,6 @@ select throws_ok(
   $$update public.author_profiles set about = '  ' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '23514', null,
   'a whitespace-only about is rejected'
-);
-
-select throws_ok(
-  $$update public.author_profiles set about_align = 'justify' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
-  '23514', null,
-  'an unknown alignment is rejected'
 );
 
 -- Storage, as A.

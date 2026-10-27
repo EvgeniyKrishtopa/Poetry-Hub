@@ -62,7 +62,6 @@ function toAuthorProfile(supabase: SupabaseClient, row: ProfileRow): AuthorProfi
     firstName: row.first_name,
     lastName: row.last_name,
     about: row.about,
-    aboutAlign: row.about_align,
     photoUrl: photoPublicUrl(supabase, row.photo_path),
   };
 }
@@ -75,7 +74,6 @@ export function toPublicAuthor(supabase: SupabaseClient, row: ProfileRow): Publi
     firstName: row.first_name,
     lastName: row.last_name,
     about: row.about,
-    aboutAlign: row.about_align,
     photoUrl: photoPublicUrl(supabase, row.photo_path),
   };
 }

@@ -1,5 +1,5 @@
 import { ABOUT_MAX_LENGTH } from "./author.constants";
-import type { AboutAlign, MarkdownFormat, PhotoFileError, ProfileField, WriteFailure } from "./author.types";
+import type { MarkdownFormat, PhotoFileError, ProfileField, WriteFailure } from "./author.types";
 
 // Every string of the proposal's UI copy table, verbatim and in Russian (NFR-8).
 
@@ -56,12 +56,6 @@ export const FORMAT_LABELS: Readonly<Record<MarkdownFormat, string>> = {
   quote: "Цитата",
 };
 
-export const ALIGN_LABELS: Readonly<Record<AboutAlign, string>> = {
-  left: "По левому краю",
-  center: "По центру",
-  right: "По правому краю",
-};
-
 export const ABOUT_VIEW_LABELS = {
   editor: "Редактор",
   preview: "Просмотр",
@@ -81,7 +75,6 @@ export const VALIDATION_MESSAGES = {
   aboutTooLong: "Не более 1000 символов.",
   photoTooLarge: "Файл должен быть не больше 5 МБ.",
   photoUnsupportedType: "Допустимы только изображения PNG или JPEG.",
-  invalidAlign: "Недопустимое выравнивание.",
 } as const;
 
 /** The field error for a photo `validatePhotoFile` rejects, in the browser and in the action (FR-8). */

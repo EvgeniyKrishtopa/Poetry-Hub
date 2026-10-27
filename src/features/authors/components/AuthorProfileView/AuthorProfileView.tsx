@@ -17,7 +17,7 @@ export function AuthorProfileView({ author, ownerLink, poems }: AuthorProfileVie
         <h1 className="text-4xl font-bold tracking-tight">{name}</h1>
       </header>
       <AuthorPhoto photoUrl={author.photoUrl} fullName={name} />
-      {author.about !== null && <AuthorAbout markdown={author.about} align={author.aboutAlign} />}
+      {author.about !== null && <AuthorAbout markdown={author.about} />}
       {poems}
     </article>
   );

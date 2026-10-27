@@ -81,8 +81,8 @@ export const saveNameAction = authorsActionClient
 
 export const saveAboutAction = authorsActionClient
   .inputSchema(saveAboutSchema)
-  .action(async ({ parsedInput: { about, align } }): Promise<ProfileActionResult> =>
-    runOwnerWrite(() => writeOwnProfile({ about, about_align: align })),
+  .action(async ({ parsedInput: { about } }): Promise<ProfileActionResult> =>
+    runOwnerWrite(() => writeOwnProfile({ about })),
   );
 
 export const savePhotoAction = authorsActionClient

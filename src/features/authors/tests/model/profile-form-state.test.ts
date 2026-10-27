@@ -3,14 +3,13 @@ import { describe, expect, it } from "vitest";
 import type { AuthorProfile, FieldFormState, ProfileActionResponse } from "../../model/author.types";
 import { getFieldErrorMessage, toFieldFormState } from "../../model/profile-form-state";
 
-const DRAFT = { about: "**Поэт**", align: "center" } as const;
+const DRAFT = { field: "first_name", value: "Anna" } as const;
 
 const PROFILE: AuthorProfile = {
   id: "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
   firstName: "Anna",
   lastName: null,
   about: null,
-  aboutAlign: "left",
   photoUrl: null,
 };
 
@@ -29,10 +28,10 @@ describe("toFieldFormState", () => {
       {
         validationErrors: {
           formErrors: [],
-          fieldErrors: { about: [], align: ["Недопустимое выравнивание."] },
+          fieldErrors: { field: [], value: ["Обязательное поле."] },
         },
       },
-      { status: "invalid", draft: DRAFT, error: "Недопустимое выравнивание." },
+      { status: "invalid", draft: DRAFT, error: "Обязательное поле." },
     ],
     [
       "a form-level validation error",
