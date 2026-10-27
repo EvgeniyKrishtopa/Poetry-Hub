@@ -283,7 +283,11 @@ sequenceDiagram
   outside any Suspense boundary) is a design revision, not a silent workaround.
 - **Seeding `auth.users` by SQL** depends on GoTrue's table shape. The seed follows Supabase's
   documented local-seed pattern; a CLI upgrade that changes the shape surfaces as a failed
-  `db reset`, never in production (the seed never runs on `db push`).
+  `db reset`, never in production (a plain `db push` doesn't run the seed).
+- **Seed reaching a hosted database** (deep review DR-03/06, 2026-10-27). `db push --include-seed`,
+  `supabase bootstrap`, and Supabase Branching preview branches do load `[db.seed]`, which would put
+  six accounts with a repo-visible password online. `docs/environment.md` forbids the first two
+  against a hosted project and requires a per-remote seed override before Branching is enabled.
 - **Old links.** Bookmarks of `/authors/<id>/poems` now 404 (user decision). No external links
   exist yet.
 

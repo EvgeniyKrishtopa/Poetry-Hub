@@ -1,5 +1,7 @@
 -- Local test data (refine-author-page-and-contact, design D5). Loaded by `npx supabase db reset` after the
--- migrations ([db.seed] in config.toml); `db push` never runs it, so it never reaches a hosted project.
+-- migrations ([db.seed] in config.toml). A plain `db push` doesn't run it, but `db push --include-seed`,
+-- `supabase bootstrap`, and Supabase Branching preview branches do: never use those against a hosted
+-- project while this file holds sign-in accounts (docs/environment.md).
 --
 -- LOCAL ONLY. Every reader below signs in with the same placeholder password: local-seed-password
 -- It is a throwaway value for the local stack, not a secret; never reuse it or seed a hosted project.
