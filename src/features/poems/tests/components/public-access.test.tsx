@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPublicAuthorName } from "@/features/authors";
 
 import { AuthorPoemsEntry } from "../../components/AuthorPoemsEntry/AuthorPoemsEntry";
-import { AuthorPoemsPageContent } from "../../components/AuthorPoemsPageContent/AuthorPoemsPageContent";
 import { PoemPageContent } from "../../components/PoemPageContent/PoemPageContent";
 import { listAuthorPoems } from "../../dal/author-poems";
 
@@ -32,8 +31,7 @@ type Render = () => Promise<ReactNode>;
 
 /** Each view, how to render it, and a piece of markup that only its content has. */
 const PUBLIC_VIEWS: readonly (readonly [string, Render, string])[] = [
-  ["AuthorPoemsEntry", () => AuthorPoemsEntry({ authorId: Promise.resolve(AUTHOR_ID) }), "Произведения автора</a>"],
-  ["AuthorPoemsPageContent", () => AuthorPoemsPageContent({ authorId: Promise.resolve(AUTHOR_ID) }), "<li>"],
+  ["AuthorPoemsEntry", () => AuthorPoemsEntry({ authorId: Promise.resolve(AUTHOR_ID) }), "<li>"],
   [
     "PoemPageContent",
     async () => {
@@ -65,6 +63,7 @@ describe("public access to the poems views", () => {
   });
 
   // implements FR-6 of add-author-poems
+  // implements NFR-2 of refine-author-page-and-contact
   it.each(PUBLIC_VIEWS)(
     "%s renders its content with no session, without redirecting",
     async (_name, renderView, contentMarkup) => {

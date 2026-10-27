@@ -25,12 +25,12 @@ const AUTUMN_GARDEN: Poem = {
 };
 
 describe("AuthorPoemList", () => {
-  // implements FR-2, NFR-6 of add-author-poems
-  it("shows the h1 «Произведения» over title links, in the given order, with poem hrefs", () => {
+  // implements FR-5, NFR-4 of refine-author-page-and-contact
+  it("shows the h2 «Произведения» over title links, in the given order, with poem hrefs", () => {
     render(<AuthorPoemList authorId={AUTHOR_ID} poems={[NIGHT_STATION, AUTUMN_GARDEN]} />);
 
-    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole("heading", { level: 1, name: "Произведения" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    expect(screen.getByRole("heading", { level: 2, name: "Произведения" })).toBeInTheDocument();
     for (const item of screen.getAllByRole("listitem")) expect(within(item).getAllByRole("link")).toHaveLength(1);
     const links = within(screen.getByRole("list")).getAllByRole("link");
     expect(links.map((link) => link.textContent)).toEqual(["Ночной вокзал", "Осенний сад"]);
@@ -40,7 +40,7 @@ describe("AuthorPoemList", () => {
     ]);
   });
 
-  // implements FR-2 of add-author-poems
+  // implements FR-5 of refine-author-page-and-contact
   it("shows only the titles: no text, date, genre, or illustration", () => {
     const { container } = render(<AuthorPoemList authorId={AUTHOR_ID} poems={[NIGHT_STATION, AUTUMN_GARDEN]} />);
 
@@ -50,11 +50,11 @@ describe("AuthorPoemList", () => {
     expect(screen.queryByRole("img")).toBeNull();
   });
 
-  // implements FR-3, NFR-6 of add-author-poems
+  // implements FR-5, NFR-4 of refine-author-page-and-contact
   it("shows the heading and the empty text, and no list, when the author has no poems", () => {
     render(<AuthorPoemList authorId={AUTHOR_ID} poems={[]} />);
 
-    expect(screen.getByRole("heading", { level: 1, name: "Произведения" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Произведения" })).toBeInTheDocument();
     expect(screen.getByText("У автора пока ещё нет публикаций.")).toBeInTheDocument();
     expect(screen.queryByRole("list")).toBeNull();
   });

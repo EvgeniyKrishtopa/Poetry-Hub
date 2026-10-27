@@ -32,6 +32,7 @@ describe("poems feature boundaries", () => {
   });
 
   // implements NFR-1 of add-author-poems
+  // implements NFR-2 of refine-author-page-and-contact
   it("contains no client module", () => {
     expect(filesMatching(poemsFiles, /^\s*["']use client["']/m)).toEqual([]);
   });
@@ -49,6 +50,7 @@ describe("poems feature boundaries", () => {
   });
 
   // implements NFR-2 of add-author-poems
+  // implements NFR-2 of refine-author-page-and-contact
   it("is never imported by the authors feature, so there is no cycle", () => {
     expect(filesMatching(sourceFiles(AUTHORS_DIR), /from ["']@\/features\/poems(\/[^"']*)?["']/)).toEqual([]);
   });

@@ -7,11 +7,14 @@ import { NO_POEMS_TEXT, POEMS_PAGE_TITLE } from "../../model/poems-messages";
 
 import type { AuthorPoemListProps } from "./AuthorPoemList.types";
 
-/** The poem list page: the heading over title links in the given order, or the empty text. */
+/**
+ * The author page's poems section: an h2 over title links in the given order, or the empty text. An h2,
+ * because the page's h1 is the author's name.
+ */
 export function AuthorPoemList({ authorId, poems }: AuthorPoemListProps) {
   return (
-    <section lang={CONTENT_LANG} className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{POEMS_PAGE_TITLE}</h1>
+    <section lang={CONTENT_LANG} className="flex flex-col gap-4">
+      <h2 className="text-2xl font-semibold tracking-[-0.01em]">{POEMS_PAGE_TITLE}</h2>
       {poems.length === 0 ? (
         <p className="text-muted">{NO_POEMS_TEXT}</p>
       ) : (

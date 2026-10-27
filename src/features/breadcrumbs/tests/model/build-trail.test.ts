@@ -81,7 +81,6 @@ describe("buildTrail", () => {
 
 describe("buildTrail on the poem routes", () => {
   const POEM_ID = "osenniy-sad";
-  const LIST_MATCH = { kind: "author-poems", authorId: ANNA_ID } as const;
   const POEM_MATCH = { kind: "author-poem", authorId: ANNA_ID, poemId: POEM_ID } as const;
 
   const ANNA = { ok: true, name: "Анна Ахматова" } as const;
@@ -101,61 +100,35 @@ describe("buildTrail on the poem routes", () => {
   const POEM_NOT_FOUND: AuthorPoemResult = { ok: false, reason: "not-found" };
 
   const AUTHOR_HREF = `/authors/${ANNA_ID}`;
-  const LIST_HREF = `/authors/${ANNA_ID}/poems`;
 
-  // implements FR-8 of add-author-poems
-  it("ends the list trail on «Произведения», after the author's name linking to the author page", () => {
-    expect(buildTrail(LIST_MATCH, ANNA)).toEqual({
-      kind: "shown",
-      items: [
-        HOME,
-        AUTHORS,
-        { kind: "link", label: "Анна Ахматова", href: AUTHOR_HREF },
-        { kind: "current", label: "Произведения" },
-      ],
-    });
-  });
-
-  // implements FR-8 of add-author-poems
-  it("ends the poem trail on the poem's title, after «Произведения» linking to the list", () => {
+  // implements FR-7 of refine-author-page-and-contact
+  it("ends the poem trail on the poem's title, right after the author's name linking to the author page", () => {
     expect(buildTrail(POEM_MATCH, ANNA, POEM_FOUND)).toEqual({
       kind: "shown",
       items: [
         HOME,
         AUTHORS,
         { kind: "link", label: "Анна Ахматова", href: AUTHOR_HREF },
-        { kind: "link", label: "Произведения", href: LIST_HREF },
         { kind: "current", label: "Осенний сад" },
       ],
     });
   });
 
-  // implements FR-8 of add-author-poems
+  // implements FR-7 of refine-author-page-and-contact
   it("keeps «Автор» as a link to the author page when the author read is unavailable", () => {
-    expect(buildTrail(LIST_MATCH, AUTHOR_UNAVAILABLE)).toEqual({
-      kind: "shown",
-      items: [
-        HOME,
-        AUTHORS,
-        { kind: "link", label: "Автор", href: AUTHOR_HREF },
-        { kind: "current", label: "Произведения" },
-      ],
-    });
     expect(buildTrail(POEM_MATCH, AUTHOR_UNAVAILABLE, POEM_FOUND)).toEqual({
       kind: "shown",
       items: [
         HOME,
         AUTHORS,
         { kind: "link", label: "Автор", href: AUTHOR_HREF },
-        { kind: "link", label: "Произведения", href: LIST_HREF },
         { kind: "current", label: "Осенний сад" },
       ],
     });
   });
 
   // implements FR-8 of add-author-poems
-  it("shows no trail for an author that doesn't exist, on either poem route", () => {
-    expect(buildTrail(LIST_MATCH, AUTHOR_NOT_FOUND)).toEqual({ kind: "none" });
+  it("shows no trail for an author that doesn't exist", () => {
     expect(buildTrail(POEM_MATCH, AUTHOR_NOT_FOUND, POEM_FOUND)).toEqual({ kind: "none" });
     expect(buildTrail(POEM_MATCH, AUTHOR_NOT_FOUND, POEM_NOT_FOUND)).toEqual({ kind: "none" });
   });

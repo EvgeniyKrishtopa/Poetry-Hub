@@ -83,23 +83,16 @@ describe("BreadcrumbsLoader", () => {
     expect(element.props.items.map((item) => item.label)).toEqual(["Главная", "Наши авторы", "Анна Ахматова"]);
   });
 
-  // implements FR-8 of add-author-poems
-  it("reads the author's name but not any poem for the poem list", async () => {
-    vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Анна Ахматова" });
+  // implements FR-6 of refine-author-page-and-contact
+  it("renders nothing and reads nothing for the removed poem list route", async () => {
+    await expect(load(["authors", ANNA_ID, "poems"])).resolves.toBeNull();
 
-    const element = (await load(["authors", ANNA_ID, "poems"])) as ReactElement<{ items: { label: string }[] }>;
-
-    expect(getPublicAuthorName).toHaveBeenCalledWith(ANNA_ID);
+    expect(getPublicAuthorName).not.toHaveBeenCalled();
     expect(getAuthorPoem).not.toHaveBeenCalled();
-    expect(element.props.items.map((item) => item.label)).toEqual([
-      "Главная",
-      "Наши авторы",
-      "Анна Ахматова",
-      "Произведения",
-    ]);
   });
 
   // implements FR-8, FR-12 of add-author-poems
+  // implements FR-7 of refine-author-page-and-contact
   it("reads the author's name and the poem for a poem page", async () => {
     vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Анна Ахматова" });
     vi.mocked(getAuthorPoem).mockResolvedValue({
@@ -126,7 +119,6 @@ describe("BreadcrumbsLoader", () => {
       "Главная",
       "Наши авторы",
       "Анна Ахматова",
-      "Произведения",
       "Осенний сад",
     ]);
   });
