@@ -14,6 +14,10 @@ const SEED_FILE = "supabase/seed.sql";
 const PUBLIC_READER_LINE =
   /\('([^']+@example\.test)',\s*'[0-9a-f-]{36}',\s*'([0-9a-f-]{36})',\s*'/g;
 
+/** The draft reader's line: an email, two ids, and no first name, so the profile stays private. */
+const DRAFT_READER_LINE =
+  /\('draft-author@example\.test',\s*'[0-9a-f-]{36}',\s*'[0-9a-f-]{36}',\s*null,/;
+
 const EXPECTED_POEM_COUNTS: readonly [string, number][] = [
   ["author1@example.test", 0],
   ["author2@example.test", 1],
@@ -32,6 +36,11 @@ describe("supabase/seed.sql", () => {
   // implements FR-8 of refine-author-page-and-contact
   it("seeds exactly the five public readers", () => {
     expect([...publicProfileIds().keys()].sort()).toEqual(EXPECTED_POEM_COUNTS.map(([email]) => email));
+  });
+
+  // implements FR-8 of refine-author-page-and-contact
+  it("seeds the draft reader with no first name, so the profile is not public", () => {
+    expect(readFileSync(SEED_FILE, "utf8")).toMatch(DRAFT_READER_LINE);
   });
 
   // implements FR-8 of refine-author-page-and-contact
