@@ -7,6 +7,10 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(56);
 
+-- Start from an empty table, so the visibility checks below see only these fixtures and not the local seed
+-- (supabase/seed.sql). The whole file runs in one transaction that is rolled back, so the seed survives.
+delete from public.author_profiles;
+
 -- Fixtures, written as the superuser (bypasses RLS). A owns a non-public profile, B a public one.
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'a@example.test'),
