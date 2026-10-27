@@ -113,29 +113,29 @@ Mockups approved 2026-10-27 (proposal.md, ## Mockups).
 
 ## 5. Docs and verification <!-- judgement-heavy -->
 
-- [ ] 5.1 (FR-2, FR-6, FR-8) Update docs: `docs/architecture.md` (the list route, `authorPoemsPath`, and
+- [x] 5.1 (FR-2, FR-6, FR-8) Update docs: `docs/architecture.md` (the list route, `authorPoemsPath`, and
   `POEMS_PAGE_TITLE` mentions), `docs/design-system.md` (no alignment control; the poems entry
   is now the author page's poems section), and `PROGRESS.md`'s note on the QA user
   `qa-breadcrumbs@example.test`, which the reset removed (via the progress script, not by hand).
-- [ ] 5.2 (FR-6, NFR-3) On `npm run build && npm run start`: the build's route list equals
+- [x] 5.2 (FR-6, NFR-3) On `npm run build && npm run start`: the build's route list equals
   `main`'s before this change minus exactly `/authors/[id]/poems`, with `/authors/[id]` and
   `/authors/[id]/poems/[poemId]` keeping their render-mode marker; the build also succeeds with
   no Supabase or Contentful variables; `curl -s -o /dev/null -w '%{http_code}'` on
   `/authors/<seeded id>/poems` and `/authors/not-a-uuid/poems` prints `404`, and the page
   shows «Страница не найдена» with no trail. If the status is 200, stop and revise design D3
   (Risks: soft vs hard 404).
-- [ ] 5.3 (NFR-1, NFR-5, NFR-6) Static checks: the changed component files hold no hex,
+- [x] 5.3 (NFR-1, NFR-5, NFR-6) Static checks: the changed component files hold no hex,
   `rgb(`, `hsl(` literals and no `text-[`, `bg-[`, `border-[` classes; `src/` and
   `supabase/tests/` hold none of `about_align`, `aboutAlign`, `AboutAlign`, `AlignControl`,
   `ALIGN_LABELS`, `ALIGN_CLASSES`, `invalidAlign`; `src/` and `tests/web-qa-scenarios/` hold no
   `authorPoemsPath`, `AuthorPoemsPage`, or «Произведения автора»; the changed screens' strings
   match the proposal's UI copy table.
-- [ ] 5.4 (FR-1, FR-3, FR-5, FR-6, FR-7) In the Gate 3 browser pass, check against the approved
+- [x] 5.4 (FR-1, FR-3, FR-5, FR-6, FR-7) In the Gate 3 browser pass, check against the approved
   mockups: the contact dialog closes by itself 3 s after the thank-you view and focus lands on
   «Связаться с нами»; «Закрыть» before 3 s cancels it; the about editor has no alignment
   control and the public about is left-aligned; on the seeded authors with 0 and 4 poems the section matches the approved
   Claude Design mockup visually and shows the right content (the empty text for `author1`, four
   titles newest first for `author5`); the old list URL shows the 404 page with no trail; the poem page trail has
-  four items. Save the passing contact and author page flows as scenarios.
-- [ ] 5.5 (FR-1..FR-8, NFR-1..NFR-6) Run the full validation: `npm run typecheck && npm run lint && npm run test:coverage
+  four items. Save the passing contact and author page flows as scenarios. <!-- deferred: docs/deferred.md -->
+- [x] 5.5 (FR-1..FR-8, NFR-1..NFR-6) Run the full validation: `npm run typecheck && npm run lint && npm run test:coverage
   && npm run build && npm run knip`.
