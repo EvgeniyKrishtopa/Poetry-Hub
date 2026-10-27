@@ -1,8 +1,8 @@
-// pages: /authors/501634db-2e8f-4a20-b60e-a74c6d5d84fa/poems, /authors/501634db-2e8f-4a20-b60e-a74c6d5d84fa/poems/nochnoy-vokzal
+// pages: /authors/10000000-0000-4000-8000-000000000005, /authors/10000000-0000-4000-8000-000000000005/poems/nochnoy-vokzal
 import { expect, test } from "@playwright/test";
 
-/** A public author in the local Supabase seed data, with four mock poems. */
-const POEMS_PATH = "/authors/501634db-2e8f-4a20-b60e-a74c6d5d84fa/poems";
+/** `author5@example.test` in `supabase/seed.sql`, whose page lists four mock poems. */
+const AUTHOR_PATH = "/authors/10000000-0000-4000-8000-000000000005";
 const FIRST_TITLE = "Осенний сад";
 const SECOND_TITLE = "Ночной вокзал";
 /** Long enough that the second click lands before the first navigation's response. */
@@ -11,14 +11,16 @@ const NO_THROTTLING = -1;
 /** Several throttled round trips: the second navigation's page and trail. */
 const SETTLE_TIMEOUT_MS = 20_000;
 
-// implements FR-13 of add-author-poems: the last of two quick clicks wins, and the first poem never shows.
-test("two quick clicks in the poem list end on the second poem", {
-  tag: ["@add-author-poems"],
+// implements FR-13 of add-author-poems and FR-5 of refine-author-page-and-contact: the last of two quick
+// clicks in the author page's poems section wins, and the first poem never shows.
+test("two quick clicks in the author page's poems section end on the second poem", {
+  tag: ["@add-author-poems", "@refine-author-page-and-contact"],
 }, async ({ page }) => {
   const main = page.getByRole("main");
   const trail = page.getByRole("navigation", { name: "Навигационная цепочка" });
 
-  await page.goto(POEMS_PATH);
+  await page.goto(AUTHOR_PATH);
+  await expect(main.getByRole("heading", { level: 2, name: "Произведения" })).toBeVisible();
   await expect(main.getByRole("link", { name: SECOND_TITLE })).toBeVisible();
 
   // Record every visible h1 from now on, so a brief flash of the first poem is caught too.

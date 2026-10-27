@@ -1,5 +1,5 @@
 import { AUTHORS_PAGE_TITLES, AUTHORS_PATH, authorPagePath, type PublicAuthorNameResult } from "@/features/authors";
-import { authorPoemsPath, POEMS_PAGE_TITLE, type AuthorPoemResult } from "@/features/poems";
+import type { AuthorPoemResult } from "@/features/poems";
 import { HOME_PATH } from "@/shared/config/constants";
 
 import type { BreadcrumbItem, RouteMatch, Trail } from "./breadcrumb.types";
@@ -46,17 +46,11 @@ export function buildTrail(match: RouteMatch, authorName?: PublicAuthorNameResul
   switch (match.kind) {
     case "author":
       return shown([{ kind: "current", label }]);
-    case "author-poems":
-      return shown([
-        { kind: "link", label, href: authorPagePath(match.authorId) },
-        { kind: "current", label: POEMS_PAGE_TITLE },
-      ]);
     case "author-poem":
       // Unreachable from the loader, which always reads the poem here; without it there's no last item.
       if (poem === undefined) return NO_TRAIL;
       return shown([
         { kind: "link", label, href: authorPagePath(match.authorId) },
-        { kind: "link", label: POEMS_PAGE_TITLE, href: authorPoemsPath(match.authorId) },
         { kind: "current", label: poem.poem.title },
       ]);
   }

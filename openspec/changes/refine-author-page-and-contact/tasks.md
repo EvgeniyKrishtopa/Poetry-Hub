@@ -78,7 +78,7 @@ Mockups approved 2026-10-27 (proposal.md, ## Mockups).
 
 Mockups approved 2026-10-27 (proposal.md, ## Mockups).
 
-- [ ] 4.1 (FR-5, NFR-2, NFR-4) `AuthorPoemsEntry` renders `AuthorPoemList` with
+- [x] 4.1 (FR-5, NFR-2, NFR-4) `AuthorPoemsEntry` renders `AuthorPoemList` with
   `listAuthorPoems(id)` (design D3); `AuthorPoemList`'s heading becomes an `h2` at the mockup's section
   scale (24/32, weight 600, -0.01em) with 16 px to the list (artboard 12); delete `AUTHOR_POEMS_LINK_LABEL`. The route file
   `src/app/(public)/authors/[id]/page.tsx` stays unchanged.
@@ -88,7 +88,7 @@ Mockups approved 2026-10-27 (proposal.md, ## Mockups).
     to its poem page, and no «Произведения автора» link; no poems render the heading and «У
     автора пока ещё нет публикаций.» with no list; no level-1 heading is rendered by the
     section. `public-access.test.tsx` and `boundaries.test.ts` keep passing (NFR-2).
-- [ ] 4.2 (FR-7, FR-6) Breadcrumbs (before 4.3, which removes the poems exports the trail still imports) (design D4): `matchAuthorRoute` no longer matches
+- [x] 4.2 (FR-7, FR-6) Breadcrumbs (before 4.3, which removes the poems exports the trail still imports) (design D4): `matchAuthorRoute` no longer matches
   `[id, "poems"]`; the `RouteMatch` union loses `author-poems`; `BreadcrumbsLoader`'s
   `readForMatch` loses that case; `buildTrail`'s `author-poem` trail drops the «Произведения»
   item, and `build-trail.ts` stops importing `authorPoemsPath` and `POEMS_PAGE_TITLE`.
@@ -97,7 +97,7 @@ Mockups approved 2026-10-27 (proposal.md, ## Mockups).
     `["authors", id, "poems"]` matches `none`; the poem trail is Главная › Наши авторы ›
     <author name> (link to `/authors/<id>`) › <poem title>; the «Автор» fallback and not-found
     cases keep their results without the «Произведения» item. Remove the poem-list cases.
-- [ ] 4.3 (FR-6) Delete `src/app/(public)/authors/[id]/poems/page.tsx`,
+- [x] 4.3 (FR-6) Delete `src/app/(public)/authors/[id]/poems/page.tsx`,
   `src/app/@breadcrumbs/authors/[id]/poems/page.tsx`, `AuthorPoemsPage`, and
   `AuthorPoemsPageContent` (with their types and tests); delete `authorPoemsPath` (inline its
   path into `authorPoemPath`) and drop `AuthorPoemsPage`, `authorPoemsPath`, and
@@ -105,7 +105,7 @@ Mockups approved 2026-10-27 (proposal.md, ## Mockups).
   - Verify with `src/features/poems/tests/model/poem-paths.test.ts` (unchanged `authorPoemPath`
     output) and `src/app/tests/breadcrumbs-slot.test.ts` (implements breadcrumbs NFR-5: real
     and slot pages still mirror, with no `authors/[id]/poems` page in either).
-- [ ] 4.4 (FR-5, FR-6, FR-7) Update the recorded browser scenarios under
+- [x] 4.4 (FR-5, FR-6, FR-7) Update the recorded browser scenarios under
   `tests/web-qa-scenarios/`: `author-poems-reading-path.spec.ts` goes author page → poem
   (no list page) and checks the short trail; `author-poems-not-found.spec.ts` adds the HTTP 404
   for `/authors/<id>/poems`; `poem-two-quick-clicks.spec.ts` starts from the author page's

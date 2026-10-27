@@ -14,15 +14,13 @@ interface TrailReads {
 }
 
 /**
- * The reads a match needs: the author name on the three author pages, and on a poem page the poem too,
- * in parallel. Both reads are memoized per request, so the page shares them (FR-12).
+ * The reads a match needs: the author name on the author page, and on a poem page the poem too, in
+ * parallel. Both reads are memoized per request, so the page shares them (FR-12).
  */
 async function readForMatch(match: RouteMatch): Promise<TrailReads> {
   switch (match.kind) {
     case "author":
       return { authorName: await getPublicAuthorName(match.id) };
-    case "author-poems":
-      return { authorName: await getPublicAuthorName(match.authorId) };
     case "author-poem": {
       const [authorName, poem] = await Promise.all([
         getPublicAuthorName(match.authorId),

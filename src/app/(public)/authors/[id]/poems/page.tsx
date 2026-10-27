@@ -1,9 +1,0 @@
-import { AuthorPoemsPage } from "@/features/poems";
-
-export default function AuthorPoemsRoutePage({ params }: PageProps<"/authors/[id]/poems">) {
-  return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-16">
-      <AuthorPoemsPage authorId={params.then(({ id }) => id)} />
-    </main>
-  );
-}

@@ -34,8 +34,8 @@ function isParentPath(parent: string, path: string): boolean {
 }
 
 /**
- * The dynamic rows, over the segments after the author directory: `[id]` is the author page,
- * `[id, "poems"]` the poem list, `[id, "poems", poemId]` one poem; anything else has no trail.
+ * The dynamic rows, over the segments after the author directory: `[id]` is the author page and
+ * `[id, "poems", poemId]` one poem; anything else, `[id, "poems"]` included, has no trail.
  */
 function matchAuthorRoute(path: string): RouteMatch {
   if (!path.startsWith(AUTHOR_PAGE_PREFIX)) return NO_MATCH;
@@ -43,9 +43,7 @@ function matchAuthorRoute(path: string): RouteMatch {
   const [authorId, section, poemId, ...extra] = path.slice(AUTHOR_PAGE_PREFIX.length).split("/");
   if (authorId === undefined || authorId === "" || extra.length > 0) return NO_MATCH;
   if (section === undefined) return { kind: "author", id: authorId };
-  if (section !== POEMS_SEGMENT) return NO_MATCH;
-  if (poemId === undefined) return { kind: "author-poems", authorId };
-  if (poemId === "") return NO_MATCH;
+  if (section !== POEMS_SEGMENT || poemId === undefined || poemId === "") return NO_MATCH;
   return { kind: "author-poem", authorId, poemId };
 }
 
