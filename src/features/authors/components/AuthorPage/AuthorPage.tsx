@@ -10,7 +10,7 @@ const SKELETON_TEXT_LINE_WIDTHS = ["w-full", "w-11/12", "w-3/4"] as const;
 const SKELETON_BLOCK = "rounded bg-surface animate-pulse motion-reduce:animate-none";
 
 /** The author page's Suspense boundary: `notFound()` on not-found, throws on unavailable (FR-14). */
-export function AuthorPage({ id }: AuthorPageProps) {
+export function AuthorPage({ id, poems }: AuthorPageProps) {
   return (
     <Suspense
       fallback={
@@ -25,7 +25,7 @@ export function AuthorPage({ id }: AuthorPageProps) {
         </div>
       }
     >
-      <AuthorPageContent id={id} />
+      <AuthorPageContent id={id} poems={poems} />
     </Suspense>
   );
 }

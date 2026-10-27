@@ -13,7 +13,9 @@ Read before fetching data, adding a store, or passing data from a Server Compone
 
 ## TanStack Query conventions
 
-- Define a key factory per feature (`poemsKeys`) and export `queryOptions(...)` objects; hooks wrap those options.
+No feature uses TanStack Query today: the home page's poem list was its only consumer and was removed in `add-author-poems`. `app/providers.tsx` still mounts the client, and these conventions stay for the next feature that fetches on the client.
+
+- Define a key factory per feature (`<name>Keys`) and export `queryOptions(...)` objects; hooks wrap those options.
 - The same `queryOptions` are used for server prefetching (`prefetchQuery` + `HydrationBoundary` in a Server Component page) and for client hooks.
 - Use `getQueryClient()` from `@/shared/lib/query-client` — per-request on the server, singleton in the browser.
 - Fetchers in `*.api.ts` are plain async functions returning typed data; they know nothing about React.
@@ -22,6 +24,7 @@ Read before fetching data, adding a store, or passing data from a Server Compone
 
 - Data that needs a secret and is consumed only by Server Components goes through a module in `features/<name>/dal/` (e.g. `dal/home-greeting.ts` — the folder names the role, so no `.dal.ts` suffix): starts with `import "server-only"`, validates the response with a Zod schema from `model/`, and returns a typed result. Never wrap it in `queryOptions` or client hooks — a client refetch would need the secret.
 - The page awaits the DAL and passes plain values to synchronous presentational components (Vitest can't render async Server Components).
+- A mock DAL that reads no data and no clock needs no cache scope: `features/poems/dal/author-poems.ts` serves in-code placeholder poems and only memoizes `getAuthorPoem` per request with React's `cache` (page and trail share it). When a database replaces the mock, the DAL adds its own result-dependent scope and an `unavailable` reason, per the Supabase public reads below.
 
 ## Server caching (Cache Components)
 
@@ -39,7 +42,8 @@ Read before fetching data, adding a store, or passing data from a Server Compone
 Public Supabase data (the author directory and pages, `features/authors/dal/public-authors.ts`) departs from the Contentful rules above in two places:
 
 - **The client:** `createSupabasePublicClient()` from `@/shared/lib/supabase/public` — cookie-less, anon role, so RLS returns only public rows. It reads no request data, which is what lets it run inside `"use cache"`. Never use the cookie client (`/server`) in a cache scope.
-- **The feature DAL owns the cache scope.** Each read opens its own `"use cache"` around the query, the Zod parse, and the row mapping, because the lifetime depends on the result and is set after the read: `cacheLife("hours")` for a hit, `"minutes"` for not-found, `"seconds"` for unavailable — so a Supabase blip or an env-less build heals itself instead of freezing into the prerendered shell. Failures are returned as plain values, never thrown, and the scope always carries its tag. Validate an id argument (a UUID) before calling the cached function, so junk never becomes a cache key.
+- **The feature DAL owns the cache scope.** Each read opens its own `"use cache"` around the query, the Zod parse, and the row mapping, because the lifetime depends on the result and is set after the read: `cacheLife("hours")` for a hit, `"minutes"` for not-found, `"seconds"` for unavailable — so a Supabase blip or an env-less build heals itself instead of freezing into the prerendered shell. Failures are returned as plain values, never thrown, and the scope always carries its tag. Validate an id argument (a UUID) before calling the cached function, so junk never becomes a cache key. Don't throw inside the scope to keep a failure out of the cache: a throw during prerender fails the build even when the caller catches it, Next logs it a second time, and a failed refresh still doesn't keep the stale entry (`add-author-poems` design D14).
+- **One read per request for shared entities** (ADR 0008). A read that a page and its breadcrumb trail both call is wrapped in React's `cache` (`export const getPublicAuthor = cache(async (id) => …)`), so every caller in the request shares one result and page and trail can't disagree. Derived reads (`getPublicAuthorName`) call the memoized function. Tests mock `react`'s `cache` with a per-test memo: Vitest runs the client React build, whose `cache` doesn't memoize.
 - **Invalidation from the owner's write:** `updateTag(tag)` in the Server Action that wrote, so the action's own re-render already reads the new data. `revalidateTag(tag, { expire: 0 })` stays for writes that arrive outside a Server Action (a route handler, a CMS webhook) — `updateTag` works only inside a Server Action.
 - **A write that expires a public tag goes through the per-user write limit first** (ADR 0007): after the session check and before any other I/O, the action calls its feature's allowance DAL (`features/authors/dal/write-allowance.ts`, the `consume_write_allowance(scope)` database function). An attempt over the limit writes nothing and expires no tag, so one account's save loop can't keep the public pages uncached.
 

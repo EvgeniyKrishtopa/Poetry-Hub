@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cacheLife, cacheTag } from "next/cache";
+import { cache } from "react";
 import { z } from "zod";
 
 import { createSupabasePublicClient } from "@/shared/lib/supabase/public";
@@ -16,7 +17,8 @@ import { toPublicAuthor } from "./profile-queries";
 
 // Both reads run as anon through the cookie-less client, so RLS returns only public rows, and each
 // opens its own cache scope: the lifetime depends on the result, set after the read (design D5, NFR-7).
-// Failures are returned as values, so they are cached too, briefly.
+// Failures are returned as values, so they are cached too, briefly. Throwing instead to keep them out
+// of the cache fails an env-less build and doesn't keep a stale entry (add-author-poems design D14).
 
 const LIST_OPERATION = "list public authors";
 const READ_OPERATION = "read public author";
@@ -110,8 +112,12 @@ async function cachedPublicAuthor(id: string): Promise<PublicAuthorResult> {
   return result;
 }
 
-/** One public profile; a non-UUID id is `not-found` before any cache scope opens (design D5). */
-export async function getPublicAuthor(id: string): Promise<PublicAuthorResult> {
+/**
+ * One public profile; a non-UUID id is `not-found` before any cache scope opens (design D5).
+ * Memoized per request, so a page and its breadcrumb trail share one result and can't disagree
+ * (design D12 of add-author-poems).
+ */
+export const getPublicAuthor = cache(async (id: string): Promise<PublicAuthorResult> => {
   if (!authorIdSchema.safeParse(id).success) return { ok: false, reason: "not-found" };
   return cachedPublicAuthor(id);
-}
+});

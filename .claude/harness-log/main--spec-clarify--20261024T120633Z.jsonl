@@ -1,0 +1,3 @@
+{"ts":"2026-10-24T12:06:33Z","change":"add-author-poems","kind":"finding","gate":"spec-clarify","finding":"author-poems NFR-6 scenario: 'queried by role' scope (whole page vs main) -> main only","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-24T12:06:33Z","change":"add-author-poems","kind":"finding","gate":"spec-clarify","finding":"breadcrumbs NFR-5 route-list baseline (main before this change vs before breadcrumbs) -> one-time rule removed, slot-per-page kept","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-24T12:06:33Z","change":"add-author-poems","kind":"finding","gate":"spec-clarify","finding":"author-poems FR-5: poemId case sensitivity -> exact match, other casing is 404","outcome":"fixed","ruleNumber":""}

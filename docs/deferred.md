@@ -77,3 +77,17 @@ Archived at `openspec/changes/archive/2026-09-29-add-contentful-home-greeting/`.
 - **Verified instead:** the workflow file is on `main` and the workflow is `active`. Manual dispatch run 36845027421 (`workflow_dispatch`) ran one `deps-outdated` job, which failed and named `next` and `eslint-config-next` 16.3.7 → 16.3.8 and `@fission-ai/openspec` ^1.13.2 → ^1.14.0. That matches the local `npm run deps:outdated` on the same tree exactly.
 - **Decision:** user, 2026-09-30 (spec-clarify, reading B).
 - **Status:** resolved 2026-10-05. `gh run list --workflow deps-outdated.yml --event schedule` shows run 37319694071 (event `schedule`, branch `main`, one `deps-outdated` job, started 13:48 UTC; GitHub delayed the 06:00 cron). It failed naming five patch upgrades (`@tanstack/react-query`, `@tanstack/react-query-devtools`, `@types/node`, `@vitejs/plugin-react`, `jsdom`), exactly matching `npm run deps:outdated` run locally on `main` the same day. The user cleared the block; 8.1 is ticked and the change archived.
+
+## add-author-poems
+
+Archived at `openspec/changes/archive/2026-10-27-add-author-poems/`.
+
+### add-author-poems · 6.4 — race and cache checks not recorded as scenarios
+
+- **State:** skipped
+- **Requirement:** FR-11, FR-12, FR-13, FR-14
+- **What is missing:** recorded `@playwright/test` scenarios for the Gate 3 checks that need more than the dev server and the seed data: FR-13's directory → author cases (two clicks before the URL changes; skeleton, Back, the other author), the skeleton-and-Back cases for poem list → poem and author page → poem list, and the production-build checks of FR-11 (retry lock), FR-12 (error screen with the «Автор» trail) and FR-14 (cold failure, recovery a second after restart, one shared author read for two tabs). Only FR-13's "two quick clicks between poems" is recorded (`tests/web-qa-scenarios/poem-two-quick-clicks.spec.ts`).
+- **Why:** the local seed data has one public author, and the second click needs a second public author as its target. Browser network throttling sends the whole page in one late response, so the skeleton never shows; only pausing the `supabase_rest_Poetry-Hub` container slows the server's author read. The FR-11, FR-12 and FR-14 checks also need `npm run build && npm run start` and stopping that container. The replay runs on `next dev` with neither.
+- **Verified instead:** every case passed by hand in Gate 3 on 2026-10-27, recorded in commit 86d4552's body. FR-13 ran on `next dev` with the REST container paused, using a second public author made temporarily from the local QA row (last name set, then reset to NULL). FR-11, FR-12 and FR-14 ran on a local production build, with the REST container stopped or paused, and requests counted in the Kong access log.
+- **Decision:** user, 2026-10-27 (Gate 4/5 finding CR-06/CR-13 on group 6).
+- **Status:** open. To record them: add a second public author to the local seed data, and write the cases as `@local-stack` scenarios that pause the REST container and run against a production build. Both need a `tests.integration` health check, so the replay doesn't exclude them.

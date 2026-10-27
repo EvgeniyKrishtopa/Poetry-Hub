@@ -36,13 +36,32 @@ describe("matchRoute", () => {
     expect(matchRoute(["authors", ANNA_ID])).toEqual({ kind: "author", id: ANNA_ID });
   });
 
-  // implements FR-6 of add-breadcrumbs
-  it.each([[["no-such-page"]], [["account", "author", "extra"]], [["authors", "a", "b"]], [["authors", ""]]])(
-    "matches nothing for %j",
-    (segments) => {
-      expect(matchRoute(segments)).toEqual({ kind: "none" });
-    },
-  );
+  // implements FR-8 of add-author-poems
+  it("matches an author's poem list by the author id", () => {
+    expect(matchRoute(["authors", ANNA_ID, "poems"])).toEqual({ kind: "author-poems", authorId: ANNA_ID });
+  });
+
+  // implements FR-8 of add-author-poems
+  it("matches one poem by the author id and the poem id", () => {
+    expect(matchRoute(["authors", ANNA_ID, "poems", "osenniy-sad"])).toEqual({
+      kind: "author-poem",
+      authorId: ANNA_ID,
+      poemId: "osenniy-sad",
+    });
+  });
+
+  // implements FR-6 of add-breadcrumbs, FR-8 of add-author-poems
+  it.each([
+    [["no-such-page"]],
+    [["account", "author", "extra"]],
+    [["authors", "a", "b"]],
+    [["authors", ""]],
+    [["authors", ANNA_ID, ""]],
+    [["authors", ANNA_ID, "poems", ""]],
+    [["authors", ANNA_ID, "poems", "x", "y"]],
+  ])("matches nothing for %j", (segments) => {
+    expect(matchRoute(segments)).toEqual({ kind: "none" });
+  });
 
   // implements FR-2 of add-breadcrumbs
   it("writes every row's path from its named constant", () => {

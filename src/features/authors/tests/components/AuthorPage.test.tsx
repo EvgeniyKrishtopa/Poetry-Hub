@@ -48,7 +48,7 @@ afterEach(() => {
 describe("AuthorProfileView", () => {
   // implements FR-14, NFR-8 of add-author-profiles
   it("renders the full-name h1, the photo with its alt, and the centred about on a lang=ru root", () => {
-    const { container } = render(<AuthorProfileView author={ANNA} ownerLink={null} />);
+    const { container } = render(<AuthorProfileView author={ANNA} ownerLink={null} poems={null} />);
 
     expect(screen.getByRole("heading", { level: 1, name: "Anna Akhmatova" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Фото: Anna Akhmatova" })).toBeInTheDocument();
@@ -59,7 +59,7 @@ describe("AuthorProfileView", () => {
 
   // implements FR-14 of add-author-profiles
   it("shows the placeholder instead of an image when there is no photo", () => {
-    const { container } = render(<AuthorProfileView author={{ ...ANNA, photoUrl: null }} ownerLink={null} />);
+    const { container } = render(<AuthorProfileView author={{ ...ANNA, photoUrl: null }} ownerLink={null} poems={null} />);
 
     expect(screen.queryByRole("img")).toBeNull();
     expect(container.querySelector("[data-photo-placeholder]")).not.toBeNull();
@@ -67,18 +67,41 @@ describe("AuthorProfileView", () => {
 
   // implements FR-14 of add-author-profiles
   it("omits the about section when about is empty", () => {
-    render(<AuthorProfileView author={{ ...ANNA, about: null }} ownerLink={null} />);
+    render(<AuthorProfileView author={{ ...ANNA, about: null }} ownerLink={null} poems={null} />);
 
     expect(screen.queryByRole("heading", { level: 2 })).toBeNull();
   });
 
   // implements FR-15, NFR-8 of add-author-profiles
   it("places the owner's «Редактировать профиль» link before the h1", () => {
-    render(<AuthorProfileView author={ANNA} ownerLink={<AuthorOwnerLinkView isOwner />} />);
+    render(<AuthorProfileView author={ANNA} ownerLink={<AuthorOwnerLinkView isOwner />} poems={null} />);
 
     const link = screen.getByRole("link", { name: "Редактировать профиль" });
     const heading = screen.getByRole("heading", { level: 1 });
     expect(link.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // implements FR-1 of add-author-poems
+  it("renders the poems slot last, after the about section", () => {
+    const { container } = render(<AuthorProfileView author={ANNA} ownerLink={null} poems={<p data-poems-slot />} />);
+
+    const slot = container.querySelector("[data-poems-slot]");
+    const about = screen.getByRole("heading", { level: 2, name: "Poet" });
+    expect(slot).not.toBeNull();
+    expect(container.firstElementChild?.lastElementChild).toBe(slot);
+    expect(about.compareDocumentPosition(slot as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // implements FR-1 of add-author-poems
+  it("renders the poems slot right after the photo when about is empty", () => {
+    const { container } = render(
+      <AuthorProfileView author={{ ...ANNA, about: null }} ownerLink={null} poems={<p data-poems-slot />} />,
+    );
+
+    const slot = container.querySelector("[data-poems-slot]");
+    const photo = screen.getByRole("img", { name: "Фото: Anna Akhmatova" });
+    expect(container.firstElementChild?.lastElementChild).toBe(slot);
+    expect(slot?.previousElementSibling?.contains(photo)).toBe(true);
   });
 });
 
@@ -152,14 +175,17 @@ describe("AuthorPageContent", () => {
   it("renders the profile view, with the owner check in its own Suspense boundary", async () => {
     vi.mocked(getPublicAuthor).mockResolvedValue({ ok: true, author: ANNA });
 
-    const element = (await AuthorPageContent({ id: Promise.resolve(PROFILE_ID) })) as ReactElement<{
+    const poems = <p data-poems-slot />;
+    const element = (await AuthorPageContent({ id: Promise.resolve(PROFILE_ID), poems })) as ReactElement<{
       author: PublicAuthor;
       ownerLink: ReactElement<{ children: ReactElement<{ profileId: string }> }>;
+      poems: ReactNode;
     }>;
 
     expect(getPublicAuthor).toHaveBeenCalledWith(PROFILE_ID);
     expect(element.type).toBe(AuthorProfileView);
     expect(element.props.author).toBe(ANNA);
+    expect(element.props.poems).toBe(poems);
     expect(element.props.ownerLink.type).toBe(Suspense);
     expect(element.props.ownerLink.props.children.type).toBe(AuthorOwnerLink);
     expect(element.props.ownerLink.props.children.props.profileId).toBe(PROFILE_ID);
@@ -169,14 +195,16 @@ describe("AuthorPageContent", () => {
   it("calls notFound() for an unknown or malformed id", async () => {
     vi.mocked(getPublicAuthor).mockResolvedValue({ ok: false, reason: "not-found" });
 
-    await expect(AuthorPageContent({ id: Promise.resolve("not-a-uuid") })).rejects.toThrow("404");
+    await expect(AuthorPageContent({ id: Promise.resolve("not-a-uuid"), poems: null })).rejects.toThrow("404");
     expect(notFound).toHaveBeenCalledOnce();
   });
 
   it("throws to the route's error screen when the profile is unavailable", async () => {
     vi.mocked(getPublicAuthor).mockResolvedValue({ ok: false, reason: "unavailable" });
 
-    await expect(AuthorPageContent({ id: Promise.resolve(PROFILE_ID) })).rejects.toThrow("Author page unavailable");
+    await expect(AuthorPageContent({ id: Promise.resolve(PROFILE_ID), poems: null })).rejects.toThrow(
+      "Author page unavailable",
+    );
     expect(notFound).not.toHaveBeenCalled();
   });
 });
@@ -185,12 +213,17 @@ describe("AuthorPage", () => {
   // An async Server Component can't render in jsdom, so this checks the tree the wrapper returns.
   it("streams the content inside Suspense, with heading, photo, and text skeletons as the fallback", () => {
     const id = Promise.resolve(PROFILE_ID);
-    const element = AuthorPage({ id });
+    const poems = <p data-poems-slot />;
+    const element = AuthorPage({ id, poems });
     expect(element.type).toBe(Suspense);
-    const { fallback, children } = element.props as { fallback: ReactNode; children: ReactElement<{ id: unknown }> };
+    const { fallback, children } = element.props as {
+      fallback: ReactNode;
+      children: ReactElement<{ id: unknown; poems: unknown }>;
+    };
 
     expect(children.type).toBe(AuthorPageContent);
     expect(children.props.id).toBe(id);
+    expect(children.props.poems).toBe(poems);
     const { container } = render(fallback);
     expect(container.querySelectorAll("[data-skeleton]")).toHaveLength(5);
     expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");

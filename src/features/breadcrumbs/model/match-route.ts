@@ -1,4 +1,5 @@
 import { AUTHOR_EDITOR_PATH, AUTHORS_PAGE_TITLES, AUTHORS_PATH } from "@/features/authors";
+import { POEMS_SEGMENT } from "@/features/poems";
 import { ACCOUNT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
 import { ABOUT_PATH, PRIVACY_PATH } from "@/shared/config/constants";
 
@@ -26,16 +27,26 @@ export const STATIC_ROUTES: readonly RouteRow[] = [
 
 const AUTHOR_PAGE_PREFIX = `${AUTHORS_PATH}/`;
 
+const NO_MATCH: RouteMatch = { kind: "none" };
+
 function isParentPath(parent: string, path: string): boolean {
   return path.startsWith(`${parent}/`);
 }
 
-/** The one dynamic row: exactly one segment after the author directory. */
-function matchAuthorId(path: string): string | null {
-  if (!path.startsWith(AUTHOR_PAGE_PREFIX)) return null;
-  const id = path.slice(AUTHOR_PAGE_PREFIX.length);
-  if (id === "" || id.includes("/")) return null;
-  return id;
+/**
+ * The dynamic rows, over the segments after the author directory: `[id]` is the author page,
+ * `[id, "poems"]` the poem list, `[id, "poems", poemId]` one poem; anything else has no trail.
+ */
+function matchAuthorRoute(path: string): RouteMatch {
+  if (!path.startsWith(AUTHOR_PAGE_PREFIX)) return NO_MATCH;
+
+  const [authorId, section, poemId, ...extra] = path.slice(AUTHOR_PAGE_PREFIX.length).split("/");
+  if (authorId === undefined || authorId === "" || extra.length > 0) return NO_MATCH;
+  if (section === undefined) return { kind: "author", id: authorId };
+  if (section !== POEMS_SEGMENT) return NO_MATCH;
+  if (poemId === undefined) return { kind: "author-poems", authorId };
+  if (poemId === "") return NO_MATCH;
+  return { kind: "author-poem", authorId, poemId };
 }
 
 /** Maps a URL's segments to its trail by the route table; anything not in the table is `none`. */
@@ -50,8 +61,5 @@ export function matchRoute(segments: readonly string[]): RouteMatch {
     return { kind: "static", items: [...parents, { kind: "current", label: row.label }] };
   }
 
-  const authorId = matchAuthorId(path);
-  if (authorId !== null) return { kind: "author", id: authorId };
-
-  return { kind: "none" };
+  return matchAuthorRoute(path);
 }

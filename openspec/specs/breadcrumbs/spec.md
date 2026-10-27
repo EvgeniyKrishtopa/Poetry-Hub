@@ -17,7 +17,7 @@ Every page except home SHALL show a breadcrumb trail between the site header and
 - **THEN** a navigation landmark named «Навигационная цепочка» is rendered after the site header and before the page's main content
 
 ### Requirement: Trail items per route (FR-2)
-The trail SHALL list «Главная» first and then every level down to the current page: `/authors` → Главная › Наши авторы; `/authors/<id>` → Главная › Наши авторы › <author name>; `/account` → Главная › Мастерская поэта; `/account/author` → Главная › Мастерская поэта › Профиль автора; `/login` → Главная › Вход; `/signup` → Главная › Регистрация; `/about` → Главная › О проекте; `/privacy` → Главная › Политика конфиденциальности.
+The trail SHALL list «Главная» first and then every level down to the current page: `/authors` → Главная › Наши авторы; `/authors/<id>` → Главная › Наши авторы › <author name>; `/authors/<id>/poems` → Главная › Наши авторы › <author name> › Произведения; `/authors/<id>/poems/<poemId>` → Главная › Наши авторы › <author name> › Произведения › <poem title>; `/account` → Главная › Мастерская поэта; `/account/author` → Главная › Мастерская поэта › Профиль автора; `/login` → Главная › Вход; `/signup` → Главная › Регистрация; `/about` → Главная › О проекте; `/privacy` → Главная › Политика конфиденциальности. On the two poem routes (add-author-poems FR-8), «<author name>» links to `/authors/<id>`, and on the poem page «Произведения» links to `/authors/<id>/poems`.
 
 #### Scenario: Two-level trail
 - **GIVEN** any visitor
@@ -48,6 +48,18 @@ The trail SHALL list «Главная» first and then every level down to the c
 - **AND** «Главная» links to `/`, and «Политика конфиденциальности» is not a link and has `aria-current="page"`
 - **AND** the same trail is shown when the privacy policy content fails and the error screen replaces it
 
+#### Scenario: Poem list trail
+- **GIVEN** a public author «Анна Ахматова» with id `<id>`
+- **WHEN** a visitor opens `/authors/<id>/poems`
+- **THEN** the trail items read, in order, «Главная», «Наши авторы», «Анна Ахматова», «Произведения»
+- **AND** «Анна Ахматова» links to `/authors/<id>`, and «Произведения» is not a link and has `aria-current="page"`
+
+#### Scenario: Poem trail
+- **GIVEN** a public author «Анна Ахматова» with id `<id>` and her poem «Осенний сад» with id `<poemId>`
+- **WHEN** a visitor opens `/authors/<id>/poems/<poemId>`
+- **THEN** the trail items read, in order, «Главная», «Наши авторы», «Анна Ахматова», «Произведения», «Осенний сад»
+- **AND** «Произведения» links to `/authors/<id>/poems`, and «Осенний сад» is not a link and has `aria-current="page"`
+
 ### Requirement: Links and current-item highlight (FR-3)
 Every trail item except the last SHALL be a link to its page. The last item SHALL be plain text, not a link, carry `aria-current="page"`, and use the accent color; the other items SHALL use the regular text color.
 
@@ -63,7 +75,7 @@ Every trail item except the last SHALL be a link to its page. The last item SHAL
 - **AND** «Главная» is rendered in the regular text color
 
 ### Requirement: Author name on the author page (FR-4)
-On `/authors/<id>` the last item SHALL be the author's first and last name separated by a space. When the author can't be read because the service is unavailable, the last item SHALL read «Автор». When the author doesn't exist or isn't public, no trail SHALL be shown.
+On `/authors/<id>`, `/authors/<id>/poems`, and `/authors/<id>/poems/<poemId>`, the author's item SHALL be the author's first and last name separated by a space. When the author can't be read because the service is unavailable, that item SHALL read «Автор» (still a link on the two poem routes). When the author doesn't exist or isn't public, no trail SHALL be shown. On the poem page, when the poem is not one of that author's poems, no trail SHALL be shown (add-author-poems FR-8), except when the author read is unavailable: then the trail SHALL read Главная › Наши авторы › Автор, with «Автор» as the current item, matching the error screen (add-author-poems FR-12).
 
 #### Scenario: Public author
 - **GIVEN** a public author with first name «Анна» and last name «Ахматова»
@@ -75,10 +87,25 @@ On `/authors/<id>` the last item SHALL be the author's first and last name separ
 - **WHEN** a visitor opens `/authors/<a valid id>`
 - **THEN** the trail's last item reads «Автор»
 
+#### Scenario: Author read unavailable on a poem route
+- **GIVEN** the author service can't be reached
+- **WHEN** a visitor opens `/authors/<a valid id>/poems`
+- **THEN** the trail's third item reads «Автор» and links to `/authors/<id>`
+
 #### Scenario: Unknown author
 - **GIVEN** no public author has id `<id>`
-- **WHEN** a visitor opens `/authors/<id>`
+- **WHEN** a visitor opens `/authors/<id>`, `/authors/<id>/poems`, or `/authors/<id>/poems/<any poem id>`
 - **THEN** no trail is shown
+
+#### Scenario: Poem that isn't the author's
+- **GIVEN** a public author `<id>` and a poem id that is not one of that author's poems
+- **WHEN** a visitor opens `/authors/<id>/poems/<that id>`
+- **THEN** no trail is shown
+
+#### Scenario: Author unavailable and poem not the author's
+- **GIVEN** the author service can't be reached for a valid id `<id>`, and `no-such-poem` is not one of that author's poems
+- **WHEN** a visitor opens `/authors/<id>/poems/no-such-poem`
+- **THEN** the page shows the error screen, and the trail items read «Главная», «Наши авторы», «Автор», with «Автор» not a link and carrying `aria-current="page"`
 
 ### Requirement: Same trail for every visitor (FR-5)
 The trail SHALL be identical for every visitor, signed in or not, and SHALL NOT depend on the session.
@@ -146,14 +173,6 @@ While the trail's data loads, its row SHALL keep the height of a one-line trail,
 - **WHEN** the page's shell renders
 - **THEN** a placeholder with the trail row's height, hidden from assistive technology, stands in its place
 
-### Requirement: Route list unchanged (NFR-5)
-The production build SHALL succeed under Cache Components, and its set of route paths SHALL be identical to `main` before the change.
-
-#### Scenario: Build route list
-- **GIVEN** the change is complete
-- **WHEN** `npm run build` runs
-- **THEN** it exits 0 and its route path list equals the one on `main` before the change
-
 ### Requirement: Russian UI copy (NFR-6)
 Every user-facing string of the trail SHALL be the Russian copy from the change's UI copy table, verbatim.
 
@@ -161,4 +180,43 @@ Every user-facing string of the trail SHALL be the Russian copy from the change'
 - **GIVEN** the trail on each page in the trail table
 - **WHEN** its landmark name and item labels are read
 - **THEN** each matches the UI copy table exactly
+
+### Requirement: Slot page for every page (NFR-5)
+The production build SHALL succeed under Cache Components, and every page route under `app/(public)/` and `app/(authorized)/` SHALL have exactly one mirror page at the same path under `app/@breadcrumbs/`, with no slot page lacking a real page.
+
+#### Scenario: Slot mirrors every page
+- **GIVEN** the page files under `app/(public)/` and `app/(authorized)/`
+- **WHEN** they are compared with the page files under `app/@breadcrumbs/`
+- **THEN** both sets of paths are identical, including `authors/[id]/poems` and `authors/[id]/poems/[poemId]`
+
+### Requirement: Trail agrees with its page (FR-12)
+On `/authors/<id>`, `/authors/<id>/poems`, and `/authors/<id>/poems/<poemId>`, the page and its trail SHALL use one author read per request, and on the poem page one poem read, so they never disagree: the trail shows the author's name exactly when the page shows the author's content, «Автор» exactly when the page shows the error screen, and no trail exactly when the page shows the 404 page (add-author-poems FR-12).
+
+#### Scenario: One read per request
+- **GIVEN** a request for `/authors/<id>/poems/<poemId>`
+- **WHEN** the page and the trail render
+- **THEN** the author data source is queried at most once and the poem data source at most once for that request
+
+#### Scenario: A failing read fails both
+- **GIVEN** the author read for a request fails as unavailable
+- **WHEN** `/authors/<id>` renders
+- **THEN** the page shows the error screen and the trail's author item reads «Автор»; the trail never shows the author's name in that request
+
+### Requirement: Trail follows the last of several quick navigations (FR-13)
+When a visitor follows a link to an author page, a poem list, or a poem page, and then another such link before the first page has rendered, the page and the trail SHALL both end on the second link's target (add-author-poems FR-13). This holds both when the second click comes before the URL changes and when it comes after the first page's skeleton shows but before its content arrives; late content from the first navigation SHALL never appear.
+
+#### Scenario: Two clicks before the URL changes
+- **GIVEN** a visitor on `/authors` with authors «Анна Ахматова» and «Борис Пастернак», and author reads slowed down
+- **WHEN** they click «Анна Ахматова» and, before the URL changes, click «Борис Пастернак»
+- **THEN** the URL is Борис Пастернак's page, the page heading reads «Борис Пастернак», and the trail's last item reads «Борис Пастернак»
+
+#### Scenario: Second click while the first page's content is in flight
+- **GIVEN** a visitor on `/authors` with authors «Анна Ахматова» and «Борис Пастернак», and author reads slowed down
+- **WHEN** they click «Анна Ахматова», see her page's skeleton, press Back before her content arrives, and click «Борис Пастернак»
+- **THEN** the page heading reads «Борис Пастернак» and the trail's last item reads «Борис Пастернак», and «Анна Ахматова» never appears afterwards
+
+#### Scenario: Two quick clicks between poems
+- **GIVEN** a visitor on an author's poem list with two poems
+- **WHEN** they click the first title and immediately press Back and click the second title
+- **THEN** the page shows the second poem and the trail's last item is the second poem's title
 

@@ -8,7 +8,7 @@ import { AuthorProfileView } from "../AuthorProfileView/AuthorProfileView";
 import type { AuthorPageContentProps } from "./AuthorPageContent.types";
 
 /** Reads the cached public profile inside `AuthorPage`'s Suspense boundary (FR-14). */
-export async function AuthorPageContent({ id }: AuthorPageContentProps) {
+export async function AuthorPageContent({ id, poems }: AuthorPageContentProps) {
   const result = await getPublicAuthor(await id);
 
   if (!result.ok) {
@@ -29,6 +29,7 @@ export async function AuthorPageContent({ id }: AuthorPageContentProps) {
           <AuthorOwnerLink profileId={result.author.id} />
         </Suspense>
       }
+      poems={poems}
     />
   );
 }

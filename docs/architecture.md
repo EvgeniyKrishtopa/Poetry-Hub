@@ -9,20 +9,22 @@ src/
 ├── app/                      # Routing only: pages, layouts, route handlers, providers
 │   ├── layout.tsx            # Root shell: html/body/Providers + header (site link; a <nav> with authors' `AuthorsNavLink` and auth's `HeaderAuthLinks`, which reads the session inside its own <Suspense>), then the `breadcrumbs` slot, then the page, then site-footer's `SiteFooter`
 │   ├── @breadcrumbs/         # Parallel slot: the breadcrumb trail. Mirrors the page tree, one page.tsx per real page at the same URL path, each rendering breadcrumbs' `Breadcrumbs` with its own segments
-│   │                         # (about/page.tsx, privacy/page.tsx, authors/page.tsx, authors/[id]/page.tsx, login/, signup/, account/, account/author/);
+│   │                         # (about/page.tsx, privacy/page.tsx, authors/page.tsx, authors/[id]/page.tsx, authors/[id]/poems/page.tsx, authors/[id]/poems/[poemId]/page.tsx, login/, signup/, account/, account/author/);
 │   │                         # page.tsx (home) and default.tsx (any 404) render nothing. No catch-all: it would turn missing URLs into HTTP 200. A new page needs its slot page too (app/tests/breadcrumbs-slot.test.ts checks)
-│   ├── error.tsx             # Client error boundary: generic copy + digest, retry() (covers both groups)
+│   ├── error.tsx             # Client error boundary: generic copy + digest; «Повторить» runs router.refresh() and reset() in one transition, so page and trail refresh together, and stays disabled while pending (covers both groups)
 │   ├── not-found.tsx         # 404 screen for unmatched URLs (covers both groups)
 │   ├── loading.tsx           # Neutral loading state for any segment (covers both groups)
 │   ├── (public)/             # Route group (no URL segment): pages anyone can read
 │   │   ├── layout.tsx        # Pass-through
-│   │   ├── page.tsx          # / (home)
+│   │   ├── page.tsx          # / (home): home's `HomeGreeting` banner only, the whole page cached ("use cache", cacheLife("minutes"), tagged CONTENTFUL_CACHE_TAG)
 │   │   ├── login/page.tsx    # /login (passes ?error= to auth's `SignInPanel`, which awaits it inside <Suspense>)
 │   │   ├── signup/page.tsx   # /signup
 │   │   ├── about/page.tsx    # /about: content-page's `ContentPage` with `CONTENT_PAGE_KEYS.about` (Contentful's `about_page` entry)
 │   │   ├── privacy/page.tsx  # /privacy: content-page's `ContentPage` with `CONTENT_PAGE_KEYS.privacyPolicy` (Contentful's `privacy_policy` entry)
 │   │   ├── authors/page.tsx  # /authors: the author directory (authors' `AuthorDirectory`)
-│   │   └── authors/[id]/page.tsx # /authors/<profile id>: a public author page (authors' `AuthorPage`)
+│   │   ├── authors/[id]/page.tsx # /authors/<profile id>: a public author page (authors' `AuthorPage`, with poems' `AuthorPoemsEntry` passed in as its `poems` slot)
+│   │   ├── authors/[id]/poems/page.tsx # /authors/<profile id>/poems: the author's poem list (poems' `AuthorPoemsPage`)
+│   │   └── authors/[id]/poems/[poemId]/page.tsx # /authors/<profile id>/poems/<poem id>: one poem (poems' `PoemPage`)
 │   ├── (authorized)/         # Route group for pages that need a signed-in reader
 │   │   ├── layout.tsx        # Pass-through placement marker; each page enforces the session itself
 │   │   ├── account/page.tsx  # /account: «Мастерская поэта», the reader's account page (authors' `AccountPage`)
@@ -45,7 +47,10 @@ src/
 │   │   └── …                 # dal/content-page.ts (owns a result-dependent "use cache" scope keyed by the entry key), model/ (CONTENT_PAGE_KEYS, Zod schema, result types), components/ (Suspense wrapper, async loader, view, placeholder), tests/, index.ts
 │   ├── site-footer/          # The footer on every page: copyright range (founding year to current year), the about and privacy links, and the contact button
 │   │   └── …                 # components/SiteFooter (owns its "use cache" scope for the year; renders contact's ContactDialog as its last item), model/ (link paths and order, founding year, copy, formatCopyrightYears), tests/, index.ts
-│   └── poems/                # The folder roles every feature can use:
+│   ├── home/                 # The home page's welcome banner: dal/home-greeting.ts (Contentful `greeting` entry), model/ (schema, fallback), components/HomeGreeting
+│   ├── poems/                # An author's poems: the author page's entry link, the poem list, the poem page; server-only, public (reads no session)
+│   │   └── …                 # dal/ (author-poems.ts: listAuthorPoems, getAuthorPoem in React's cache; mock-poems.ts and mock-poem-count.ts stand in for the database and only author-poems.ts imports them), model/ (types, paths, copy, date format, sorting, POEMS_SEGMENT), components/ (Suspense wrappers with skeletons, async loaders, sync views AuthorPoemList and PoemView), tests/, index.ts
+│   └── <name>/               # The folder roles every feature can use:
 │       ├── api/              # Fetchers (*.api.ts) + query keys/options/hooks (*.queries.ts)
 │       ├── dal/              # Server-only data access for Server Components (no role suffix)
 │       ├── hooks/            # Client hooks shared by several of the feature's components (use-<name>.ts) + their types (*.types.ts)
@@ -70,7 +75,7 @@ src/
 - A new page goes in `app/(public)/` unless it needs a signed-in reader; then it goes in `app/(authorized)/`. The group's layout enforces nothing — placing a page there does not protect it. Each page's feature component calls `requireSession()` (from `@/features/auth`) inside its own Suspense boundary before reading any reader data: it redirects a signed-out reader to `/login`, and returns `unknown` when Supabase can't be reached, which the page shows as "service unavailable" instead of redirecting. Never a layout-only check, since a shared layout does not re-render on client navigation. On top of that, the proxy redirects a signed-out page request under `/account` before anything renders (ACCOUNT_PATH in `shared/config/account-paths.ts`; a page outside it gets only its own gate). That redirect is optimistic, so the page gate always stays. Route handlers under `app/api/` stay outside both groups.
 - Import a feature only through its public API: `@/features/poems`, never `@/features/poems/model/...` (enforced by `no-restricted-imports` in `eslint.config.mjs`).
 - Features must not import from other features' internals. If two features need the same thing, move it to `shared/` or compose them in `app/`.
-- A feature may import another feature's public API for a server-only accessor it needs, e.g. `authors` takes `getSessionState` / `getCurrentUserId` / `requireSession` from `@/features/auth`, and `breadcrumbs` takes `getPublicAuthorName`, `AUTHORS_PAGE_TITLES` and the authors path constants from `@/features/authors`. Only through the index, only server-side, and never in both directions (no cycles). One client-side exception: `site-footer` renders `contact`'s `ContactDialog`, because the footer always shows that button (`add-contact-form` design D7); `contact` never imports `site-footer`.
+- A feature may import another feature's public API for a server-only accessor it needs, e.g. `authors` takes `getSessionState` / `getCurrentUserId` / `requireSession` from `@/features/auth`, `breadcrumbs` takes `getPublicAuthorName`, `AUTHORS_PAGE_TITLES` and the authors path constants from `@/features/authors` and `getAuthorPoem`, `authorPoemsPath`, `POEMS_SEGMENT`, `POEMS_PAGE_TITLE` from `@/features/poems`, and `poems` takes `getPublicAuthorName` and `authorPagePath` from `@/features/authors`. `authors` never imports `poems`: the author route passes `AuthorPoemsEntry` into `AuthorPage` as a slot. Only through the index, only server-side, and never in both directions (no cycles). One client-side exception: `site-footer` renders `contact`'s `ContactDialog`, because the footer always shows that button (`add-contact-form` design D7); `contact` never imports `site-footer`.
 - `shared/` never imports from `features/` or `app/`.
 - Inside a feature, use relative imports; across layers, use the `@/` alias.
 - Don't create a `shared/` abstraction until a second feature actually needs it. Exception: an infrastructure client for an external service (e.g. `shared/lib/contentful`, `shared/lib/supabase`) may live in `shared/lib` from its first consumer.
@@ -79,9 +84,9 @@ src/
 
 ## Naming
 
-- Components: `PascalCase` folder + file (`PoemCard/PoemCard.tsx`, `PoemCard.module.css`, `PoemCard.types.ts`), named exports only (except Next.js route files, which need default exports). A helper only that component uses sits in the same folder in `kebab-case` (`SignInForm/submit-sign-in.ts`). What gets its own file: `docs/code-style.md`.
+- Components: `PascalCase` folder + file (`AuthorPhoto/AuthorPhoto.tsx`, `AuthorPhoto.module.css`, `AuthorPhoto.types.ts`), named exports only (except Next.js route files, which need default exports). A helper only that component uses sits in the same folder in `kebab-case` (`SignInForm/submit-sign-in.ts`). What gets its own file: `docs/code-style.md`.
 - Constants: `model/<name>.constants.ts` per feature, `shared/config/constants.ts` project-wide (`docs/code-style.md`).
-- Non-component files: `kebab-case` with a role suffix (`poems.api.ts`, `poems.queries.ts`, `poems-ui.store.ts`, `poem.types.ts`, `auth.actions.ts`). Exceptions take no suffix: modules in a feature's `dal/` folder (`dal/home-greeting.ts`), a helper inside a component's folder (`SignInForm/submit-sign-in.ts`, see `docs/code-style.md`), and hooks in a feature's `hooks/` folder, whose `use-` prefix is the role (`hooks/use-profile-field.ts`); a helper only one hook uses sits next to it (`hooks/settle-profile-action.ts`).
+- Non-component files: `kebab-case` with a role suffix (`poem.types.ts`, `poem.constants.ts`, `greeting.schema.ts`, `auth.actions.ts`; a client-fetched feature adds `<name>.api.ts`, `<name>.queries.ts`, `<name>-ui.store.ts`). Exceptions take no suffix: modules in a feature's `dal/` folder (`dal/home-greeting.ts`), a helper inside a component's folder (`SignInForm/submit-sign-in.ts`, see `docs/code-style.md`), and hooks in a feature's `hooks/` folder, whose `use-` prefix is the role (`hooks/use-profile-field.ts`); a helper only one hook uses sits next to it (`hooks/settle-profile-action.ts`).
 - A hook that only one component uses stays in that component's folder. It moves to the feature's `hooks/` once a second component uses it, or when it is part of a contract between components (the author editor's `useProfileField`, `useFieldLock`). Hooks never import from `components/`; the types they share with components live in `hooks/<name>.types.ts`.
 - A feature's `actions/` folder holds `"use server"` modules (`<name>.actions.ts`, exporting only Server Actions) and the feature's action client (`action-client.ts`, `import "server-only"`). Server Actions are public endpoints: validate input with a `model/` schema and never export anything else from a `"use server"` module.
 - Add `"use client"` only to components that need hooks, state, or browser APIs; keep pages as Server Components.
