@@ -1,0 +1,3 @@
+{"ts":"2026-10-27T12:37:50Z","kind":"finding","change":"refine-author-page-and-contact","gate":"spec-clarify","finding":"contact-form spec.md:14 — 'WHEN 3 seconds pass with no action from the visitor': does activity pause the timer","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-27T12:37:50Z","kind":"finding","change":"refine-author-page-and-contact","gate":"spec-clarify","finding":"proposal.md:70 — '0, 1, 2, 3, and 4 mock poems respectively': strict email order or any order","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-27T12:37:50Z","kind":"finding","change":"refine-author-page-and-contact","gate":"spec-clarify","finding":"tasks.md:133 — 'show the section as mocked': mockup comparison or content check","outcome":"fixed","ruleNumber":""}

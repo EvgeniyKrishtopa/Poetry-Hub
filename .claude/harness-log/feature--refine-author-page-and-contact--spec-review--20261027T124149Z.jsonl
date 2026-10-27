@@ -1,0 +1,3 @@
+{"ts":"2026-10-27T12:41:49Z","change":"refine-author-page-and-contact","kind":"finding","gate":"spec-review","finding":"SR-01: tasks 5.1 and 5.5 named no requirement identifier","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-27T12:41:49Z","change":"refine-author-page-and-contact","kind":"finding","gate":"spec-review","finding":"SR-03: proposal Capabilities omitted author-profiles FR-22 (local seed)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-27T12:41:49Z","change":"refine-author-page-and-contact","group":"full","gate":"spec-review","verdict":"confirmed","skipReason":"","durationMs":122241,"tokensTotal":79906,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}
