@@ -118,13 +118,39 @@ From the submit until the action answers, the submit button SHALL read «Отп�
 - **AND** the action has been called once
 
 ### Requirement: Success (FR-8)
-When Telegram accepts the message, the form SHALL be replaced by the message «Спасибо! Ваше сообщение отправлено.» (`role="status"`) and a «Закрыть» button that closes the dialog. The first time the dialog opens after the visitor has closed the thank-you view, it SHALL show an empty form with no error messages. If the success arrives while the dialog is closed, the next open SHALL still show the thank-you view, and the empty form SHALL come on the open after that view is closed.
+When Telegram accepts the message, the form SHALL be replaced by the message «Спасибо! Ваше сообщение отправлено.» (`role="status"`) and a «Закрыть» button that closes the dialog. While the thank-you view is shown in the open dialog, the dialog SHALL close by itself 3 seconds after the view became visible, exactly as activating «Закрыть» closes it (refine-author-page-and-contact FR-1). Pointer, focus, and keyboard activity inside the dialog SHALL neither pause nor restart the timer; only closing the dialog cancels it. Only the thank-you view closes the dialog by itself: the form, its validation errors, the sending state, and the failure alert never do. Closing the dialog earlier by any means («Закрыть», Escape, or the dialog's close button) SHALL cancel that timer, so a later open is never closed by it. The first time the dialog opens after the thank-you view has closed, it SHALL show an empty form with no error messages. If the success arrives while the dialog is closed, the next open SHALL still show the thank-you view, the 3 seconds SHALL start at that open, and the empty form SHALL come on the open after that view is closed.
 
 #### Scenario: Thank-you and a fresh form
 - **GIVEN** Telegram accepts the message
 - **WHEN** the action answers
 - **THEN** the dialog shows «Спасибо! Ваше сообщение отправлено.» and a «Закрыть» button, and no form fields
 - **AND** after closing and opening the dialog again, every field is empty and no error is shown
+
+#### Scenario: Dialog closes by itself after 3 seconds
+- **GIVEN** the dialog is open and the thank-you view has just appeared
+- **WHEN** 3 seconds pass, whatever the visitor does inside the dialog meanwhile (pointer movement, Tab, text selection) short of closing it
+- **THEN** the dialog is closed and focus is on the «Связаться с нами» button
+- **AND** the next open shows every field empty and no error
+
+#### Scenario: Thank-you view still open just before 3 seconds
+- **GIVEN** the dialog is open and the thank-you view has just appeared
+- **WHEN** 2.9 seconds pass
+- **THEN** the dialog is still open and shows the thank-you view
+
+#### Scenario: Closing early cancels the timer
+- **GIVEN** the thank-you view appeared in the open dialog
+- **WHEN** the visitor activates «Закрыть» after 1 second and reopens the dialog 1 second later
+- **THEN** the dialog shows the empty form and is still open 5 seconds after the reopen
+
+#### Scenario: Success while the dialog is closed
+- **GIVEN** the visitor submitted and closed the dialog before the action answered, and Telegram accepted the message
+- **WHEN** the visitor opens the dialog
+- **THEN** the thank-you view is shown, and the dialog closes 3 seconds after that open
+
+#### Scenario: No auto-close without success
+- **GIVEN** the dialog is open on the form, after a validation error, or after the failure alert «Не удалось отправить сообщение. Попробуйте ещё раз позже.»
+- **WHEN** 5 seconds pass
+- **THEN** the dialog is still open and shows the same state
 
 ### Requirement: Failure (FR-9)
 When the message can't be delivered (the bot settings are missing or malformed, Telegram can't be reached, it doesn't answer within 10 seconds, it answers with an error, or the browser's request to the Server Action fails with no result), the dialog SHALL stay on the form with the alert «Не удалось отправить сообщение. Попробуйте ещё раз позже.» (`role="alert"`) above the fields, keep the typed values, move focus to the «Отправить» button, and allow another submit; the page SHALL never be replaced by an error screen. The alert SHALL disappear the moment «Отправить» is activated again. Each failed delivery that reaches the action SHALL write exactly one server log line, `[contact] send failed`, holding the reason (`config`, `network`, `timeout`, or `http`) and, for `http` only, the HTTP status, and nothing else.
