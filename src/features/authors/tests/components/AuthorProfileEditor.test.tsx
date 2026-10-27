@@ -26,7 +26,6 @@ const PROFILE: AuthorProfile = {
   firstName: "Anna",
   lastName: "Akhmatova",
   about: null,
-  aboutAlign: "left",
   photoUrl: null,
 };
 

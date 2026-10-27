@@ -12,27 +12,23 @@ import { FieldActions } from "../FieldActions/FieldActions";
 import { FieldErrorText } from "../FieldErrorText/FieldErrorText";
 import { ProfileFieldRow } from "../ProfileFieldRow/ProfileFieldRow";
 
-import type { AboutContent, AboutFieldEditorProps } from "./AboutFieldEditor.types";
-
-const EMPTY_DRAFT: AboutContent = { markdown: "", align: "left" };
+import type { AboutFieldEditorProps } from "./AboutFieldEditor.types";
 
 /** About: its rendered value, and the Markdown editor in edit mode (FR-6, FR-10, FR-11). */
-export function AboutFieldEditor({ savedAbout, savedAlign, ...controls }: AboutFieldEditorProps) {
-  const savedContent: AboutContent | null = savedAbout === null ? null : { markdown: savedAbout, align: savedAlign };
-  const [draft, setDraft] = useState<AboutContent>(EMPTY_DRAFT);
+export function AboutFieldEditor({ savedAbout, ...controls }: AboutFieldEditorProps) {
+  const [draft, setDraft] = useState("");
   const errorId = useId();
-  const editor = useProfileField<AboutContent, AboutContent>({
-    savedValue: savedContent,
+  const editor = useProfileField<string, string>({
+    savedValue: savedAbout,
     controls,
-    save: ({ markdown, align }) => saveAboutAction({ about: markdown, align }),
+    save: (about) => saveAboutAction({ about }),
     remove: () => deleteProfileFieldAction({ field: "about" }),
-    toPendingValue: (content) => content,
+    toPendingValue: (about) => about,
     keepEditingOnFailure: true,
   });
 
   function startEditing() {
-    // With no saved about, the draft starts left-aligned: a delete resets the alignment (FR-10).
-    setDraft(savedContent ?? EMPTY_DRAFT);
+    setDraft(savedAbout ?? "");
     editor.startEditing();
   }
 
@@ -50,9 +46,9 @@ export function AboutFieldEditor({ savedAbout, savedAlign, ...controls }: AboutF
 
   return (
     <ProfileFieldRow caption={FIELD_LABELS.about}>
-      {editor.shownValue && (
+      {editor.shownValue !== null && (
         <div className="w-full pt-1.5">
-          <AuthorAbout markdown={editor.shownValue.markdown} align={editor.shownValue.align} />
+          <AuthorAbout markdown={editor.shownValue} />
         </div>
       )}
       {editor.error && <FieldErrorText id={errorId} message={editor.error} />}

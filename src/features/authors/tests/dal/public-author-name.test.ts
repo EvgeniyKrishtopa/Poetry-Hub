@@ -13,7 +13,6 @@ const ANNA = {
   firstName: "Анна",
   lastName: "Ахматова",
   about: null,
-  aboutAlign: "left",
   photoUrl: null,
 } as const;
 

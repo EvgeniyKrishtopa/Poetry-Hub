@@ -71,7 +71,7 @@ export async function writeOwnProfile(patch: ProfileRowPatch): Promise<ProfileWr
 
 const CLEAR_OPERATION = "clear profile field";
 
-/** Clears one text field; clearing about also resets the alignment (FR-10). */
+/** Clears one text field, and only that field (FR-10). */
 export async function clearProfileField(field: NameField | "about"): Promise<ProfileWriteResult> {
   return withServerClient(CLEAR_OPERATION, async (supabase) => {
     const own = await findOwnProfileId(supabase, CLEAR_OPERATION);
@@ -79,7 +79,7 @@ export async function clearProfileField(field: NameField | "about"): Promise<Pro
     // No row (a stale editor in a second tab): there is nothing to clear, so the field is already gone.
     if (own.id === null) return { ok: true, profile: null };
 
-    const patch: ProfileRowPatch = field === "about" ? { about: null, about_align: "left" } : { [field]: null };
+    const patch: ProfileRowPatch = { [field]: null };
     // `.maybeSingle()`: the row may have gone since the id was read (design D3 N5).
     const response = await supabase
       .from(TABLE)

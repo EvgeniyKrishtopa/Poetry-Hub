@@ -10,15 +10,13 @@ const EMPTY_ROW: ProfileRow = {
   first_name: null,
   last_name: null,
   about: null,
-  about_align: "left",
   photo_path: null,
 };
 
 describe("hasProfileContent", () => {
   // implements FR-1 of add-author-profiles
-  it("is false for a row with every content field empty, whatever the alignment", () => {
+  it("is false for a row with every content field empty", () => {
     expect(hasProfileContent(EMPTY_ROW)).toBe(false);
-    expect(hasProfileContent({ ...EMPTY_ROW, about_align: "center" })).toBe(false);
   });
 
   it.each([

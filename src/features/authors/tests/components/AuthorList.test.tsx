@@ -14,7 +14,7 @@ const ANNA_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
 const BORIS_ID = "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f";
 
 function author(id: string, firstName: string, lastName: string): PublicAuthor {
-  return { id, firstName, lastName, about: null, aboutAlign: "left", photoUrl: null };
+  return { id, firstName, lastName, about: null, photoUrl: null };
 }
 
 const LISTED: PublicAuthorsResult = {

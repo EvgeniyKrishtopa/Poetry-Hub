@@ -19,7 +19,10 @@ afterEach(() => {
   vi.resetAllMocks();
 });
 
-function renderAbout(saved: Pick<AboutFieldEditorProps, "savedAbout" | "savedAlign">) {
+const FORMAT_BUTTONS = ["Жирный", "Курсив", "Заголовок", "Подзаголовок", "Маркированный список", "Нумерованный список", "Цитата"];
+const ALIGN_BUTTONS = ["По левому краю", "По центру", "По правому краю"];
+
+function renderAbout(saved: Pick<AboutFieldEditorProps, "savedAbout">) {
   const controls = {
     disabled: false,
     onEditingChange: vi.fn(),
@@ -32,7 +35,7 @@ function renderAbout(saved: Pick<AboutFieldEditorProps, "savedAbout" | "savedAli
 
 async function openEmptyEditor() {
   const user = userEvent.setup();
-  renderAbout({ savedAbout: null, savedAlign: "left" });
+  renderAbout({ savedAbout: null });
   await user.click(screen.getByRole("button", { name: "Добавить «О себе»" }));
   return { user, textarea: screen.getByRole<HTMLTextAreaElement>("textbox", { name: "О себе" }) };
 }
@@ -42,8 +45,26 @@ describe("AboutFieldEditor", () => {
   it("offers the seven toolbar buttons by their Russian names", async () => {
     await openEmptyEditor();
 
-    for (const name of ["Жирный", "Курсив", "Заголовок", "Подзаголовок", "Маркированный список", "Нумерованный список", "Цитата"]) {
+    for (const name of FORMAT_BUTTONS) {
       expect(screen.getByRole("button", { name })).toBeInTheDocument();
+    }
+  });
+
+  // implements FR-2 of refine-author-page-and-contact
+  it("offers no alignment control in either tab, and keeps the format buttons", async () => {
+    const { user } = await openEmptyEditor();
+
+    for (const name of FORMAT_BUTTONS) {
+      expect(screen.getByRole("button", { name })).toBeInTheDocument();
+    }
+    for (const name of ALIGN_BUTTONS) {
+      expect(screen.queryByRole("button", { name })).toBeNull();
+    }
+
+    await user.click(screen.getByRole("tab", { name: "Просмотр" }));
+
+    for (const name of ALIGN_BUTTONS) {
+      expect(screen.queryByRole("button", { name })).toBeNull();
     }
   });
 
@@ -103,17 +124,16 @@ describe("AboutFieldEditor", () => {
   });
 
   // implements FR-8, FR-11, NFR-5 of add-author-profiles
-  it("sends the text with the chosen alignment, and shows a validation error under about", async () => {
+  it("sends only the text, and shows a validation error under about", async () => {
     vi.mocked(saveAboutAction).mockResolvedValue({
       validationErrors: { formErrors: [], fieldErrors: { about: ["Не более 1000 символов."] } },
     });
     const { user, textarea } = await openEmptyEditor();
     await user.type(textarea, "**Поэт**");
-    await user.click(screen.getByRole("button", { name: "По центру" }));
 
     await user.click(screen.getByRole("button", { name: "Сохранить" }));
 
-    expect(saveAboutAction).toHaveBeenCalledWith({ about: "**Поэт**", align: "center" });
+    expect(saveAboutAction).toHaveBeenCalledWith({ about: "**Поэт**" });
     // The field comes back only once the save's answer arrives; under a loaded full run that can be after the click.
     const field = await screen.findByRole("textbox", { name: "О себе" });
     expect(field).toHaveAttribute("aria-invalid", "true");
@@ -121,43 +141,39 @@ describe("AboutFieldEditor", () => {
   });
 
   // implements FR-7, FR-9 of add-author-profiles
-  it("stays in edit mode with the text and alignment kept after a failed save", async () => {
+  it("stays in edit mode with the text kept after a failed save", async () => {
     vi.mocked(saveAboutAction).mockResolvedValue({ data: { status: "failed", failure: "unavailable" } });
     const { user, textarea } = await openEmptyEditor();
     await user.type(textarea, "Поэт");
-    await user.click(screen.getByRole("button", { name: "По центру" }));
 
     await user.click(screen.getByRole("button", { name: "Сохранить" }));
 
     const field = await screen.findByRole("textbox", { name: "О себе" });
     expect(field).toHaveValue("Поэт");
     expect(field).toHaveAccessibleDescription(/Сохранение сейчас недоступно\. Попробуйте позже\./);
-    expect(screen.getByRole("button", { name: "По центру" })).toHaveAttribute("aria-pressed", "true");
   });
 
   // implements FR-10 of add-author-profiles
-  it("starts a new about with left alignment after a delete", async () => {
+  it("starts a new about empty after a delete", async () => {
     vi.mocked(deleteProfileFieldAction).mockResolvedValue({ data: { status: "saved", profile: null } });
     const user = userEvent.setup();
-    const { rerender, controls } = renderAbout({ savedAbout: "Поэт", savedAlign: "center" });
+    const { rerender, controls } = renderAbout({ savedAbout: "Поэт" });
 
     await user.click(screen.getByRole("button", { name: "Удалить" }));
-    rerender(<AboutFieldEditor savedAbout={null} savedAlign="center" {...controls} />);
+    rerender(<AboutFieldEditor savedAbout={null} {...controls} />);
     await user.click(screen.getByRole("button", { name: "Добавить «О себе»" }));
 
-    expect(screen.getByRole("button", { name: "По левому краю" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "По центру" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("textbox", { name: "О себе" })).toHaveValue("");
   });
 
   // implements FR-6, FR-14 of add-author-profiles
-  it("renders a saved about as Markdown with its alignment, and edits it from the saved values", async () => {
+  it("renders a saved about as Markdown, and edits it from the saved text", async () => {
     const user = userEvent.setup();
-    renderAbout({ savedAbout: "## Поэт", savedAlign: "right" });
+    renderAbout({ savedAbout: "## Поэт" });
     expect(screen.getByRole("heading", { level: 2, name: "Поэт" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Изменить" }));
 
     expect(screen.getByRole("textbox", { name: "О себе" })).toHaveValue("## Поэт");
-    expect(screen.getByRole("button", { name: "По правому краю" })).toHaveAttribute("aria-pressed", "true");
   });
 });

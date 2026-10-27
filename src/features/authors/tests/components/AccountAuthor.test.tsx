@@ -19,7 +19,7 @@ const PROFILE_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
 const USER_ID = "2b3c4d5e-6f70-4a1b-9c2d-3e4f5a6b7c8d";
 
 function profile(firstName: string | null, lastName: string | null): MyProfileResult {
-  const own: AuthorProfile = { id: PROFILE_ID, firstName, lastName, about: null, aboutAlign: "left", photoUrl: null };
+  const own: AuthorProfile = { id: PROFILE_ID, firstName, lastName, about: null, photoUrl: null };
   return { ok: true, profile: own };
 }
 

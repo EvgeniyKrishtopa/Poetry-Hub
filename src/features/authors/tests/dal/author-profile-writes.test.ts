@@ -23,11 +23,10 @@ const ROW = {
   first_name: NAME,
   last_name: null,
   about: null,
-  about_align: "left",
   photo_path: null,
 };
 
-const PROFILE = { id: PROFILE_ID, firstName: NAME, lastName: null, about: null, aboutAlign: "left", photoUrl: null };
+const PROFILE = { id: PROFILE_ID, firstName: NAME, lastName: null, about: null, photoUrl: null };
 
 function photoFile(): File {
   return new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], "secret-name.gif", { type: "image/gif" });
@@ -118,13 +117,14 @@ describe("author profile writes", () => {
       ]);
     });
 
-    it("resets the alignment when clearing about", async () => {
+    // implements FR-4 of refine-author-page-and-contact
+    it("clears only the about text when clearing about", async () => {
       supabase.onRpc("my_author_profile_id", okResponse(PROFILE_ID));
       supabase.queueQuery(okResponse(ROW));
 
       await clearProfileField("about");
 
-      expect(supabase.queries[0]).toContainEqual(["update", [{ about: null, about_align: "left" }]]);
+      expect(supabase.queries[0]).toContainEqual(["update", [{ about: null }]]);
     });
 
     it("returns saved with no profile and updates nothing when there is no row", async () => {

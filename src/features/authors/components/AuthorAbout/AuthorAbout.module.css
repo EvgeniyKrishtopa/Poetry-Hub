@@ -24,14 +24,19 @@
   margin: 0 0 0.75rem;
 }
 
+/* Markers sit inside the text block at its left edge, with no indent (approved mockup, artboards 3 and 12). */
+.about ul,
+.about ol {
+  padding-left: 0;
+  list-style-position: inside;
+}
+
 .about ul {
-  padding-left: 1.5rem;
-  list-style: disc;
+  list-style-type: disc;
 }
 
 .about ol {
-  padding-left: 1.5rem;
-  list-style: decimal;
+  list-style-type: decimal;
 }
 
 .about blockquote {
@@ -46,11 +51,4 @@
 
 .about > :last-child {
   margin-bottom: 0;
-}
-
-/* Centred and right-aligned lists keep their markers next to the text instead of at the left edge. */
-.inlineLists ul,
-.inlineLists ol {
-  padding-left: 0;
-  list-style-position: inside;
 }

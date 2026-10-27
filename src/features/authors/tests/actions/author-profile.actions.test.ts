@@ -36,7 +36,6 @@ const PROFILE: AuthorProfile = {
   firstName: NAME,
   lastName: null,
   about: null,
-  aboutAlign: "left",
   photoUrl: null,
 };
 
@@ -134,17 +133,21 @@ describe("author profile actions", () => {
 
   describe("saveAboutAction", () => {
     // implements FR-10, FR-11 of add-author-profiles
-    it("writes about and its alignment together", async () => {
-      await saveAboutAction({ about: " ## Поэт ", align: "center" });
+    it("writes the trimmed about", async () => {
+      await saveAboutAction({ about: " ## Поэт " });
 
-      expect(writeOwnProfile).toHaveBeenCalledExactlyOnceWith({ about: "## Поэт", about_align: "center" });
+      expect(writeOwnProfile).toHaveBeenCalledExactlyOnceWith({ about: "## Поэт" });
     });
 
-    it("returns a field error for an invalid alignment without a DAL call", async () => {
-      const result = await saveAboutAction({ about: "text", align: "justify" as never });
+    // implements FR-4 of refine-author-page-and-contact
+    it("ignores a stale alignment field and writes only about", async () => {
+      // A variable, not a literal: a request from an old client still carries `align`.
+      const staleRequest = { about: "Текст", align: "justify" };
 
-      expect(result.validationErrors?.fieldErrors.align).toEqual([VALIDATION_MESSAGES.invalidAlign]);
-      expect(writeOwnProfile).not.toHaveBeenCalled();
+      const result = await saveAboutAction(staleRequest);
+
+      expect(result.validationErrors).toBeUndefined();
+      expect(writeOwnProfile).toHaveBeenCalledExactlyOnceWith({ about: "Текст" });
     });
   });
 
@@ -243,7 +246,7 @@ describe("author profile actions", () => {
   describe("the per-user write limit", () => {
     const PROFILE_WRITES = [
       ["saveNameAction", () => saveNameAction({ field: "first_name", value: NAME })],
-      ["saveAboutAction", () => saveAboutAction({ about: "Поэт", align: "left" })],
+      ["saveAboutAction", () => saveAboutAction({ about: "Поэт" })],
       ["deleteProfileFieldAction (about)", () => deleteProfileFieldAction({ field: "about" })],
       ["deleteProfileFieldAction (the photo)", () => deleteProfileFieldAction({ field: "photo" })],
     ] as const;
@@ -343,7 +346,7 @@ describe("author profile actions", () => {
     // implements FR-20, FR-9 of add-author-profiles
     it.each([
       ["saveNameAction", () => saveNameAction({ field: "last_name", value: NAME })],
-      ["saveAboutAction", () => saveAboutAction({ about: "Поэт", align: "left" })],
+      ["saveAboutAction", () => saveAboutAction({ about: "Поэт" })],
       ["deleteProfileFieldAction (a name)", () => deleteProfileFieldAction({ field: "first_name" })],
       ["deleteProfileFieldAction (the photo)", () => deleteProfileFieldAction({ field: "photo" })],
     ])("%s returns unavailable without a DAL call", async (_name, run) => {

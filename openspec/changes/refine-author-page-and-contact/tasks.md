@@ -43,14 +43,14 @@ PR. The column drop (group 3) lands with the code that stops reading it, never b
 
 Mockups approved 2026-10-27 (proposal.md, ## Mockups).
 
-- [ ] 3.1 (FR-4) Add the migration `supabase/migrations/<timestamp>_drop_about_align.sql`
+- [x] 3.1 (FR-4) Add the migration `supabase/migrations/<timestamp>_drop_about_align.sql`
   (`alter table public.author_profiles drop column about_align;`, with a documented down
   migration in its header, design D2) and update `supabase/tests/author_profiles.test.sql`:
   remove `about_align` from the `returning` list and the `about_align = 'justify'` case, add
   `hasnt_column('public', 'author_profiles', 'about_align')`.
   - Verify: `npx supabase db reset && npx supabase test db` passes (implements FR-4 of
     refine-author-page-and-contact, in the pgTAP file).
-- [ ] 3.2 (FR-4) Remove alignment from the model, DAL, and action (design D2): `AboutAlign`,
+- [x] 3.2 (FR-4) Remove alignment from the model, DAL, and action (design D2): `AboutAlign`,
   `alignSchema`, the `align` field of `saveAboutSchema`, `about_align` in `profileRowSchema`,
   `OWNER_PROFILE_COLUMNS`, the row and profile types, the `profile-queries.ts` mapping,
   `VALIDATION_MESSAGES.invalidAlign`, and the delete patch (now `{ [field]: null }` for every
@@ -60,7 +60,7 @@ Mockups approved 2026-10-27 (proposal.md, ## Mockups).
     refine-author-page-and-contact): a save of `{ about: "Текст", align: "justify" }` succeeds
     and writes only `{ about: "Текст" }`; deleting about writes only `{ about: null }`. Update the
     existing tests that pass or expect alignment, and drop the "Invalid alignment" schema case.
-- [ ] 3.3 (FR-2, FR-3) Remove alignment from the UI (design D2): delete `AlignControl` and
+- [x] 3.3 (FR-2, FR-3) Remove alignment from the UI (design D2): delete `AlignControl` and
   `AboutToolbarRow` (and their types and tests); `AboutEditForm` renders `MarkdownToolbar`
   directly; `AboutPreview` renders only `AuthorAbout`; `AboutFieldEditor`'s draft and saved
   value become the Markdown string and `savedAlign` goes from it and `AuthorProfileEditor`;

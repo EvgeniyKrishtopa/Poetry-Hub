@@ -51,11 +51,7 @@ export function AuthorProfileEditor({ profile }: AuthorProfileEditorProps) {
       <div className="flex flex-col">
         <NameFieldEditor field="first_name" savedValue={profile?.firstName ?? null} {...controlsFor("first_name")} />
         <NameFieldEditor field="last_name" savedValue={profile?.lastName ?? null} {...controlsFor("last_name")} />
-        <AboutFieldEditor
-          savedAbout={profile?.about ?? null}
-          savedAlign={profile?.aboutAlign ?? "left"}
-          {...controlsFor("about")}
-        />
+        <AboutFieldEditor savedAbout={profile?.about ?? null} {...controlsFor("about")} />
         <PhotoFieldEditor photoUrl={profile?.photoUrl ?? null} fullName={fullName} {...controlsFor("photo")} />
       </div>
     </div>
