@@ -7,7 +7,7 @@ PR. The column drop (group 3) lands with the code that stops reading it, never b
 
 ## 1. Test data seed (no new visuals) <!-- judgement-heavy -->
 
-- [ ] 1.1 (FR-8) Write `supabase/seed.sql` (design D5): six test readers in `auth.users` with
+- [x] 1.1 (FR-8) Write `supabase/seed.sql` (design D5): six test readers in `auth.users` with
   matching `auth.identities` rows (fixed UUIDs, confirmed emails `author1@example.test` …
   `author5@example.test` and `draft-author@example.test`, one placeholder password hashed with
   `crypt(..., gen_salt('bf'))`, documented in the header as local-only and never pushed), and
@@ -19,7 +19,7 @@ PR. The column drop (group 3) lands with the code that stops reading it, never b
     refine-author-page-and-contact): reads `supabase/seed.sql`, extracts the five public
     profile ids, and checks that `mockPoemCount` gives `author1@example.test`'s profile 0, `author2` 1,
     `author3` 2, `author4` 3, and `author5` 4.
-- [ ] 1.2 (FR-8) Reset the local database and check the seed: `npx supabase db reset` exits 0;
+- [x] 1.2 (FR-8) Reset the local database and check the seed: `npx supabase db reset` exits 0;
   `auth.users` holds exactly six rows and `public.author_profiles` six; `npx supabase test db`
   passes; `/authors` on the dev server lists exactly the five public authors; signing in as
   `author1@example.test` opens `/account/author` with that profile.
