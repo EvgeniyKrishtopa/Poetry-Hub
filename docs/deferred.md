@@ -80,6 +80,8 @@ Archived at `openspec/changes/archive/2026-09-29-add-contentful-home-greeting/`.
 
 ## add-author-poems
 
+Archived at `openspec/changes/archive/2026-10-27-add-author-poems/`.
+
 ### add-author-poems · 6.4 — race and cache checks not recorded as scenarios
 
 - **State:** skipped

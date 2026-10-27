@@ -4,9 +4,7 @@
 Defines the `danger` and `success` design tokens, the shared `Alert` primitive, and how every
 error and success message in the app uses them, so feedback is distinguishable from links and
 consistent across features.
-
 ## Requirements
-
 ### Requirement: Feedback tokens (FR-1)
 `src/app/globals.css` SHALL define `--danger` and `--success` for the light and dark themes and
 map them in `@theme inline` to `--color-danger` and `--color-success`.
@@ -57,28 +55,6 @@ and an optional `className`.
 - **GIVEN** `<Alert tone="success" className="flex flex-col gap-2">`
 - **WHEN** it renders
 - **THEN** the element has `flex flex-col gap-2` in addition to the tone classes
-
-### Requirement: Form and list errors use the danger alert (FR-4)
-The form-level errors of `SignInForm` and `SignUpForm`, and the load error of `PoemList`, SHALL
-render inside `<Alert tone="danger">` with their current texts.
-
-#### Scenario: Wrong credentials
-- **GIVEN** `signInAction` returns the `invalid-credentials` failure
-- **WHEN** the sign-in form is submitted
-- **THEN** a `role="alert"` element with the `border-danger` utility reads "Неверный адрес электронной почты
-  или пароль."
-
-#### Scenario: Sign-up failure
-- **GIVEN** `signUpAction` returns the `rate-limited` failure
-- **WHEN** the sign-up form is submitted
-- **THEN** a `role="alert"` element with the `border-danger` utility reads "Слишком много попыток.
-  Попробуйте через несколько минут."
-
-#### Scenario: Poems fail to load
-- **GIVEN** the poems query errors
-- **WHEN** `PoemList` renders
-- **THEN** a `role="alert"` element with the `border-danger` utility reads "Не удалось загрузить
-  стихи."
 
 ### Requirement: Inline sign-out failure in danger (FR-5)
 The header's sign-out failure SHALL stay an inline `role="alert"` paragraph with `text-danger`.
@@ -177,3 +153,19 @@ its own.
 - **THEN** every route has the mode `auth` NFR-2 states: `/`, `/login`, `/signup`, and
   `/_not-found` partially prerendered, `/api/revalidate` and `/auth/confirm` dynamic, and `/`
   with Revalidate 1m and Expire 1h
+
+### Requirement: Form errors use the danger alert (FR-4)
+The form-level errors of `SignInForm` and `SignUpForm` SHALL render inside `<Alert tone="danger">` with their current texts.
+
+#### Scenario: Wrong credentials
+- **GIVEN** `signInAction` returns the `invalid-credentials` failure
+- **WHEN** the sign-in form is submitted
+- **THEN** a `role="alert"` element with the `border-danger` utility reads "Неверный адрес электронной почты
+  или пароль."
+
+#### Scenario: Sign-up failure
+- **GIVEN** `signUpAction` returns the `rate-limited` failure
+- **WHEN** the sign-up form is submitted
+- **THEN** a `role="alert"` element with the `border-danger` utility reads "Слишком много попыток.
+  Попробуйте через несколько минут."
+
