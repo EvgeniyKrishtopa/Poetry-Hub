@@ -48,12 +48,17 @@ function describeError(error: unknown): string {
   return typeof error;
 }
 
-/** Logs `[poem-management] <operation> failed: <kind>` and classifies the error. */
-function toServiceFailure(operation: string, error: unknown): ServiceFailure {
+/** Logs `[poem-management] <operation> failed: <kind>`. */
+function logFailure(operation: string, error: unknown): void {
   // The proxy already logs a missing config on every request.
   if (!(error instanceof SupabaseConfigError)) {
     console.error(`[poem-management] ${operation} failed: ${describeError(error)}`);
   }
+}
+
+/** Logs the failure and classifies it for the form. */
+function toServiceFailure(operation: string, error: unknown): ServiceFailure {
+  logFailure(operation, error);
   return classifySupabaseError(error);
 }
 
@@ -121,9 +126,9 @@ async function uploadIllustration(
 async function removeIllustrationBestEffort(supabase: SupabaseClient, path: string): Promise<void> {
   try {
     const { error } = await supabase.storage.from(POEM_ILLUSTRATIONS_BUCKET).remove([path]);
-    if (error) toServiceFailure(CLEANUP_OPERATION, error);
+    if (error) logFailure(CLEANUP_OPERATION, error);
   } catch (error) {
-    toServiceFailure(CLEANUP_OPERATION, error);
+    logFailure(CLEANUP_OPERATION, error);
   }
 }
 
