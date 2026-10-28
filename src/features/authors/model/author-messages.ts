@@ -1,7 +1,9 @@
-import { ABOUT_MAX_LENGTH } from "./author.constants";
-import type { MarkdownFormat, PhotoFileError, ProfileField, WriteFailure } from "./author.types";
+import type { ImageFileError } from "@/shared/lib/image-file/image-file.types";
 
-// Every string of the proposal's UI copy table, verbatim and in Russian (NFR-8).
+import type { ProfileField, WriteFailure } from "./author.types";
+
+// Every string of the proposal's UI copy table, verbatim and in Russian (NFR-8). The Markdown editor's
+// toolbar, tabs, and counter moved to `shared/ui/ui-messages.ts` with the editor (add-poem-creation D1).
 
 export const PAGE_TITLES = {
   authors: "Наши авторы",
@@ -46,29 +48,6 @@ export const PHOTO_PICKER_LABEL = "Выбрать фото";
 
 export const SAVED_MESSAGE = "Сохранено";
 
-export const FORMAT_LABELS: Readonly<Record<MarkdownFormat, string>> = {
-  bold: "Жирный",
-  italic: "Курсив",
-  heading: "Заголовок",
-  subheading: "Подзаголовок",
-  bulleted: "Маркированный список",
-  numbered: "Нумерованный список",
-  quote: "Цитата",
-};
-
-export const ABOUT_VIEW_LABELS = {
-  editor: "Редактор",
-  preview: "Просмотр",
-} as const;
-
-/** The word a toolbar format inserts, selected, when nothing is selected (design D7). */
-export const FORMAT_PLACEHOLDER = "текст";
-
-/** The about counter, e.g. "12 / 1000"; it may exceed the limit (FR-11). */
-export function formatAboutCounter(length: number): string {
-  return `${length} / ${ABOUT_MAX_LENGTH}`;
-}
-
 export const VALIDATION_MESSAGES = {
   required: "Обязательное поле.",
   nameTooLong: "Не более 60 символов.",
@@ -77,8 +56,8 @@ export const VALIDATION_MESSAGES = {
   photoUnsupportedType: "Допустимы только изображения PNG или JPEG.",
 } as const;
 
-/** The field error for a photo `validatePhotoFile` rejects, in the browser and in the action (FR-8). */
-export const PHOTO_FILE_ERROR_MESSAGES: Readonly<Record<PhotoFileError, string>> = {
+/** The field error for a photo `validateImageFile` rejects, in the browser and in the action (FR-8). */
+export const PHOTO_FILE_ERROR_MESSAGES: Readonly<Record<ImageFileError, string>> = {
   "too-large": VALIDATION_MESSAGES.photoTooLarge,
   "unsupported-type": VALIDATION_MESSAGES.photoUnsupportedType,
 };

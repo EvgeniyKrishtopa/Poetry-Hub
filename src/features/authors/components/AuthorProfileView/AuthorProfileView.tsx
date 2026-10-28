@@ -1,7 +1,7 @@
 import { CONTENT_LANG } from "@/shared/config/constants";
+import { MarkdownText } from "@/shared/ui";
 
 import { fullName } from "../../model/full-name";
-import { AuthorAbout } from "../AuthorAbout/AuthorAbout";
 import { AuthorPhoto } from "../AuthorPhoto/AuthorPhoto";
 
 import type { AuthorProfileViewProps } from "./AuthorProfileView.types";
@@ -17,7 +17,7 @@ export function AuthorProfileView({ author, ownerLink, poems }: AuthorProfileVie
         <h1 className="text-4xl font-bold tracking-tight">{name}</h1>
       </header>
       <AuthorPhoto photoUrl={author.photoUrl} fullName={name} />
-      {author.about !== null && <AuthorAbout markdown={author.about} />}
+      {author.about !== null && <MarkdownText markdown={author.about} />}
       {poems}
     </article>
   );

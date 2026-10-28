@@ -14,7 +14,7 @@ import { clearProfileField, removePhoto, replacePhoto, writeOwnProfile } from ".
 import { consumeWriteAllowance } from "../../dal/write-allowance";
 import { getProfileFailureMessage, VALIDATION_MESSAGES } from "../../model/author-messages";
 import type { AuthorProfile } from "../../model/author.types";
-import { validatePhotoFile } from "../../model/validate-photo-file";
+import { validateImageFile } from "@/shared/lib/image-file/validate-image-file";
 
 vi.mock("next/cache", () => ({ updateTag: vi.fn() }));
 vi.mock("@/features/auth", () => ({ getSessionState: vi.fn() }));
@@ -25,7 +25,7 @@ vi.mock("../../dal/author-profile-writes", () => ({
   removePhoto: vi.fn(),
 }));
 vi.mock("../../dal/write-allowance", () => ({ consumeWriteAllowance: vi.fn() }));
-vi.mock("../../model/validate-photo-file", { spy: true });
+vi.mock("@/shared/lib/image-file/validate-image-file", { spy: true });
 
 const USER_ID = "2b3c4d5e-6f70-4a1b-9c2d-3e4f5a6b7c8d";
 const PROFILE_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
@@ -285,7 +285,7 @@ describe("author profile actions", () => {
 
       expect(consumeWriteAllowance).toHaveBeenCalledExactlyOnceWith("photo_upload");
       expect(result.data).toEqual({ status: "failed", failure: "too-many-uploads" });
-      expect(validatePhotoFile).not.toHaveBeenCalled();
+      expect(validateImageFile).not.toHaveBeenCalled();
       expect(slice).not.toHaveBeenCalled();
       expectNoWrite();
     });
@@ -295,9 +295,9 @@ describe("author profile actions", () => {
       const result = await savePhotoAction({ photo: file(GIF_BYTES, "photo.jpg", "image/jpeg") });
 
       expect(consumeWriteAllowance).toHaveBeenCalledExactlyOnceWith("photo_upload");
-      expect(validatePhotoFile).toHaveBeenCalledOnce();
+      expect(validateImageFile).toHaveBeenCalledOnce();
       expect(vi.mocked(consumeWriteAllowance).mock.invocationCallOrder[0]).toBeLessThan(
-        vi.mocked(validatePhotoFile).mock.invocationCallOrder[0] ?? 0,
+        vi.mocked(validateImageFile).mock.invocationCallOrder[0] ?? 0,
       );
       expect(result.validationErrors?.fieldErrors.photo).toEqual([VALIDATION_MESSAGES.photoUnsupportedType]);
       expect(replacePhoto).not.toHaveBeenCalled();

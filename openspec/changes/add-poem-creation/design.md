@@ -335,6 +335,13 @@ text, links unwrapped to text, and a `variant` prop:
 | Profile «О себе» | bold, italic, heading, subheading, bulleted, numbered, quote (unchanged) | `about` |
 | Poem text | bold, italic, epigraph, separator, indent (user decision, 2026-10-28) | `poem` |
 
+As built in group 1: the caller renders the field's label (`htmlFor` the editor's `id`), because the
+profile puts it in its own column and the poem form above the editor, so the editor takes no
+`label` prop; it generates its own error and counter ids. It takes the counter's `length` from the
+caller, because about and the poem trim differently (D6's poem trimming). `MarkdownEditor` and
+`ImagePicker` take an `autoFocus` flag, on for the profile's on-demand editors and off inside a
+form. `useImageDraft` returns the error kind, not a message: each feature keeps its own copy.
+
 `shared/lib/markdown/markdown-format.ts` gains three pure formats next to the existing ones:
 
 - `epigraph` — the existing `quote` transform (prefix `> ` to each selected line) under the poem

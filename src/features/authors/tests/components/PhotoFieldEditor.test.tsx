@@ -3,10 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { Activity } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ImageFileCheck } from "@/shared/lib/image-file/image-file.types";
+import { validateImageFile } from "@/shared/lib/image-file/validate-image-file";
+
 import { deleteProfileFieldAction, savePhotoAction } from "../../actions/author-profile.actions";
 import { PhotoFieldEditor } from "../../components/PhotoFieldEditor/PhotoFieldEditor";
-import type { PhotoFileCheck } from "../../model/author.types";
-import { validatePhotoFile } from "../../model/validate-photo-file";
 
 import { deferred } from "./deferred";
 
@@ -18,9 +19,9 @@ vi.mock("../../actions/author-profile.actions", () => ({
 }));
 
 // The real check by default; a test overrides one call to control its timing or result.
-vi.mock("../../model/validate-photo-file", async (importOriginal) => {
-  const original = await importOriginal<typeof import("../../model/validate-photo-file")>();
-  return { validatePhotoFile: vi.fn(original.validatePhotoFile) };
+vi.mock("@/shared/lib/image-file/validate-image-file", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/shared/lib/image-file/validate-image-file")>();
+  return { validateImageFile: vi.fn(original.validateImageFile) };
 });
 
 type PhotoResponse = Awaited<ReturnType<typeof savePhotoAction>>;
@@ -213,7 +214,7 @@ describe("PhotoFieldEditor", () => {
   it("checks the file again on Сохранить and sends nothing when it fails then", async () => {
     const user = await chooseFile(pngFile());
     await screen.findByRole("img");
-    vi.mocked(validatePhotoFile).mockResolvedValueOnce({ ok: false, error: "too-large" });
+    vi.mocked(validateImageFile).mockResolvedValueOnce({ ok: false, error: "too-large" });
 
     await user.click(screen.getByRole("button", { name: "Сохранить" }));
 
@@ -223,8 +224,8 @@ describe("PhotoFieldEditor", () => {
 
   // implements FR-8 of add-author-profiles
   it("keeps the file chosen last when an earlier file's check finishes after it", async () => {
-    const slowCheck = deferred<PhotoFileCheck>();
-    vi.mocked(validatePhotoFile).mockReturnValueOnce(slowCheck.promise);
+    const slowCheck = deferred<ImageFileCheck>();
+    vi.mocked(validateImageFile).mockReturnValueOnce(slowCheck.promise);
     const first = pngFile();
     const second = new File([new Uint8Array(PNG_HEADER)], "second.png", { type: "image/png" });
     const user = await chooseFile(first);
