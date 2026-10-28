@@ -59,6 +59,44 @@ The trail SHALL list «Главная» first and then every level down to the c
 - **WHEN** a visitor opens `/authors/<id>/poems`
 - **THEN** no trail is shown
 
+### Requirement: Author name on the author page (FR-4)
+On `/authors/<id>` and `/authors/<id>/poems/<poemId>`, the author's item SHALL be the author's first and last name separated by a space. When the author can't be read because the service is unavailable, that item SHALL read «Автор» (still a link on the poem page). When the author doesn't exist or isn't public, no trail SHALL be shown. On the poem page, when the poem is not one of that author's poems, no trail SHALL be shown (add-author-poems FR-8), except when the author read is unavailable: then the trail SHALL read Главная › Наши авторы › Автор, with «Автор» as the current item, matching the error screen (add-author-poems FR-12). When the poem can't be read because the service is unavailable, the page shows the error screen and the trail SHALL end at the author's item (the name, or «Автор» when the author read is unavailable too) as the current item (add-poem-creation, user decision 2026-10-28).
+
+#### Scenario: Public author
+- **GIVEN** a public author with first name «Анна» and last name «Ахматова»
+- **WHEN** a visitor opens her page
+- **THEN** the trail items read «Главная», «Наши авторы», «Анна Ахматова», and «Наши авторы» links to `/authors`
+
+#### Scenario: Author read unavailable
+- **GIVEN** the author service can't be reached
+- **WHEN** a visitor opens `/authors/<a valid id>`
+- **THEN** the trail's last item reads «Автор»
+
+#### Scenario: Author read unavailable on a poem route
+- **GIVEN** the author service can't be reached, and `<poemId>` is one of that author's poems
+- **WHEN** a visitor opens `/authors/<a valid id>/poems/<poemId>`
+- **THEN** the trail's third item reads «Автор» and links to `/authors/<id>`
+
+#### Scenario: Unknown author
+- **GIVEN** no public author has id `<id>`
+- **WHEN** a visitor opens `/authors/<id>` or `/authors/<id>/poems/<any poem id>`
+- **THEN** no trail is shown
+
+#### Scenario: Poem that isn't the author's
+- **GIVEN** a public author `<id>` and a poem id that is not one of that author's poems
+- **WHEN** a visitor opens `/authors/<id>/poems/<that id>`
+- **THEN** no trail is shown
+
+#### Scenario: Author unavailable and poem not the author's
+- **GIVEN** the author service can't be reached for a valid id `<id>`, and `no-such-poem` is not one of that author's poems
+- **WHEN** a visitor opens `/authors/<id>/poems/no-such-poem`
+- **THEN** the page shows the error screen, and the trail items read «Главная», «Наши авторы», «Автор», with «Автор» not a link and carrying `aria-current="page"`
+
+#### Scenario: Poem read unavailable
+- **GIVEN** a public author «Анна Ахматова» with id `<id>`, and a poem read that fails because the database is unreachable
+- **WHEN** a visitor opens `/authors/<id>/poems/<poemId>`
+- **THEN** the page shows the error screen, and the trail items read «Главная», «Наши авторы», «Анна Ахматова», with «Анна Ахматова» not a link and carrying `aria-current="page"`
+
 ### Requirement: Same trail for every visitor (FR-5)
 The trail SHALL be identical for every visitor, signed in or not, and SHALL NOT depend on the session, with one exception: the last item of `/account/poems/<poemId>` is the title of the signed-in owner's poem, which only that owner can open (add-poem-creation FR-8).
 

@@ -25,7 +25,8 @@ function shown(items: readonly BreadcrumbItem[]): Trail {
  * Prepends the home item and resolves an author or poem match from its read results, so the trail
  * agrees with the page (FR-12): an unknown author or poem hides the trail, as the page shows the 404
  * page; an unavailable author shows the author fallback label, as the page shows the error screen.
- * That error screen wins over an unknown poem, so the trail then ends on the fallback label.
+ * That error screen wins over an unknown poem, so the trail then ends on the fallback label; an
+ * unavailable poem read also shows the error screen, so its trail ends on the author's item.
  */
 export function buildTrail(match: RouteMatch, authorName?: PublicAuthorNameResult, poem?: AuthorPoemResult): Trail {
   if (match.kind === "none") return NO_TRAIL;
@@ -34,15 +35,18 @@ export function buildTrail(match: RouteMatch, authorName?: PublicAuthorNameResul
   if (authorName?.ok === false && authorName.reason === "not-found") return NO_TRAIL;
   // A switch over the reasons, not a check of `ok` alone: a new failure reason falls through to the poem
   // title below and fails to compile until it gets its own rule here.
+  const label = authorLabel(authorName);
   if (poem?.ok === false) {
     switch (poem.reason) {
       case "not-found":
         if (authorName?.ok === false) return shown([{ kind: "current", label: BREADCRUMB_LABELS.authorFallback }]);
         return NO_TRAIL;
+      // The page shows the error screen: the trail ends at the author (add-poem-creation, breadcrumbs FR-4).
+      case "unavailable":
+        return shown([{ kind: "current", label }]);
     }
   }
 
-  const label = authorLabel(authorName);
   switch (match.kind) {
     case "author":
       return shown([{ kind: "current", label }]);

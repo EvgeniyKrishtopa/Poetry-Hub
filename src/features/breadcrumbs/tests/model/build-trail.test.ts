@@ -80,7 +80,7 @@ describe("buildTrail", () => {
 });
 
 describe("buildTrail on the poem routes", () => {
-  const POEM_ID = "osenniy-sad";
+  const POEM_ID = "30000000-0000-4000-8000-000000000021";
   const POEM_MATCH = { kind: "author-poem", authorId: ANNA_ID, poemId: POEM_ID } as const;
 
   const ANNA = { ok: true, name: "Анна Ахматова" } as const;
@@ -92,12 +92,13 @@ describe("buildTrail on the poem routes", () => {
       id: POEM_ID,
       title: "Осенний сад",
       text: "Строка",
-      illustrationSrc: `/mock-poems/${POEM_ID}.svg`,
+      illustrationUrl: null,
       publishedAt: "2026-03-12",
-      genre: "Лирика",
+      genreId: null,
     },
   };
   const POEM_NOT_FOUND: AuthorPoemResult = { ok: false, reason: "not-found" };
+  const POEM_UNAVAILABLE: AuthorPoemResult = { ok: false, reason: "unavailable" };
 
   const AUTHOR_HREF = `/authors/${ANNA_ID}`;
 
@@ -144,6 +145,25 @@ describe("buildTrail on the poem routes", () => {
       kind: "shown",
       items: [HOME, AUTHORS, { kind: "current", label: "Автор" }],
     });
+  });
+
+  // breadcrumbs FR-4 (add-poem-creation): the poem page shows the error screen, so the trail ends at the author.
+  it("ends on the author's name as the current item when the poem read is unavailable", () => {
+    expect(buildTrail(POEM_MATCH, ANNA, POEM_UNAVAILABLE)).toEqual({
+      kind: "shown",
+      items: [HOME, AUTHORS, { kind: "current", label: "Анна Ахматова" }],
+    });
+  });
+
+  it("ends on «Автор» as the current item when both the author and the poem reads are unavailable", () => {
+    expect(buildTrail(POEM_MATCH, AUTHOR_UNAVAILABLE, POEM_UNAVAILABLE)).toEqual({
+      kind: "shown",
+      items: [HOME, AUTHORS, { kind: "current", label: "Автор" }],
+    });
+  });
+
+  it("shows no trail for an unknown author even when the poem read is unavailable", () => {
+    expect(buildTrail(POEM_MATCH, AUTHOR_NOT_FOUND, POEM_UNAVAILABLE)).toEqual({ kind: "none" });
   });
 
   // implements FR-8 of add-author-poems

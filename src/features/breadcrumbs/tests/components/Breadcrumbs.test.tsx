@@ -95,26 +95,27 @@ describe("BreadcrumbsLoader", () => {
   // implements FR-7 of refine-author-page-and-contact
   it("reads the author's name and the poem for a poem page", async () => {
     vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Анна Ахматова" });
+    const poemId = "30000000-0000-4000-8000-000000000021";
     vi.mocked(getAuthorPoem).mockResolvedValue({
       ok: true,
       poem: {
-        id: "osenniy-sad",
+        id: poemId,
         title: "Осенний сад",
         text: "Строка",
-        illustrationSrc: "/mock-poems/osenniy-sad.svg",
+        illustrationUrl: null,
         publishedAt: "2026-03-12",
-        genre: "Лирика",
+        genreId: null,
       },
     });
 
-    const element = (await load(["authors", ANNA_ID, "poems", "osenniy-sad"])) as ReactElement<{
+    const element = (await load(["authors", ANNA_ID, "poems", poemId])) as ReactElement<{
       items: { label: string }[];
     }>;
 
     expect(getPublicAuthorName).toHaveBeenCalledTimes(1);
     expect(getPublicAuthorName).toHaveBeenCalledWith(ANNA_ID);
     expect(getAuthorPoem).toHaveBeenCalledTimes(1);
-    expect(getAuthorPoem).toHaveBeenCalledWith(ANNA_ID, "osenniy-sad");
+    expect(getAuthorPoem).toHaveBeenCalledWith(ANNA_ID, poemId);
     expect(element.props.items.map((item) => item.label)).toEqual([
       "Главная",
       "Наши авторы",

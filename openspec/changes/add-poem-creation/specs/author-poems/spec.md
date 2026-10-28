@@ -174,6 +174,14 @@ Pages and components SHALL read poems only through the poems DAL's functions; on
 - **WHEN** `src/` is searched for reads of the `poems` table
 - **THEN** the only reader is `src/features/poems/dal/`, and no mock poem module exists
 
+### Requirement: Server-rendered and session-free (NFR-1)
+The poem page, the author page's poems section, and the poems feature SHALL contain no `"use client"` module, and the poems feature SHALL import nothing from `@/features/auth`, `@/shared/lib/supabase/server`, or `@/shared/lib/supabase/session`: it reads poems only through the cookie-less public client (`@/shared/lib/supabase/public`), as the anon role (add-poem-creation design D3). It SHALL read authors only through `@/features/authors`' public API.
+
+#### Scenario: Static check
+- **GIVEN** the change is complete
+- **WHEN** `src/features/poems/` is searched for `"use client"` and for imports of `@/features/auth`, `@/shared/lib/supabase/server`, and `@/shared/lib/supabase/session`
+- **THEN** there are no matches
+
 ## REMOVED Requirements
 
 ### Requirement: Mock poems (FR-7)
