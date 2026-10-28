@@ -1,0 +1,2 @@
+{"ts":"2026-10-28T11:35:15Z","change":"add-poem-creation","group":"full","gate":"spec-review","verdict":"confirmed","skipReason":"","durationMs":107898,"tokensTotal":85253,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}
+{"ts":"2026-10-28T11:35:15Z","change":"add-poem-creation","kind":"finding","gate":"spec-review","finding":"Readiness condition 2 (traceability): NFR-8 named by no task; 9 tasks named no identifier","outcome":"fixed","ruleNumber":""}
