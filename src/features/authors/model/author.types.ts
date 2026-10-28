@@ -117,3 +117,12 @@ export interface FormattedText {
   readonly text: string;
   readonly selection: TextSelection;
 }
+
+/**
+ * The signed-in owner's profile reduced to "public or not" (add-poem-creation design D4).
+ * @public Scaffold: no importer until task 1.5.
+ */
+export type OwnPublicAuthorResult =
+  | { readonly ok: true; readonly status: "public"; readonly authorId: string }
+  | { readonly ok: true; readonly status: "not-public" }
+  | { readonly ok: false; readonly failure: ProfileFailure };

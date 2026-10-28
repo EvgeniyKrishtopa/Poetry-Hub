@@ -46,6 +46,8 @@ group exports only what it already consumes (tests count as consumers for knip),
   - Verify with `src/features/authors/tests/dal/own-public-author.test.ts`: public, no row, missing
     last name, each failure kind; two calls in one request read once. The existing account and
     owner-link tests stay green.
+  - Scaffold clean-up: remove `src/features/authors/dal/own-public-author.ts` from `knip.jsonc`'s
+    `ignoreFiles` and the `@public` tag on `OwnPublicAuthorResult`; `npm run knip` passes. Triage any unused-export finding (remove the export or use it) instead of re-adding an ignore.
 - [ ] 1.6 (NFR-3, FR-1) Verify: `npm run typecheck && npm run lint && npm run test:coverage && npm run build &&
   npm run knip` pass; `rg "detectImageType|MarkdownToolbar|PGRST301" src/features` finds only imports from
   `@/shared`.
@@ -83,7 +85,7 @@ group exports only what it already consumes (tests count as consumers for knip),
 
 - [ ] 3.1 (FR-9, NFR-4, FR-11) Rewrite `src/features/poems/dal/author-poems.ts` (design D3):
   `cachedAuthorPoems` with `"use cache"`, `cacheTag(poemsTag(authorId))`, the public client, Zod
-  row schema in `dal/poem-row.ts`, `"hours"` / `"seconds"` lifetimes; `listAuthorPoems` and
+  row schema in `model/poem-row.schema.ts` (ADR 0001), the mapping in `dal/poem-row.ts`, `"hours"` / `"seconds"` lifetimes; `listAuthorPoems` and
   `getAuthorPoem` in React `cache`; UUID guards; new `Poem`, `AuthorPoemsResult`,
   `AuthorPoemResult` types; `model/poem-cache-tags.ts`.
   - Verify with `src/features/poems/tests/dal/author-poems.test.ts` (implements FR-9 and NFR-4
@@ -92,11 +94,15 @@ group exports only what it already consumes (tests count as consumers for knip),
     success → `"hours"`, error → `unavailable` + `"seconds"`, logged without content (NFR-10);
     a non-UUID or uppercase `poemId` → `not-found` with no query; two calls in one request query
     once.
+  - Scaffold clean-up: remove `poem-row.ts`, `poem-row.schema.ts`, and `poem-cache-tags.ts` from `knip.jsonc`'s `ignoreFiles` and
+    the `@public` tag on `AuthorPoemsResult`. Triage any unused-export finding (remove the export or use it) instead of re-adding an ignore.
 - [ ] 3.2 (FR-10, FR-3) Genres DAL `src/features/poems/dal/poem-genres.ts` (design D5):
   `listPoemGenres` and `getPoemGenreName` with the result-dependent Contentful scope.
   - Verify with `src/features/poems/tests/dal/poem-genres.test.ts`: sorted by Russian name;
     an invalid item dropped and logged by id; Contentful failure → `unavailable` with `"seconds"`;
     `getPoemGenreName` for `null`, a known id, an unknown id, and an unavailable list.
+  - Scaffold clean-up: remove `poem-genres.ts` from `knip.jsonc`'s `ignoreFiles` and the `@public` tags on
+    `PoemGenre`, `PoemGenresResult`, `PoemGenreName`. Triage any unused-export finding (remove the export or use it) instead of re-adding an ignore.
 - [ ] 3.3 (FR-9, FR-10, FR-11, NFR-3) Delete `mock-poems.ts`, `mock-poem-count.ts`, their tests, and
   `public/mock-poems/`; adapt the components to the new types with no visual change (Gate 2,
   2026-10-28): `PoemView` renders the illustration only when `illustrationUrl` is set and the genre
@@ -129,7 +135,10 @@ group exports only what it already consumes (tests count as consumers for knip),
     shape → `unknown`); with and without an illustration; RPC failure or `over-limit` removes the
     upload; upload failure calls no RPC; the path is `<authorId>/<uuid>.<ext>` from the sniffed
     type; logs carry no title, text, file name, user id, profile id, or poem id.
-- [ ] 4.4 (FR-5, FR-6, FR-12) `actions/create-poem.actions.ts` + `action-client.ts` (design D7).
+- [ ] 4.4 (FR-5, FR-6, FR-12) `actions/create-poem.actions.ts` + `action-client.ts` (design D7). Pick one
+  channel for server field errors (Gate 2b, 2026-10-28): either every field error through next-safe-action's
+  `validationErrors` (`returnValidationErrors` for genre and illustration) or parsing inside the body and
+  returning `invalid`; make `CreatePoemResult` and design D7 say which, so `NewPoemForm` reads one shape.
   - Verify with `tests/actions/create-poem.actions.test.ts` (implements FR-5, FR-6, FR-12 of
     add-poem-creation): invalid input → field errors, no RPC call; no session →
     `unauthenticated`; `can_create_poem` over limit → `too-many-poems`, no profile read, no
@@ -149,10 +158,14 @@ group exports only what it already consumes (tests count as consumers for knip),
     NFR-5 of add-poem-creation): with and without an illustration (heading first; the image carries
     the 16:9 cropping classes); genre named,
     none; Markdown bold; a single line break kept; `<script>` and a link rendered as text.
+  - Scaffold clean-up: remove `PoemArticle/**` from `knip.jsonc`'s `ignoreFiles` (the scaffolded
+    `PoemArticle.tsx` and `PoemArticle.types.ts` are filled in here).
 - [ ] 5.2 (FR-11, FR-13) `AuthorPoemList` → `PoemTitleList` (href per poem passed in); `PoemPage`'s
   inline fallback → `PoemPageSkeleton`; restyle the unavailable state from 3.3 per the mockup.
   - Verify with `tests/components/PoemTitleList.test.tsx` and `AuthorPoemsEntry.test.tsx`: list,
     empty, unavailable, hrefs.
+  - Scaffold clean-up: fill in the scaffolded `PoemPageSkeleton.tsx`; remove `PoemPageSkeleton/**` from
+    `knip.jsonc`'s `ignoreFiles`.
 - [ ] 5.3 (FR-10, FR-11, NFR-5, NFR-6) Verify: typecheck, lint, coverage, build, knip.
 
 ## 6. Poem management pages, form, links (UI) <!-- judgement-heavy -->
@@ -180,11 +193,16 @@ group exports only what it already consumes (tests count as consumers for knip),
     other author's or malformed id → `notFound`; failure throws) and
     `CreatedPoemNotice.test.tsx` (shows for the matching id with `role="status"` and stays shown after
     the store is cleared, under Strict Mode too; a second mount shows nothing; nothing for another id).
+  - Scaffold clean-up: remove `src/features/poem-management/**` and then the empty `ignoreFiles` key with its
+    comment from `knip.jsonc`; drop `zustand` from `ignoreDependencies` (the notice store uses it) with its
+    comment; remove the `@public` tag on `poems/index.ts`'s `Poem`, `PoemGenre` export. `npm run knip`
+    passes. Triage any unused-export finding (remove the export or use it) instead of re-adding an ignore.
 - [ ] 6.4 (FR-1) Entry links: `POEM_MANAGEMENT_PATH` in `shared/config/account-paths.ts`;
   `AccountAuthorLinks` and `AuthorOwnerLinkView` render «Управление произведениями».
   - Verify with the authors tests for both components (implements FR-1 of add-poem-creation):
     public own profile shows it with `href="/account/poems"`; no profile, not public, other
     visitor don't.
+  - Scaffold clean-up: remove the `@public` tag on `POEM_MANAGEMENT_PATH`.
 - [ ] 6.5 (FR-1, FR-2, FR-3, FR-7, NFR-9) Verify: typecheck, lint, coverage, build (route list per NFR-9), knip.
 
 ## 7. Breadcrumbs <!-- isolated -->

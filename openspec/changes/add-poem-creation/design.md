@@ -82,9 +82,10 @@ internal: the trail builds the last item from the current URL, which it already 
 src/features/poems/
 ├── dal/
 │   ├── author-poems.ts      # listAuthorPoems, getAuthorPoem: database reads, own cache scope (D3)
-│   ├── poem-row.ts          # Zod row schema + row → Poem mapping (illustration public URL)
+│   ├── poem-row.ts          # row → Poem mapping (illustration public URL)
 │   └── poem-genres.ts       # listPoemGenres(), getPoemGenreName(id): Contentful `tag` entries (D5)
 ├── model/
+│   ├── poem-row.schema.ts   # Zod row schema (ADR 0001: dal/ validates with model/'s schema)
 │   ├── poem-cache-tags.ts   # poemsTag(authorId)
 │   └── …                    # Poem type changes (D3), copy, paths, constants
 └── components/
@@ -756,3 +757,41 @@ sequenceDiagram
    three to the deploy checklist in `PROGRESS.md`.
 3. Rollback: revert the app first (its reads would fail against a missing table), then the
    documented down migration.
+
+## Scaffold map
+
+Written by `opsx-scaffold` after the files existed (map approved 2026-10-28). Stub bodies only; moves
+out of `authors` (group 1), the migration and seed (group 2), the `AuthorPoemList` → `PoemTitleList`
+rename (5.2), routes and slot pages (groups 6-7) are not scaffolded. Temporary `knip.jsonc`
+`ignoreFiles` entries and `@public` tags carry the task that removes each.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/shared/config/account-paths.ts` (added) | the management area's path | `POEM_MANAGEMENT_PATH` |
+| `src/features/authors/dal/own-public-author.ts` | own profile as public / not public, request-memoized (D4) | `getOwnPublicAuthor` |
+| `src/features/authors/model/author.types.ts` (added) | its result type | `OwnPublicAuthorResult` |
+| `src/features/poems/model/poem-row.schema.ts` | Zod row schema (D3, ADR 0001) | `poemRowSchema`, `PoemRow` |
+| `src/features/poems/dal/poem-row.ts` | row → `Poem` (D3) | `toPoem` |
+| `src/features/poems/dal/poem-genres.ts` | Contentful `tag` genres, name lookup (D5) | `listPoemGenres`, `getPoemGenreName` |
+| `src/features/poems/model/poem-cache-tags.ts` | one tag per author (D3) | `poemsTag` |
+| `src/features/poems/model/poem.types.ts` (added) | list and genre result types | `AuthorPoemsResult`, `PoemGenre`, `PoemGenresResult`, `PoemGenreName` |
+| `src/features/poems/index.ts` (added) | types for poem-management | `Poem`, `PoemGenre` (types) |
+| `src/features/poems/components/PoemArticle/` | genre lookup + `PoemView`, both poem pages | `PoemArticle`, `PoemArticleProps` |
+| `src/features/poems/components/PoemPageSkeleton/` | poem page loading state (D11) | `PoemPageSkeleton` |
+| `src/features/poem-management/model/poem-management.constants.ts` | limits, `NO_GENRE`, bucket, action statuses | `TITLE_MAX_LENGTH`, `TEXT_MAX_LENGTH`, `NO_GENRE`, `POEM_ILLUSTRATIONS_BUCKET`, `CREATE_POEM_STATUS` |
+| `src/features/poem-management/model/poem-management.types.ts` | form fields, failures, action and DAL results | `PoemFormField`, `PoemFieldErrors`, `ServiceFailure`, `CreatePoemFailure`, `CreatePoemResult`, `CanCreatePoemResult`, `PoemIllustration`, `CreateOwnPoemInput`, `CreateOwnPoemResult`, `OwnPoemResult`, `OwnPoemTitleResult` |
+| `src/features/poem-management/model/poem-form.schema.ts` | field shape; rules in 4.1 | `poemFormSchema`, `PoemFormInput` |
+| `src/features/poem-management/model/poem-management-messages.ts` | the UI copy table, verbatim | `POEM_MANAGEMENT_COPY`, `POEM_FIELD_ERRORS`, `CREATE_POEM_FAILURE_MESSAGES`, `POEM_MANAGEMENT_TRAIL_LABELS` |
+| `src/features/poem-management/model/poem-paths.ts` | management paths | `NEW_POEM_PATH`, `ownPoemPath` |
+| `src/features/poem-management/model/created-poem-notice-ui.store.ts` | Zustand: the poem just created (D8) | `useCreatedPoemNotice`, `CreatedPoemNoticeState` |
+| `src/features/poem-management/dal/own-poem.ts` | owner's poem and its title, request-memoized (D4, D10) | `getOwnPoem`, `getOwnPoemTitle` |
+| `src/features/poem-management/dal/poem-writes.ts` | limit check, upload, `create_my_poem`, cleanup (D7) | `checkCanCreatePoem`, `createOwnPoem` |
+| `src/features/poem-management/actions/action-client.ts` | next-safe-action client | `poemManagementActionClient` |
+| `src/features/poem-management/actions/create-poem.actions.ts` | `"use server"` create (D7) | `createPoemAction` |
+| `src/features/poem-management/components/MyPoemsPage/`, `MyPoemsContent/`, `MyPoemsSkeleton/` | `/account/poems` (FR-2) | one component each |
+| `src/features/poem-management/components/NewPoemPage/`, `NewPoemContent/`, `NewPoemSkeleton/` | `/account/poems/new` (FR-3) | one component each |
+| `src/features/poem-management/components/NewPoemForm/` | client add form (D8) | `NewPoemForm`, `NewPoemFormProps` |
+| `src/features/poem-management/components/OwnPoemPage/`, `OwnPoemContent/` | `/account/poems/<id>` (FR-7) | component + props each |
+| `src/features/poem-management/components/CreatedPoemNotice/` | client success notice (D8) | `CreatedPoemNotice`, `CreatedPoemNoticeProps` |
+| `src/features/poem-management/components/NotPublicNotice/` | not-public message + editor link | `NotPublicNotice` |
+| `src/features/poem-management/index.ts` | public API | `MyPoemsPage`, `NewPoemPage`, `OwnPoemPage`, `getOwnPoemTitle`, `OwnPoemTitleResult`, `POEM_MANAGEMENT_TRAIL_LABELS`, `NEW_POEM_PATH` |
