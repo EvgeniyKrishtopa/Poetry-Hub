@@ -25,7 +25,9 @@ export const AUTUMN_GARDEN: Poem = {
     "И сад молчит, и между прочим",
     "Хранит всё лето в голове.",
   ].join("\n"),
-  illustrationUrl: `http://127.0.0.1:54321/storage/v1/object/public/poem-illustrations/${FIXTURE_AUTHOR_ID}/0b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d.jpg`,
+  // Short on purpose: next/image's `preload` builds a selector from every srcset URL, and jsdom
+  // rejects selectors over 2048 characters, which a real-length Storage URL exceeds.
+  illustrationUrl: "http://127.0.0.1:54321/storage/v1/object/public/poem-illustrations/a.jpg",
   publishedAt: "2026-03-12",
   genreId: "lyric",
 };
