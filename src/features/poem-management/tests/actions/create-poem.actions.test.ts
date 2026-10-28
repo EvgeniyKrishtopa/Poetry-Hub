@@ -8,7 +8,7 @@ import { listPoemGenres } from "@/features/poems";
 
 import { createPoemAction } from "../../actions/create-poem.actions";
 import { checkCanCreatePoem, createOwnPoem } from "../../dal/poem-writes";
-import { POEM_FIELD_ERRORS } from "../../model/poem-management-messages";
+import { CREATE_POEM_FAILURE_MESSAGES, POEM_FIELD_ERRORS } from "../../model/poem-management-messages";
 import { NO_GENRE } from "../../model/poem-management.constants";
 
 vi.mock("next/cache", () => ({ updateTag: vi.fn() }));
@@ -245,6 +245,20 @@ describe("createPoemAction", () => {
 
     expect(result.data).toEqual({ status: "created", poemId: POEM_ID });
     expect(console.error).toHaveBeenCalledExactlyOnceWith("[poem-management] expire poems tag failed: TypeError");
+  });
+
+  // implements NFR-10 of add-poem-creation
+  it("masks an unexpected throw and logs none of the poem, the user, the author, or the poem id", async () => {
+    vi.mocked(listPoemGenres).mockRejectedValue(new Error(`${TITLE} ${TEXT} ${USER_ID} ${AUTHOR_ID} ${POEM_ID}`));
+
+    const result = await createPoemAction(VALID);
+
+    expect(result.data).toBeUndefined();
+    expect(result.serverError).toBe(CREATE_POEM_FAILURE_MESSAGES.unknown);
+    expect(console.error).toHaveBeenCalledWith("[poem-management] action failed: Error");
+    const logged = vi.mocked(console.error).mock.calls.flat().map(String).join("\n");
+    for (const secret of [TITLE, TEXT, USER_ID, AUTHOR_ID, POEM_ID]) expect(logged).not.toContain(secret);
+    expectNothingWritten();
   });
 
   it("ignores any author id in the input", async () => {
