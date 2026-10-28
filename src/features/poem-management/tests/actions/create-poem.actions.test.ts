@@ -116,6 +116,20 @@ describe("createPoemAction", () => {
     expectNothingWritten();
   });
 
+  // A request the form never sends: wrong types get next-safe-action's validationErrors, which the form
+  // shows as the generic failure (design D7).
+  it.each([
+    ["a title that is not a string", { ...VALID, title: 1 }],
+    ["an illustration that is not a file", { ...VALID, illustration: "picture.png" }],
+  ])("rejects %s through validationErrors, before any check runs", async (_case, malformed) => {
+    const result = await createPoemAction(malformed as never);
+
+    expect(result.data).toBeUndefined();
+    expect(result.validationErrors).toBeDefined();
+    expect(getSessionState).not.toHaveBeenCalled();
+    expectNothingWritten();
+  });
+
   // implements FR-5 of add-poem-creation
   it("returns unauthenticated when there is no session", async () => {
     vi.mocked(getSessionState).mockResolvedValue({ state: "signed-out" });
