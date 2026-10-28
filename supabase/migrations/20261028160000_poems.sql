@@ -19,6 +19,8 @@
 --   drop policy if exists "authors upload poem illustrations" on storage.objects;
 --   drop policy if exists "owners read their poem illustrations" on storage.objects;
 --   drop policy if exists "owners delete poem illustrations" on storage.objects;
+--   -- Storage refuses direct deletes from its tables unless this is set for the transaction.
+--   set local storage.allow_delete_query = 'true';
 --   delete from storage.objects where bucket_id = 'poem-illustrations';
 --   delete from storage.buckets where id = 'poem-illustrations';
 --   drop function if exists public.can_create_poem();
