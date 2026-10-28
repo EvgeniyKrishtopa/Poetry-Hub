@@ -6,3 +6,5 @@ export { PoemPage } from "./components/PoemPage/PoemPage";
 export { getAuthorPoem } from "./dal/author-poems";
 export { POEMS_SEGMENT } from "./model/poem.constants";
 export type { AuthorPoemResult } from "./model/poem.types";
+/** @public Scaffold: no importer outside poems until task 6.3 (poem-management). */
+export type { Poem, PoemGenre } from "./model/poem.types";
