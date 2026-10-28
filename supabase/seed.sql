@@ -116,16 +116,37 @@ insert into seed_poems (position, title, text, published_on) values
 будет помнить,
 что с ним говорили.$$, '2026-09-05');
 
+-- Who gets which poem, one per line in the shape ('<poem id>', '<email>', <position>):
+-- src/features/poems/tests/dal/seed-poems.test.ts reads it.
+create temporary table seed_author_poems (
+  poem_id  uuid primary key,
+  email    text not null,
+  position integer not null
+);
+
+insert into seed_author_poems (poem_id, email, position) values
+  ('30000000-0000-4000-8000-000000000021', 'author2@example.test', 1),
+  ('30000000-0000-4000-8000-000000000031', 'author3@example.test', 1),
+  ('30000000-0000-4000-8000-000000000032', 'author3@example.test', 2),
+  ('30000000-0000-4000-8000-000000000041', 'author4@example.test', 1),
+  ('30000000-0000-4000-8000-000000000042', 'author4@example.test', 2),
+  ('30000000-0000-4000-8000-000000000043', 'author4@example.test', 3),
+  ('30000000-0000-4000-8000-000000000051', 'author5@example.test', 1),
+  ('30000000-0000-4000-8000-000000000052', 'author5@example.test', 2),
+  ('30000000-0000-4000-8000-000000000053', 'author5@example.test', 3),
+  ('30000000-0000-4000-8000-000000000054', 'author5@example.test', 4);
+
 insert into public.poems (id, author_id, title, text, created_at)
 select
-  format('30000000-0000-4000-8000-0000000000%s%s', a.n, p.position)::uuid,
+  ap.poem_id,
   r.profile_id,
   p.title,
   p.text,
   (p.published_on + time '12:00') at time zone 'UTC'
-from generate_series(2, 5) as a (n)
-join seed_readers r on r.email = format('author%s@example.test', a.n)
-join seed_poems p on p.position <= a.n - 1;
+from seed_author_poems ap
+join seed_readers r on r.email = ap.email
+join seed_poems p on p.position = ap.position;
 
+drop table seed_author_poems;
 drop table seed_poems;
 drop table seed_readers;
