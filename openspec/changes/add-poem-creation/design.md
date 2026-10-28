@@ -395,7 +395,14 @@ counts as empty. The title keeps the plain `trim()`. The database's blank-text c
 9. Return `{ status: "created", poemId }`.
 
 Failures are values (`{ status: "failed", failure }` / `{ status: "invalid", fieldErrors }`), never
-`null`-as-success. Logs carry the operation and failure kind only — no title, text, file name, or
+`null`-as-success. **One channel for field errors** (Gate 2b; user decision, 2026-10-28, group 4): the
+action's input schema checks only the types (`createPoemInputSchema`: three strings and an optional
+`File`); `poemFormSchema` runs inside the body, and every field error, from the field rules (step 1)
+or from the genre and illustration checks (steps 5-6), returns as `{ status: "invalid", fieldErrors }`
+with one message per field (`toPoemFieldErrors`, also used by the form for its browser check). The form
+reads only `data`; next-safe-action's `validationErrors` appears only for a malformed request the form
+never sends, which the form shows as the generic failure. Rejected: `returnValidationErrors` for genre
+and illustration (the profile editor's pattern), which would make the form read two places. Logs carry the operation and failure kind only — no title, text, file name, or
 bytes, no user id, author profile id, or poem id (NFR-10; clarify, 2026-10-28).
 
 Why not `redirect()` inside the action: the client needs to know the action succeeded to show the

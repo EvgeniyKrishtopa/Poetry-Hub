@@ -1,7 +1,10 @@
+import type { ImageFileError } from "@/shared/lib/image-file/image-file.types";
+
 import { TEXT_MAX_LENGTH, TITLE_MAX_LENGTH } from "./poem-management.constants";
 
 // Every string of the proposal's UI copy table this feature shows, verbatim and in Russian.
 
+/** @public Scaffold: no importer until the pages and the form, tasks 6.1-6.4. */
 export const POEM_MANAGEMENT_COPY = {
   entryLink: "Управление произведениями",
   listHeading: "Ваши Произведения",
@@ -33,6 +36,12 @@ export const POEM_FIELD_ERRORS = {
   illustrationUnsupportedType: "Допустимы только изображения PNG или JPEG.",
 } as const;
 
+/** The illustration's message for each image check failure (the profile photo's rules, FR-4). */
+export const ILLUSTRATION_ERROR_MESSAGES: Readonly<Record<ImageFileError, string>> = {
+  "too-large": POEM_FIELD_ERRORS.illustrationTooLarge,
+  "unsupported-type": POEM_FIELD_ERRORS.illustrationUnsupportedType,
+};
+
 export const CREATE_POEM_FAILURE_MESSAGES = {
   "too-many-poems": "Слишком много новых произведений. Попробуйте позже.",
   unauthenticated: "Сессия истекла. Войдите снова.",
@@ -40,7 +49,7 @@ export const CREATE_POEM_FAILURE_MESSAGES = {
   unknown: "Что-то пошло не так. Попробуйте ещё раз.",
 } as const;
 
-/** Breadcrumb labels of the static management routes (design D10). */
+/** Breadcrumb labels of the static management routes (design D10). @public Scaffold: no importer until task 7.1. */
 export const POEM_MANAGEMENT_TRAIL_LABELS = {
   list: "Управление произведениями",
   newPoem: "Добавление нового произведения",
