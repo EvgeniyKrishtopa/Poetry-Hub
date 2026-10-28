@@ -168,6 +168,13 @@ describe("applyFormat", () => {
       expect(result.text).toBe(`строфа\n\n* * *\n\n${INDENT_STEP}дальше`);
     });
 
+    it("separator over a selection inside whitespace-only lines drops those lines too", () => {
+      const text = "строфа\n \n \nследующая";
+      const result = applyFormat(text, { start: "строфа\n ".length, end: "строфа\n \n ".length }, "separator");
+
+      expect(result.text).toBe("строфа\n\n* * *\n\nследующая");
+    });
+
     it("separator at the very start adds no leading blank line", () => {
       const result = applyFormat("строфа", { start: 0, end: 0 }, "separator");
 
@@ -182,6 +189,13 @@ describe("applyFormat", () => {
       expect([...INDENT_STEP].map((char) => char.codePointAt(0))).toEqual([EM_SPACE_CODE_POINT, EM_SPACE_CODE_POINT]);
       expect(twice.text).toBe(`до\n${INDENT_STEP}${INDENT_STEP}строка\n${INDENT_STEP}${INDENT_STEP}ещё строка\nпосле`);
       expect(selected(twice)).toBe(`${INDENT_STEP}${INDENT_STEP}строка\n${INDENT_STEP}${INDENT_STEP}ещё строка`);
+    });
+
+    it("indent leaves the next line alone when the selection ends right after a line break", () => {
+      const result = applyFormat("a\nb\nc", { start: 0, end: 2 }, "indent");
+
+      expect(result.text).toBe(`${INDENT_STEP}a\nb\nc`);
+      expect(selected(result)).toBe(`${INDENT_STEP}a`);
     });
 
     it("indent with no selection prefixes the cursor's line, even an empty one", () => {
