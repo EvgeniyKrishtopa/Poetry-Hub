@@ -82,9 +82,10 @@ internal: the trail builds the last item from the current URL, which it already 
 src/features/poems/
 ├── dal/
 │   ├── author-poems.ts      # listAuthorPoems, getAuthorPoem: database reads, own cache scope (D3)
-│   ├── poem-row.ts          # Zod row schema + row → Poem mapping (illustration public URL)
+│   ├── poem-row.ts          # row → Poem mapping (illustration public URL)
 │   └── poem-genres.ts       # listPoemGenres(), getPoemGenreName(id): Contentful `tag` entries (D5)
 ├── model/
+│   ├── poem-row.schema.ts   # Zod row schema (ADR 0001: dal/ validates with model/'s schema)
 │   ├── poem-cache-tags.ts   # poemsTag(authorId)
 │   └── …                    # Poem type changes (D3), copy, paths, constants
 └── components/
@@ -769,7 +770,8 @@ rename (5.2), routes and slot pages (groups 6-7) are not scaffolded. Temporary `
 | `src/shared/config/account-paths.ts` (added) | the management area's path | `POEM_MANAGEMENT_PATH` |
 | `src/features/authors/dal/own-public-author.ts` | own profile as public / not public, request-memoized (D4) | `getOwnPublicAuthor` |
 | `src/features/authors/model/author.types.ts` (added) | its result type | `OwnPublicAuthorResult` |
-| `src/features/poems/dal/poem-row.ts` | Zod row schema, row → `Poem` (D3) | `poemRowSchema`, `PoemRow`, `toPoem` |
+| `src/features/poems/model/poem-row.schema.ts` | Zod row schema (D3, ADR 0001) | `poemRowSchema`, `PoemRow` |
+| `src/features/poems/dal/poem-row.ts` | row → `Poem` (D3) | `toPoem` |
 | `src/features/poems/dal/poem-genres.ts` | Contentful `tag` genres, name lookup (D5) | `listPoemGenres`, `getPoemGenreName` |
 | `src/features/poems/model/poem-cache-tags.ts` | one tag per author (D3) | `poemsTag` |
 | `src/features/poems/model/poem.types.ts` (added) | list and genre result types | `AuthorPoemsResult`, `PoemGenre`, `PoemGenresResult`, `PoemGenreName` |

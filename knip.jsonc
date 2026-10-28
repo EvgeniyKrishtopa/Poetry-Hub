@@ -11,6 +11,7 @@
   "ignoreFiles": [
     "src/features/authors/dal/own-public-author.ts",
     "src/features/poems/dal/poem-row.ts",
+    "src/features/poems/model/poem-row.schema.ts",
     "src/features/poems/dal/poem-genres.ts",
     "src/features/poems/model/poem-cache-tags.ts",
     "src/features/poems/components/PoemArticle/**",

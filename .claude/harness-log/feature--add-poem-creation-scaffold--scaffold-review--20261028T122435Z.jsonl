@@ -1,0 +1,2 @@
+{"ts":"2026-10-28T12:24:35Z","change":"add-poem-creation","group":"full","gate":"scaffold-review","verdict":"confirmed","skipReason":"","durationMs":133383,"tokensTotal":93073,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}
+{"ts":"2026-10-28T12:24:35Z","change":"add-poem-creation","kind":"finding","gate":"scaffold-review","finding":"poemRowSchema in dal/ contradicts ADR 0001 (schemas live in model/)","outcome":"fixed","ruleNumber":"SC-1"}

@@ -85,7 +85,7 @@ group exports only what it already consumes (tests count as consumers for knip),
 
 - [ ] 3.1 (FR-9, NFR-4, FR-11) Rewrite `src/features/poems/dal/author-poems.ts` (design D3):
   `cachedAuthorPoems` with `"use cache"`, `cacheTag(poemsTag(authorId))`, the public client, Zod
-  row schema in `dal/poem-row.ts`, `"hours"` / `"seconds"` lifetimes; `listAuthorPoems` and
+  row schema in `model/poem-row.schema.ts` (ADR 0001), the mapping in `dal/poem-row.ts`, `"hours"` / `"seconds"` lifetimes; `listAuthorPoems` and
   `getAuthorPoem` in React `cache`; UUID guards; new `Poem`, `AuthorPoemsResult`,
   `AuthorPoemResult` types; `model/poem-cache-tags.ts`.
   - Verify with `src/features/poems/tests/dal/author-poems.test.ts` (implements FR-9 and NFR-4
@@ -94,7 +94,7 @@ group exports only what it already consumes (tests count as consumers for knip),
     success → `"hours"`, error → `unavailable` + `"seconds"`, logged without content (NFR-10);
     a non-UUID or uppercase `poemId` → `not-found` with no query; two calls in one request query
     once.
-  - Scaffold clean-up: remove `poem-row.ts` and `poem-cache-tags.ts` from `knip.jsonc`'s `ignoreFiles` and
+  - Scaffold clean-up: remove `poem-row.ts`, `poem-row.schema.ts`, and `poem-cache-tags.ts` from `knip.jsonc`'s `ignoreFiles` and
     the `@public` tag on `AuthorPoemsResult`. Triage any unused-export finding (remove the export or use it) instead of re-adding an ignore.
 - [ ] 3.2 (FR-10, FR-3) Genres DAL `src/features/poems/dal/poem-genres.ts` (design D5):
   `listPoemGenres` and `getPoemGenreName` with the result-dependent Contentful scope.
@@ -135,7 +135,10 @@ group exports only what it already consumes (tests count as consumers for knip),
     shape → `unknown`); with and without an illustration; RPC failure or `over-limit` removes the
     upload; upload failure calls no RPC; the path is `<authorId>/<uuid>.<ext>` from the sniffed
     type; logs carry no title, text, file name, user id, profile id, or poem id.
-- [ ] 4.4 (FR-5, FR-6, FR-12) `actions/create-poem.actions.ts` + `action-client.ts` (design D7).
+- [ ] 4.4 (FR-5, FR-6, FR-12) `actions/create-poem.actions.ts` + `action-client.ts` (design D7). Pick one
+  channel for server field errors (Gate 2b, 2026-10-28): either every field error through next-safe-action's
+  `validationErrors` (`returnValidationErrors` for genre and illustration) or parsing inside the body and
+  returning `invalid`; make `CreatePoemResult` and design D7 say which, so `NewPoemForm` reads one shape.
   - Verify with `tests/actions/create-poem.actions.test.ts` (implements FR-5, FR-6, FR-12 of
     add-poem-creation): invalid input → field errors, no RPC call; no session →
     `unauthenticated`; `can_create_poem` over limit → `too-many-poems`, no profile read, no
