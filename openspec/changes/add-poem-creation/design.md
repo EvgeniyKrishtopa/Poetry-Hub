@@ -475,7 +475,10 @@ author2 1, author3 2, author4 3, author5 4 — the same counts the e2e scenarios
 `genre_id null`, no illustration, and `created_at` set to each mock poem's former `publishedAt` at
 12:00 UTC, so pages and recorded scenarios keep the same dates and order (clarify, 2026-10-28).
 Author N+1 gets the first N poems of the former set, in its definition order, as `slice(0, n)` did. The
-seed runs as the database owner, so it inserts directly, bypassing `create_my_poem`. Recorded
+seed runs as the database owner, so it inserts directly, bypassing `create_my_poem`. Each seeded poem
+gets a fixed id, `30000000-0000-4000-8000-0000000000NM` (N the author's number, M the poem's 1-based
+position in the former set), so recorded scenarios can open a poem by URL after every
+`db reset` (user decision, 2026-10-28, group 2). Recorded
 scenarios that asserted an illustration or a genre line are updated.
 
 ### D13 — Testing

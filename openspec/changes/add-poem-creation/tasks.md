@@ -54,17 +54,17 @@ group exports only what it already consumes (tests count as consumers for knip),
 
 ## 2. Database: poems, illustrations bucket, limits, seed <!-- judgement-heavy -->
 
-- [ ] 2.1 (NFR-1, FR-5) Migration `supabase/migrations/<ts>_poems.sql` (design D2): `public.poems`
+- [x] 2.1 (NFR-1, FR-5) Migration `supabase/migrations/<ts>_poems.sql` (design D2): `public.poems`
   with checks and index, RLS, the select policy, select-only column grants;
   `is_public_author_profile(uuid)` and the `author_profiles` public policy rewritten to use it;
   `owns_public_author_folder(text)`; the `poem-illustrations` bucket and its policies; documented
   down migration. Mirror the bucket in `supabase/config.toml`.
-- [ ] 2.2 (FR-5, FR-6) In the same migration: `create_my_poem(title, text, genre_id,
+- [x] 2.2 (FR-5, FR-6) In the same migration: `create_my_poem(title, text, genre_id,
   illustration_path)` and `can_create_poem()` (design D2): caller from `auth.uid()`, public own
   profile from `my_author_profile_id()`, advisory lock, and the internal `poem_create_status(profile)`
   holding the public check and the 2-per-minute and 20-per-day counts from `poems.created_at`;
   jsonb status.
-- [ ] 2.3 (NFR-1, FR-6) pgTAP `supabase/tests/poems.test.sql` (design D13; implements NFR-1 and
+- [x] 2.3 (NFR-1, FR-6) pgTAP `supabase/tests/poems.test.sql` (design D13; implements NFR-1 and
   FR-6 of add-poem-creation): direct insert, update, and delete on `poems` rejected for `anon` and
   `authenticated`; `create_my_poem` as anon fails; with a non-public own profile → `not-public`;
   as the owner → `created`, row owned by the caller's profile; blank title, 81-character title,
@@ -75,8 +75,8 @@ group exports only what it already consumes (tests count as consumers for knip),
   `42501` (`throws_ok`), never a uuid-cast error `22P02`.
   `supabase/tests/author_profiles.test.sql` and `write_rate_limits.test.sql` keep passing
   unchanged.
-- [ ] 2.4 (FR-14) Seed (design D12): insert the four former mock poems as rows for author2..author5
-  (1, 2, 3, 4 poems), `genre_id null`, no illustration, `created_at` = the former `publishedAt` at
+- [x] 2.4 (FR-14) Seed (design D12): insert the four former mock poems as rows for author2..author5
+  (1, 2, 3, 4 poems) with fixed ids (design D12), `genre_id null`, no illustration, `created_at` = the former `publishedAt` at
   12:00 UTC, each author the first N poems in the former set's order (design D12); update the seed's header comment.
   - Verify: `npx supabase db reset` then `npx supabase test db` pass; `select count(*) from
     public.poems` is 10.
