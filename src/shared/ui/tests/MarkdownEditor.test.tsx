@@ -11,7 +11,7 @@ import type { MarkdownEditorProps } from "../MarkdownEditor/MarkdownEditor.types
 const POEM_FORMATS: readonly MarkdownFormat[] = ["bold", "italic", "epigraph", "separator", "indent"];
 const POEM_MAX_LENGTH = 10000;
 
-type EditorOptions = Partial<Pick<MarkdownEditorProps, "error" | "formats" | "variant" | "maxLength">> & {
+type EditorOptions = Partial<Pick<MarkdownEditorProps, "error" | "formats" | "variant" | "maxLength" | "autoFocus">> & {
   readonly initialValue?: string;
 };
 
@@ -30,6 +30,7 @@ function Harness({ initialValue = "", ...options }: EditorOptions) {
         maxLength={options.maxLength ?? POEM_MAX_LENGTH}
         formats={options.formats ?? POEM_FORMATS}
         variant={options.variant ?? "poem"}
+        autoFocus={options.autoFocus}
       />
     </>
   );
@@ -104,5 +105,12 @@ describe("MarkdownEditor", () => {
     expect(textarea).not.toHaveAttribute("aria-invalid");
     expect(textarea).not.toHaveFocus();
     expect(textarea).toHaveAccessibleDescription("0 / 10000");
+  });
+
+  // implements NFR-5 of add-author-profiles
+  it("takes focus on mount when autoFocus is set", () => {
+    const { textarea } = setup({ autoFocus: true });
+
+    expect(textarea).toHaveFocus();
   });
 });
