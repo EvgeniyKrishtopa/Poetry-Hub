@@ -235,6 +235,18 @@ describe("createPoemAction", () => {
     expect(updateTag).not.toHaveBeenCalled();
   });
 
+  // implements FR-5 of add-poem-creation
+  it("still reports a stored poem as created when expiring the tag throws, and logs only the error class", async () => {
+    vi.mocked(updateTag).mockImplementationOnce(() => {
+      throw new TypeError(`tag poems:${AUTHOR_ID}`);
+    });
+
+    const result = await createPoemAction(VALID);
+
+    expect(result.data).toEqual({ status: "created", poemId: POEM_ID });
+    expect(console.error).toHaveBeenCalledExactlyOnceWith("[poem-management] expire poems tag failed: TypeError");
+  });
+
   it("ignores any author id in the input", async () => {
     await createPoemAction({ ...VALID, authorId: "someone-else" } as never);
 

@@ -108,8 +108,20 @@ async function createPoem(input: CreatePoemInput): Promise<CreatePoemResult> {
 
   // 8. `updateTag`, not `revalidateTag`: the next request for any of the author's poem pages must wait
   //    for the new list.
-  updateTag(poemsTag(author.authorId));
+  expirePoemsTag(author.authorId);
   return { status: CREATE_POEM_STATUS.created, poemId: created.poemId };
+}
+
+/**
+ * The poem is already stored here, so a failed expiry must not turn it into an error the author would
+ * retry, creating a duplicate. It is only logged; the list catches up when its cache lifetime ends.
+ */
+function expirePoemsTag(authorId: string): void {
+  try {
+    updateTag(poemsTag(authorId));
+  } catch (error) {
+    console.error(`[poem-management] expire poems tag failed: ${error instanceof Error ? error.name : typeof error}`);
+  }
 }
 
 /** Creates one poem for the caller's own public profile (design D7). */
