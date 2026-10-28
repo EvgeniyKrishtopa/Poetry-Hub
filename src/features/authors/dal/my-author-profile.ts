@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
 import { OWNER_PROFILE_COLUMNS } from "../model/author.constants";
@@ -13,8 +15,10 @@ const OPERATION = "read own profile";
 /**
  * The signed-in owner's own row, per request with the cookie client: the database resolves the caller
  * (`my_author_profile_id()`), so no user id is passed (design D3). Never throws for an expected failure.
+ * Memoized per request, so the account page, the owner link, and `getOwnPublicAuthor`'s callers share
+ * one read (add-poem-creation design D4).
  */
-export async function getMyAuthorProfile(): Promise<MyProfileResult> {
+export const getMyAuthorProfile = cache(async (): Promise<MyProfileResult> => {
   try {
     const supabase = await createSupabaseServerClient();
     const own = await findOwnProfileId(supabase, OPERATION);
@@ -27,4 +31,4 @@ export async function getMyAuthorProfile(): Promise<MyProfileResult> {
     // A config error, or an unexpected throw: still a value, never an exception.
     return { ok: false, failure: toProfileFailure(OPERATION, error) };
   }
-}
+});

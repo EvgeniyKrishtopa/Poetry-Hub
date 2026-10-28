@@ -10,18 +10,18 @@ group exports only what it already consumes (tests count as consumers for knip),
 
 ## 1. Shared building blocks and the own-author read (no visible change) <!-- judgement-heavy -->
 
-- [ ] 1.1 (NFR-3) Move the pure Markdown and text helpers (design D1): `markdown-format.ts` →
+- [x] 1.1 (NFR-3) Move the pure Markdown and text helpers (design D1): `markdown-format.ts` →
   `src/shared/lib/markdown/`, `trimmed-length.ts` → `src/shared/lib/text/`; move their tests to
   the matching `tests/` folders; update the authors imports.
   - Verify: the moved tests pass unchanged apart from import paths.
-- [ ] 1.2 (NFR-3) Move the image file check (design D1): `validate-photo-file.ts`,
+- [x] 1.2 (NFR-3) Move the image file check (design D1): `validate-photo-file.ts`,
   `detect-image-type.ts`, `PHOTO_FORMATS`, `PHOTO_MAX_BYTES` → `src/shared/lib/image-file/`
   (`validateImageFile`, `IMAGE_FORMATS`, `IMAGE_MAX_BYTES`); `use-photo-draft.ts` and
   `object-url-store.ts` → `src/shared/lib/image-file/use-image-draft.ts` (+ store);
   `PhotoPicker` → `src/shared/ui/ImagePicker/` with a `buttonLabel` prop. Authors keep their
   messages and pass «Выбрать фото».
   - Verify with the moved tests, plus `src/features/authors/tests/` unchanged and green.
-- [ ] 1.3 (NFR-3, FR-10) Move the Markdown editor and renderer (design D1, D6):
+- [x] 1.3 (NFR-3, FR-10) Move the Markdown editor and renderer (design D1, D6):
   `AboutTextarea`, `MarkdownToolbar`, `AboutViewTabs`, `AboutPreview`, and the counter →
   `src/shared/ui/MarkdownEditor/` (`maxLength`, `label`, `id`, `errorId`, `formats`, `variant`
   props); `AuthorAbout` + `about-markdown.ts` → `src/shared/ui/MarkdownText/` (`variant`, default
@@ -35,20 +35,20 @@ group exports only what it already consumes (tests count as consumers for knip),
     leading em spaces; `formats` limits the toolbar; the three new transforms: epigraph
     prefix, separator with one blank line each side, indent per selected line), and the
     authors editor tests unchanged and green.
-- [ ] 1.4 (NFR-3) Move the Supabase error classifier (design D1): `classify-profile-error.ts` →
+- [x] 1.4 (NFR-3) Move the Supabase error classifier (design D1): `classify-profile-error.ts` →
   `src/shared/lib/supabase/classify-error.ts` (`classifySupabaseError`). The write-allowance DAL
   stays in `authors`.
   - Verify with the moved classifier tests and the existing authors cases.
-- [ ] 1.5 (NFR-3, FR-1) Wrap `getMyAuthorProfile` in React `cache`; add `getOwnPublicAuthor()` in
-  `src/features/authors/dal/own-public-author.ts` on top of it (design D4), exported from
-  `@/features/authors`; only `AuthorOwnerLink` switches to it (`AccountAuthorSection` keeps
+- [x] 1.5 (NFR-3, FR-1) Wrap `getMyAuthorProfile` in React `cache`; add `getOwnPublicAuthor()` in
+  `src/features/authors/dal/own-public-author.ts` on top of it (design D4); the `@/features/authors`
+  export lands with its first consumer in 4.2 (knip, group 1); only `AuthorOwnerLink` switches to it (`AccountAuthorSection` keeps
   `getMyAuthorProfile` for its three states).
   - Verify with `src/features/authors/tests/dal/own-public-author.test.ts`: public, no row, missing
     last name, each failure kind; two calls in one request read once. The existing account and
     owner-link tests stay green.
   - Scaffold clean-up: remove `src/features/authors/dal/own-public-author.ts` from `knip.jsonc`'s
     `ignoreFiles` and the `@public` tag on `OwnPublicAuthorResult`; `npm run knip` passes. Triage any unused-export finding (remove the export or use it) instead of re-adding an ignore.
-- [ ] 1.6 (NFR-3, FR-1) Verify: `npm run typecheck && npm run lint && npm run test:coverage && npm run build &&
+- [x] 1.6 (NFR-3, FR-1) Verify: `npm run typecheck && npm run lint && npm run test:coverage && npm run build &&
   npm run knip` pass; `rg "detectImageType|MarkdownToolbar|PGRST301" src/features` finds only imports from
   `@/shared`.
 
@@ -124,7 +124,8 @@ group exports only what it already consumes (tests count as consumers for knip),
     FR-4 of add-poem-creation): required, whitespace-only, 80/81 title, 10000/10001 text, code
     points not UTF-16 units, `NO_GENRE` → `null`, trimming.
 - [ ] 4.2 (FR-7, FR-8) `dal/own-poem.ts`: `getOwnPoem(poemId)` and `getOwnPoemTitle(poemId)` in
-  React `cache`, over `getOwnPublicAuthor` and `getAuthorPoem` (design D4).
+  React `cache`, over `getOwnPublicAuthor` and `getAuthorPoem` (design D4); export
+  `getOwnPublicAuthor` from `@/features/authors`' index (left out in group 1: no consumer yet).
   - Verify with `tests/dal/own-poem.test.ts`: own poem; another author's or malformed id →
     `not-found`; not public → `not-found`; signed out meanwhile and failures → `unavailable`; page and title
     calls in one request read once.

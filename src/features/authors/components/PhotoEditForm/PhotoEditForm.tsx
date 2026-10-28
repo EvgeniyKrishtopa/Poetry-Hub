@@ -1,10 +1,11 @@
 import { useId } from "react";
 
-import { FIELD_LABELS } from "../../model/author-messages";
+import { ImagePicker } from "@/shared/ui";
+
+import { FIELD_LABELS, PHOTO_PICKER_LABEL } from "../../model/author-messages";
 import { AuthorPhoto } from "../AuthorPhoto/AuthorPhoto";
 import { FieldEditActions } from "../FieldEditActions/FieldEditActions";
 import { FieldErrorText } from "../FieldErrorText/FieldErrorText";
-import { PhotoPicker } from "../PhotoPicker/PhotoPicker";
 import { ProfileFieldRow } from "../ProfileFieldRow/ProfileFieldRow";
 
 import type { PhotoEditFormProps } from "./PhotoEditForm.types";
@@ -23,11 +24,14 @@ export function PhotoEditForm({ draft, error, fullName, onFileChange, onSubmit, 
           </label>
         }
       >
-        <PhotoPicker
+        <ImagePicker
           id={inputId}
+          buttonLabel={PHOTO_PICKER_LABEL}
           fileName={draft?.file.name ?? null}
           errorId={error ? errorId : undefined}
           onFileChange={onFileChange}
+          // It mounts only with the photo's edit form, when the reader opens the field (NFR-5).
+          autoFocus
         />
         {error && <FieldErrorText id={errorId} message={error} />}
         {draft !== null && <AuthorPhoto photoUrl={draft.previewUrl} fullName={fullName} />}

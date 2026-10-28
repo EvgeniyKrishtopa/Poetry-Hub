@@ -1,0 +1,118 @@
+.about {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.about h2 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+}
+
+.about h3 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+}
+
+.about p,
+.about ul,
+.about ol,
+.about blockquote {
+  margin: 0 0 0.75rem;
+}
+
+/* Markers sit inside the text block at its left edge, with no indent (approved mockup, artboards 3 and 12). */
+.about ul,
+.about ol {
+  padding-left: 0;
+  list-style-position: inside;
+}
+
+.about ul {
+  list-style-type: disc;
+}
+
+.about ol {
+  list-style-type: decimal;
+}
+
+.about blockquote {
+  padding-left: 1rem;
+  border-left: 2px solid var(--color-border);
+  font-style: italic;
+}
+
+.about > :first-child {
+  margin-top: 0;
+}
+
+.about > :last-child {
+  margin-bottom: 0;
+}
+
+/* A poem (add-poem-creation design D6, Claude Design artboard 14): italic stanzas 24 px apart. */
+.poem {
+  font-size: 1rem;
+  line-height: 1.7;
+  font-style: italic;
+}
+
+@media (min-width: 40rem) {
+  .poem {
+    font-size: 1.125rem;
+  }
+}
+
+/*
+ * react-markdown keeps a soft line break as "\n", so pre-line puts each line of a stanza on its own
+ * line. It collapses only spaces and tabs, so the em spaces of an indent survive.
+ */
+.poem p {
+  margin: 0 0 1.5rem;
+  white-space: pre-line;
+}
+
+/* Emphasis inside the italic text stands out upright. */
+.poem em {
+  font-style: normal;
+}
+
+.poem > :first-child {
+  margin-top: 0;
+}
+
+.poem > :last-child {
+  margin-bottom: 0;
+}
+
+/* Each line right-aligned, the block pushed to the right edge; italic is inherited. */
+.epigraph {
+  max-width: 28em;
+  margin: 0 0 1.5rem auto;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  text-align: right;
+  color: var(--color-muted);
+}
+
+.epigraph > :last-child {
+  margin-bottom: 0;
+}
+
+/* A thematic break drawn as a centred «* * *» instead of a rule; the element keeps its separator role. */
+.separator {
+  height: auto;
+  margin: 0 0 1.5rem;
+  border: 0;
+  overflow: visible;
+  font-style: normal;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
+.separator::before {
+  content: "* * *";
+}

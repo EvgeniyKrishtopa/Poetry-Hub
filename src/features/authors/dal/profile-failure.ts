@@ -1,9 +1,9 @@
 import "server-only";
 
 import { SupabaseConfigError } from "@/shared/lib/supabase";
+import { classifySupabaseError } from "@/shared/lib/supabase/classify-error";
 
 import type { ProfileFailure } from "../model/author.types";
-import { classifyProfileError } from "../model/classify-profile-error";
 
 /**
  * A PostgREST error with its response status merged in. postgrest-js keeps the status on the
@@ -33,5 +33,5 @@ export function toProfileFailure(operation: string, error: unknown): ProfileFail
   if (!(error instanceof SupabaseConfigError)) {
     console.error(`[authors] ${operation} failed: ${describeError(error)}`);
   }
-  return classifyProfileError(error);
+  return classifySupabaseError(error);
 }

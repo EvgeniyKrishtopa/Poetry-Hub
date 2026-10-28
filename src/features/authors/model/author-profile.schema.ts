@@ -1,8 +1,10 @@
 import { z } from "zod";
 
+import { IMAGE_MAX_BYTES } from "@/shared/lib/image-file/image-file.constants";
+import { trimmedLength } from "@/shared/lib/text/trimmed-length";
+
 import { VALIDATION_MESSAGES } from "./author-messages";
-import { ABOUT_MAX_LENGTH, NAME_MAX_LENGTH, PHOTO_MAX_BYTES } from "./author.constants";
-import { trimmedLength } from "./trimmed-length";
+import { ABOUT_MAX_LENGTH, NAME_MAX_LENGTH } from "./author.constants";
 
 /** Trimmed, non-empty, and at most `max` code points: what is stored is the trimmed value (FR-8). */
 function trimmedText(max: number, tooLongMessage: string) {
@@ -23,11 +25,11 @@ export const saveAboutSchema = z.object({
   about: trimmedText(ABOUT_MAX_LENGTH, VALIDATION_MESSAGES.aboutTooLong),
 });
 
-// Only the size is checked here; the type is checked by content in `validatePhotoFile` (design D4).
+// Only the size is checked here; the type is checked by content in `validateImageFile` (design D4).
 export const savePhotoSchema = z.object({
   photo: z
     .instanceof(File, { error: VALIDATION_MESSAGES.required })
-    .refine((file) => file.size <= PHOTO_MAX_BYTES, VALIDATION_MESSAGES.photoTooLarge),
+    .refine((file) => file.size <= IMAGE_MAX_BYTES, VALIDATION_MESSAGES.photoTooLarge),
 });
 
 export const deleteProfileFieldSchema = z.object({

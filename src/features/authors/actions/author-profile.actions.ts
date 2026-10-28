@@ -5,6 +5,7 @@ import { returnValidationErrors } from "next-safe-action";
 
 import { getSessionState } from "@/features/auth";
 import { SESSION_STATE } from "@/shared/config/constants";
+import { validateImageFile } from "@/shared/lib/image-file/validate-image-file";
 
 import { clearProfileField, removePhoto, replacePhoto, writeOwnProfile } from "../dal/author-profile-writes";
 import { consumeWriteAllowance } from "../dal/write-allowance";
@@ -18,7 +19,6 @@ import {
   savePhotoSchema,
 } from "../model/author-profile.schema";
 import type { ProfileActionResult, ProfileWriteResult, WriteAccess, WriteScope } from "../model/author.types";
-import { validatePhotoFile } from "../model/validate-photo-file";
 
 import { authorsActionClient } from "./action-client";
 
@@ -95,7 +95,7 @@ export const savePhotoAction = authorsActionClient
 
     // The browser ran the same check, but an action is a public endpoint (design D4). The stored
     // type comes from the file's bytes, whatever `photo.type` claims (FR-8).
-    const check = await validatePhotoFile(photo);
+    const check = await validateImageFile(photo);
     if (!check.ok) {
       return returnValidationErrors(savePhotoSchema, { photo: { _errors: [PHOTO_FILE_ERROR_MESSAGES[check.error]] } });
     }

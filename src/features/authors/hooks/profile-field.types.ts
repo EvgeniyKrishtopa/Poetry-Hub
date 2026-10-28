@@ -9,9 +9,3 @@ export interface FieldEditorControls {
   /** The action settled; `saved` decides whether the notice announces the save. */
   readonly onActionEnd: (saved: boolean) => void;
 }
-
-/** A chosen photo file that passed the browser check, with an object URL for its preview. */
-export interface PhotoDraft {
-  readonly file: File;
-  readonly previewUrl: string;
-}

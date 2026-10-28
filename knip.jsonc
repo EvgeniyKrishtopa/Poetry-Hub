@@ -6,10 +6,9 @@
     ".ncurc.cjs"
   ],
   // Temporary, add-poem-creation scaffold: these stubs have no importer until the groups wire them. Each entry
-  // is removed by the task that first imports the file: own-public-author 1.5, poems' genres/row/tags 3.1-3.2,
+  // is removed by the task that first imports the file: poems' genres/row/tags 3.1-3.2,
   // PoemArticle/PoemPageSkeleton 5.1-5.2, the poem-management feature 6.3.
   "ignoreFiles": [
-    "src/features/authors/dal/own-public-author.ts",
     "src/features/poems/dal/poem-row.ts",
     "src/features/poems/model/poem-row.schema.ts",
     "src/features/poems/dal/poem-genres.ts",
