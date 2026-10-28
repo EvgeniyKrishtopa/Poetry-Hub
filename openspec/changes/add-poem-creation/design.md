@@ -236,7 +236,13 @@ type AuthorPoemResult =
   and `/account/poems/<id>` all read this one entry.
 - `poemId` that isn't a lowercase-hex UUID → `not-found` before any read (junk never becomes a
   cache key and never reaches the database); comparison stays exact, so an uppercase spelling is
-  unknown (author-poems FR-5 keeps its case rule). `authorId` is validated as a UUID the same way.
+  unknown (author-poems FR-5 keeps its case rule). `authorId` is validated as a UUID too, but
+  lowercased rather than rejected when uppercase: the author page opens for an uppercase spelling,
+  and the create expires the lowercase tag (group 3).
+- An unavailable poem read on the public poem page shows the error screen; its trail ends at the
+  author's item as the current item (breadcrumbs FR-4, user decision 2026-10-28, group 3).
+- `next.config`'s `images.remotePatterns` allows the `poem-illustrations` public path next to
+  `author-photos` (`shared/config/supabase-image-patterns.ts`; user decision 2026-10-28, group 3).
 - Each read is bounded by an author check the caller already did (`getPublicAuthorName` on the
   public pages, `getOwnPublicAuthor` on the management pages).
 - The illustration URL is the public-bucket URL of `illustration_path`, built in the mapping, like

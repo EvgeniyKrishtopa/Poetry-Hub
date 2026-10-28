@@ -8,8 +8,8 @@ const POEMS_DIR = "src/features/poems";
 const AUTHORS_DIR = "src/features/authors";
 const SRC_DIR = "src";
 
-/** The one module allowed to read the mock set and its count rule (NFR-3). */
-const MOCK_READER = "src/features/poems/dal/author-poems.ts";
+/** The one module allowed to read the poems table (NFR-3). */
+const POEMS_READER = "src/features/poems/dal/author-poems.ts";
 
 const SOURCE_FILE = /\.tsx?$/;
 
@@ -38,9 +38,9 @@ describe("poems feature boundaries", () => {
   });
 
   // implements NFR-1 of add-author-poems
-  it("imports neither the session-aware auth feature nor Supabase", () => {
+  it("imports neither the session-aware auth feature nor a cookie-reading Supabase client", () => {
     expect(filesMatching(poemsFiles, /from ["']@\/features\/auth["']/)).toEqual([]);
-    expect(filesMatching(poemsFiles, /from ["']@\/shared\/lib\/supabase(\/[^"']*)?["']/)).toEqual([]);
+    expect(filesMatching(poemsFiles, /from ["']@\/shared\/lib\/supabase\/(server|session)["']/)).toEqual([]);
   });
 
   // implements FR-6 of add-author-poems
@@ -56,9 +56,15 @@ describe("poems feature boundaries", () => {
   });
 
   // implements NFR-3 of add-author-poems
-  it("lets only the poems DAL read the mock set and its count rule", () => {
-    const importers = filesMatching(sourceFiles(SRC_DIR), /from ["'][^"']*\/mock-poem(s|-count)["']/);
+  it("lets only the poems DAL read the poems table", () => {
+    const readers = filesMatching(sourceFiles(SRC_DIR), /\.from\(["']poems["']\)/);
 
-    expect(importers).toEqual([MOCK_READER]);
+    expect(readers).toEqual([POEMS_READER]);
+  });
+
+  // implements NFR-3 of add-author-poems
+  it("has no mock poem module left", () => {
+    // A character class, so this line itself doesn't match task 3.3's text search.
+    expect(sourceFiles(SRC_DIR).filter((file) => /mock[-]poem/.test(file))).toEqual([]);
   });
 });

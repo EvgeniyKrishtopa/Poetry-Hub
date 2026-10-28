@@ -6,6 +6,9 @@ export const POEMS_PAGE_TITLE = "Произведения";
 /** Shown in the author page's poems section when the author has no poems. */
 export const NO_POEMS_TEXT = "У автора пока ещё нет публикаций.";
 
+/** Shown in the author page's poems section when the poems can't be read (add-poem-creation FR-11). */
+export const POEMS_UNAVAILABLE_TEXT = "Произведения сейчас недоступны.";
+
 /**
  * Announced to screen readers while a poem page's skeleton shows; the same text as the root
  * `loading.tsx`. Not in the copy table: added with the poem pages (user decision, 2026-10-24).

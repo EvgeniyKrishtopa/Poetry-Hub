@@ -11,5 +11,11 @@ export const ILLUSTRATION_HEIGHT = 450;
  */
 export const ILLUSTRATION_SIZES = "(min-width: 944px) 896px, calc(100vw - 3rem)";
 
-/** The optimizer doesn't serve SVG (Next's `dangerouslyAllowSVG` stays off), so these load as is. */
-export const SVG_EXTENSION = ".svg";
+/**
+ * The public Storage bucket of poem illustrations (design D2). The read maps a stored path to its
+ * public URL; poem-management uploads into the same bucket.
+ */
+export const POEM_ILLUSTRATIONS_BUCKET = "poem-illustrations";
+
+/** The `public.poems` columns the public read selects (design D3). */
+export const POEM_COLUMNS = "id, title, text, genre_id, illustration_path, created_at";

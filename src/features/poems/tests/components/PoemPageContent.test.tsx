@@ -1,39 +1,37 @@
 import { render, screen } from "@testing-library/react";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactElement, type ReactNode } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getPublicAuthorName } from "@/features/authors";
 
 import { PoemPage } from "../../components/PoemPage/PoemPage";
 import { PoemPageContent } from "../../components/PoemPageContent/PoemPageContent";
 import { PoemView } from "../../components/PoemView/PoemView";
+import type { PoemViewProps } from "../../components/PoemView/PoemView.types";
 import { getAuthorPoem } from "../../dal/author-poems";
-import type { Poem } from "../../model/poem.types";
+import { getPoemGenreName } from "../../dal/poem-genres";
+import { AUTUMN_GARDEN, FIXTURE_AUTHOR_ID } from "../poem-fixtures";
 
 vi.mock("@/features/authors", () => ({ getPublicAuthorName: vi.fn() }));
 vi.mock("../../dal/author-poems", () => ({ getAuthorPoem: vi.fn() }));
+vi.mock("../../dal/poem-genres", () => ({ getPoemGenreName: vi.fn() }));
 vi.mock("next/navigation", () => ({
   notFound: vi.fn(() => {
     throw new Error("NEXT_HTTP_ERROR_FALLBACK;404");
   }),
 }));
 
-const AUTHOR_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
-const POEM_ID = "osenniy-sad";
-
-const POEM: Poem = {
-  id: POEM_ID,
-  title: "Осенний сад",
-  text: "Листва ложится на дорожки,",
-  illustrationSrc: "/mock-poems/osenniy-sad.svg",
-  publishedAt: "2026-03-12",
-  genre: "Лирика",
-};
+const AUTHOR_ID = FIXTURE_AUTHOR_ID;
+const POEM_ID = AUTUMN_GARDEN.id;
 
 function renderContent(poemId = POEM_ID) {
   return PoemPageContent({ authorId: Promise.resolve(AUTHOR_ID), poemId: Promise.resolve(poemId) });
 }
+
+beforeEach(() => {
+  vi.mocked(getPoemGenreName).mockResolvedValue({ kind: "named", name: "Лирика" });
+});
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -41,15 +39,30 @@ afterEach(() => {
 
 describe("PoemPageContent", () => {
   // implements FR-4, FR-5 of add-author-poems
-  it("renders a found author's poem", async () => {
+  // implements FR-10 of add-poem-creation
+  it("renders a found author's poem with its genre name", async () => {
     vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Anna Akhmatova" });
-    vi.mocked(getAuthorPoem).mockResolvedValue({ ok: true, poem: POEM });
+    vi.mocked(getAuthorPoem).mockResolvedValue({ ok: true, poem: AUTUMN_GARDEN });
 
-    const element = (await renderContent()) as ReactElement<{ poem: Poem }>;
+    const element = (await renderContent()) as ReactElement<PoemViewProps>;
 
     expect(getAuthorPoem).toHaveBeenCalledWith(AUTHOR_ID, POEM_ID);
+    expect(getPoemGenreName).toHaveBeenCalledWith(AUTUMN_GARDEN.genreId);
     expect(element.type).toBe(PoemView);
-    expect(element.props.poem).toBe(POEM);
+    expect(element.props.poem).toBe(AUTUMN_GARDEN);
+    expect(element.props.genre).toEqual({ kind: "named", name: "Лирика" });
+  });
+
+  // implements FR-10 of add-poem-creation
+  it("passes a none genre on, so the page shows no genre line", async () => {
+    vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Anna Akhmatova" });
+    vi.mocked(getAuthorPoem).mockResolvedValue({ ok: true, poem: { ...AUTUMN_GARDEN, genreId: null } });
+    vi.mocked(getPoemGenreName).mockResolvedValue({ kind: "none" });
+
+    const element = (await renderContent()) as ReactElement<PoemViewProps>;
+
+    expect(getPoemGenreName).toHaveBeenCalledWith(null);
+    expect(element.props.genre).toEqual({ kind: "none" });
   });
 
   // implements FR-5 of add-author-poems
@@ -76,6 +89,16 @@ describe("PoemPageContent", () => {
 
     await expect(renderContent()).rejects.toThrow("Poem page unavailable");
     expect(notFound).not.toHaveBeenCalled();
+  });
+
+  // implements FR-9 of add-poem-creation
+  it("throws to the route's error screen when the poems are unavailable, without a genre read", async () => {
+    vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Anna Akhmatova" });
+    vi.mocked(getAuthorPoem).mockResolvedValue({ ok: false, reason: "unavailable" });
+
+    await expect(renderContent()).rejects.toThrow("Poem page unavailable");
+    expect(notFound).not.toHaveBeenCalled();
+    expect(getPoemGenreName).not.toHaveBeenCalled();
   });
 });
 

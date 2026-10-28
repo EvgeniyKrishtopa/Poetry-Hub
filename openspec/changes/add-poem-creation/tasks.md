@@ -83,7 +83,7 @@ group exports only what it already consumes (tests count as consumers for knip),
 
 ## 3. Poems read side from the database (server, no new visuals) <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-9, NFR-4, FR-11) Rewrite `src/features/poems/dal/author-poems.ts` (design D3):
+- [x] 3.1 (FR-9, NFR-4, FR-11) Rewrite `src/features/poems/dal/author-poems.ts` (design D3):
   `cachedAuthorPoems` with `"use cache"`, `cacheTag(poemsTag(authorId))`, the public client, Zod
   row schema in `model/poem-row.schema.ts` (ADR 0001), the mapping in `dal/poem-row.ts`, `"hours"` / `"seconds"` lifetimes; `listAuthorPoems` and
   `getAuthorPoem` in React `cache`; UUID guards; new `Poem`, `AuthorPoemsResult`,
@@ -96,14 +96,14 @@ group exports only what it already consumes (tests count as consumers for knip),
     once.
   - Scaffold clean-up: remove `poem-row.ts`, `poem-row.schema.ts`, and `poem-cache-tags.ts` from `knip.jsonc`'s `ignoreFiles` and
     the `@public` tag on `AuthorPoemsResult`. Triage any unused-export finding (remove the export or use it) instead of re-adding an ignore.
-- [ ] 3.2 (FR-10, FR-3) Genres DAL `src/features/poems/dal/poem-genres.ts` (design D5):
+- [x] 3.2 (FR-10, FR-3) Genres DAL `src/features/poems/dal/poem-genres.ts` (design D5):
   `listPoemGenres` and `getPoemGenreName` with the result-dependent Contentful scope.
   - Verify with `src/features/poems/tests/dal/poem-genres.test.ts`: sorted by Russian name;
     an invalid item dropped and logged by id; Contentful failure → `unavailable` with `"seconds"`;
     `getPoemGenreName` for `null`, a known id, an unknown id, and an unavailable list.
   - Scaffold clean-up: remove `poem-genres.ts` from `knip.jsonc`'s `ignoreFiles` and the `@public` tags on
     `PoemGenre`, `PoemGenresResult`, `PoemGenreName`. Triage any unused-export finding (remove the export or use it) instead of re-adding an ignore.
-- [ ] 3.3 (FR-9, FR-10, FR-11, NFR-3) Delete `mock-poems.ts`, `mock-poem-count.ts`, their tests, and
+- [x] 3.3 (FR-9, FR-10, FR-11, NFR-3) Delete `mock-poems.ts`, `mock-poem-count.ts`, their tests, and
   `public/mock-poems/`; adapt the components to the new types with no visual change (Gate 2,
   2026-10-28): `PoemView` renders the illustration only when `illustrationUrl` is set and the genre
   line from a `getPoemGenreName` result passed in by `PoemPageContent` (left out for `none`), text
