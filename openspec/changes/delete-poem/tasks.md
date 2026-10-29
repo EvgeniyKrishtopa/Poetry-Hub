@@ -34,7 +34,9 @@ already consumes (tests count as consumers for knip), so `npm run knip` stays gr
   server-only `actions/expire-poems-tag.ts` (design D1).
   - Verify: the existing `poem-writes` and create-action tests pass unchanged.
 - [ ] 2.2 (FR-3, FR-4) Add `DELETE_POEM_STATUS`, `DeletePoemResult`, `DeleteOwnPoemResult`, and
-  `model/delete-poem.schema.ts` (lowercase-hex UUID `poemId`) (design D1, D3).
+  `model/delete-poem.schema.ts`: the input schema checks only that `poemId` is a string; the
+  lowercase-hex UUID guard is a separate function the action runs first, so a malformed id answers
+  `not-found`, never `validationErrors` (design D1, D3; Gate 2b).
   - Verify with `tests/delete-poem.schema.test.ts`.
 - [ ] 2.3 (FR-3, FR-4, FR-6, NFR-5) Add `dal/poem-delete.ts`: `deleteOwnPoem(poemId)` (RPC, Zod parse
   of the answer, `classifySupabaseError` with the response status) (design D3).
@@ -44,7 +46,8 @@ already consumes (tests count as consumers for knip), so `npm run knip` stays gr
 - [ ] 2.4 (FR-3, FR-4, FR-5, FR-6, FR-7, FR-8) Add `actions/delete-poem.actions.ts`: `deletePoemAction` in design D3's
   order: UUID guard, session, RPC, `updateTag(poemsTag(authorId))` only on `deleted`, then the
   best-effort file removal.
-  - Verify with `tests/delete-poem.actions.test.ts`: a malformed id reaches no I/O; signed-out →
+  - Verify with `tests/delete-poem.actions.test.ts`: a malformed id reaches no I/O and answers
+    `{ status: "not-found" }`; signed-out →
     `unauthenticated`; a refreshed session (the proxy already renewed the access token) runs the delete as
     usual (FR-7); unknown session → `unavailable`; `not-found` and failures expire no tag
     (FR-8); `deleted` expires exactly the returned author's tag, before the file removal; a file

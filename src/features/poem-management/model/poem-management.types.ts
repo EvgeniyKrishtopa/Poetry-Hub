@@ -1,7 +1,7 @@
 import type { Poem } from "@/features/poems";
 import type { ImageType } from "@/shared/lib/image-file/image-file.types";
 
-import type { CREATE_POEM_STATUS } from "./poem-management.constants";
+import type { CREATE_POEM_STATUS, DELETE_POEM_STATUS } from "./poem-management.constants";
 
 /** The add form's fields, as named in the submitted `FormData`. */
 export type PoemFormField = "title" | "text" | "genreId" | "illustration";
@@ -60,3 +60,36 @@ export type OwnPoemTitleResult =
   | { readonly ok: true; readonly title: string }
   | { readonly ok: false; readonly reason: "not-found" }
   | { readonly ok: false; readonly reason: "unavailable" };
+
+/**
+ * The delete action's answer (delete-poem design D3): another author's poem and a missing one are both
+ * `not-found`, so the answer tells them apart for nobody.
+ *
+ * @public scaffold: first imported in task 2.4.
+ */
+export type DeletePoemResult =
+  | { readonly status: typeof DELETE_POEM_STATUS.deleted }
+  | { readonly status: typeof DELETE_POEM_STATUS.notFound }
+  | { readonly status: typeof DELETE_POEM_STATUS.failed; readonly failure: ServiceFailure };
+
+/**
+ * `delete_my_poem()`'s answer, or why it couldn't be read (delete-poem design D2, D3).
+ *
+ * @public scaffold: first imported in task 2.3.
+ */
+export type DeleteOwnPoemResult =
+  | {
+      readonly ok: true;
+      readonly status: "deleted";
+      readonly authorId: string;
+      readonly illustrationPath: string | null;
+    }
+  | { readonly ok: true; readonly status: "not-found" }
+  | { readonly ok: false; readonly failure: ServiceFailure };
+
+/**
+ * What `/account/poems` shows once after a delete (delete-poem design D5).
+ *
+ * @public scaffold: first imported in task 4.2.
+ */
+export type DeletedPoemNotice = { readonly kind: "deleted"; readonly title: string } | { readonly kind: "already-deleted" };
