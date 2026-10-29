@@ -32,9 +32,11 @@ mock set (user request, 2026-10-28).
   for anyone else's profile), the author's poem list is refreshed everywhere it is shown, the
   author is taken to `/account/poems/<poemId>`, and a notification reads «Поздравляем, Ваше
   произведение успешно добавлено.».
-- **Write limit**: at most 2 new poems per minute and 20 per day per author, enforced by the
-  database function that is the only way to store a poem, so it can't be bypassed through the
-  database API (Gate 1, 2026-10-28). It counts the author's stored poems in sliding windows.
+- **Write limit**: at most 100 new poems in any 30 days per author, enforced by the database
+  function that is the only way to store a poem, so it can't be bypassed through the database API
+  (Gate 1, 2026-10-28). It counts the author's stored poems in a sliding window. The earlier
+  2-per-minute and 20-per-day windows were dropped by the product owner on 2026-10-29: nothing
+  throttles a burst within the 100 (design, Risks).
 - **Real poems replace the mock set**. The author page's «Произведения» section and the poem page
   read the `poems` table. The poem page starts with the illustration when the poem has one, and
   with the title otherwise; its text is rendered as safe Markdown with line breaks kept; the genre
@@ -148,7 +150,7 @@ Each requirement is specified with its scenarios in the delta specs. Summary:
 | FR-3 | `/account/poems/new` add form: title, Markdown text, genre dropdown, optional illustration | poem-management |
 | FR-4 | Field validation in the browser and in the action, with the same rules | poem-management |
 | FR-5 | Creating a poem: stored for the caller's own profile only, redirect, notification | poem-management |
-| FR-6 | Write limit: 2 per minute and 20 per day per author, enforced in the database | poem-management |
+| FR-6 | Write limit: 100 per 30 days per author, enforced in the database | poem-management |
 | FR-7 | `/account/poems/<poemId>`: the owner's poem page; 404 for anything else | poem-management |
 | FR-8 | Breadcrumb trails for the three new pages | breadcrumbs |
 | FR-9 | Poems read from the database instead of the mock set | author-poems |

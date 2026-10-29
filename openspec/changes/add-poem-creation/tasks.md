@@ -80,6 +80,17 @@ group exports only what it already consumes (tests count as consumers for knip),
   12:00 UTC, each author the first N poems in the former set's order (design D12); update the seed's header comment.
   - Verify: `npx supabase db reset` then `npx supabase test db` pass; `select count(*) from
     public.poems` is 10.
+- [x] 2.5 (FR-6) Revised limit (product owner, 2026-10-29; supersedes the numbers in 2.2): in the
+  same unreleased migration `supabase/migrations/20261028160000_poems.sql`, `poem_create_status`'s
+  `limits` holds one window, `(interval '30 days', 100)`; the 1-minute and 1-day windows are
+  removed; its header comment says so (design D2). The function's signature, statuses, grants, and
+  the action code stay unchanged.
+- [x] 2.6 (FR-6) Update `supabase/tests/poems.test.sql` (implements FR-6 of add-poem-creation):
+  a third create within a minute → `created`; 100 rows backdated within 30 days →
+  `can_create_poem` and `create_my_poem` → `over-limit`, no row; the oldest moved to exactly
+  30 days ago (the window is strict) → `created`; three rejected calls leave the count unchanged; replace the 2-per-minute and
+  21st-in-a-day checks and fix `plan(N)`.
+  - Verify: `npx supabase db reset` then `npx supabase test db` pass.
 
 ## 3. Poems read side from the database (server, no new visuals) <!-- judgement-heavy -->
 
@@ -227,7 +238,11 @@ group exports only what it already consumes (tests count as consumers for knip),
   the row-counting variant). Record ADR 0009 with the `record-decision` skill: a reader-owned write
   that creates rows counts the caller's own rows inside the `security definer` function that writes
   them (design D2); it partially supersedes ADR 0007 (Decisions 1 and 3, and Decision 6's poem
-  example), and ADR 0007's status line gains "Partially superseded by 0009".
+  example), and ADR 0007's status line gains "Partially superseded by 0009". The ADR states the
+  single 100-per-30-days window and that it has no burst throttle within the 100 (product owner,
+  2026-10-29, accepted risk), so ADR 0007's rate argument no longer applies to poems; that the
+  cap covers rows and tag expiries only, not illustration uploads (design Risks, "No burst
+  throttle" and "Direct Storage inserts").
 - [ ] 8.2 (FR-9, FR-10) Update the recorded web-qa scenarios that relied on mock illustrations or genres
   (`author-poems-reading-path`, `poem-two-quick-clicks`, `author-page-sections`).
 - [ ] 8.3 (NFR-3, NFR-6, NFR-2, NFR-8) Static checks: the NFR-3 import searches, the NFR-6 literal search,

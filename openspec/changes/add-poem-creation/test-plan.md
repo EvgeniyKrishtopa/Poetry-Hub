@@ -45,11 +45,11 @@ existing tests and are listed once at the end.
 | FR-5 | Server unavailable | action test: RPC network error → `unavailable`; `NewPoemForm` test: alert text above submit, drafts kept | unit |
 | FR-5 | Session expired | action test: `getSessionState` signed-out → `unauthenticated`, nothing called after; `NewPoemForm` test: «Сессия истекла. Войдите снова.» | unit |
 | FR-5 | Illustration stored only with its poem | `createOwnPoem` test: RPC error or `over-limit` after upload → `remove` called; upload failure → no RPC | unit |
-| FR-6 | Third poem in a minute | pgTAP: third `create_my_poem` within a minute → `over-limit`, no row; action test: `can_create_poem` over-limit → `too-many-poems`, no profile read, Contentful call, or upload | integration, unit |
-| FR-6 | Twenty-first poem in a day | pgTAP: 20 rows backdated within 24 h → `over-limit` | integration |
-| FR-6 | Window slides | pgTAP: rows backdated past one minute (fewer than 20 in 24 h) → `created` | integration |
+| FR-6 | Hundred-and-first poem in 30 days | pgTAP: 100 rows backdated within 30 days → `can_create_poem` and `create_my_poem` → `over-limit`, no row; action test: `can_create_poem` over-limit → `too-many-poems`, no profile read, Contentful call, or upload; `NewPoemForm` test: the over-limit alert above submit, drafts kept | integration, unit |
+| FR-6 | Quick creates within the limit | pgTAP: a third `create_my_poem` within a minute (fewer than 100 in 30 days) → `created` | integration |
+| FR-6 | Window slides | pgTAP: with 100 rows in 30 days, the oldest moved to exactly 30 days ago (strict window) → `created` | integration |
 | FR-6 | Failed attempts don't count | pgTAP: rejected calls (bad title) leave the count unchanged and a later call → `created`; action test: invalid illustration never calls an RPC | integration, unit |
-| FR-6 | Direct calls can't bypass it | pgTAP: direct `insert into poems` rejected for `authenticated`; `create_my_poem` over the limit → `over-limit`; `poem_create_status` not executable by client roles | integration |
+| FR-6 | Direct calls can't bypass it | pgTAP: direct `insert into poems` rejected for `authenticated`; `create_my_poem` at 100 poems in 30 days → `over-limit`; `poem_create_status` not executable by client roles | integration |
 | FR-7 | Own poem | `OwnPoemContent` test: renders `PoemArticle` with the own poem; web-qa: same content as the public poem page | unit, end-to-end |
 | FR-7 | Another author's poem | `own-poem` DAL test: another author's or malformed id → `not-found`; `OwnPoemContent` test: `notFound()` | unit |
 | FR-7 | Read fails | `OwnPoemContent` test: `unavailable` throws (error screen) | unit |
