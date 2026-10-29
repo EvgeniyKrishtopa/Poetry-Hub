@@ -7,7 +7,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(78);
+select plan(79);
 
 -- Start from empty tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -436,6 +436,10 @@ where ctid = (
   order by created_at limit 1
 );
 
+-- An aged creation of another author (B): D's next create prunes only D's own rows, so this one must stay.
+insert into public.poem_creations (author_id, created_at)
+values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', now() - interval '31 days');
+
 set local role authenticated;
 select is(public.can_create_poem()->>'status', 'allowed', 'a poem exactly 30 days old no longer counts: 99 in the window, allowed');
 
@@ -478,6 +482,12 @@ select is_empty(
   $$select 1 from public.poem_creations
     where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' and created_at <= now() - interval '30 days'$$,
   'a creation 30 days old is pruned on the author''s next create'
+);
+
+select isnt_empty(
+  $$select 1 from public.poem_creations
+    where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' and created_at <= now() - interval '30 days'$$,
+  'D''s create leaves another author''s aged creations alone'
 );
 
 set local role authenticated;
