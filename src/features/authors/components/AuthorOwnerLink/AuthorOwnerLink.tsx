@@ -1,6 +1,6 @@
 import { getCurrentUserId } from "@/features/auth";
 
-import { getMyAuthorProfile } from "../../dal/my-author-profile";
+import { getOwnPublicAuthor } from "../../dal/own-public-author";
 import { AuthorOwnerLinkView } from "../AuthorOwnerLinkView/AuthorOwnerLinkView";
 
 import type { AuthorOwnerLinkProps } from "./AuthorOwnerLink.types";
@@ -11,8 +11,9 @@ export async function AuthorOwnerLink({ profileId }: AuthorOwnerLinkProps) {
   // Signed out: no owner read at all.
   if (userId === null) return <AuthorOwnerLinkView isOwner={false} />;
 
-  // A failed read shows no link rather than an error: the page itself is fine (FR-18).
-  const own = await getMyAuthorProfile();
-  const isOwner = own.ok && own.profile?.id === profileId;
+  // A failed read shows no link rather than an error: the page itself is fine (FR-18). The page shows a
+  // public profile, so only a public own profile can be the one on it.
+  const own = await getOwnPublicAuthor();
+  const isOwner = own.ok && own.status === "public" && own.authorId === profileId;
   return <AuthorOwnerLinkView isOwner={isOwner} />;
 }

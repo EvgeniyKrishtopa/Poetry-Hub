@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { IMAGE_QUALITY } from "@/shared/config/constants";
+import { isUnoptimizableImage } from "@/shared/lib/image-file/is-unoptimizable-image";
 
 import { getPhotoAlt } from "../../model/author-messages";
 import { PHOTO_HEIGHT, PHOTO_SIZES, PHOTO_WIDTH } from "../../model/author.constants";
@@ -8,7 +9,6 @@ import { AuthorPhotoPlaceholder } from "../AuthorPhotoPlaceholder/AuthorPhotoPla
 
 import styles from "./AuthorPhoto.module.css";
 import type { AuthorPhotoProps } from "./AuthorPhoto.types";
-import { isUnoptimizableImage } from "./is-unoptimizable-image";
 
 /** The photo at 300 × 400 (full column width at 3:4 below 460 px), or the user-icon placeholder (FR-16). */
 export function AuthorPhoto({ photoUrl, fullName }: AuthorPhotoProps) {

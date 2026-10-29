@@ -3,10 +3,12 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
+import { IMAGE_FORMATS } from "@/shared/lib/image-file/image-file.constants";
+import type { ImageType } from "@/shared/lib/image-file/image-file.types";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
-import { AUTHOR_PHOTOS_BUCKET, OWNER_PROFILE_COLUMNS, PHOTO_FORMATS } from "../model/author.constants";
-import type { ImageType, NameField, ProfileFailure, ProfileRowPatch, ProfileWriteResult } from "../model/author.types";
+import { AUTHOR_PHOTOS_BUCKET, OWNER_PROFILE_COLUMNS } from "../model/author.constants";
+import type { NameField, ProfileFailure, ProfileRowPatch, ProfileWriteResult } from "../model/author.types";
 
 import { toProfileFailure, withStatus } from "./profile-failure";
 import { ensureOwnProfileId, findOwnProfileId, toMyProfileResult } from "./profile-queries";
@@ -109,7 +111,7 @@ export async function replacePhoto(file: File, type: ImageType): Promise<Profile
 
     // 2. A fresh name per upload, so a cached public URL never shows a stale image. The extension and
     //    content type come from the sniffed type, never from the browser-supplied `file.type` (FR-8).
-    const { extension, contentType } = PHOTO_FORMATS[type];
+    const { extension, contentType } = IMAGE_FORMATS[type];
     const path = `${own.id}/${crypto.randomUUID()}.${extension}`;
     // Re-wrapped: for a File/Blob body Storage stores the body's own type and ignores `contentType`.
     const body = new Blob([file], { type: contentType });

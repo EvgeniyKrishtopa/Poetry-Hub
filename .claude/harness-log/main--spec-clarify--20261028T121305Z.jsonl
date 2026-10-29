@@ -1,0 +1,6 @@
+{"ts":"2026-10-28T12:13:05Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Epigraph: block pushed right vs each line right-aligned","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T12:13:05Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Invalid illustration: dropped on pick (poem created) vs submit blocked","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T12:13:05Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Focus on invalid text while the Preview tab is open","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T12:13:05Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"When field errors and the failure alert clear","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T12:13:05Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Which controls are disabled while sending","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T12:13:05Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Illustration 16:9: cropped frame vs own proportions","outcome":"fixed","ruleNumber":""}

@@ -2,12 +2,13 @@
 
 import { useId } from "react";
 
+import type { ImageDraft } from "@/shared/lib/image-file/image-file.types";
+import { useImageDraft } from "@/shared/lib/image-file/use-image-draft";
+
 import { deleteProfileFieldAction, savePhotoAction } from "../../actions/author-profile.actions";
-import type { PhotoDraft } from "../../hooks/profile-field.types";
-import { usePhotoDraft } from "../../hooks/use-photo-draft";
 import { useProfileField } from "../../hooks/use-profile-field";
 import { FIELD_MODE } from "../../model/author.constants";
-import { ADD_PROMPTS, FIELD_LABELS } from "../../model/author-messages";
+import { ADD_PROMPTS, FIELD_LABELS, PHOTO_FILE_ERROR_MESSAGES } from "../../model/author-messages";
 import { AuthorPhoto } from "../AuthorPhoto/AuthorPhoto";
 import { FieldActions } from "../FieldActions/FieldActions";
 import { FieldErrorText } from "../FieldErrorText/FieldErrorText";
@@ -18,9 +19,9 @@ import type { PhotoFieldEditorProps } from "./PhotoFieldEditor.types";
 
 /** Photo: browser pre-check, optimistic preview, placeholder when empty (FR-8, FR-10, FR-12). */
 export function PhotoFieldEditor({ photoUrl, fullName, ...controls }: PhotoFieldEditorProps) {
-  const photo = usePhotoDraft();
+  const photo = useImageDraft();
   const errorId = useId();
-  const editor = useProfileField<string, PhotoDraft>({
+  const editor = useProfileField<string, ImageDraft>({
     savedValue: photoUrl,
     controls,
     save: ({ file }) => savePhotoAction({ photo: file }),
@@ -56,7 +57,7 @@ export function PhotoFieldEditor({ photoUrl, fullName, ...controls }: PhotoField
     return (
       <PhotoEditForm
         draft={photo.draft}
-        error={photo.fileError ?? editor.error}
+        error={photo.fileError === null ? editor.error : PHOTO_FILE_ERROR_MESSAGES[photo.fileError]}
         fullName={fullName}
         onFileChange={photo.choose}
         onSubmit={submit}

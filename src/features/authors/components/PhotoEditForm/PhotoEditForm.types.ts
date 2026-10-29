@@ -1,7 +1,7 @@
-import type { PhotoDraft } from "../../hooks/profile-field.types";
+import type { ImageDraft } from "@/shared/lib/image-file/image-file.types";
 
 export interface PhotoEditFormProps {
-  readonly draft: PhotoDraft | null;
+  readonly draft: ImageDraft | null;
   readonly error: string | undefined;
   /** For the preview's alt text. */
   readonly fullName: string;

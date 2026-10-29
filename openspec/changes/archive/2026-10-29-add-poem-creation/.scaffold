@@ -1,0 +1,2 @@
+yes
+# new module: yes (src/features/poem-editor); new boundary crossing: yes (create-poem Server Action, Contentful genres query, Supabase poems table and storage bucket)

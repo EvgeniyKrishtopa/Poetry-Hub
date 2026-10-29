@@ -5,11 +5,12 @@ import { buildSupabaseImagePatterns } from "../supabase-image-patterns";
 
 describe("buildSupabaseImagePatterns", () => {
   // implements FR-16, NFR-6 of add-author-profiles
-  it("allows only the author-photos public path on the Supabase host", () => {
-    const [pattern, ...rest] = buildSupabaseImagePatterns("https://abc.supabase.co");
-
-    expect(rest).toHaveLength(0);
-    expect(pattern.href).toBe("https://abc.supabase.co/storage/v1/object/public/author-photos/**");
+  // implements FR-9 of add-poem-creation
+  it("allows only the author-photos and poem-illustrations public paths on the Supabase host", () => {
+    expect(buildSupabaseImagePatterns("https://abc.supabase.co").map((pattern) => pattern.href)).toEqual([
+      "https://abc.supabase.co/storage/v1/object/public/author-photos/**",
+      "https://abc.supabase.co/storage/v1/object/public/poem-illustrations/**",
+    ]);
   });
 
   it("keeps a local stack's port", () => {

@@ -9,3 +9,6 @@ export const SIGN_UP_PATH = "/signup";
 export function isAccountPath(pathname: string): boolean {
   return pathname === ACCOUNT_PATH || pathname.startsWith(`${ACCOUNT_PATH}/`);
 }
+
+/** The author's poem management area (add-poem-creation design D9); `isAccountPath` already gates it. */
+export const POEM_MANAGEMENT_PATH = "/account/poems";

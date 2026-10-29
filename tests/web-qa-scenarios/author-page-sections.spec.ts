@@ -1,7 +1,7 @@
 // pages: /authors/10000000-0000-4000-8000-000000000001, /authors/10000000-0000-4000-8000-000000000005
 import { expect, test } from "@playwright/test";
 
-/** `author1@example.test` in `supabase/seed.sql`; that profile id gets no mock poems. */
+/** `author1@example.test` in `supabase/seed.sql`; the seed gives that profile no poems. */
 const AUTHOR_WITHOUT_POEMS_PATH = "/authors/10000000-0000-4000-8000-000000000001";
 /** `author5@example.test`; its about holds a `##` heading and a `-` list. */
 const AUTHOR_WITH_ABOUT_PATH = "/authors/10000000-0000-4000-8000-000000000005";

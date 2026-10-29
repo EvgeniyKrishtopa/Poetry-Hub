@@ -1,7 +1,9 @@
-import { ABOUT_MAX_LENGTH } from "./author.constants";
-import type { MarkdownFormat, PhotoFileError, ProfileField, WriteFailure } from "./author.types";
+import type { ImageFileError } from "@/shared/lib/image-file/image-file.types";
 
-// Every string of the proposal's UI copy table, verbatim and in Russian (NFR-8).
+import type { ProfileField, WriteFailure } from "./author.types";
+
+// Every string of the proposal's UI copy table, verbatim and in Russian (NFR-8). The Markdown editor's
+// toolbar, tabs, and counter moved to `shared/ui/ui-messages.ts` with the editor (add-poem-creation D1).
 
 export const PAGE_TITLES = {
   authors: "Наши авторы",
@@ -12,10 +14,14 @@ export const PAGE_TITLES = {
 /** The account page's author-section heading; the same words as the editor's title, but its own key. */
 export const ACCOUNT_AUTHOR_SECTION_TITLE = "Профиль автора";
 
+/** The entry to the author's poem management, on the account page and the own author page (add-poem-creation FR-1). */
+const POEM_MANAGEMENT_LINK_LABEL = "Управление произведениями";
+
 export const ACCOUNT_LINK_LABELS = {
   createProfile: "Создать кабинет автора",
   editProfile: "Редактировать профиль автора",
   openPublicPage: "Открыть публичную страницу",
+  managePoems: POEM_MANAGEMENT_LINK_LABEL,
 } as const;
 
 export const FIELD_LABELS: Readonly<Record<ProfileField, string>> = {
@@ -46,29 +52,6 @@ export const PHOTO_PICKER_LABEL = "Выбрать фото";
 
 export const SAVED_MESSAGE = "Сохранено";
 
-export const FORMAT_LABELS: Readonly<Record<MarkdownFormat, string>> = {
-  bold: "Жирный",
-  italic: "Курсив",
-  heading: "Заголовок",
-  subheading: "Подзаголовок",
-  bulleted: "Маркированный список",
-  numbered: "Нумерованный список",
-  quote: "Цитата",
-};
-
-export const ABOUT_VIEW_LABELS = {
-  editor: "Редактор",
-  preview: "Просмотр",
-} as const;
-
-/** The word a toolbar format inserts, selected, when nothing is selected (design D7). */
-export const FORMAT_PLACEHOLDER = "текст";
-
-/** The about counter, e.g. "12 / 1000"; it may exceed the limit (FR-11). */
-export function formatAboutCounter(length: number): string {
-  return `${length} / ${ABOUT_MAX_LENGTH}`;
-}
-
 export const VALIDATION_MESSAGES = {
   required: "Обязательное поле.",
   nameTooLong: "Не более 60 символов.",
@@ -77,8 +60,8 @@ export const VALIDATION_MESSAGES = {
   photoUnsupportedType: "Допустимы только изображения PNG или JPEG.",
 } as const;
 
-/** The field error for a photo `validatePhotoFile` rejects, in the browser and in the action (FR-8). */
-export const PHOTO_FILE_ERROR_MESSAGES: Readonly<Record<PhotoFileError, string>> = {
+/** The field error for a photo `validateImageFile` rejects, in the browser and in the action (FR-8). */
+export const PHOTO_FILE_ERROR_MESSAGES: Readonly<Record<ImageFileError, string>> = {
   "too-large": VALIDATION_MESSAGES.photoTooLarge,
   "unsupported-type": VALIDATION_MESSAGES.photoUnsupportedType,
 };
@@ -96,11 +79,6 @@ export function getProfileFailureMessage(failure: WriteFailure): string {
   return FAILURE_MESSAGES[failure];
 }
 
-/** Shown on the account pages when the session itself can't be checked: Supabase is down (FR-20). */
-export const SESSION_UNAVAILABLE_MESSAGE = "Сервис временно недоступен. Попробуйте позже.";
-
-export const RETRY_LABEL = "Повторить";
-
 /** Shown instead of the account section or the editor when the own profile can't be read (FR-18). */
 export const PROFILE_LOAD_FAILED_MESSAGE = "Не удалось загрузить профиль. Попробуйте позже.";
 
@@ -109,7 +87,11 @@ export const DIRECTORY_MESSAGES = {
   unavailable: "Список авторов сейчас недоступен.",
 } as const;
 
-export const OWNER_EDIT_LINK_LABEL = "Редактировать профиль";
+/** The owner's links above the public author page's heading. */
+export const OWNER_LINK_LABELS = {
+  editProfile: "Редактировать профиль",
+  managePoems: POEM_MANAGEMENT_LINK_LABEL,
+} as const;
 
 /** The photo's alt text: the "photo" prefix, then the first and last name (NFR-5). */
 export function getPhotoAlt(fullName: string): string {

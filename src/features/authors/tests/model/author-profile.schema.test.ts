@@ -7,7 +7,7 @@ import {
   saveNameSchema,
   savePhotoSchema,
 } from "../../model/author-profile.schema";
-import { PHOTO_MAX_BYTES } from "../../model/author.constants";
+import { IMAGE_MAX_BYTES } from "@/shared/lib/image-file/image-file.constants";
 
 const EMOJI = "🌙";
 
@@ -95,11 +95,11 @@ describe("saveAboutSchema", () => {
 describe("savePhotoSchema", () => {
   // implements FR-8, NFR-8 of add-author-profiles
   it("accepts a file of exactly 5 MiB", () => {
-    expect(savePhotoSchema.safeParse({ photo: fileOfSize(PHOTO_MAX_BYTES) }).success).toBe(true);
+    expect(savePhotoSchema.safeParse({ photo: fileOfSize(IMAGE_MAX_BYTES) }).success).toBe(true);
   });
 
   it("rejects a file of 5 MiB + 1 byte", () => {
-    const result = savePhotoSchema.safeParse({ photo: fileOfSize(PHOTO_MAX_BYTES + 1) });
+    const result = savePhotoSchema.safeParse({ photo: fileOfSize(IMAGE_MAX_BYTES + 1) });
 
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]?.message).toBe("Файл должен быть не больше 5 МБ.");

@@ -1,0 +1,2 @@
+full
+# multi-module: yes (poems, new poem-editor feature, authors, breadcrumbs, shared); schema: yes (poems table, poem-illustrations bucket, write-limit scopes); contract: yes (poems DAL result types, shared markdown editor and image-file modules)

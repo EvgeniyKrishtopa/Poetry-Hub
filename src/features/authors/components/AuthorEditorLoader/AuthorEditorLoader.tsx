@@ -1,11 +1,10 @@
 import { requireSession } from "@/features/auth";
 import { SESSION_STATE } from "@/shared/config/constants";
-import { Alert } from "@/shared/ui";
+import { Alert, SessionUnavailableAlert } from "@/shared/ui";
 
 import { getMyAuthorProfile } from "../../dal/my-author-profile";
 import { PROFILE_LOAD_FAILED_MESSAGE } from "../../model/author-messages";
 import { AuthorProfileEditor } from "../AuthorProfileEditor/AuthorProfileEditor";
-import { SessionUnavailableAlert } from "../SessionUnavailableAlert/SessionUnavailableAlert";
 
 // mt-6 on top of the panel's 8 px gap: the mockup's 32 px between the heading and the content.
 const CONTENT_OFFSET_CLASS = "mt-6";

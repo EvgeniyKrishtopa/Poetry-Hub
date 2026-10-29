@@ -1,3 +1,5 @@
+import type { SupabaseFailure } from "@/shared/lib/supabase/classify-error";
+
 import type { ACTION_STATUS, FIELD_ACTION, FIELD_MODE, FORM_STATUS, WRITE_SCOPES } from "./author.constants";
 
 export type NameField = "first_name" | "last_name";
@@ -6,7 +8,7 @@ export type NameField = "first_name" | "last_name";
 export type ProfileField = NameField | "about" | "photo";
 
 /** Why a profile read or write failed, in the terms the editor shows (FR-9). */
-export type ProfileFailure = "unauthenticated" | "unavailable" | "unknown";
+export type ProfileFailure = SupabaseFailure;
 
 /** Why a profile write failed: a read's failures, or the per-user write limit (FR-21). Reads stay narrow. */
 export type WriteFailure = ProfileFailure | "too-many-saves" | "too-many-uploads";
@@ -16,14 +18,6 @@ export type WriteScope = (typeof WRITE_SCOPES)[keyof typeof WRITE_SCOPES];
 
 /** Whether the write limit lets this attempt through; when not, why (design D13). */
 export type WriteAllowance = { readonly ok: true } | { readonly ok: false; readonly failure: WriteFailure };
-
-export type ImageType = "png" | "jpeg";
-
-export type PhotoFileError = "too-large" | "unsupported-type";
-
-export type PhotoFileCheck =
-  | { readonly ok: true; readonly type: ImageType }
-  | { readonly ok: false; readonly error: PhotoFileError };
 
 /** The owner's own profile; any field may be empty. */
 export interface AuthorProfile {
@@ -106,14 +100,10 @@ export type FieldActionKind = (typeof FIELD_ACTION)[keyof typeof FIELD_ACTION];
 
 export type FieldMode = (typeof FIELD_MODE)[keyof typeof FIELD_MODE];
 
-export type MarkdownFormat = "bold" | "italic" | "heading" | "subheading" | "bulleted" | "numbered" | "quote";
-
-export interface TextSelection {
-  readonly start: number;
-  readonly end: number;
-}
-
-export interface FormattedText {
-  readonly text: string;
-  readonly selection: TextSelection;
-}
+/**
+ * The signed-in owner's profile reduced to "public or not" (add-poem-creation design D4).
+ */
+export type OwnPublicAuthorResult =
+  | { readonly ok: true; readonly status: "public"; readonly authorId: string }
+  | { readonly ok: true; readonly status: "not-public" }
+  | { readonly ok: false; readonly failure: ProfileFailure };

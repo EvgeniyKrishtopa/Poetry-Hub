@@ -7,10 +7,15 @@
 -- It is a throwaway value for the local stack, not a secret; never reuse it or seed a hosted project.
 --
 -- Six readers with confirmed .test emails: author1..author5 own public profiles, draft-author owns a
--- profile with no names (not public, absent from /authors). Profile ids are fixed so that mockPoemCount
--- gives author1..author5 0..4 mock poems: the ids' code units sum to 1729 + n for the last digit n, and
--- (1729 + n) mod 5 = n - 1. src/features/poems/tests/dal/seed-poem-counts.test.ts checks it, so keep one
--- reader per line in the shape ('<email>', '<user id>', '<profile id>', ...).
+-- profile with no names (not public, absent from /authors). Keep one reader per line in the shape
+-- ('<email>', '<user id>', '<profile id>', ...): src/features/poems/tests/dal/seed-poem-counts.test.ts
+-- reads it.
+--
+-- Poems (add-poem-creation FR-14, design D12): authorN gets the first N - 1 of the four poems below, in
+-- their order (author1 none, author5 all four), with no genre and no illustration, created at noon UTC on
+-- each poem's publication date, so pages and recorded scenarios keep the same counts, dates, and order.
+-- Poem ids are fixed, 30000000-0000-4000-8000-0000000000NM for authorN's poem M, so a scenario can open
+-- a poem by URL after every reset. The seed inserts directly, bypassing create_my_poem() and its limit.
 --
 -- The seed runs as the database owner: RLS and the column grants don't apply. No about_align value is
 -- written, so the seed works before and after the migration that drops that column.
@@ -56,4 +61,92 @@ insert into public.author_profiles (id, user_id, first_name, last_name, about)
 select r.profile_id, r.user_id, r.first_name, r.last_name, r.about
 from seed_readers r;
 
+-- The four poems, in the order authors receive them.
+create temporary table seed_poems (
+  position     integer primary key,
+  title        text not null,
+  text         text not null,
+  published_on date not null
+);
+
+insert into seed_poems (position, title, text, published_on) values
+  (1, 'Осенний сад', $$Листва ложится на дорожки,
+Шуршит под шагом тишина,
+И капли светятся, как брошки,
+На тёмной ветке у окна.
+
+Ещё тепло, но день короче,
+И пахнет яблоком в траве,
+И сад молчит, и между прочим
+Хранит всё лето в голове.$$, '2026-03-12'),
+  (2, 'Ночной вокзал', $$Табло мигает жёлтыми словами,
+Последний поезд медлит у перрона,
+И проводник с потёртыми флажками
+Глядит на нас устало и бессонно.
+
+Здесь каждый ждёт кого-то или что-то,
+Сжимая в пальцах тёплые билеты,
+И пахнет кофе, рельсами, работой,
+И город спит, не зная про всё это.
+
+Гудок. Вагон качнулся, свет поплыл,
+Состав ушёл в густую темноту,
+А я стою, как будто что-то забыл.$$, '2026-07-01'),
+  (3, 'Зимний мост', $$Над речкой мост, и снег лежит на перилах,
+Следы прохожих тают до утра.
+Я помню, как мы здесь когда-то были
+И как смеялись, глядя в холода.
+
+Теперь вода под коркой ледяною
+Течёт без нас, неслышно и светло,
+И только ветер говорит со мною
+О том, что было и уже прошло.$$, '2026-01-20'),
+  (4, 'Утренний двор', $$Дворник метёт асфальт
+широкими спокойными движениями,
+как будто пишет письмо
+всему переулку.
+
+Голуби читают его первыми.
+Потом соседка с собакой,
+потом мальчик с рюкзаком,
+опаздывающий в школу.
+
+К полудню письмо исчезнет,
+но двор весь день
+будет помнить,
+что с ним говорили.$$, '2026-09-05');
+
+-- Who gets which poem, one per line in the shape ('<poem id>', '<email>', <position>):
+-- src/features/poems/tests/dal/seed-poems.test.ts reads it.
+create temporary table seed_author_poems (
+  poem_id  uuid primary key,
+  email    text not null,
+  position integer not null
+);
+
+insert into seed_author_poems (poem_id, email, position) values
+  ('30000000-0000-4000-8000-000000000021', 'author2@example.test', 1),
+  ('30000000-0000-4000-8000-000000000031', 'author3@example.test', 1),
+  ('30000000-0000-4000-8000-000000000032', 'author3@example.test', 2),
+  ('30000000-0000-4000-8000-000000000041', 'author4@example.test', 1),
+  ('30000000-0000-4000-8000-000000000042', 'author4@example.test', 2),
+  ('30000000-0000-4000-8000-000000000043', 'author4@example.test', 3),
+  ('30000000-0000-4000-8000-000000000051', 'author5@example.test', 1),
+  ('30000000-0000-4000-8000-000000000052', 'author5@example.test', 2),
+  ('30000000-0000-4000-8000-000000000053', 'author5@example.test', 3),
+  ('30000000-0000-4000-8000-000000000054', 'author5@example.test', 4);
+
+insert into public.poems (id, author_id, title, text, created_at)
+select
+  ap.poem_id,
+  r.profile_id,
+  p.title,
+  p.text,
+  (p.published_on + time '12:00') at time zone 'UTC'
+from seed_author_poems ap
+join seed_readers r on r.email = ap.email
+join seed_poems p on p.position = ap.position;
+
+drop table seed_author_poems;
+drop table seed_poems;
 drop table seed_readers;

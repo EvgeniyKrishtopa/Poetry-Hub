@@ -1,20 +1,26 @@
 import { render } from "@testing-library/react";
 import { redirect } from "next/navigation";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getPublicAuthorName } from "@/features/authors";
+import { createSupabasePublicClient } from "@/shared/lib/supabase/public";
 
 import { AuthorPoemsEntry } from "../../components/AuthorPoemsEntry/AuthorPoemsEntry";
+import { PoemArticle } from "../../components/PoemArticle/PoemArticle";
+import type { PoemArticleProps } from "../../components/PoemArticle/PoemArticle.types";
 import { PoemPageContent } from "../../components/PoemPageContent/PoemPageContent";
 import { listAuthorPoems } from "../../dal/author-poems";
+import { createFakePublicClient, okResponse } from "../dal/fake-public-client";
 
-// Only the authors boundary is stubbed: no session, auth, or Supabase module is mocked or set up,
-// and the real poems DAL runs. A component that needed a session would fail or redirect here.
+// Only the authors boundary and the cookie-less public client are stubbed: no session, auth, or
+// cookie-reading Supabase module is mocked or set up, and the real poems DAL runs. A component that
+// needed a session would fail or redirect here.
 vi.mock("@/features/authors", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/authors")>()),
   getPublicAuthorName: vi.fn(),
 }));
+vi.mock("@/shared/lib/supabase/public", () => ({ createSupabasePublicClient: vi.fn() }));
 vi.mock("next/navigation", () => ({
   notFound: vi.fn(() => {
     throw new Error("NEXT_HTTP_ERROR_FALLBACK;404");
@@ -24,8 +30,17 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-/** An author whose id gives all four mock poems. */
 const AUTHOR_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
+
+/** The author's one stored poem, with no genre, so no Contentful read happens. */
+const POEM_ROW = {
+  id: "30000000-0000-4000-8000-000000000021",
+  title: "Осенний сад",
+  text: "Листва ложится на дорожки,",
+  genre_id: null,
+  illustration_path: null,
+  created_at: "2026-03-12T12:00:00+00:00",
+};
 
 type Render = () => Promise<ReactNode>;
 
@@ -35,8 +50,12 @@ const PUBLIC_VIEWS: readonly (readonly [string, Render, string])[] = [
   [
     "PoemPageContent",
     async () => {
-      const [poem] = await listAuthorPoems(AUTHOR_ID);
-      return PoemPageContent({ authorId: Promise.resolve(AUTHOR_ID), poemId: Promise.resolve(poem.id) });
+      const article = (await PoemPageContent({
+        authorId: Promise.resolve(AUTHOR_ID),
+        poemId: Promise.resolve(POEM_ROW.id),
+      })) as ReactElement<PoemArticleProps>;
+      // An async Server Component can't render in jsdom, so the article is resolved here too.
+      return PoemArticle(article.props);
     },
     "<time ",
   ],
@@ -51,6 +70,12 @@ async function renderedHtml(renderView: Render): Promise<string> {
 
 beforeEach(() => {
   vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Anna Akhmatova" });
+  // A fresh client per read: React's `cache` doesn't memoize in Vitest, so every render reads again.
+  vi.mocked(createSupabasePublicClient).mockImplementation(() => {
+    const fake = createFakePublicClient();
+    fake.queueQuery(okResponse([POEM_ROW]));
+    return fake.client;
+  });
 });
 
 afterEach(() => {
@@ -59,7 +84,7 @@ afterEach(() => {
 
 describe("public access to the poems views", () => {
   it("uses an author who has poems", async () => {
-    await expect(listAuthorPoems(AUTHOR_ID)).resolves.not.toHaveLength(0);
+    await expect(listAuthorPoems(AUTHOR_ID)).resolves.toMatchObject({ ok: true, poems: [{ id: POEM_ROW.id }] });
   });
 
   // implements FR-6 of add-author-poems

@@ -1,0 +1,9 @@
+{"ts":"2026-10-28T11:31:57Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Genre list: every tag vs a 100-item query","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T11:31:57Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Notification after leaving and coming back, Back/Forward included","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T11:31:57Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Line breaks counted once or as sent","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T11:31:57Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Seed poems created_at: former dates or any order","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T11:31:57Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Which next request must show a new poem","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T11:31:57Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Which ids may appear in logs","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T11:31:57Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"When focus moves after a failed submit","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T11:31:57Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"Genre dropdown after genre-unavailable","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-28T11:31:57Z","kind":"finding","change":"add-poem-creation","gate":"spec-clarify","finding":"pgTAP bucket rejection: 42501 vs no error","outcome":"fixed","ruleNumber":""}

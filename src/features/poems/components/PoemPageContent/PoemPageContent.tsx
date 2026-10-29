@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import { getPublicAuthorName } from "@/features/authors";
 
 import { getAuthorPoem } from "../../dal/author-poems";
-import { PoemView } from "../PoemView/PoemView";
+import { PoemArticle } from "../PoemArticle/PoemArticle";
 
 import type { PoemPageContentProps } from "./PoemPageContent.types";
 
-/** Checks the author, then reads the poem, inside `PoemPage`'s Suspense boundary. */
+/** Checks the author, then reads the poem and renders its article, inside `PoemPage`'s Suspense boundary. */
 export async function PoemPageContent({ authorId, poemId }: PoemPageContentProps) {
   const id = await authorId;
   const author = await getPublicAuthorName(id);
@@ -20,7 +20,11 @@ export async function PoemPageContent({ authorId, poemId }: PoemPageContentProps
   }
 
   const result = await getAuthorPoem(id, await poemId);
-  if (!result.ok) notFound();
+  if (!result.ok) {
+    if (result.reason === "not-found") notFound();
+    // The poems DAL already logged the cause.
+    throw new Error("Poem page unavailable");
+  }
 
-  return <PoemView poem={result.poem} />;
+  return <PoemArticle poem={result.poem} />;
 }

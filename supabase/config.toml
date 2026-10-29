@@ -131,6 +131,12 @@ public = true
 file_size_limit = "5MiB"
 allowed_mime_types = ["image/png", "image/jpeg"]
 
+# Poem illustrations (add-poem-creation). Mirrors the bucket the poems migration creates.
+[storage.buckets.poem-illustrations]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg"]
+
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
 enabled = true

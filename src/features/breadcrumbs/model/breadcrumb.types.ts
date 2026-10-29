@@ -4,14 +4,15 @@ export type BreadcrumbItem =
   | { readonly kind: "current"; readonly label: string };
 
 /**
- * What a URL maps to: no trail, a fully known trail without the home item, an author page by id, or one
- * of the author's poems.
+ * What a URL maps to: no trail, a fully known trail without the home item, an author page by id, one of
+ * the author's poems, or the signed-in owner's page of one poem.
  */
 export type RouteMatch =
   | { readonly kind: "none" }
   | { readonly kind: "static"; readonly items: readonly BreadcrumbItem[] }
   | { readonly kind: "author"; readonly id: string }
-  | { readonly kind: "author-poem"; readonly authorId: string; readonly poemId: string };
+  | { readonly kind: "author-poem"; readonly authorId: string; readonly poemId: string }
+  | { readonly kind: "own-poem"; readonly poemId: string };
 
 /** The trail to render, «Главная» first, or none. */
 export type Trail = { readonly kind: "none" } | { readonly kind: "shown"; readonly items: readonly BreadcrumbItem[] };

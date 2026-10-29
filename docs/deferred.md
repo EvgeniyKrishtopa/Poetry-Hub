@@ -105,3 +105,17 @@ Archived at `openspec/changes/archive/2026-10-27-refine-author-page-and-contact/
 - **Verified instead:** Gate 3 on 2026-10-27 passed both flows by hand: the thank-you view appeared at 986 ms and the dialog closed at about 3 995 ms with focus on «Связаться с нами»; «Закрыть» at about 0.85 s closed it at once, and a reopen at about 2.1 s stayed open past 12 s with an empty form. Unit tests in `src/features/contact/tests/components/ContactDialog.test.tsx` cover the timer cases.
 - **Decision:** user, 2026-10-27 (Gate 3 recording question).
 - **Status:** open. To record them: add the hydration marker (`PROGRESS.md` follow-up on the contact dialog scenarios), then record both flows as `@external` scenarios that wait for hydration before filling the form.
+
+## add-poem-creation
+
+Archived at `openspec/changes/archive/2026-10-29-add-poem-creation/`.
+
+### add-poem-creation · 8.6 — create flow not recorded as a scenario
+
+- **State:** skipped
+- **Requirement:** FR-5, FR-7, FR-13
+- **What is missing:** a recorded `@playwright/test` scenario for creating a poem: the «Поздравляем…» notice on `/account/poems/<id>`, gone after a reload and after Back/Forward, the form empty after Back, and the poem on the public page. The other flows of the change are recorded (`poem-management-guest-redirect`, `poem-management-breadcrumbs`, `new-poem-form-validation`, `poem-management-not-public`).
+- **Why:** every run would create a real poem the app can't delete yet (no delete in this change). The rows pile up, change the seed authors' poem lists other scenarios rely on, and reach the 100-per-30-days limit after about 33 three-run recordings.
+- **Verified instead:** Gate 3 on 2026-10-29 passed it by hand (with and without an illustration) and with a scratchpad Playwright probe against `next start`: notice shown once, Back to an empty form, Forward without the notice, «Добавление…» while pending, the poem on the public page. Unit tests cover `CreatedPoemNotice` and `NewPoemForm`. On the long-running dev server the own page briefly showed the 404 right after a create; the production build did not (`openspec/changes/add-poem-creation/_debug/own-poem-404-right-after-create-in-dev.md`).
+- **Decision:** user, 2026-10-29 (Gate 3 recording question).
+- **Status:** open. To record it: once poems can be deleted, record the flow with a cleanup step that deletes the poem it created.

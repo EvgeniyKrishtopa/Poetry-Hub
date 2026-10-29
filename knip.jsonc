@@ -9,10 +9,6 @@
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
     "@fission-ai/openspec",
     // Supabase CLI for the local stack (`npx supabase start`, reads supabase/config.toml), never imported or referenced in a script.
-    "supabase",
-    // The project's client UI state store (CLAUDE.md stack). No feature has client UI state since the home
-    // poem search went (add-author-poems); kept for the next one, e.g. the author editor's unsaved-changes store
-    // (user decision, 2026-10-24).
-    "zustand"
+    "supabase"
   ]
 }

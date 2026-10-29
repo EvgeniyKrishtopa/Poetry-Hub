@@ -2,12 +2,13 @@
 
 import { useId, useState } from "react";
 
+import { MarkdownText } from "@/shared/ui";
+
 import { deleteProfileFieldAction, saveAboutAction } from "../../actions/author-profile.actions";
 import { useProfileField } from "../../hooks/use-profile-field";
 import { FIELD_MODE } from "../../model/author.constants";
 import { ADD_PROMPTS, FIELD_LABELS } from "../../model/author-messages";
 import { AboutEditForm } from "../AboutEditForm/AboutEditForm";
-import { AuthorAbout } from "../AuthorAbout/AuthorAbout";
 import { FieldActions } from "../FieldActions/FieldActions";
 import { FieldErrorText } from "../FieldErrorText/FieldErrorText";
 import { ProfileFieldRow } from "../ProfileFieldRow/ProfileFieldRow";
@@ -48,7 +49,7 @@ export function AboutFieldEditor({ savedAbout, ...controls }: AboutFieldEditorPr
     <ProfileFieldRow caption={FIELD_LABELS.about}>
       {editor.shownValue !== null && (
         <div className="w-full pt-1.5">
-          <AuthorAbout markdown={editor.shownValue} />
+          <MarkdownText markdown={editor.shownValue} />
         </div>
       )}
       {editor.error && <FieldErrorText id={errorId} message={editor.error} />}
