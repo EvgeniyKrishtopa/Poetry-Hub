@@ -150,6 +150,9 @@ loop runs straight against the database API, past any app check. The same migrat
 - backfills `poem_creations` from the existing `poems` rows inside the window;
 - replaces `poem_create_status` (same signature, same windows list) to count `poem_creations`
   instead of `poems`.
+- moves the windows list into `poem_create_limits()` (internal, no client grant), so the status
+  check, the trigger's pruning, and the backfill read one list instead of repeating `30 days`
+  (group 1, 2026-10-29).
 
 A delete removes the `poems` row and nothing from `poem_creations`, so a deleted poem keeps its
 place in the window until it ages out. Deletes need no limit of their own: an author can only

@@ -1,12 +1,13 @@
 -- RLS, grants, checks, the create function and its limit, and Storage policies for poems
--- (add-poem-creation, design D2, D13).
+-- (add-poem-creation, design D2, D13), and the delete function and the creation log (delete-poem, design D2, D9).
 -- implements NFR-1 and FR-6 of add-poem-creation
+-- implements NFR-1 and FR-9 of delete-poem
 -- Run against the local stack: npx supabase test db
 begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(57);
+select plan(79);
 
 -- Start from empty tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -80,6 +81,32 @@ select throws_ok(
   $$select public.poem_create_status('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')$$,
   '42501', null,
   'anon cannot call poem_create_status()'
+);
+
+select throws_ok(
+  $$select public.delete_my_poem('b0000000-0000-4000-8000-000000000001')$$,
+  '42501', null,
+  'anon cannot call delete_my_poem()'
+);
+
+select throws_ok($$select * from public.poem_creations$$, '42501', null, 'anon cannot read the creation log');
+
+select throws_ok(
+  $$insert into public.poem_creations (author_id) values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')$$,
+  '42501', null,
+  'anon cannot write the creation log'
+);
+
+reset role;
+
+-- An authenticated role whose token carries no user id: the function's own guard, not the grant, stops it.
+set local role authenticated;
+select set_config('request.jwt.claims', '{"role":"authenticated"}', true);
+
+select throws_ok(
+  $$select public.delete_my_poem('b0000000-0000-4000-8000-000000000001')$$,
+  '42501', null,
+  'delete_my_poem() rejects a signed-in role without a user id'
 );
 
 reset role;
@@ -210,6 +237,41 @@ select results_eq(
 
 select is(public.can_create_poem()->>'status', 'allowed', 'can_create_poem() still allows B, far under 100 in 30 days');
 
+-- The creation log is reachable only through the definer functions and the trigger.
+select throws_ok($$select * from public.poem_creations$$, '42501', null, 'a signed-in user cannot read the creation log');
+
+select throws_ok(
+  $$insert into public.poem_creations (author_id) values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')$$,
+  '42501', null,
+  'a signed-in user cannot add to the creation log'
+);
+
+select throws_ok(
+  $$delete from public.poem_creations$$,
+  '42501', null,
+  'a signed-in user cannot remove from the creation log'
+);
+
+select throws_ok($$select * from public.poem_create_limits()$$, '42501', null, 'a signed-in user cannot call poem_create_limits()');
+
+-- Deleting through the function (delete-poem D2).
+select is(
+  public.delete_my_poem('cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
+  '{"status": "not-found"}'::jsonb,
+  'delete_my_poem() answers not-found for an unknown id'
+);
+
+select is(
+  public.delete_my_poem((select id from public.poems where title = repeat('я', 80))),
+  '{"status": "deleted", "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "illustration_path": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee.jpg"}'::jsonb,
+  'the owner deletes their poem and gets its author id and illustration path'
+);
+
+select is_empty(
+  $$select id from public.poems where title = repeat('я', 80)$$,
+  'the deleted poem is gone'
+);
+
 -- Storage, as B.
 select lives_ok(
   $$insert into storage.objects (bucket_id, name)
@@ -310,6 +372,23 @@ select results_eq(
   'the not-public create stored nothing'
 );
 
+-- Accepted (design D2, Risks): deleting is not gated by public status, so an owner can remove their own poem
+-- even with a non-public profile. Recorded here so a later change can't widen it by accident.
+set local role authenticated;
+
+select is(
+  public.delete_my_poem('a0000000-0000-4000-8000-000000000001'),
+  '{"status": "deleted", "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "illustration_path": null}'::jsonb,
+  'an owner with a non-public profile can still delete their own poem'
+);
+
+reset role;
+
+select is_empty(
+  $$select id from public.poems where id = 'a0000000-0000-4000-8000-000000000001'$$,
+  'the non-public owner''s poem is gone'
+);
+
 -- ---------- signed in as C (no profile) ----------
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"33333333-3333-4333-8333-333333333333","role":"authenticated"}', true);
@@ -348,13 +427,18 @@ select results_eq(
   'the 101st create stored nothing'
 );
 
--- The oldest of the 100 turns exactly 30 days old: the window is strict (created_at > now() - 30 days),
--- so that poem no longer counts and the window slides.
-update public.poems set created_at = now() - interval '30 days'
-where id = (
-  select id from public.poems where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+-- The oldest of the 100 creations turns exactly 30 days old: the window is strict (created_at > now() -
+-- 30 days), so that creation no longer counts and the window slides. The limit counts the creation log, not
+-- the poems (delete-poem FR-9), so the log row is what ages.
+update public.poem_creations set created_at = now() - interval '30 days'
+where ctid = (
+  select ctid from public.poem_creations where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
   order by created_at limit 1
 );
+
+-- An aged creation of another author (B): D's next create prunes only D's own rows, so this one must stay.
+insert into public.poem_creations (author_id, created_at)
+values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', now() - interval '31 days');
 
 set local role authenticated;
 select is(public.can_create_poem()->>'status', 'allowed', 'a poem exactly 30 days old no longer counts: 99 in the window, allowed');
@@ -386,6 +470,64 @@ select is(
 
 select is(public.can_create_poem()->>'status', 'over-limit', 'back at 100 poems in 30 days, over-limit again');
 reset role;
+
+-- The 100th create logged itself and pruned the creation that had aged out of the window.
+select results_eq(
+  $$select count(*)::int from public.poem_creations where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'$$,
+  array[100],
+  'each stored poem adds one creation row: 100 in the window'
+);
+
+select is_empty(
+  $$select 1 from public.poem_creations
+    where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' and created_at <= now() - interval '30 days'$$,
+  'a creation 30 days old is pruned on the author''s next create'
+);
+
+select isnt_empty(
+  $$select 1 from public.poem_creations
+    where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' and created_at <= now() - interval '30 days'$$,
+  'D''s create leaves another author''s aged creations alone'
+);
+
+set local role authenticated;
+
+select is(
+  public.delete_my_poem('b0000000-0000-4000-8000-000000000001'),
+  '{"status": "not-found"}'::jsonb,
+  'another author''s poem answers not-found, the same as an unknown id'
+);
+
+-- implements FR-9 of delete-poem: deleting doesn't free a place in the create limit.
+select results_eq(
+  $$with victims as materialized (
+      select id from public.poems where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+      order by created_at desc limit 10
+    )
+    select count(*)::int from victims v where public.delete_my_poem(v.id)->>'status' = 'deleted'$$,
+  array[10],
+  'D deletes 10 of their poems'
+);
+
+select is(public.can_create_poem()->>'status', 'over-limit', 'after 100 creations and 10 deletes, can_create_poem() is still over-limit');
+
+select ok(
+  (select (public.create_my_poem('После удаления', 'X', null, null) = '{"status": "over-limit"}'::jsonb)),
+  'after 100 creations and 10 deletes, create_my_poem() still answers over-limit'
+);
+
+reset role;
+
+select results_eq(
+  $$select count(*)::int from public.poems where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'$$,
+  array[91],
+  'the 10 deletes removed D''s poems and the over-limit create stored nothing'
+);
+
+select isnt_empty(
+  $$select id from public.poems where id = 'b0000000-0000-4000-8000-000000000001'$$,
+  'the other author''s poem is still there'
+);
 
 -- ---------- a public author loses public status ----------
 update public.author_profiles set last_name = null where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';

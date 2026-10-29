@@ -8,16 +8,16 @@ already consumes (tests count as consumers for knip), so `npm run knip` stays gr
 
 ## 1. Delete operation in the database <!-- judgement-heavy -->
 
-- [ ] 1.1 (NFR-1, FR-3, FR-4) Add `supabase/migrations/<ts>_delete_my_poem.sql` with
+- [x] 1.1 (NFR-1, FR-3, FR-4) Add `supabase/migrations/<ts>_delete_my_poem.sql` with
   `public.delete_my_poem(poem_id uuid)` (design D2): `security definer`, `set search_path = ''`,
   owner from `auth.uid()` and `my_author_profile_id()`, returns `deleted` with `author_id` and
   `illustration_path`, or `not-found`; execute for `authenticated` only; no delete grant or policy
   on `poems`; the down migration in the header.
-- [ ] 1.2 (FR-9) In the same migration (design D2): `poem_creations` (RLS on, no policies, no
+- [x] 1.2 (FR-9) In the same migration (design D2): `poem_creations` (RLS on, no policies, no
   client grants), the `after insert on poems` trigger that logs each creation and prunes the
   author's rows past the window, the backfill from existing poems, and `poem_create_status`
   counting `poem_creations`.
-- [ ] 1.3 (NFR-1, FR-9) Extend `supabase/tests/poems.test.sql` (design D9): direct `delete from poems`
+- [x] 1.3 (NFR-1, FR-9) Extend `supabase/tests/poems.test.sql` (design D9): direct `delete from poems`
   changes nothing for any role; anon can't execute `delete_my_poem`; the owner gets `deleted`
   with `author_id` and `illustration_path` and the row is gone; another author and an unknown id
   get `not-found` and the other author's row stays; a Storage delete in another author's folder
