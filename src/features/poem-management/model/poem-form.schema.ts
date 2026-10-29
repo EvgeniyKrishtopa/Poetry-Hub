@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { POEM_FIELD_ERRORS } from "./poem-management-messages";
-import { NO_GENRE, TEXT_MAX_LENGTH, TITLE_MAX_LENGTH } from "./poem-management.constants";
+import { NO_GENRE, POEM_FORM_FIELDS, TEXT_MAX_LENGTH, TITLE_MAX_LENGTH } from "./poem-management.constants";
 import type { PoemFieldErrors, PoemFormField } from "./poem-management.types";
 
 /** `\r\n` and lone `\r`, as browsers send line breaks in a textarea's value. */
@@ -32,6 +32,11 @@ function codePointLength(value: string): number {
   return [...value].length;
 }
 
+/** The text's length as the field rules measure it: what the editor's counter shows (FR-4). */
+export function poemTextLength(value: string): number {
+  return codePointLength(normalizeText(value));
+}
+
 /** The one set of field rules for the form and the action (FR-4, design D6, D7). */
 export const poemFormSchema = z.object({
   title: z
@@ -59,9 +64,6 @@ export const poemFormSchema = z.object({
     .transform((genreId) => (genreId === NO_GENRE ? null : genreId)),
 });
 
-/** @public Scaffold: no importer until the form, task 6.2. */
-export type PoemFormInput = z.input<typeof poemFormSchema>;
-
 /**
  * What the create action accepts: the form's raw fields plus the optional illustration. Only the types are
  * checked here; the field rules run inside the action, so every field error reaches the form as the
@@ -86,7 +88,7 @@ export function toPoemFieldErrors(error: z.ZodError): PoemFieldErrors {
   return fieldErrors;
 }
 
-const FORM_FIELDS: ReadonlySet<unknown> = new Set<PoemFormField>(["title", "text", "genreId", "illustration"]);
+const FORM_FIELDS: ReadonlySet<unknown> = new Set<PoemFormField>(POEM_FORM_FIELDS);
 
 function isFormField(value: unknown): value is PoemFormField {
   return FORM_FIELDS.has(value);

@@ -188,16 +188,22 @@ group exports only what it already consumes (tests count as consumers for knip),
 
 ## 6. Poem management pages, form, links (UI) <!-- judgement-heavy -->
 
-- [ ] 6.1 (FR-2, FR-11, FR-13, NFR-7) `MyPoemsPage` (+ content, skeleton) and `NotPublicNotice`;
+- [x] 6.1 (FR-2, FR-11, FR-13, NFR-7) `MyPoemsPage` (+ content, skeleton) and `NotPublicNotice`;
   route `app/(authorized)/account/poems/page.tsx`; slot page `app/@breadcrumbs/account/poems/page.tsx`
   (static trail for now; group 7 adds the labels).
+  As built: the session outage alert (`SessionUnavailableAlert` with its retry button) moved from `authors`
+  to `shared/ui`, its second consumer (user decision, 2026-10-29; design D1); the slot pages of all three
+  routes landed here and render no trail until 7.1.
   - Verify with `tests/components/MyPoemsContent.test.tsx` (implements FR-2 and FR-11 of
     add-poem-creation): list newest first with `/account/poems/<id>` links; empty; not public;
     profile failure; list unavailable keeps the add link; skeleton has `role="status"`
     «Загрузка…» and `motion-reduce:animate-none`.
-- [ ] 6.2 (FR-3, FR-4, FR-5, NFR-7) `NewPoemPage` (+ content, skeleton) loading genres server-side,
+- [x] 6.2 (FR-3, FR-4, FR-5, NFR-7) `NewPoemPage` (+ content, skeleton) loading genres server-side,
   and the client `NewPoemForm` on `MarkdownEditor` and `ImagePicker` (design D8); route
   `…/account/poems/new/page.tsx` and its slot page.
+  As built: the form's genre dropdown and illustration field are files in its own folder (`GenreSelect`,
+  `IllustrationField`); the counter uses `poemTextLength`, the schema's own normalization; an invalid text
+  remounts the editor on its editor tab before taking focus.
   - Verify with `tests/components/NewPoemForm.test.tsx` (implements FR-3, FR-4, FR-5 of
     add-poem-creation; action mocked): field order and labels; option order «—», genres,
     «Без жанра»; empty submit → three errors, no action call, focus on title, `aria-invalid` and
@@ -205,7 +211,7 @@ group exports only what it already consumes (tests count as consumers for knip),
     colour; bad illustration message; pending text and disabled button, one call on double click;
     failure alert keeps drafts; `created` → store set and `router.push("/account/poems/<id>")`.
     And `NewPoemContent.test.tsx`: genres unavailable alert, not public, profile failure.
-- [ ] 6.3 (FR-7, FR-5) `OwnPoemPage` + `CreatedPoemNotice` + `created-poem-notice-ui.store.ts` (design D8);
+- [x] 6.3 (FR-7, FR-5) `OwnPoemPage` + `CreatedPoemNotice` + `created-poem-notice-ui.store.ts` (design D8);
   route `…/account/poems/[poemId]/page.tsx` and its slot page.
   - Verify with `tests/components/OwnPoemContent.test.tsx` (own poem renders `PoemArticle`;
     other author's or malformed id → `notFound`; failure throws) and
@@ -217,18 +223,25 @@ group exports only what it already consumes (tests count as consumers for knip),
     added in `poem-management/model/` (`POEM_MANAGEMENT_COPY`, `NEW_POEM_PATH`, `PoemFormInput`; 7.1 removes
     the one on `POEM_MANAGEMENT_TRAIL_LABELS`). `npm run knip`
     passes. Triage any unused-export finding (remove the export or use it) instead of re-adding an ignore.
-- [ ] 6.4 (FR-1) Entry links: `POEM_MANAGEMENT_PATH` in `shared/config/account-paths.ts`;
+  - As built: knip then flagged the breadcrumbs exports of `poem-management/index.ts` (`getOwnPoemTitle`,
+    `OwnPoemTitleResult`, `POEM_MANAGEMENT_TRAIL_LABELS`, `NEW_POEM_PATH`), which have no consumer before 7.1;
+    they were removed from the index and land with 7.1. `PoemFormInput` was removed (no consumer). The
+    created-poem notice dismisses itself on a timer started in its effect cleanup, which the effect's
+    Strict Mode re-run cancels (design D8's guard).
+- [x] 6.4 (FR-1) Entry links: `POEM_MANAGEMENT_PATH` in `shared/config/account-paths.ts`;
   `AccountAuthorLinks` and `AuthorOwnerLinkView` render «Управление произведениями».
   - Verify with the authors tests for both components (implements FR-1 of add-poem-creation):
     public own profile shows it with `href="/account/poems"`; no profile, not public, other
     visitor don't.
   - Scaffold clean-up: remove the `@public` tag on `POEM_MANAGEMENT_PATH`.
-- [ ] 6.5 (FR-1, FR-2, FR-3, FR-7, NFR-9) Verify: typecheck, lint, coverage, build (route list per NFR-9), knip.
+- [x] 6.5 (FR-1, FR-2, FR-3, FR-7, NFR-9) Verify: typecheck, lint, coverage, build (route list per NFR-9), knip.
 
 ## 7. Breadcrumbs <!-- isolated -->
 
 - [ ] 7.1 (FR-8) Static rows for `/account/poems` and `/account/poems/new`; the `own-poem` match
-  and `getOwnPoemTitle` from `@/features/poem-management` (design D10).
+  and `getOwnPoemTitle` from `@/features/poem-management` (design D10). Add to `poem-management/index.ts`
+  the exports group 6 left out for knip: `getOwnPoemTitle`, `OwnPoemTitleResult`,
+  `POEM_MANAGEMENT_TRAIL_LABELS`, `NEW_POEM_PATH`.
   - Verify with `src/features/breadcrumbs/tests/model/*.test.ts` (implements FR-8 of
     add-poem-creation): the three trails; not-found → no trail; unavailable → ends at
     «Управление произведениями» as current; `/account/poems/a/b` → no match.
