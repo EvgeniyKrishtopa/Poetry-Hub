@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { AUTHOR_EDITOR_PATH, AUTHORS_PATH } from "@/features/authors";
-import { ACCOUNT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
+import { NEW_POEM_PATH } from "@/features/poem-management";
+import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
 import { ABOUT_PATH, PRIVACY_PATH } from "@/shared/config/constants";
 
 import { matchRoute, STATIC_ROUTES } from "../../model/match-route";
@@ -69,11 +70,48 @@ describe("matchRoute", () => {
       AUTHORS_PATH,
       ACCOUNT_PATH,
       AUTHOR_EDITOR_PATH,
+      POEM_MANAGEMENT_PATH,
+      NEW_POEM_PATH,
       SIGN_IN_PATH,
       SIGN_UP_PATH,
       ABOUT_PATH,
       PRIVACY_PATH,
     ]);
+  });
+
+  // implements FR-8 of add-poem-creation
+  it("maps the management list to «Управление произведениями» under «Мастерская поэта»", () => {
+    expect(matchRoute(["account", "poems"])).toEqual({
+      kind: "static",
+      items: [
+        { kind: "link", label: "Мастерская поэта", href: ACCOUNT_PATH },
+        { kind: "current", label: "Управление произведениями" },
+      ],
+    });
+  });
+
+  // implements FR-8 of add-poem-creation
+  it("maps the add form to «Добавление нового произведения» under both management parents", () => {
+    expect(matchRoute(["account", "poems", "new"])).toEqual({
+      kind: "static",
+      items: [
+        { kind: "link", label: "Мастерская поэта", href: ACCOUNT_PATH },
+        { kind: "link", label: "Управление произведениями", href: POEM_MANAGEMENT_PATH },
+        { kind: "current", label: "Добавление нового произведения" },
+      ],
+    });
+  });
+
+  // implements FR-8 of add-poem-creation
+  it("matches the owner's poem page by the poem id", () => {
+    const poemId = "30000000-0000-4000-8000-000000000021";
+
+    expect(matchRoute(["account", "poems", poemId])).toEqual({ kind: "own-poem", poemId });
+  });
+
+  // implements FR-8 of add-poem-creation
+  it.each([[["account", "poems", "a", "b"]], [["account", "poems", ""]]])("matches nothing for %j", (segments) => {
+    expect(matchRoute(segments)).toEqual({ kind: "none" });
   });
 
   // implements FR-4 of add-about-page

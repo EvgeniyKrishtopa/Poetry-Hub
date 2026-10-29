@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { AUTHORS_PATH } from "@/features/authors";
 import type { AuthorPoemResult } from "@/features/poems";
-import { ACCOUNT_PATH } from "@/shared/config/account-paths";
+import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH } from "@/shared/config/account-paths";
 import { HOME_PATH } from "@/shared/config/constants";
 
 import { buildTrail } from "../../model/build-trail";
@@ -169,5 +169,52 @@ describe("buildTrail on the poem routes", () => {
   // implements FR-8 of add-author-poems
   it("shows no trail for a poem match that comes with no poem result", () => {
     expect(buildTrail(POEM_MATCH, ANNA)).toEqual({ kind: "none" });
+  });
+});
+
+describe("buildTrail on the poem management routes", () => {
+  const POEM_ID = "30000000-0000-4000-8000-000000000021";
+  const OWN_POEM_MATCH = { kind: "own-poem", poemId: POEM_ID } as const;
+
+  const ACCOUNT_LINK = { kind: "link", label: "Мастерская поэта", href: ACCOUNT_PATH } as const;
+  const MANAGEMENT_LINK = { kind: "link", label: "Управление произведениями", href: POEM_MANAGEMENT_PATH } as const;
+
+  // implements FR-8 of add-poem-creation
+  it("builds the list and add form trails from their static matches", () => {
+    expect(buildTrail(matchRoute(["account", "poems"]))).toEqual({
+      kind: "shown",
+      items: [HOME, ACCOUNT_LINK, { kind: "current", label: "Управление произведениями" }],
+    });
+    expect(buildTrail(matchRoute(["account", "poems", "new"]))).toEqual({
+      kind: "shown",
+      items: [HOME, ACCOUNT_LINK, MANAGEMENT_LINK, { kind: "current", label: "Добавление нового произведения" }],
+    });
+  });
+
+  // implements FR-8 of add-poem-creation
+  it("ends the owner's poem trail on the poem's title, after the management item linking to the list", () => {
+    expect(buildTrail(OWN_POEM_MATCH, undefined, undefined, { ok: true, title: "Первый снег" })).toEqual({
+      kind: "shown",
+      items: [HOME, ACCOUNT_LINK, MANAGEMENT_LINK, { kind: "current", label: "Первый снег" }],
+    });
+  });
+
+  // implements FR-8 of add-poem-creation
+  it("shows no trail for a poem that isn't the owner's", () => {
+    expect(buildTrail(OWN_POEM_MATCH, undefined, undefined, { ok: false, reason: "not-found" })).toEqual({
+      kind: "none",
+    });
+  });
+
+  // implements FR-8 of add-poem-creation
+  it("ends on «Управление произведениями» as the current item when the poem read is unavailable", () => {
+    expect(buildTrail(OWN_POEM_MATCH, undefined, undefined, { ok: false, reason: "unavailable" })).toEqual({
+      kind: "shown",
+      items: [HOME, ACCOUNT_LINK, { kind: "current", label: "Управление произведениями" }],
+    });
+  });
+
+  it("shows no trail for an owner's poem match that comes with no title result", () => {
+    expect(buildTrail(OWN_POEM_MATCH)).toEqual({ kind: "none" });
   });
 });

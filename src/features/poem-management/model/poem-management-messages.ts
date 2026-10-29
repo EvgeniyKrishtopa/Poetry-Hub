@@ -49,7 +49,7 @@ export const CREATE_POEM_FAILURE_MESSAGES = {
   unknown: "Что-то пошло не так. Попробуйте ещё раз.",
 } as const;
 
-/** Breadcrumb labels of the static management routes (design D10). @public Scaffold: no importer until task 7.1. */
+/** Breadcrumb labels of the static management routes (design D10). */
 export const POEM_MANAGEMENT_TRAIL_LABELS = {
   list: "Управление произведениями",
   newPoem: "Добавление нового произведения",
