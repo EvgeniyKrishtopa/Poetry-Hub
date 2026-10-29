@@ -759,10 +759,14 @@ sequenceDiagram
   tag, which is what ADR 0007's limit protects. Recorded as ADR 0009, partially superseding 0007.
 - **No burst throttle** (D2, product owner's decision 2026-10-29): with only the 30-day window,
   an author (or a script with their session) can create all 100 poems in seconds, and each create
-  expires the `poems:<authorId>` tag. Accepted: the damage is capped at 100 rows, 100 expiries of
-  one author's own poems tag, and 100 illustration uploads (up to 5 MB each, plus image
-  optimization) per 30 days, and the advisory lock still serializes one author's creates. If abuse
-  shows up, add a short window back in `poem_create_status` (one more row in its list of windows).
+  expires the `poems:<authorId>` tag. Accepted: the cap is 100 rows and 100 expiries of one
+  author's own poems tag per 30 days, and the advisory lock still serializes one author's creates.
+  Uploads are not capped by it: the Storage API takes any number of objects (next entry), and on
+  the app path `can_create_poem` runs without the lock, so concurrent submits at 99 poems all pass
+  the pre-check and upload before the locked check rejects all but one (their files are removed
+  best-effort). The short windows used to slow both down; now nothing does. The limit is per
+  account, so a new sign-up gets a fresh 100 at once. If abuse shows up, add a short window back in
+  `poem_create_status` (one more row in its list of windows).
 - **Direct Storage inserts**: as with author photos, a signed-in user's own token can upload any
   number of objects into their folder through the Storage API (the bucket caps size and type, not
   count). Known limit carried over from add-author-profiles (PROGRESS item 10). The `poems` table

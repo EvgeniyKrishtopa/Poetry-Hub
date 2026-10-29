@@ -6,7 +6,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(55);
+select plan(57);
 
 -- Start from empty tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -348,27 +348,40 @@ select results_eq(
   'the 101st create stored nothing'
 );
 
--- The oldest of the 100 leaves the 30-day window by one second: the window slides.
-update public.poems set created_at = now() - interval '30 days 1 second'
+-- The oldest of the 100 turns exactly 30 days old: the window is strict (created_at > now() - 30 days),
+-- so that poem no longer counts and the window slides.
+update public.poems set created_at = now() - interval '30 days'
 where id = (
   select id from public.poems where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
   order by created_at limit 1
 );
 
 set local role authenticated;
-select is(public.can_create_poem()->>'status', 'allowed', 'with 99 poems in the last 30 days, creating is allowed');
+select is(public.can_create_poem()->>'status', 'allowed', 'a poem exactly 30 days old no longer counts: 99 in the window, allowed');
 
--- A rejected call stores nothing, so it doesn't use up the one free place.
+-- Rejected calls store nothing, so three of them don't use up the one free place.
 select throws_ok(
   $$select public.create_my_poem('   ', 'X', null, null)$$,
   '23514', null,
   'a blank title is rejected at 99 poems'
 );
 
+select throws_ok(
+  $$select public.create_my_poem(repeat('я', 81), 'X', null, null)$$,
+  '23514', null,
+  'an 81-character title is rejected at 99 poems'
+);
+
+select throws_ok(
+  $$select public.create_my_poem('T', 'X', null, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee.png')$$,
+  '23514', null,
+  'an illustration path in another profile''s folder is rejected at 99 poems'
+);
+
 select is(
   public.create_my_poem('Сотое', 'X', null, null)->>'status',
   'created',
-  'after the rejected call, the 100th poem in the window is created'
+  'after three rejected calls, the 100th poem in the window is created'
 );
 
 select is(public.can_create_poem()->>'status', 'over-limit', 'back at 100 poems in 30 days, over-limit again');

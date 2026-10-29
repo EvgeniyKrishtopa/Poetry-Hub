@@ -87,8 +87,8 @@ group exports only what it already consumes (tests count as consumers for knip),
   the action code stay unchanged.
 - [x] 2.6 (FR-6) Update `supabase/tests/poems.test.sql` (implements FR-6 of add-poem-creation):
   a third create within a minute → `created`; 100 rows backdated within 30 days →
-  `can_create_poem` and `create_my_poem` → `over-limit`, no row; the oldest moved to 30 days +
-  1 second ago → `created`; rejected calls leave the count unchanged; replace the 2-per-minute and
+  `can_create_poem` and `create_my_poem` → `over-limit`, no row; the oldest moved to exactly
+  30 days ago (the window is strict) → `created`; three rejected calls leave the count unchanged; replace the 2-per-minute and
   21st-in-a-day checks and fix `plan(N)`.
   - Verify: `npx supabase db reset` then `npx supabase test db` pass.
 
@@ -240,7 +240,9 @@ group exports only what it already consumes (tests count as consumers for knip),
   them (design D2); it partially supersedes ADR 0007 (Decisions 1 and 3, and Decision 6's poem
   example), and ADR 0007's status line gains "Partially superseded by 0009". The ADR states the
   single 100-per-30-days window and that it has no burst throttle within the 100 (product owner,
-  2026-10-29, accepted risk), so ADR 0007's rate argument no longer applies to poems.
+  2026-10-29, accepted risk), so ADR 0007's rate argument no longer applies to poems; that the
+  cap covers rows and tag expiries only, not illustration uploads (design Risks, "No burst
+  throttle" and "Direct Storage inserts").
 - [ ] 8.2 (FR-9, FR-10) Update the recorded web-qa scenarios that relied on mock illustrations or genres
   (`author-poems-reading-path`, `poem-two-quick-clicks`, `author-page-sections`).
 - [ ] 8.3 (NFR-3, NFR-6, NFR-2, NFR-8) Static checks: the NFR-3 import searches, the NFR-6 literal search,

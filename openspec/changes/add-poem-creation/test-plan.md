@@ -47,7 +47,7 @@ existing tests and are listed once at the end.
 | FR-5 | Illustration stored only with its poem | `createOwnPoem` test: RPC error or `over-limit` after upload → `remove` called; upload failure → no RPC | unit |
 | FR-6 | Hundred-and-first poem in 30 days | pgTAP: 100 rows backdated within 30 days → `can_create_poem` and `create_my_poem` → `over-limit`, no row; action test: `can_create_poem` over-limit → `too-many-poems`, no profile read, Contentful call, or upload; `NewPoemForm` test: the over-limit alert above submit, drafts kept | integration, unit |
 | FR-6 | Quick creates within the limit | pgTAP: a third `create_my_poem` within a minute (fewer than 100 in 30 days) → `created` | integration |
-| FR-6 | Window slides | pgTAP: with 100 rows in 30 days, the oldest moved to 30 days + 1 second ago → `created` | integration |
+| FR-6 | Window slides | pgTAP: with 100 rows in 30 days, the oldest moved to exactly 30 days ago (strict window) → `created` | integration |
 | FR-6 | Failed attempts don't count | pgTAP: rejected calls (bad title) leave the count unchanged and a later call → `created`; action test: invalid illustration never calls an RPC | integration, unit |
 | FR-6 | Direct calls can't bypass it | pgTAP: direct `insert into poems` rejected for `authenticated`; `create_my_poem` at 100 poems in 30 days → `over-limit`; `poem_create_status` not executable by client roles | integration |
 | FR-7 | Own poem | `OwnPoemContent` test: renders `PoemArticle` with the own poem; web-qa: same content as the public poem page | unit, end-to-end |
