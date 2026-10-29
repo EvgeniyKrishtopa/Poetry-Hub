@@ -25,6 +25,8 @@ export function CreatedPoemNotice({ poemId }: CreatedPoemNoticeProps) {
     clearTimeout(dismissTimer.current);
     useCreatedPoemNotice.getState().clearCreatedPoemId();
     return () => {
+      // Left running on a real unmount on purpose: React ignores a state update there, and this cleanup
+      // can't tell an unmount from an `Activity` hide.
       dismissTimer.current = setTimeout(() => setDismissed(true));
     };
   }, []);
