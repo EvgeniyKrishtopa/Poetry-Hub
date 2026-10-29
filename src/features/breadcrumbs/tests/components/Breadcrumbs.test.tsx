@@ -2,7 +2,8 @@ import { render } from "@testing-library/react";
 import { Suspense, type ReactElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getPublicAuthorName } from "@/features/authors";
+import { requireSession } from "@/features/auth";
+import { getOwnPublicAuthor, getPublicAuthorName } from "@/features/authors";
 import { getAuthorPoem } from "@/features/poems";
 
 import { Breadcrumbs } from "../../components/Breadcrumbs/Breadcrumbs";
@@ -13,6 +14,12 @@ import { BreadcrumbsView } from "../../components/BreadcrumbsView/BreadcrumbsVie
 vi.mock("@/features/authors", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/authors")>()),
   getPublicAuthorName: vi.fn(),
+  getOwnPublicAuthor: vi.fn(),
+}));
+
+vi.mock("@/features/auth", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/auth")>()),
+  requireSession: vi.fn(),
 }));
 
 vi.mock("@/features/poems", async (importOriginal) => ({
@@ -152,6 +159,50 @@ describe("BreadcrumbsLoader", () => {
     await load(["authors", ANNA_ID]);
 
     expect(getAuthorPoem).not.toHaveBeenCalled();
+  });
+
+  // implements FR-8 of add-poem-creation
+  it("reads the owner's poem title for the owner's poem page, never the session gate", async () => {
+    const authorId = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
+    const poemId = "30000000-0000-4000-8000-000000000021";
+    vi.mocked(getOwnPublicAuthor).mockResolvedValue({ ok: true, status: "public", authorId });
+    vi.mocked(getAuthorPoem).mockResolvedValue({
+      ok: true,
+      poem: {
+        id: poemId,
+        title: "Первый снег",
+        text: "Строка",
+        illustrationUrl: null,
+        publishedAt: "2026-10-29",
+        genreId: null,
+      },
+    });
+
+    const element = (await load(["account", "poems", poemId])) as ReactElement<{
+      items: { label: string }[];
+    }>;
+
+    expect(getAuthorPoem).toHaveBeenCalledWith(authorId, poemId);
+    expect(requireSession).not.toHaveBeenCalled();
+    expect(getPublicAuthorName).not.toHaveBeenCalled();
+    expect(element.props.items.map((item) => item.label)).toEqual([
+      "Главная",
+      "Мастерская поэта",
+      "Управление произведениями",
+      "Первый снег",
+    ]);
+  });
+
+  // implements FR-8 of add-poem-creation
+  it("renders nothing for another author's poem on the owner's poem page", async () => {
+    vi.mocked(getOwnPublicAuthor).mockResolvedValue({
+      ok: true,
+      status: "public",
+      authorId: "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b",
+    });
+    vi.mocked(getAuthorPoem).mockResolvedValue({ ok: false, reason: "not-found" });
+
+    await expect(load(["account", "poems", "30000000-0000-4000-8000-000000000031"])).resolves.toBeNull();
   });
 
   // implements FR-4, FR-6 of add-breadcrumbs

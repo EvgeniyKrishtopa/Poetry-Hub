@@ -238,14 +238,14 @@ group exports only what it already consumes (tests count as consumers for knip),
 
 ## 7. Breadcrumbs <!-- isolated -->
 
-- [ ] 7.1 (FR-8) Static rows for `/account/poems` and `/account/poems/new`; the `own-poem` match
+- [x] 7.1 (FR-8) Static rows for `/account/poems` and `/account/poems/new`; the `own-poem` match
   and `getOwnPoemTitle` from `@/features/poem-management` (design D10). Add to `poem-management/index.ts`
   the exports group 6 left out for knip: `getOwnPoemTitle`, `OwnPoemTitleResult`,
   `POEM_MANAGEMENT_TRAIL_LABELS`, `NEW_POEM_PATH`.
   - Verify with `src/features/breadcrumbs/tests/model/*.test.ts` (implements FR-8 of
     add-poem-creation): the three trails; not-found → no trail; unavailable → ends at
     «Управление произведениями» as current; `/account/poems/a/b` → no match.
-- [ ] 7.2 (FR-8) Verify: typecheck, lint, coverage, build, knip; `app/tests/breadcrumbs-slot.test.ts`
+- [x] 7.2 (FR-8) Verify: typecheck, lint, coverage, build, knip; `app/tests/breadcrumbs-slot.test.ts`
   passes.
 
 ## 8. Docs and verification <!-- judgement-heavy -->
