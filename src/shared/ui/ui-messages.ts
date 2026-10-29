@@ -21,6 +21,11 @@ export const MARKDOWN_VIEW_LABELS = {
   preview: "Просмотр",
 } as const;
 
+/** Shown on the account pages when the session itself can't be checked: Supabase is down (add-author-profiles FR-20). */
+export const SESSION_UNAVAILABLE_MESSAGE = "Сервис временно недоступен. Попробуйте позже.";
+
+export const RETRY_LABEL = "Повторить";
+
 /** A text field's counter, e.g. "12 / 1000"; it may exceed the limit. */
 export function formatCharacterCounter(length: number, maxLength: number): string {
   return `${length} / ${maxLength}`;

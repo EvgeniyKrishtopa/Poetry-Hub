@@ -111,6 +111,7 @@ Moved to `shared/` (second consumer, architecture.md's rule):
 | `validate-photo-file.ts`, `detect-image-type.ts`, `PHOTO_FORMATS`, `PHOTO_MAX_BYTES` | `shared/lib/image-file/` (`validateImageFile`, `IMAGE_FORMATS`, `IMAGE_MAX_BYTES`) |
 | `PhotoPicker`, `use-photo-draft.ts`, `object-url-store.ts` | `shared/ui/ImagePicker/` (button label prop) and `shared/lib/image-file/use-image-draft.ts` |
 | `model/classify-profile-error.ts` | `shared/lib/supabase/classify-error.ts`: `classifySupabaseError(error)` → `"unauthenticated" \| "unavailable" \| "unknown"` (JWT codes, HTTP status, Storage errors) |
+| `SessionUnavailableAlert`, `RetryButton`, their two messages | `shared/ui/SessionUnavailableAlert/` (added in group 6, user decision 2026-10-29: the management pages show the same outage alert; exporting it from `authors`' index was rejected, since a feature index exports server-only accessors, not UI) |
 
 The authors feature keeps thin wrappers where it adds its own copy (`AboutFieldEditor` passes the
 about label and limit). Every existing authors test keeps passing; tests of moved pure modules move

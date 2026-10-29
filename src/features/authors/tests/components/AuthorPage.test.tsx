@@ -107,15 +107,20 @@ describe("AuthorProfileView", () => {
 
 describe("AuthorOwnerLinkView", () => {
   // implements FR-15 of add-author-profiles
-  it("links the owner to /account/author", () => {
-    render(<AuthorOwnerLinkView isOwner />);
+  // implements FR-1 of add-poem-creation
+  it("links the owner to /account/author, then to /account/poems, in a lang=ru row", () => {
+    const { container } = render(<AuthorOwnerLinkView isOwner />);
 
-    const link = screen.getByRole("link", { name: "Редактировать профиль" });
-    expect(link).toHaveAttribute("href", "/account/author");
-    expect(link).toHaveAttribute("lang", "ru");
+    const links = screen.getAllByRole("link");
+    expect(links.map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["Редактировать профиль", "/account/author"],
+      ["Управление произведениями", "/account/poems"],
+    ]);
+    expect(container.firstElementChild).toHaveAttribute("lang", "ru");
   });
 
   // implements FR-15 of add-author-profiles
+  // implements FR-1 of add-poem-creation
   it("renders nothing for another visitor", () => {
     const { container } = render(<AuthorOwnerLinkView isOwner={false} />);
 

@@ -56,6 +56,28 @@ describe("AccountAuthorLinks", () => {
     );
   });
 
+  // implements FR-1 of add-poem-creation
+  it("adds «Управление произведениями» to /account/poems last, for a public profile only", () => {
+    render(<AccountAuthorLinks result={profile("Анна", "Ахматова")} />);
+
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual([
+      "Редактировать профиль автора",
+      "Открыть публичную страницу",
+      "Управление произведениями",
+    ]);
+    expect(screen.getByRole("link", { name: "Управление произведениями" })).toHaveAttribute("href", "/account/poems");
+  });
+
+  // implements FR-1 of add-poem-creation
+  it.each([
+    ["no profile", { ok: true, profile: null } as const],
+    ["a profile with no last name", profile("Анна", null)],
+  ])("shows no «Управление произведениями» for %s", (_case, result) => {
+    render(<AccountAuthorLinks result={result} />);
+
+    expect(screen.queryByRole("link", { name: "Управление произведениями" })).toBeNull();
+  });
+
   // implements FR-18 of add-author-profiles
   it("shows the load-failure alert instead of any link when the read failed", () => {
     render(<AccountAuthorLinks result={{ ok: false, failure: "unavailable" }} />);

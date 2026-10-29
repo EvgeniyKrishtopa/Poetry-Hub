@@ -1,6 +1,6 @@
 import { POEM_MANAGEMENT_PATH } from "@/shared/config/account-paths";
 
-/** The add form, `/account/poems/new`. @public Scaffold: no importer until tasks 6.1 and 7.1. */
+/** The add form, `/account/poems/new`. */
 export const NEW_POEM_PATH = `${POEM_MANAGEMENT_PATH}/new`;
 
 /** The owner's page of one poem, `/account/poems/<poemId>`. */

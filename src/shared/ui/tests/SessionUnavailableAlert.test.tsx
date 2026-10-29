@@ -2,9 +2,16 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { SessionUnavailableAlert } from "../../components/SessionUnavailableAlert/SessionUnavailableAlert";
+import { SessionUnavailableAlert } from "../SessionUnavailableAlert/SessionUnavailableAlert";
 
-import { deferred } from "./deferred";
+/** A promise the test settles by hand, to observe the button while the refresh is pending. */
+function deferred<T>(): { readonly promise: Promise<T>; readonly resolve: (value: T) => void } {
+  let resolve: (value: T) => void = () => undefined;
+  const promise = new Promise<T>((onResolve) => {
+    resolve = onResolve;
+  });
+  return { promise, resolve };
+}
 
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));

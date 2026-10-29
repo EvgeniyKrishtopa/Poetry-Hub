@@ -1,10 +1,10 @@
 import { requireSession } from "@/features/auth";
 import { SESSION_STATE } from "@/shared/config/constants";
+import { SessionUnavailableAlert } from "@/shared/ui";
 
 import { getMyAuthorProfile } from "../../dal/my-author-profile";
 import { ACCOUNT_AUTHOR_SECTION_TITLE } from "../../model/author-messages";
 import { AccountAuthorLinks } from "../AccountAuthorLinks/AccountAuthorLinks";
-import { SessionUnavailableAlert } from "../SessionUnavailableAlert/SessionUnavailableAlert";
 
 /**
  * The account page's author-profile section: session gate, then the owner read, inside

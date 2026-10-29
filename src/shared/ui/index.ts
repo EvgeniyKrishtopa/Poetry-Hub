@@ -5,5 +5,6 @@ export { Dialog } from "./Dialog/Dialog";
 export { ImagePicker } from "./ImagePicker/ImagePicker";
 export { MarkdownEditor } from "./MarkdownEditor/MarkdownEditor";
 export { MarkdownText } from "./MarkdownText/MarkdownText";
+export { SessionUnavailableAlert } from "./SessionUnavailableAlert/SessionUnavailableAlert";
 export { TextField } from "./TextField/TextField";
 export { FIELD_INPUT_CLASS } from "./TextField/text-field-classes";

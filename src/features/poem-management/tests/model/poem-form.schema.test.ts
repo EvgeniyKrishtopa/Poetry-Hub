@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { poemFormSchema, toPoemFieldErrors } from "../../model/poem-form.schema";
+import { poemFormSchema, poemTextLength, toPoemFieldErrors } from "../../model/poem-form.schema";
 import { POEM_FIELD_ERRORS } from "../../model/poem-management-messages";
 import { NO_GENRE, TEXT_MAX_LENGTH, TITLE_MAX_LENGTH } from "../../model/poem-management.constants";
 import { ownPoemPath } from "../../model/poem-paths";
@@ -108,5 +108,13 @@ describe("toPoemFieldErrors", () => {
 describe("ownPoemPath", () => {
   it("is the poem's page under /account/poems", () => {
     expect(ownPoemPath("abc")).toBe("/account/poems/abc");
+  });
+});
+
+describe("poemTextLength", () => {
+  // implements FR-4 of add-poem-creation
+  it("counts the text as stored: line breaks once, leading empty lines and trailing whitespace dropped, code points", () => {
+    expect(poemTextLength(`\r\n  \n${INDENT_STEP}а\r\nб${ASTRAL}   `)).toBe(INDENT_STEP.length + 4);
+    expect(poemTextLength("   ")).toBe(0);
   });
 });

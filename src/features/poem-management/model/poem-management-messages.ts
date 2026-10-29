@@ -4,9 +4,7 @@ import { TEXT_MAX_LENGTH, TITLE_MAX_LENGTH } from "./poem-management.constants";
 
 // Every string of the proposal's UI copy table this feature shows, verbatim and in Russian.
 
-/** @public Scaffold: no importer until the pages and the form, tasks 6.1-6.4. */
 export const POEM_MANAGEMENT_COPY = {
-  entryLink: "Управление произведениями",
   listHeading: "Ваши Произведения",
   addLink: "Добавить новое произведение",
   notPublic: "Чтобы добавлять произведения, укажите имя и фамилию в профиле автора.",
@@ -25,6 +23,8 @@ export const POEM_MANAGEMENT_COPY = {
   submitPending: "Добавление…",
   genresUnavailable: "Список жанров сейчас недоступен. Попробуйте позже.",
   created: "Поздравляем, Ваше произведение успешно добавлено.",
+  // Not in the copy table: the same text as the root `loading.tsx` and the poem pages' skeleton (FR-13).
+  loading: "Загрузка…",
 } as const;
 
 export const POEM_FIELD_ERRORS = {

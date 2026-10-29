@@ -14,10 +14,14 @@ export const PAGE_TITLES = {
 /** The account page's author-section heading; the same words as the editor's title, but its own key. */
 export const ACCOUNT_AUTHOR_SECTION_TITLE = "Профиль автора";
 
+/** The entry to the author's poem management, on the account page and the own author page (add-poem-creation FR-1). */
+const POEM_MANAGEMENT_LINK_LABEL = "Управление произведениями";
+
 export const ACCOUNT_LINK_LABELS = {
   createProfile: "Создать кабинет автора",
   editProfile: "Редактировать профиль автора",
   openPublicPage: "Открыть публичную страницу",
+  managePoems: POEM_MANAGEMENT_LINK_LABEL,
 } as const;
 
 export const FIELD_LABELS: Readonly<Record<ProfileField, string>> = {
@@ -75,11 +79,6 @@ export function getProfileFailureMessage(failure: WriteFailure): string {
   return FAILURE_MESSAGES[failure];
 }
 
-/** Shown on the account pages when the session itself can't be checked: Supabase is down (FR-20). */
-export const SESSION_UNAVAILABLE_MESSAGE = "Сервис временно недоступен. Попробуйте позже.";
-
-export const RETRY_LABEL = "Повторить";
-
 /** Shown instead of the account section or the editor when the own profile can't be read (FR-18). */
 export const PROFILE_LOAD_FAILED_MESSAGE = "Не удалось загрузить профиль. Попробуйте позже.";
 
@@ -88,7 +87,11 @@ export const DIRECTORY_MESSAGES = {
   unavailable: "Список авторов сейчас недоступен.",
 } as const;
 
-export const OWNER_EDIT_LINK_LABEL = "Редактировать профиль";
+/** The owner's links above the public author page's heading. */
+export const OWNER_LINK_LABELS = {
+  editProfile: "Редактировать профиль",
+  managePoems: POEM_MANAGEMENT_LINK_LABEL,
+} as const;
 
 /** The photo's alt text: the "photo" prefix, then the first and last name (NFR-5). */
 export function getPhotoAlt(fullName: string): string {

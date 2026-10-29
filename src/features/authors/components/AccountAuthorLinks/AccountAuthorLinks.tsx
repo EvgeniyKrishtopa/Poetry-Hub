@@ -1,3 +1,4 @@
+import { POEM_MANAGEMENT_PATH } from "@/shared/config/account-paths";
 import { Alert, ButtonLink } from "@/shared/ui";
 
 import { AUTHOR_EDITOR_PATH } from "../../model/author.constants";
@@ -18,9 +19,14 @@ export function AccountAuthorLinks({ result }: AccountAuthorLinksProps) {
     <div className="flex flex-wrap gap-2">
       <ButtonLink href={AUTHOR_EDITOR_PATH}>{ACCOUNT_LINK_LABELS.editProfile}</ButtonLink>
       {isPublicProfile(profile) && (
-        <ButtonLink variant="ghost" href={authorPagePath(profile.id)}>
-          {ACCOUNT_LINK_LABELS.openPublicPage}
-        </ButtonLink>
+        <>
+          <ButtonLink variant="ghost" href={authorPagePath(profile.id)}>
+            {ACCOUNT_LINK_LABELS.openPublicPage}
+          </ButtonLink>
+          <ButtonLink variant="ghost" href={POEM_MANAGEMENT_PATH}>
+            {ACCOUNT_LINK_LABELS.managePoems}
+          </ButtonLink>
+        </>
       )}
     </div>
   );
