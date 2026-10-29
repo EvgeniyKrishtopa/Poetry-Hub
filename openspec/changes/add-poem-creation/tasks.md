@@ -117,26 +117,26 @@ group exports only what it already consumes (tests count as consumers for knip),
 
 ## 4. Poem management server side (no new visuals) <!-- judgement-heavy -->
 
-- [ ] 4.1 (FR-4, NFR-8) `src/features/poem-management/model/`: `poem-form.schema.ts`, constants
+- [x] 4.1 (FR-4, NFR-8) `src/features/poem-management/model/`: `poem-form.schema.ts`, constants
   (`TITLE_MAX_LENGTH = 80`, `TEXT_MAX_LENGTH = 10000`, `NO_GENRE`, bucket),
   types, messages (every UI copy table string this feature shows, verbatim), paths.
   - Verify with `src/features/poem-management/tests/model/poem-form.schema.test.ts` (implements
     FR-4 of add-poem-creation): required, whitespace-only, 80/81 title, 10000/10001 text, code
     points not UTF-16 units, `NO_GENRE` → `null`, trimming.
-- [ ] 4.2 (FR-7, FR-8) `dal/own-poem.ts`: `getOwnPoem(poemId)` and `getOwnPoemTitle(poemId)` in
+- [x] 4.2 (FR-7, FR-8) `dal/own-poem.ts`: `getOwnPoem(poemId)` and `getOwnPoemTitle(poemId)` in
   React `cache`, over `getOwnPublicAuthor` and `getAuthorPoem` (design D4); export
   `getOwnPublicAuthor` from `@/features/authors`' index (left out in group 1: no consumer yet).
   - Verify with `tests/dal/own-poem.test.ts`: own poem; another author's or malformed id →
     `not-found`; not public → `not-found`; signed out meanwhile and failures → `unavailable`; page and title
     calls in one request read once.
-- [ ] 4.3 (FR-5, FR-6, NFR-1, NFR-10) `dal/poem-writes.ts`: `checkCanCreatePoem` (`can_create_poem`
+- [x] 4.3 (FR-5, FR-6, NFR-1, NFR-10) `dal/poem-writes.ts`: `checkCanCreatePoem` (`can_create_poem`
   RPC) and `createOwnPoem` (upload, `create_my_poem` RPC, best-effort cleanup) with the cookie
   client, failures through `classifySupabaseError`.
   - Verify with `tests/dal/poem-writes.test.ts`: jsonb statuses parsed with Zod (an unexpected
     shape → `unknown`); with and without an illustration; RPC failure or `over-limit` removes the
     upload; upload failure calls no RPC; the path is `<authorId>/<uuid>.<ext>` from the sniffed
     type; logs carry no title, text, file name, user id, profile id, or poem id.
-- [ ] 4.4 (FR-5, FR-6, FR-12) `actions/create-poem.actions.ts` + `action-client.ts` (design D7). Pick one
+- [x] 4.4 (FR-5, FR-6, FR-12) `actions/create-poem.actions.ts` + `action-client.ts` (design D7). Pick one
   channel for server field errors (Gate 2b, 2026-10-28): either every field error through next-safe-action's
   `validationErrors` (`returnValidationErrors` for genre and illustration) or parsing inside the body and
   returning `invalid`; make `CreatePoemResult` and design D7 say which, so `NewPoemForm` reads one shape.
@@ -147,7 +147,7 @@ group exports only what it already consumes (tests count as consumers for knip),
     `genre-unavailable`; bad illustration → field error, no upload; `create_my_poem` over limit
     (race) → `too-many-poems`; success → `updateTag("poems:<id>")` once and `{ status: "created",
     poemId }`; any failure → no `updateTag`.
-- [ ] 4.5 (FR-4, FR-5, FR-6, FR-12, NFR-10) Verify: `npm run typecheck && npm run lint && npm run test:coverage && npm run build &&
+- [x] 4.5 (FR-4, FR-5, FR-6, FR-12, NFR-10) Verify: `npm run typecheck && npm run lint && npm run test:coverage && npm run build &&
   npm run knip`.
 
 ## 5. Poem page and author page section (UI) <!-- judgement-heavy -->
@@ -196,7 +196,9 @@ group exports only what it already consumes (tests count as consumers for knip),
     the store is cleared, under Strict Mode too; a second mount shows nothing; nothing for another id).
   - Scaffold clean-up: remove `src/features/poem-management/**` and then the empty `ignoreFiles` key with its
     comment from `knip.jsonc`; drop `zustand` from `ignoreDependencies` (the notice store uses it) with its
-    comment; remove the `@public` tag on `poems/index.ts`'s `Poem`, `PoemGenre` export. `npm run knip`
+    comment; remove the `@public` tag on `poems/index.ts`'s `Poem`, `PoemGenre` export, and the ones group 4
+    added in `poem-management/model/` (`POEM_MANAGEMENT_COPY`, `NEW_POEM_PATH`, `PoemFormInput`; 7.1 removes
+    the one on `POEM_MANAGEMENT_TRAIL_LABELS`). `npm run knip`
     passes. Triage any unused-export finding (remove the export or use it) instead of re-adding an ignore.
 - [ ] 6.4 (FR-1) Entry links: `POEM_MANAGEMENT_PATH` in `shared/config/account-paths.ts`;
   `AccountAuthorLinks` and `AuthorOwnerLinkView` render «Управление произведениями».

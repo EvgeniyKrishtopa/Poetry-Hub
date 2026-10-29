@@ -1,4 +1,5 @@
 import type { Poem } from "@/features/poems";
+import type { ImageType } from "@/shared/lib/image-file/image-file.types";
 
 import type { CREATE_POEM_STATUS } from "./poem-management.constants";
 
@@ -13,7 +14,11 @@ export type ServiceFailure = "unauthenticated" | "unavailable" | "unknown";
 
 export type CreatePoemFailure = ServiceFailure | "too-many-poems";
 
-/** The create action's answer: success is explicit, never "no error" (design D7). */
+/**
+ * The create action's answer: success is explicit, never "no error" (design D7). Every field error the
+ * server finds, from the field rules or from the genre and illustration checks, arrives as `invalid` here,
+ * never as next-safe-action's `validationErrors`, so the form reads this one shape.
+ */
 export type CreatePoemResult =
   | { readonly status: typeof CREATE_POEM_STATUS.created; readonly poemId: string }
   | { readonly status: typeof CREATE_POEM_STATUS.invalid; readonly fieldErrors: PoemFieldErrors }
@@ -27,7 +32,7 @@ export type CanCreatePoemResult =
 /** A checked illustration with the type sniffed from its bytes. */
 export interface PoemIllustration {
   readonly file: File;
-  readonly type: "png" | "jpeg";
+  readonly type: ImageType;
 }
 
 /** What `createOwnPoem` stores: already trimmed and checked by the action. */
