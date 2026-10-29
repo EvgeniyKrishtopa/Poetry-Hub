@@ -3,6 +3,7 @@ import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PoemGenre } from "@/features/poems";
+import { validateImageFile } from "@/shared/lib/image-file/validate-image-file";
 
 import { createPoemAction } from "../../actions/create-poem.actions";
 import { NewPoemForm } from "../../components/NewPoemForm/NewPoemForm";
@@ -12,6 +13,11 @@ import type { CreatePoemResult } from "../../model/poem-management.types";
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("../../actions/create-poem.actions", () => ({ createPoemAction: vi.fn() }));
+// The real check by default; a test overrides one call to control its result.
+vi.mock("@/shared/lib/image-file/validate-image-file", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/shared/lib/image-file/validate-image-file")>();
+  return { validateImageFile: vi.fn(original.validateImageFile) };
+});
 
 type ActionResponse = Awaited<ReturnType<typeof createPoemAction>>;
 
@@ -148,6 +154,23 @@ describe("NewPoemForm", () => {
 
     await user.click(screen.getByRole("button", { name: "Убрать иллюстрацию" }));
     expect(screen.queryByText("Допустимы только изображения PNG или JPEG.")).toBeNull();
+  });
+
+  // implements FR-4, NFR-7 of add-poem-creation
+  it("checks the chosen file again before sending, and sends nothing when it no longer passes", async () => {
+    const user = renderForm();
+    await fillValid(user);
+    await user.upload(illustrationInput(), pngFile());
+    await screen.findByRole("presentation");
+    // The file changed on disk after the pick.
+    vi.mocked(validateImageFile).mockResolvedValueOnce({ ok: false, error: "too-large" });
+
+    await user.click(submitButton());
+
+    const error = await screen.findByText("Файл должен быть не больше 5 МБ.");
+    expect(describedBy(illustrationInput())).toBe(error);
+    await waitFor(() => expect(illustrationInput()).toHaveFocus());
+    expect(createPoemAction).not.toHaveBeenCalled();
   });
 
   // implements FR-4, NFR-7 of add-poem-creation
