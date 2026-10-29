@@ -4,6 +4,8 @@
 
 Accepted (2026-10-17)
 
+Partially superseded by 0009 (Decisions 1 and 3, and Decision 6's poem example: writes that create rows)
+
 ## Context
 
 ADR 0005 made every reader write a Server Action that, on success, expires the public pages'

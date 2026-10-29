@@ -24,9 +24,6 @@ export const POEM_MARKDOWN_FORMATS: readonly MarkdownFormat[] = ["bold", "italic
 export const ILLUSTRATION_PREVIEW_WIDTH = 1280;
 export const ILLUSTRATION_PREVIEW_HEIGHT = 720;
 
-/** The management pages' h1: 30/36 below 640 px, 36/40 above (the approved mockup's page frame). */
-export const PAGE_HEADING_CLASS = "text-3xl font-bold tracking-tight sm:text-4xl";
-
 /** The create action's outcomes. */
 export const CREATE_POEM_STATUS = {
   created: "created",

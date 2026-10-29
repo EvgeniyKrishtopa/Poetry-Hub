@@ -11,7 +11,7 @@ Read before adding, renaming, or reading an environment variable.
   - Only the publishable key is ever used. Never add a secret or service-role key; nothing in `src/` may read one.
   - URL rule: `https://` with any host, or `http://` only for `localhost` / `127.0.0.1` (a local Supabase CLI instance).
   - Validated lazily on each client creation by `getSupabaseConfig()` in `src/shared/lib/supabase/config.ts`; a bad value raises `SupabaseConfigError` naming the variable, never its value.
-  - `NEXT_PUBLIC_SUPABASE_URL` is also read **at build time**: `next.config.ts` derives `images.remotePatterns` from it (the `author-photos` public bucket path, `src/shared/config/supabase-image-patterns.ts`). A build without it still succeeds but allows no remote image host, so author photos fail to render; set it in the hosting platform's build environment, not only at runtime.
+  - `NEXT_PUBLIC_SUPABASE_URL` is also read **at build time**: `next.config.ts` derives `images.remotePatterns` from it (the `author-photos` and `poem-illustrations` public bucket paths, `src/shared/config/supabase-image-patterns.ts`). A build without it still succeeds but allows no remote image host, so author photos and poem illustrations fail to render; set it in the hosting platform's build environment, not only at runtime.
   - Local stack: `npx supabase start` (needs Docker; reads `supabase/config.toml`; the CLI is a pinned devDependency). `npx supabase status` prints the local API URL and publishable key to copy into `.env.local`; never commit them.
   - Schema changes are versioned migrations in `supabase/migrations/` (`<UTC timestamp>_<name>.sql`; each documents its down migration in a header comment). Locally, `npx supabase db reset` re-creates the database and applies them all; storage buckets are also declared in `supabase/config.toml` for the local stack. At deploy, `npx supabase db push` applies new migrations to the remote project, before the app that needs them ships.
   - `supabase/seed.sql` is local test data: six sign-in accounts sharing a placeholder password written in the repo. `npx supabase db reset` loads it locally. Never pass `--include-seed` to `db push`, never run `supabase bootstrap` against a hosted project, and before turning on Supabase Branching add a `[remotes.<branch>.db.seed] enabled = false` override: each of these loads the seed into a hosted database.
@@ -26,3 +26,22 @@ Read before adding, renaming, or reading an environment variable.
   - Validated lazily on each send: the token must be `<digits>:<letters, digits, _ or ->` and the chat id an integer. Unset or malformed → the app still builds and runs, but every contact form submit shows the failure alert, and the server logs `[contact] send failed` with reason `config` (never the value).
   - Deploy step: the contact form has no app-level rate limit (ADR 0007 point 5). Add a per-IP rate rule at the hosting layer (Vercel Firewall or Cloudflare) that covers Server Action POSTs.
   - Rotation: in @BotFather, `/revoke` the bot's token to get a new one (the old one stops working at once), then update `TELEGRAM_BOT_TOKEN` in `.env.local` and on the hosting platform.
+
+## Deploy checklist
+
+Manual steps before the app that needs them ships, in each environment. Kept here, not in the
+git-ignored `PROGRESS.md`, so every clone sees them.
+
+- **Poems migration** (`add-poem-creation`): `npx supabase db push` applies `20261028160000_poems.sql`
+  (the `poems` table, `create_my_poem` / `can_create_poem`, the rewritten `author_profiles` public
+  policy, the `poem-illustrations` bucket policies). Ship it before the app: without it every poem read
+  shows the unavailable state and every create fails. Rollback: revert the app first, then the down migration
+  in the file's header.
+- **`poem-illustrations` bucket** (`add-poem-creation`): on the hosted project, confirm it exists,
+  public, 5 MiB file size limit, MIME types `image/png` and `image/jpeg` — the same as
+  `supabase/config.toml`, which configures the local stack only.
+- **Contentful `tag` content type** (`add-poem-creation`): in each Contentful environment, a content type
+  with id `tag` and fields `name` and `slug` (both short text, required), plus one published entry per
+  genre. Without it the add form shows the genres-unavailable alert and poem pages show no genre line.
+- Also before a first deploy: the Supabase dashboard setup and the Contentful webhook above, and the
+  hosting-layer per-IP rate rule (Telegram section).

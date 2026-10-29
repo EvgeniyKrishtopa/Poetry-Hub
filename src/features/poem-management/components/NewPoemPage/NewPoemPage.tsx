@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { CONTENT_LANG } from "@/shared/config/constants";
 
 import { POEM_MANAGEMENT_COPY } from "../../model/poem-management-messages";
-import { PAGE_HEADING_CLASS } from "../../model/poem-management.constants";
 import { NewPoemContent } from "../NewPoemContent/NewPoemContent";
 import { NewPoemSkeleton } from "../NewPoemSkeleton/NewPoemSkeleton";
 
@@ -11,7 +10,7 @@ import { NewPoemSkeleton } from "../NewPoemSkeleton/NewPoemSkeleton";
 export function NewPoemPage() {
   return (
     <div lang={CONTENT_LANG} className="flex flex-col gap-8">
-      <h1 className={PAGE_HEADING_CLASS}>{POEM_MANAGEMENT_COPY.addHeading}</h1>
+      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{POEM_MANAGEMENT_COPY.addHeading}</h1>
       <Suspense fallback={<NewPoemSkeleton />}>
         <NewPoemContent />
       </Suspense>

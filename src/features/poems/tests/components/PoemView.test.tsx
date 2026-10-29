@@ -49,12 +49,21 @@ describe("PoemView", () => {
   });
 
   // implements FR-9 of add-poem-creation
-  it("serves the stored illustration through the image optimizer", () => {
-    render(<PoemView poem={AUTUMN_GARDEN} genre={LYRIC} />);
+  it("serves a hosted illustration through the image optimizer", () => {
+    const hostedUrl = "https://abc.supabase.co/storage/v1/object/public/poem-illustrations/a/b.png";
+    render(<PoemView poem={{ ...AUTUMN_GARDEN, illustrationUrl: hostedUrl }} genre={LYRIC} />);
 
     const src = screen.getByRole("img").getAttribute("src") ?? "";
     expect(src).toContain("/_next/image");
-    expect(decodeURIComponent(src)).toContain(AUTUMN_GARDEN.illustrationUrl);
+    expect(decodeURIComponent(src)).toContain(hostedUrl);
+  });
+
+  // implements FR-9 of add-poem-creation: Next refuses to optimize a local-stack host, so it's served as is
+  it("serves a local-stack illustration straight from Storage, not through the optimizer", () => {
+    const localUrl = "http://127.0.0.1:54321/storage/v1/object/public/poem-illustrations/a/b.png";
+    render(<PoemView poem={{ ...AUTUMN_GARDEN, illustrationUrl: localUrl }} genre={LYRIC} />);
+
+    expect(screen.getByRole("img")).toHaveAttribute("src", localUrl);
   });
 
   // implements FR-9 of add-poem-creation

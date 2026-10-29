@@ -7,6 +7,7 @@ import { AuthorsNavLink } from "@/features/authors";
 import { SiteFooter } from "@/features/site-footer";
 import { CONTENT_LANG } from "@/shared/config/constants";
 import { siteConfig } from "@/shared/config/site";
+import { HydrationMarker } from "@/shared/ui";
 
 import { Providers } from "./providers";
 import "./globals.css";
@@ -33,6 +34,7 @@ export default function RootLayout({ children, breadcrumbs }: LayoutProps<"/">) 
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <HydrationMarker />
         <Providers>
           {/* Below 600 px the wordmark takes the first row and the nav a right-aligned second one. */}
           <header className="mx-auto flex w-full max-w-4xl flex-col gap-2 px-6 py-4 min-[600px]:flex-row min-[600px]:items-center min-[600px]:justify-between">
