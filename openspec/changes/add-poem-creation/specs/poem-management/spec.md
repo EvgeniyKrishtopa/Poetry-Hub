@@ -203,31 +203,31 @@ A valid submission SHALL store one poem for the signed-in author's own profile w
 - **THEN** the uploaded file is removed and the failure message is shown
 
 ### Requirement: Poem creation write limit (FR-6)
-Each author SHALL be able to create at most 2 poems within any one minute and at most 20 within any 24 hours, counted from the author's stored poems in sliding windows. The limit SHALL be enforced in the database by the only operation that can store a poem, so no direct API call can bypass it, and the app SHALL check it before any upload or Contentful call. Over the limit, nothing SHALL be stored, no cache SHALL be expired, nothing SHALL be uploaded when the app's pre-check catches it, and a file already uploaded when only the database's final check catches it (two concurrent creates) SHALL be removed best-effort, and «Слишком много новых произведений. Попробуйте позже.» SHALL be shown above the submit button.
+Each author SHALL be able to create at most 100 poems within any 30 days, counted from the author's stored poems in a sliding window (the last 30 days up to the moment of the request, not a calendar month). There SHALL be no shorter window: within the 100, poems MAY be created in any rhythm. The limit SHALL be enforced in the database by the only operation that can store a poem, so no direct API call can bypass it, and the app SHALL check it before any upload or Contentful call. Over the limit, nothing SHALL be stored, no cache SHALL be expired, nothing SHALL be uploaded when the app's pre-check catches it, and a file already uploaded when only the database's final check catches it (two concurrent creates) SHALL be removed best-effort, and «Слишком много новых произведений. Попробуйте позже.» SHALL be shown above the submit button.
 
-#### Scenario: Third poem in a minute
-- **GIVEN** an author who created 2 poems in the last minute
+#### Scenario: Hundred-and-first poem in 30 days
+- **GIVEN** an author who created 100 poems in the last 30 days
 - **WHEN** they submit a valid form
-- **THEN** «Слишком много новых произведений. Попробуйте позже.» is shown, every field keeps its value, no third poem exists, and no file was uploaded
+- **THEN** «Слишком много новых произведений. Попробуйте позже.» is shown, every field keeps its value, no new poem exists, and no file was uploaded
 
-#### Scenario: Twenty-first poem in a day
-- **GIVEN** an author who created 20 poems in the last 24 hours, none in the last minute
+#### Scenario: Quick creates within the limit
+- **GIVEN** an author who created 2 poems in the last minute and fewer than 100 in the last 30 days
 - **WHEN** they submit a valid form
-- **THEN** the over-limit message is shown and no poem is created
+- **THEN** the poem is created
 
 #### Scenario: Window slides
-- **GIVEN** an author blocked by the minute limit
-- **WHEN** a minute has passed since the older of their two recent poems and they submit again (with fewer than 20 poems in the last 24 hours)
+- **GIVEN** an author with 100 poems in the last 30 days
+- **WHEN** the oldest of them becomes older than 30 days and they submit again
 - **THEN** the poem is created
 
 #### Scenario: Failed attempts don't count
-- **GIVEN** an author with no poems in the last minute who submits three times with an invalid illustration
+- **GIVEN** an author with 99 poems in the last 30 days who submits three times with an invalid illustration
 - **WHEN** they then submit a valid form
 - **THEN** the poem is created
 
 #### Scenario: Direct calls can't bypass it
-- **GIVEN** an author who created 2 poems in the last minute
-- **WHEN** they try to store a third poem directly through the database API
+- **GIVEN** an author who created 100 poems in the last 30 days
+- **WHEN** they try to store another poem directly through the database API
 - **THEN** nothing is stored
 
 ### Requirement: Owner's poem page (FR-7)

@@ -6,7 +6,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(53);
+select plan(55);
 
 -- Start from empty tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -14,7 +14,7 @@ delete from public.poems;
 delete from public.author_profiles;
 
 -- Fixtures, written as the superuser (bypasses RLS). A owns a non-public profile, B and D public ones, C has
--- no profile. The two old poems are two days old, so they count in no limit window.
+-- no profile. The two old poems are two days old: B's counts toward its 30-day window.
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'a@example.test'),
   ('22222222-2222-4222-8222-222222222222', 'b@example.test'),
@@ -30,10 +30,10 @@ insert into public.poems (id, author_id, title, text, created_at) values
   ('a0000000-0000-4000-8000-000000000001', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Hidden', 'Not public yet', now() - interval '2 days'),
   ('b0000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Old', 'An old poem', now() - interval '2 days');
 
--- D already has 20 poems in the last 24 hours, none in the last minute.
+-- D already has 100 poems in the last 30 days, 6 hours apart (the oldest 25 days ago, one of a kind).
 insert into public.poems (author_id, title, text, created_at)
-select 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Poem ' || n, 'Text', now() - interval '2 hours'
-from generate_series(1, 20) as s (n);
+select 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Poem ' || n, 'Text', now() - n * interval '6 hours'
+from generate_series(1, 100) as s (n);
 
 select results_eq(
   $$select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'poem-illustrations'$$,
@@ -195,26 +195,20 @@ select results_eq(
   'both created poems belong to the caller''s own profile, with what was passed'
 );
 
-select ok(
-  (select (public.create_my_poem('Третье', 'X', null, null) = '{"status": "over-limit"}'::jsonb)),
-  'the 3rd create in a minute returns over-limit'
+-- No short window: a third create within the same minute is stored (FR-6, "Quick creates within the limit").
+select is(
+  public.create_my_poem('Третье', 'X', null, null)->>'status',
+  'created',
+  'the 3rd create in a minute is stored: there is no per-minute limit'
 );
 
 select results_eq(
   $$select count(*)::int from public.poems where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'$$,
-  array[3],
-  'the over-limit create stored nothing'
+  array[4],
+  'B has the old poem and the three new ones'
 );
 
-select is(public.can_create_poem()->>'status', 'over-limit', 'can_create_poem() agrees: over-limit');
-
-reset role;
--- A minute passes for both recent poems: the window slides.
-update public.poems set created_at = now() - interval '61 seconds'
-where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' and created_at = now();
-set local role authenticated;
-
-select is(public.can_create_poem()->>'status', 'allowed', 'a minute after the two poems, creating is allowed again');
+select is(public.can_create_poem()->>'status', 'allowed', 'can_create_poem() still allows B, far under 100 in 30 days');
 
 -- Storage, as B.
 select lives_ok(
@@ -335,32 +329,49 @@ select is_empty(
   'create_my_poem() creates no profile for a caller without one'
 );
 
--- ---------- signed in as D (20 poems in the last 24 hours) ----------
+-- ---------- signed in as D (100 poems in the last 30 days) ----------
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"44444444-4444-4444-8444-444444444444","role":"authenticated"}', true);
 
-select is(public.can_create_poem()->>'status', 'over-limit', 'can_create_poem() returns over-limit at 20 poems in a day');
+select is(public.can_create_poem()->>'status', 'over-limit', 'can_create_poem() returns over-limit at 100 poems in 30 days');
 
-select is(
-  public.create_my_poem('Двадцать первое', 'X', null, null)->>'status',
-  'over-limit',
-  'the 21st create in a day returns over-limit'
+select ok(
+  (select (public.create_my_poem('Сто первое', 'X', null, null) = '{"status": "over-limit"}'::jsonb)),
+  'the 101st create in 30 days returns over-limit'
 );
 
 reset role;
 
 select results_eq(
   $$select count(*)::int from public.poems where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'$$,
-  array[20],
-  'the 21st create stored nothing'
+  array[100],
+  'the 101st create stored nothing'
 );
 
--- One of the 20 leaves the 24-hour window.
-update public.poems set created_at = now() - interval '25 hours'
-where id = (select id from public.poems where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' limit 1);
+-- The oldest of the 100 leaves the 30-day window by one second: the window slides.
+update public.poems set created_at = now() - interval '30 days 1 second'
+where id = (
+  select id from public.poems where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+  order by created_at limit 1
+);
 
 set local role authenticated;
-select is(public.can_create_poem()->>'status', 'allowed', 'with 19 poems in the last 24 hours, creating is allowed');
+select is(public.can_create_poem()->>'status', 'allowed', 'with 99 poems in the last 30 days, creating is allowed');
+
+-- A rejected call stores nothing, so it doesn't use up the one free place.
+select throws_ok(
+  $$select public.create_my_poem('   ', 'X', null, null)$$,
+  '23514', null,
+  'a blank title is rejected at 99 poems'
+);
+
+select is(
+  public.create_my_poem('Сотое', 'X', null, null)->>'status',
+  'created',
+  'after the rejected call, the 100th poem in the window is created'
+);
+
+select is(public.can_create_poem()->>'status', 'over-limit', 'back at 100 poems in 30 days, over-limit again');
 reset role;
 
 -- ---------- a public author loses public status ----------

@@ -118,8 +118,9 @@ grant select (id, author_id, title, text, genre_id, illustration_path, created_a
 -- ---------- Creating a poem ----------
 
 -- The one home of the creation rules (design D2): 'not-public' for no profile or a non-public one,
--- 'over-limit' when the author already has 2 poems in the last minute or 20 in the last 24 hours (sliding
--- windows over created_at), otherwise 'allowed'. Internal: no client role can execute it.
+-- 'over-limit' when the author already has 100 poems in the last 30 days (a sliding window over
+-- created_at, not a calendar month), otherwise 'allowed'. No shorter window: within the 100, poems
+-- may come in any rhythm (product decision, design D2 and Risks). Internal: no client role can execute it.
 create function public.poem_create_status(profile uuid)
 returns text
 language sql
@@ -129,8 +130,7 @@ set search_path = ''
 as $$
   with limits (window_length, max_poems) as (
     values
-      (interval '1 minute', 2),
-      (interval '1 day', 20)
+      (interval '30 days', 100)
   )
   select case
     when poem_create_status.profile is null

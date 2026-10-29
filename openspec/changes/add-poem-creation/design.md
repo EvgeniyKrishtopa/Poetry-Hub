@@ -181,8 +181,9 @@ create index poems_author_created_idx on public.poems (author_id, created_at des
 - **`public.poem_create_status(profile uuid) returns text`** — internal (`security definer`,
   `stable`, execute revoked from `public`, `anon`, `authenticated`), the one home of the rules:
   `null` profile or `not is_public_author_profile(profile)` → `not-public`; the author's poems with
-  `created_at > now() - interval '1 minute'` ≥ 2, or `> now() - interval '1 day'` ≥ 20 →
-  `over-limit`; otherwise `allowed`. The numbers live only here (Gate 1 re-review N3).
+  `created_at > now() - interval '30 days'` ≥ 100 → `over-limit`; otherwise `allowed`. The
+  windows are a list of `(window_length, max_poems)` rows (one row today); the numbers live only
+  here (Gate 1 re-review N3).
 - **`public.can_create_poem() returns jsonb`** — `security definer`, `stable`, executable by
   `authenticated` only: steps 1 and 2, then
   `poem_create_status`, without the lock and the insert: `{"status": "allowed" | "not-public" |
@@ -192,9 +193,11 @@ create index poems_author_created_idx on public.poems (author_id, created_at des
 - **Why count poems instead of the `write_rate_limits` counter** (ADR 0007's table): the counter
   would have to be consumed by the app before the upload and checked again by `create_my_poem`,
   and a direct caller could then skip the app's consume step. Counting the author's own rows inside
-  the function that inserts is a check no client can skip, needs no new counter scopes, and holds
-  the same numbers (2 per minute, 20 per day). The windows become sliding (the last minute, the
-  last 24 hours) and count created poems, not attempts. This partially supersedes ADR 0007
+  the function that inserts is a check no client can skip, and needs no new counter scopes. The
+  window is sliding (the last 30 days, not a calendar month: no reset on the 1st that would allow
+  200 in a row) and counts created poems, not attempts. The first version held 2 per minute and
+  20 per day; on 2026-10-29 the product owner replaced both with the single 100-per-30-days
+  window (see Risks: no burst throttle). This partially supersedes ADR 0007
   (its Decisions 1 and 3, and Decision 6's poem example) for writes that create rows: a new ADR
   0009 records it, and ADR 0007's status line gains "Partially superseded by 0009" (task 8.1).
   Profile writes keep ADR 0007's counter unchanged.
@@ -499,8 +502,9 @@ scenarios that asserted an illustration or a genre line are updated.
 - pgTAP `supabase/tests/poems.test.sql`: no role can insert, update, or delete `poems` directly;
   `create_my_poem` as anon fails; as a user with a non-public profile → `not-public`; as the
   owner → `created` with the row owned by their profile; length, blank, genre id, and
-  illustration-path checks; the 3rd call in a minute and the 21st in a day → `over-limit` and no
-  row; `can_create_poem` agrees with `create_my_poem`; select hides poems of a non-public profile;
+  illustration-path checks; the 101st call in 30 days (rows backdated by the test) → `over-limit`
+  and no row; a poem older than 30 days no longer counts; a third create within a minute →
+  `created` (no short window); rejected calls leave the count unchanged; `can_create_poem` agrees with `create_my_poem`; select hides poems of a non-public profile;
   `author_profiles`' public select still behaves as before through `is_public_author_profile`;
   bucket policies, including a malformed folder name rejected with the RLS error `42501`,
   never a uuid-cast error.
@@ -753,6 +757,12 @@ sequenceDiagram
 - **Sliding limit instead of ADR 0007's fixed window** (D2): it counts created poems only, so
   failed attempts don't count. That's acceptable: a failed attempt writes nothing and expires no
   tag, which is what ADR 0007's limit protects. Recorded as ADR 0009, partially superseding 0007.
+- **No burst throttle** (D2, product owner's decision 2026-10-29): with only the 30-day window,
+  an author (or a script with their session) can create all 100 poems in seconds, and each create
+  expires the `poems:<authorId>` tag. Accepted: the damage is capped at 100 rows, 100 expiries of
+  one author's own poems tag, and 100 illustration uploads (up to 5 MB each, plus image
+  optimization) per 30 days, and the advisory lock still serializes one author's creates. If abuse
+  shows up, add a short window back in `poem_create_status` (one more row in its list of windows).
 - **Direct Storage inserts**: as with author photos, a signed-in user's own token can upload any
   number of objects into their folder through the Storage API (the bucket caps size and type, not
   count). Known limit carried over from add-author-profiles (PROGRESS item 10). The `poems` table
@@ -770,7 +780,7 @@ sequenceDiagram
 - **Contentful prerequisite**: the `tag` content type must exist in each environment; without it
   the query fails, and the add page shows the genres-unavailable alert (no crash).
 - **`max_rows = 1000`** PostgREST cap applies to one author's list; above any real author given
-  the 20-per-day limit for a long time, revisit with pagination.
+  the 100-per-30-days limit for a long time, revisit with pagination.
 
 ## Migration Plan
 
