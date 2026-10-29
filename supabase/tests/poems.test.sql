@@ -7,7 +7,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(77);
+select plan(78);
 
 -- Start from empty tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -95,6 +95,18 @@ select throws_ok(
   $$insert into public.poem_creations (author_id) values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')$$,
   '42501', null,
   'anon cannot write the creation log'
+);
+
+reset role;
+
+-- An authenticated role whose token carries no user id: the function's own guard, not the grant, stops it.
+set local role authenticated;
+select set_config('request.jwt.claims', '{"role":"authenticated"}', true);
+
+select throws_ok(
+  $$select public.delete_my_poem('b0000000-0000-4000-8000-000000000001')$$,
+  '42501', null,
+  'delete_my_poem() rejects a signed-in role without a user id'
 );
 
 reset role;
