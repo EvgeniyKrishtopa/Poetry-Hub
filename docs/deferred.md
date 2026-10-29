@@ -108,6 +108,8 @@ Archived at `openspec/changes/archive/2026-10-27-refine-author-page-and-contact/
 
 ## add-poem-creation
 
+Archived at `openspec/changes/archive/2026-10-29-add-poem-creation/`.
+
 ### add-poem-creation · 8.6 — create flow not recorded as a scenario
 
 - **State:** skipped
