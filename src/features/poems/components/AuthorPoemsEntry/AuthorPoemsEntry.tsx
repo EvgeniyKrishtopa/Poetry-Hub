@@ -16,15 +16,16 @@ export async function AuthorPoemsEntry({ authorId }: AuthorPoemsEntryProps) {
   const id = await authorId;
   const result = await listAuthorPoems(id);
 
-  let body;
-  if (!result.ok) body = <p className="text-muted">{POEMS_UNAVAILABLE_TEXT}</p>;
-  else if (result.poems.length === 0) body = <p className="text-muted">{NO_POEMS_TEXT}</p>;
-  else body = <PoemTitleList poems={result.poems} poemHref={(poemId) => authorPoemPath(id, poemId)} />;
+  const hasPoems = result.ok && result.poems.length > 0;
 
   return (
     <section lang={CONTENT_LANG} className="flex flex-col gap-4">
       <h2 className="text-2xl font-semibold tracking-[-0.01em]">{POEMS_PAGE_TITLE}</h2>
-      {body}
+      {hasPoems ? (
+        <PoemTitleList poems={result.poems} poemHref={(poemId) => authorPoemPath(id, poemId)} />
+      ) : (
+        <p className="text-muted">{result.ok ? NO_POEMS_TEXT : POEMS_UNAVAILABLE_TEXT}</p>
+      )}
     </section>
   );
 }
