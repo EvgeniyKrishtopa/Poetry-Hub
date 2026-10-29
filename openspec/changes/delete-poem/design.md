@@ -503,3 +503,28 @@ unexpected bug — accepted (Gate 1 P5).
    exist); add it to `docs/environment.md`'s deploy checklist.
 3. Rollback: revert the app first (the button calls the function), then the documented down
    migration.
+
+## Scaffold map
+
+Written by `opsx-scaffold` after the files existed (map approved 2026-10-29). Stub bodies only; the
+helper moves (task 2.1), the migration (group 1), the `Dialog` / `Button` / `Alert` and token
+changes (group 3), UI copy, and the wiring into `OwnPoemContent`, `MyPoemsPage`, and `SignInPanel`
+(group 4) are not scaffolded. Temporary `knip.jsonc` ignore entries and `@public` tags carry the
+task that removes each.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/shared/lib/one-time-notice/use-one-time-value.ts` | the one-time-notice hook (D5) | `useOneTimeValue` |
+| `src/shared/lib/one-time-notice/session-expired-notice.store.ts` | Zustand flag: a write found the session expired (D6) | `useSessionExpiredNotice`, `SessionExpiredNoticeState` |
+| `src/features/poem-management/model/delete-poem.schema.ts` | the action's input shape, type only (D3) | `deletePoemInputSchema`, `DeletePoemInput` |
+| `src/features/poem-management/model/poem-management.constants.ts` (added) | the delete action's outcomes | `DELETE_POEM_STATUS` |
+| `src/features/poem-management/model/poem-management.types.ts` (added) | action and DAL results, the notice value (D3, D5) | `DeletePoemResult`, `DeleteOwnPoemResult`, `DeletedPoemNotice` |
+| `src/features/poem-management/model/deleted-poem-notice-ui.store.ts` | Zustand: the outcome and title until shown (D5) | `useDeletedPoemNotice`, `DeletedPoemNoticeState` |
+| `src/features/poem-management/dal/poem-delete.ts` | `delete_my_poem` RPC as the owner (D2, D3) | `deleteOwnPoem` |
+| `src/features/poem-management/actions/delete-poem.actions.ts` | `"use server"` delete (D3) | `deletePoemAction` |
+| `src/features/poem-management/components/DeletePoemButton/` | client button, dialog, action call, navigation (D4) | `DeletePoemButton`, `DeletePoemButtonProps` |
+| `src/features/poem-management/components/DeletedPoemNotice/` | client one-time notice on `/account/poems` (D5) | `DeletedPoemNotice` |
+| `src/features/auth/components/SessionExpiredNotice/` | client one-time notice on `/login` (D6) | `SessionExpiredNotice` |
+
+The type `DeletedPoemNotice` and the component of the same name never meet in one module: the
+component reads the value from the store (Gate 2b note).
