@@ -10,7 +10,7 @@ vi.mock("../../dal/author-poems", () => ({ listAuthorPoems: vi.fn() }));
 const AUTHOR_ID = FIXTURE_AUTHOR_ID;
 
 async function renderEntry() {
-  render(await AuthorPoemsEntry({ authorId: Promise.resolve(AUTHOR_ID) }));
+  return render(await AuthorPoemsEntry({ authorId: Promise.resolve(AUTHOR_ID) }));
 }
 
 afterEach(() => {
@@ -24,9 +24,10 @@ describe("AuthorPoemsEntry", () => {
     // The DAL returns the poems newest first; the section keeps that order.
     vi.mocked(listAuthorPoems).mockResolvedValue({ ok: true, poems: [NIGHT_STATION, AUTUMN_GARDEN] });
 
-    await renderEntry();
+    const { container } = await renderEntry();
 
     expect(listAuthorPoems).toHaveBeenCalledWith(AUTHOR_ID);
+    expect(container.firstElementChild).toHaveAttribute("lang", "ru");
     expect(screen.getByRole("heading", { level: 2, name: "Произведения" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
     const links = within(screen.getByRole("list")).getAllByRole("link");
@@ -48,7 +49,7 @@ describe("AuthorPoemsEntry", () => {
 
     expect(screen.getByRole("heading", { level: 2, name: "Произведения" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
-    expect(screen.getByText("У автора пока ещё нет публикаций.")).toBeInTheDocument();
+    expect(screen.getByText("У автора пока ещё нет публикаций.")).toHaveClass("text-muted");
     expect(screen.queryByRole("list")).toBeNull();
     expect(screen.queryByRole("link")).toBeNull();
   });
@@ -60,7 +61,8 @@ describe("AuthorPoemsEntry", () => {
     await renderEntry();
 
     expect(screen.getByRole("heading", { level: 2, name: "Произведения" })).toBeInTheDocument();
-    expect(screen.getByText("Произведения сейчас недоступны.")).toBeInTheDocument();
+    expect(screen.getByText("Произведения сейчас недоступны.")).toHaveClass("text-muted");
+    expect(screen.queryByText("У автора пока ещё нет публикаций.")).toBeNull();
     expect(screen.queryByRole("list")).toBeNull();
   });
 });

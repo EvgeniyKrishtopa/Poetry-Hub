@@ -1,8 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { INDENT_STEP } from "@/shared/lib/markdown/markdown.constants";
+
 import { PoemView } from "../../components/PoemView/PoemView";
-import type { PoemGenreName } from "../../model/poem.types";
+import type { Poem, PoemGenreName } from "../../model/poem.types";
 import { AUTUMN_GARDEN } from "../poem-fixtures";
 
 const LYRIC: PoemGenreName = { kind: "named", name: "Лирика" };
@@ -12,6 +14,10 @@ const [STANZA_ONE, STANZA_TWO] = AUTUMN_GARDEN.text.split("\n\n");
 
 function follows(earlier: Node, later: Node): boolean {
   return Boolean(earlier.compareDocumentPosition(later) & Node.DOCUMENT_POSITION_FOLLOWING);
+}
+
+function renderText(text: string) {
+  return render(<PoemView poem={{ ...AUTUMN_GARDEN, text }} genre={LYRIC} />);
 }
 
 describe("PoemView", () => {
@@ -33,6 +39,15 @@ describe("PoemView", () => {
     expect(container.firstElementChild).toHaveAttribute("lang", "ru");
   });
 
+  // implements FR-4 of add-author-poems (as modified by add-poem-creation)
+  it("fills a 16:9 frame with the illustration, cropped at its edges", () => {
+    render(<PoemView poem={AUTUMN_GARDEN} genre={LYRIC} />);
+
+    const image = screen.getByRole("img");
+    expect(image).toHaveClass("aspect-video", "w-full", "object-cover", "rounded-2xl");
+    expect(image).not.toHaveClass("h-auto");
+  });
+
   // implements FR-9 of add-poem-creation
   it("serves the stored illustration through the image optimizer", () => {
     render(<PoemView poem={AUTUMN_GARDEN} genre={LYRIC} />);
@@ -44,20 +59,22 @@ describe("PoemView", () => {
 
   // implements FR-9 of add-poem-creation
   it("starts with the heading and holds no image when the poem has no illustration", () => {
-    const { container } = render(<PoemView poem={{ ...AUTUMN_GARDEN, illustrationUrl: null }} genre={LYRIC} />);
+    const poem: Poem = { ...AUTUMN_GARDEN, illustrationUrl: null };
+    const { container } = render(<PoemView poem={poem} genre={LYRIC} />);
 
     expect(screen.queryByRole("img")).toBeNull();
     expect(container.querySelector("article")?.firstElementChild?.tagName).toBe("H1");
   });
 
   // implements FR-4 of add-author-poems
-  it("keeps every line break inside a stanza", () => {
+  // implements FR-10 of add-poem-creation
+  it("keeps every line break inside a stanza, in the poem Markdown styles", () => {
     const { container } = render(<PoemView poem={AUTUMN_GARDEN} genre={LYRIC} />);
 
     const [first, second] = container.querySelectorAll("p");
     expect(first.textContent).toBe(STANZA_ONE);
     expect(second.textContent).toBe(STANZA_TWO);
-    expect(first).toHaveClass("whitespace-pre-line");
+    expect(first.parentElement).toHaveClass("poem");
   });
 
   // implements FR-4, NFR-6 of add-author-poems
@@ -81,11 +98,32 @@ describe("PoemView", () => {
     expect(footer?.querySelector("time")).not.toBeNull();
   });
 
-  // implements FR-4 of add-author-poems
-  it("shows Markdown and HTML in the text literally", () => {
-    const { container } = render(<PoemView poem={{ ...AUTUMN_GARDEN, text: "**Bold** <b>tag</b>" }} genre={LYRIC} />);
+  // implements FR-10 of add-poem-creation
+  it("renders Markdown bold and keeps a single line break visible", () => {
+    const { container } = renderText("**Тёмный** сад\nи тишина");
 
-    expect(container.querySelector("p")?.textContent).toBe("**Bold** <b>tag</b>");
-    expect(container.querySelector("b, strong")).toBeNull();
+    expect(container.querySelector("strong")).toHaveTextContent("Тёмный");
+    expect(container.querySelector("p")?.textContent).toBe("Тёмный сад\nи тишина");
+  });
+
+  // implements FR-10 of add-poem-creation
+  it("shows the epigraph, the part separator between stanzas, and an indented line's em spaces", () => {
+    const { container } = renderText(`> Эпиграф\n\nпервая\n\n* * *\n\nвторая\n${INDENT_STEP}сдвинутая`);
+
+    expect(container.querySelector("blockquote")).toHaveClass("epigraph");
+    const separator = screen.getByRole("separator");
+    const [, first, second] = container.querySelectorAll("p");
+    expect(follows(first, separator)).toBe(true);
+    expect(follows(separator, second)).toBe(true);
+    expect(second.textContent).toBe(`вторая\n${INDENT_STEP}сдвинутая`);
+  });
+
+  // implements NFR-5 of add-poem-creation
+  it("renders no script or raw tag, and a link as its text", () => {
+    const { container } = renderText("<b>plain</b> [сайт](https://evil.example)\n\n<script>alert(1)</script>");
+
+    expect(container.querySelector("script, b, a")).toBeNull();
+    expect(container).toHaveTextContent("plain сайт");
+    expect(container).not.toHaveTextContent("alert(1)");
   });
 });
