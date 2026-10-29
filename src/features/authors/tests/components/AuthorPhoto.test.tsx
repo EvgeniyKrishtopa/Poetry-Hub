@@ -2,7 +2,6 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { AuthorPhoto } from "../../components/AuthorPhoto/AuthorPhoto";
-import { isUnoptimizableImage } from "../../components/AuthorPhoto/is-unoptimizable-image";
 import { PHOTO_SIZES } from "../../model/author.constants";
 
 const REMOTE_URL = "https://abc.supabase.co/storage/v1/object/public/author-photos/a/b.jpg";
@@ -39,20 +38,5 @@ describe("AuthorPhoto", () => {
     expect(screen.queryByRole("img")).toBeNull();
     expect(container.querySelector("img")).toBeNull();
     expect(container.querySelector("[data-photo-placeholder]")).toHaveAttribute("aria-hidden", "true");
-  });
-});
-
-describe("isUnoptimizableImage", () => {
-  // implements FR-16 of add-author-profiles
-  it.each([
-    [LOCAL_URL, true],
-    ["http://localhost:54321/x.png", true],
-    ["blob:http://localhost:3000/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d", true],
-    ["blob:https://poetry.example/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d", true],
-    [REMOTE_URL, false],
-    ["https://127.0.0.1.evil.example/x.png", false],
-    ["not a url", false],
-  ])("%s → %s", (url, expected) => {
-    expect(isUnoptimizableImage(url)).toBe(expected);
   });
 });

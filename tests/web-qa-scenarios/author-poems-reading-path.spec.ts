@@ -1,12 +1,14 @@
-// pages: /authors/10000000-0000-4000-8000-000000000005, /authors/10000000-0000-4000-8000-000000000005/poems/osenniy-sad
+// pages: /authors/10000000-0000-4000-8000-000000000005, /authors/10000000-0000-4000-8000-000000000005/poems/30000000-0000-4000-8000-000000000051
 import { expect, test } from "@playwright/test";
 
-/** `author5@example.test` in `supabase/seed.sql`; that profile id gets all four mock poems. */
+/** `author5@example.test` in `supabase/seed.sql`; that profile has all four seeded poems. */
 const AUTHOR_ID = "10000000-0000-4000-8000-000000000005";
 const AUTHOR_NAME = "Ольга Северина";
 const AUTHOR_PATH = `/authors/${AUTHOR_ID}`;
 const POEM_TITLE = "Осенний сад";
-const POEM_PATH = `${AUTHOR_PATH}/poems/osenniy-sad`;
+/** The seed's fixed id for author5's first poem (`30000000-0000-4000-8000-0000000000NM`, N = 5, M = 1). */
+const POEM_ID = "30000000-0000-4000-8000-000000000051";
+const POEM_PATH = `${AUTHOR_PATH}/poems/${POEM_ID}`;
 const POEM_TITLES_NEWEST_FIRST = ["Утренний двор", "Ночной вокзал", "Осенний сад", "Зимний мост"];
 /** The poem page's trail, with no poem list item between the author and the poem. */
 const POEM_TRAIL = ["Главная", "Наши авторы", AUTHOR_NAME, POEM_TITLE];
@@ -15,7 +17,7 @@ const POEM_TRAIL = ["Главная", "Наши авторы", AUTHOR_NAME, POEM
 // implements FR-5, FR-7 of refine-author-page-and-contact
 // Author page's poems section → poem, with the short trail, and back by the trail.
 test("an author's poems are listed on the author page and the trail leads back", {
-  tag: ["@add-author-poems", "@refine-author-page-and-contact"],
+  tag: ["@add-author-poems", "@refine-author-page-and-contact", "@add-poem-creation"],
 }, async ({ page }) => {
   const main = page.getByRole("main");
   const trail = page.getByRole("navigation", { name: "Навигационная цепочка" });
@@ -30,11 +32,12 @@ test("an author's poems are listed on the author page and the trail leads back",
   await main.getByRole("link", { name: POEM_TITLE }).click();
 
   await expect(page).toHaveURL(POEM_PATH);
-  await expect(main.getByRole("img", { name: `Иллюстрация: ${POEM_TITLE}` })).toBeVisible();
   await expect(main.getByRole("heading", { level: 1, name: POEM_TITLE })).toBeVisible();
   await expect(main.locator("time")).toHaveAttribute("datetime", "2026-03-12");
   await expect(main.locator("time")).toHaveText("12 марта 2026 г.");
-  await expect(main.getByText(/^Жанр: /)).toBeVisible();
+  // implements FR-9, FR-10 of add-poem-creation: a seeded poem has no illustration and no genre, so neither is shown.
+  await expect(main.getByRole("img")).toHaveCount(0);
+  await expect(main.getByText(/^Жанр: /)).toHaveCount(0);
   // Each item after the first also holds the hidden separator, so the items are matched by containment.
   await expect(trail.getByRole("listitem")).toHaveCount(POEM_TRAIL.length);
   await expect(trail.getByRole("listitem")).toContainText(POEM_TRAIL);

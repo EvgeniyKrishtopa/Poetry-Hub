@@ -250,7 +250,7 @@ group exports only what it already consumes (tests count as consumers for knip),
 
 ## 8. Docs and verification <!-- judgement-heavy -->
 
-- [ ] 8.1 (NFR-3, FR-6) Update `docs/architecture.md` (new feature, routes, slot pages, moved shared modules,
+- [x] 8.1 (NFR-3, FR-6) Update `docs/architecture.md` (new feature, routes, slot pages, moved shared modules,
   import rules) and `docs/state-management.md` (poems as a Supabase public read with one tag
   per author; the Contentful own-scope exception widened to fallback reads such as genres; the
   created-poem notice store; TanStack still unused, why; the "A write that expires a public tag" rule gains
@@ -262,15 +262,18 @@ group exports only what it already consumes (tests count as consumers for knip),
   2026-10-29, accepted risk), so ADR 0007's rate argument no longer applies to poems; that the
   cap covers rows and tag expiries only, not illustration uploads (design Risks, "No burst
   throttle" and "Direct Storage inserts").
-- [ ] 8.2 (FR-9, FR-10) Update the recorded web-qa scenarios that relied on mock illustrations or genres
+- [x] 8.2 (FR-9, FR-10) Update the recorded web-qa scenarios that relied on mock illustrations or genres
   (`author-poems-reading-path`, `poem-two-quick-clicks`, `author-page-sections`).
-- [ ] 8.3 (NFR-3, NFR-6, NFR-2, NFR-8) Static checks: the NFR-3 import searches, the NFR-6 literal search,
+- [x] 8.3 (NFR-3, NFR-6, NFR-2, NFR-8) Static checks: the NFR-3 import searches, the NFR-6 literal search,
   the NFR-2 `"use client"` search; record results in the group's commit body.
-- [ ] 8.4 (NFR-9) `npm run build` with no Supabase or Contentful variables exits 0 and the route
+- [x] 8.4 (NFR-9) `npm run build` with no Supabase or Contentful variables exits 0 and the route
   list matches NFR-9.
-- [ ] 8.5 (NFR-1, FR-3) Add to `PROGRESS.md`'s deploy checklist: `npx supabase db push` for the poems migration,
+- [x] 8.5 (NFR-1, FR-3) Add to the deploy checklist: `npx supabase db push` for the poems migration,
   the `poem-illustrations` bucket with its limits on the hosted project, and the Contentful `tag`
-  content type with its entries in each environment.
-- [ ] 8.6 (FR-1, FR-2, FR-3, FR-4, FR-5, FR-7, FR-8, FR-13, NFR-7, NFR-8) Gate 3 (web-qa) over the change: create with and without an illustration, validation,
+  content type with its entries in each environment. The checklist lives in `docs/environment.md`'s
+  «Deploy checklist» section, not the git-ignored `PROGRESS.md` (user decision, 2026-10-29, group 8).
+- [x] 8.6 (FR-1, FR-2, FR-3, FR-4, FR-5, FR-7, FR-8, FR-13, NFR-7, NFR-8) Gate 3 (web-qa) over the change: create with and without an illustration, validation,
   the notification shown once, both paths to the poem, guest redirect, the trails; record the
-  agreed flows as scenarios.
+  agreed flows as scenarios. Recorded: guest redirect, trails, form validation, not-public notice;
+  the create flow is checked by hand only, since it leaves poems the app can't delete yet (user
+  decision, 2026-10-29). Debug records in `_debug/`. <!-- deferred: docs/deferred.md -->

@@ -2,6 +2,7 @@ export { Alert } from "./Alert/Alert";
 export { Button } from "./Button/Button";
 export { ButtonLink } from "./ButtonLink/ButtonLink";
 export { Dialog } from "./Dialog/Dialog";
+export { HydrationMarker } from "./HydrationMarker/HydrationMarker";
 export { ImagePicker } from "./ImagePicker/ImagePicker";
 export { MarkdownEditor } from "./MarkdownEditor/MarkdownEditor";
 export { MarkdownText } from "./MarkdownText/MarkdownText";

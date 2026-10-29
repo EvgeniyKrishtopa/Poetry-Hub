@@ -1,7 +1,7 @@
-// pages: /authors/10000000-0000-4000-8000-000000000005, /authors/10000000-0000-4000-8000-000000000005/poems/nochnoy-vokzal
+// pages: /authors/10000000-0000-4000-8000-000000000005, /authors/10000000-0000-4000-8000-000000000005/poems/30000000-0000-4000-8000-000000000052
 import { expect, test } from "@playwright/test";
 
-/** `author5@example.test` in `supabase/seed.sql`, whose page lists four mock poems. */
+/** `author5@example.test` in `supabase/seed.sql`, whose page lists its four seeded poems. */
 const AUTHOR_PATH = "/authors/10000000-0000-4000-8000-000000000005";
 const FIRST_TITLE = "Осенний сад";
 const SECOND_TITLE = "Ночной вокзал";

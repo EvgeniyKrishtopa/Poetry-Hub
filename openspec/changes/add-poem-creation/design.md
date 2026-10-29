@@ -792,7 +792,8 @@ sequenceDiagram
 1. Apply the migration locally (`npx supabase db reset`), run pgTAP.
 2. Deploy: `npx supabase db push` before the app ships; confirm the `poem-illustrations` bucket
    and its limits on the hosted project; confirm the Contentful `tag` content type exists; add all
-   three to the deploy checklist in `PROGRESS.md`.
+   three to the deploy checklist in `docs/environment.md` (user decision, 2026-10-29: `PROGRESS.md` is
+   git-ignored).
 3. Rollback: revert the app first (its reads would fail against a missing table), then the
    documented down migration.
 

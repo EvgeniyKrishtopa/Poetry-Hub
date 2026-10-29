@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { CONTENT_LANG, IMAGE_QUALITY } from "@/shared/config/constants";
+import { isUnoptimizableImage } from "@/shared/lib/image-file/is-unoptimizable-image";
 import { MarkdownText } from "@/shared/ui";
 
 import { formatPublishedDate } from "../../model/format-published-date";
@@ -27,6 +28,7 @@ export function PoemView({ poem, genre }: PoemViewProps) {
           height={ILLUSTRATION_HEIGHT}
           sizes={ILLUSTRATION_SIZES}
           quality={IMAGE_QUALITY}
+          unoptimized={isUnoptimizableImage(poem.illustrationUrl)}
           // The page's largest above-the-fold element: fetch it with the HTML, not after layout.
           preload
         />
