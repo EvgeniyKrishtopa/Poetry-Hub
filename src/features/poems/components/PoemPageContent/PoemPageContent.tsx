@@ -3,12 +3,11 @@ import { notFound } from "next/navigation";
 import { getPublicAuthorName } from "@/features/authors";
 
 import { getAuthorPoem } from "../../dal/author-poems";
-import { getPoemGenreName } from "../../dal/poem-genres";
-import { PoemView } from "../PoemView/PoemView";
+import { PoemArticle } from "../PoemArticle/PoemArticle";
 
 import type { PoemPageContentProps } from "./PoemPageContent.types";
 
-/** Checks the author, then reads the poem and its genre name, inside `PoemPage`'s Suspense boundary. */
+/** Checks the author, then reads the poem and renders its article, inside `PoemPage`'s Suspense boundary. */
 export async function PoemPageContent({ authorId, poemId }: PoemPageContentProps) {
   const id = await authorId;
   const author = await getPublicAuthorName(id);
@@ -27,5 +26,5 @@ export async function PoemPageContent({ authorId, poemId }: PoemPageContentProps
     throw new Error("Poem page unavailable");
   }
 
-  return <PoemView poem={result.poem} genre={await getPoemGenreName(result.poem.genreId)} />;
+  return <PoemArticle poem={result.poem} />;
 }

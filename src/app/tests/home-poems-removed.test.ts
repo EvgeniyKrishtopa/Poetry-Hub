@@ -13,8 +13,8 @@ const SOURCE_FILE = /\.(tsx?|css)$/;
 const THIS_FILE = "src/app/tests/home-poems-removed.test.ts";
 
 /**
- * Identifiers of the removed home search and list, matched as whole words: the new poems feature's
- * `AuthorPoemList` must not count as `PoemList`.
+ * Identifiers of the removed home search and list, matched as whole words: a longer name of the poems
+ * feature that contains one must not count as it.
  */
 const REMOVED_IDENTIFIERS = ["PoemSearch", "PoemList", "PoemCard", "usePoemsUiStore", "poemsListQueryOptions"];
 

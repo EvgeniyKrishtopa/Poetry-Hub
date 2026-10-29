@@ -1,12 +1,14 @@
 import { render } from "@testing-library/react";
 import { redirect } from "next/navigation";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getPublicAuthorName } from "@/features/authors";
 import { createSupabasePublicClient } from "@/shared/lib/supabase/public";
 
 import { AuthorPoemsEntry } from "../../components/AuthorPoemsEntry/AuthorPoemsEntry";
+import { PoemArticle } from "../../components/PoemArticle/PoemArticle";
+import type { PoemArticleProps } from "../../components/PoemArticle/PoemArticle.types";
 import { PoemPageContent } from "../../components/PoemPageContent/PoemPageContent";
 import { listAuthorPoems } from "../../dal/author-poems";
 import { createFakePublicClient, okResponse } from "../dal/fake-public-client";
@@ -48,7 +50,12 @@ const PUBLIC_VIEWS: readonly (readonly [string, Render, string])[] = [
   [
     "PoemPageContent",
     async () => {
-      return PoemPageContent({ authorId: Promise.resolve(AUTHOR_ID), poemId: Promise.resolve(POEM_ROW.id) });
+      const article = (await PoemPageContent({
+        authorId: Promise.resolve(AUTHOR_ID),
+        poemId: Promise.resolve(POEM_ROW.id),
+      })) as ReactElement<PoemArticleProps>;
+      // An async Server Component can't render in jsdom, so the article is resolved here too.
+      return PoemArticle(article.props);
     },
     "<time ",
   ],

@@ -163,22 +163,28 @@ group exports only what it already consumes (tests count as consumers for knip),
 
 ## 5. Poem page and author page section (UI) <!-- judgement-heavy -->
 
-- [ ] 5.1 (FR-10, NFR-5) `PoemView`: text through `MarkdownText variant="poem"` (the optional
+- [x] 5.1 (FR-10, NFR-5) `PoemView`: text through `MarkdownText variant="poem"` (the optional
   illustration and genre landed in 3.3); the illustration fills a 16:9 frame, cropped (`aspect-video
   object-cover` instead of `h-auto`, author-poems FR-4); export `PoemArticle` for the owner's page (design D4).
+  As built: `PoemPageContent` renders `PoemArticle`; the `@/features/poems` export lands with its first
+  consumer in 6.3 (knip, as in 1.5).
   - Verify with `src/features/poems/tests/components/PoemView.test.tsx` (implements FR-10 and
     NFR-5 of add-poem-creation): with and without an illustration (heading first; the image carries
     the 16:9 cropping classes); genre named,
     none; Markdown bold; a single line break kept; `<script>` and a link rendered as text.
   - Scaffold clean-up: remove `PoemArticle/**` from `knip.jsonc`'s `ignoreFiles` (the scaffolded
     `PoemArticle.tsx` and `PoemArticle.types.ts` are filled in here).
-- [ ] 5.2 (FR-11, FR-13) `AuthorPoemList` → `PoemTitleList` (href per poem passed in); `PoemPage`'s
+- [x] 5.2 (FR-11, FR-13) `AuthorPoemList` → `PoemTitleList` (href per poem passed in); `PoemPage`'s
   inline fallback → `PoemPageSkeleton`; restyle the unavailable state from 3.3 per the mockup.
+  As built: `PoemTitleList` is the list alone (`poems`, `poemHref`); the section heading, empty and
+  unavailable texts moved into `AuthorPoemsEntry`, because `/account/poems` shows no empty text (artboard
+  17). The unavailable state already matched artboard 12 (muted text under the heading). Exports from
+  `@/features/poems` land with their first consumers: `PoemTitleList` in 6.1, `PoemPageSkeleton` in 6.3.
   - Verify with `tests/components/PoemTitleList.test.tsx` and `AuthorPoemsEntry.test.tsx`: list,
     empty, unavailable, hrefs.
   - Scaffold clean-up: fill in the scaffolded `PoemPageSkeleton.tsx`; remove `PoemPageSkeleton/**` from
     `knip.jsonc`'s `ignoreFiles`.
-- [ ] 5.3 (FR-10, FR-11, NFR-5, NFR-6) Verify: typecheck, lint, coverage, build, knip.
+- [x] 5.3 (FR-10, FR-11, NFR-5, NFR-6) Verify: typecheck, lint, coverage, build, knip.
 
 ## 6. Poem management pages, form, links (UI) <!-- judgement-heavy -->
 
