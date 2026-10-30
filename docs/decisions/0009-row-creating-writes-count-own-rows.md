@@ -22,7 +22,9 @@ a burst down within those 100 (design D2 and Risks, "No burst throttle").
 ## Decision
 
 1. **A reader write that creates rows is limited by counting the caller's own rows inside the
-   `security definer` function that inserts them**, not by ADR 0007's counter table. For poems:
+   `security definer` function that inserts them**, not by ADR 0007's counter table. (Amended by
+   0010: once rows can be deleted, the function counts creations from a log, not the rows that
+   still exist.) For poems:
    `create_my_poem` resolves the caller from `auth.uid()`, takes a per-author
    `pg_advisory_xact_lock`, asks `poem_create_status(profile)`, and inserts only on `allowed`, all in
    one transaction. The table has no insert grant, so this function is the only way in.
