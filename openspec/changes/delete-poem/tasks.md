@@ -106,21 +106,27 @@ already consumes (tests count as consumers for knip), so `npm run knip` stays gr
 
 ## 5. Docs and verification <!-- judgement-heavy -->
 
-- [ ] 5.1 (NFR-3) `docs/architecture.md`: the delete action and DAL in poem-management's line,
+- [x] 5.1 (NFR-3) `docs/architecture.md`: the delete action and DAL in poem-management's line,
   `shared/lib/one-time-notice/`, `Dialog`'s `closable`, `Button`'s danger variant; then re-run
   `design-system` to refresh `docs/design-system.md` from the code (`--on-danger`, the `danger`
   button, the neutral `Alert` tone).
-- [ ] 5.2 (NFR-2) `docs/state-management.md`: the shared session-expired store as the one
+  - As done: `docs/design-system.md` was refreshed by hand from the code for exactly these entries
+    (plus `Dialog`'s `closable`), not by a full `design-system` re-run; nothing else changed.
+- [x] 5.2 (NFR-2) `docs/state-management.md`: the shared session-expired store as the one
   exception to "stores live in features", and the deleted notice store.
-- [ ] 5.3 (FR-9) Write ADR 0010 "row-creating limits count creations, not live rows" in
+- [x] 5.3 (FR-9) Write ADR 0010 "row-creating limits count creations, not live rows" in
   `docs/decisions/`, amending ADR 0009; add "Amended by 0010" to ADR 0009's status line.
-- [ ] 5.4 (NFR-1, FR-9) Add `npx supabase db push` for `delete_my_poem` to `docs/environment.md`'s deploy
+- [x] 5.4 (NFR-1, FR-9) Add `npx supabase db push` for `delete_my_poem` to `docs/environment.md`'s deploy
   checklist.
-- [ ] 5.5 (FR-1 – FR-8) Gate 3 (web-qa): delete with and without an illustration, every cancel
+- [x] 5.5 (FR-1 – FR-8) Gate 3 (web-qa): delete with and without an illustration, every cancel
   path, failure with the database stopped, already deleted in a second tab, expired session (and
   the header right after it), freshness on the public author page and the poem URL, the
   list → poem → delete path showing the notice, no 404 flash before the navigation, Escape twice
   while pending (design D9); record the happy path as a scenario under
   `tests/web-qa-scenarios`.
-- [ ] 5.6 (NFR-2, NFR-3, NFR-6) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`
+  - Result (2026-10-30): every flow passed; no 404 was visible before the navigation, so design
+    D4's `redirect()` fallback is not adopted. Escape twice and a backdrop click while pending were
+    checked with the delete request held for 3 s; the happy path is
+    `tests/web-qa-scenarios/delete-poem-happy-path.spec.ts`.
+- [x] 5.6 (NFR-2, NFR-3, NFR-6) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`
   and confirm the build's route list keeps every render-mode marker.
