@@ -3,15 +3,7 @@
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignore": [
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
-    ".ncurc.cjs",
-    // Temporary, delete-poem scaffold: these stubs have no importer until a task wires or tests them. Each entry
-    // is removed by that task: DeletePoemButton and the deleted-notice store 4.1, DeletedPoemNotice 4.2,
-    // SessionExpiredNotice 4.3.
-    "src/features/poem-management/components/DeletePoemButton/DeletePoemButton.tsx",
-    "src/features/poem-management/components/DeletePoemButton/DeletePoemButton.types.ts",
-    "src/features/poem-management/components/DeletedPoemNotice/DeletedPoemNotice.tsx",
-    "src/features/poem-management/model/deleted-poem-notice-ui.store.ts",
-    "src/features/auth/components/SessionExpiredNotice/SessionExpiredNotice.tsx"
+    ".ncurc.cjs"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.

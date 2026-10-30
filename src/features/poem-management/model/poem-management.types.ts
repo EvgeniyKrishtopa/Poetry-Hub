@@ -83,9 +83,5 @@ export type DeleteOwnPoemResult =
   | { readonly ok: true; readonly status: "not-found" }
   | { readonly ok: false; readonly failure: ServiceFailure };
 
-/**
- * What `/account/poems` shows once after a delete (delete-poem design D5).
- *
- * @public scaffold: first imported in task 4.2.
- */
+/** What `/account/poems` shows once after a delete (delete-poem design D5). */
 export type DeletedPoemNotice = { readonly kind: "deleted"; readonly title: string } | { readonly kind: "already-deleted" };

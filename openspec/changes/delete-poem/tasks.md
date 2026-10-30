@@ -81,7 +81,7 @@ already consumes (tests count as consumers for knip), so `npm run knip` stays gr
 
 ## 4. Delete button, notices, and the sign-in notice (UI — waits for the approved mockups) <!-- judgement-heavy -->
 
-- [ ] 4.1 (FR-1 – FR-6, NFR-4, NFR-7) Add `DeletePoemButton` and render it below `PoemArticle` in
+- [x] 4.1 (FR-1 – FR-6, NFR-4, NFR-7) Add `DeletePoemButton` and render it below `PoemArticle` in
   `OwnPoemContent`; copy in `poem-management-messages.ts`; `deleted-poem-notice-ui.store.ts`
   (design D4, D5).
   - Verify with `tests/DeletePoemButton.test.tsx`: opens with focus on «Отмена»; each cancel path
@@ -93,15 +93,15 @@ already consumes (tests count as consumers for knip), so `npm run knip` stays gr
     `serverError`, and `validationErrors` → the alert in the dialog with focus on «Удалить»; the
     alert hides when the next confirm starts (implements FR-1 – FR-6 of delete-poem); and
     `OwnPoemContent.test.tsx` (button only when the poem renders).
-- [ ] 4.2 (FR-3, FR-4, NFR-2, NFR-4) Add `DeletedPoemNotice` and render it in `MyPoemsPage`
+- [x] 4.2 (FR-3, FR-4, NFR-2, NFR-4) Add `DeletedPoemNotice` and render it in `MyPoemsPage`
   between the heading and the Suspense boundary (design D5).
   - Verify with `tests/DeletedPoemNotice.test.tsx`: both texts verbatim, `role="status"`, shown
     once, nothing for an empty store.
-- [ ] 4.3 (FR-6) Add `auth`'s `SessionExpiredNotice` and render it in `SignInPanel` above the
+- [x] 4.3 (FR-6) Add `auth`'s `SessionExpiredNotice` and render it in `SignInPanel` above the
   Suspense boundary (design D6).
   - Verify with `src/features/auth/tests/SessionExpiredNotice.test.tsx`: text verbatim,
     `role="status"`, once; nothing on a plain visit.
-- [ ] 4.4 (NFR-2, NFR-3, NFR-6) Static checks: `"use client"` only in the listed modules; no import
+- [x] 4.4 (NFR-2, NFR-3, NFR-6) Static checks: `"use client"` only in the listed modules; no import
   of `@/features/poem-management` from `poems`, `authors`, or `auth`; no colour literals.
 
 ## 5. Docs and verification <!-- judgement-heavy -->
