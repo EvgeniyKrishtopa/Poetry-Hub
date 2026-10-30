@@ -13,8 +13,9 @@ export interface DialogProps {
   readonly onClose?: () => void;
   /**
    * `false` while the dialog must stay open (a request is running): the corner button is disabled, the
-   * backdrop and Escape do nothing, and a close that happens anyway re-opens it at once without calling
-   * `onClose` — the caller's own `close()` included, so set it back to `true` first. Defaults to `true`.
+   * backdrop and Escape do nothing, and a close that happens anyway re-opens it on the next task without
+   * calling `onClose` — unless `closable` is `true` again by then, so a caller may allow closing and close
+   * in the same tick. Defaults to `true`.
    */
   readonly closable?: boolean;
   readonly children: ReactNode;

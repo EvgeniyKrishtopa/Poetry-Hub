@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, type MouseEvent, type PointerEvent, type SyntheticEvent } from "react";
+import { useId, useLayoutEffect, useRef, type MouseEvent, type PointerEvent, type SyntheticEvent } from "react";
 
 import styles from "./Dialog.module.css";
 import type { DialogProps } from "./Dialog.types";
@@ -21,7 +21,13 @@ const CLOSE_GLYPH = "×";
  */
 export function Dialog({ ref, title, description, closeLabel, onClose, closable = true, children }: DialogProps) {
   const pressStartedOnBackdrop = useRef(false);
+  // The committed `closable`, for a close decided after the render that saw it.
+  const closableRef = useRef(closable);
   const titleId = useId();
+
+  useLayoutEffect(() => {
+    closableRef.current = closable;
+  }, [closable]);
 
   // Shared by the corner button and the backdrop.
   function close() {
@@ -34,14 +40,22 @@ export function Dialog({ ref, title, description, closeLabel, onClose, closable 
   }
 
   // Chromium can make a second Escape without user activation uncancelable, so a close can still happen;
-  // re-opening at once keeps the dialog up while a request runs (delete-poem design D7, Gate 1 P7).
+  // re-opening keeps the dialog up while a request runs (delete-poem design D7, Gate 1 P7). The decision
+  // waits one task and reads the latest `closable`: a caller that allows closing and closes in the same
+  // tick has re-rendered by then, so its close stands (Gate 4 CR-01, group 3).
   function handleClose(event: SyntheticEvent<HTMLDialogElement>) {
     const dialog = event.currentTarget;
     if (closable) {
       onClose?.();
       return;
     }
-    if (dialog.isConnected && !dialog.open) dialog.showModal();
+    setTimeout(() => {
+      if (closableRef.current) {
+        onClose?.();
+        return;
+      }
+      if (dialog.isConnected && !dialog.open) dialog.showModal();
+    });
   }
 
   // The padding lives on the inner box, so only the backdrop targets the dialog itself. A drag that

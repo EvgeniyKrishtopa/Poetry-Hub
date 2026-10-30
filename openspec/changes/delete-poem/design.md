@@ -339,7 +339,9 @@ copy constant with the same string (no cross-feature import for one string).
   (Gate 1 P7). `Dialog` therefore also re-opens itself with `showModal()` in its `close` handler
   whenever it closes while `closable` is `false` (clarify, 2026-10-29), so to the author it never
   closes while a request runs and FR-3 holds as written; the request is never cancelled, and
-  `onClose` is not passed on for that close. web-qa presses Escape twice while pending (task 5.5).
+  `onClose` is not passed on for that close. The re-open waits one task and reads the latest
+  committed `closable` (group 3 Gate 4 CR-01, user decision 2026-10-30): a caller that sets
+  `closable` back to `true` and closes in the same tick keeps its close, and `onClose` runs then. web-qa presses Escape twice while pending (task 5.5).
 - `Button` gains `variant="danger"`: a solid `danger` fill with `on-danger` text, hover mixes 15%
   black into the fill, disabled at 50% like the other variants (artboard 22). `globals.css` gains
   the `--on-danger` token (`#ffffff` light, `#0a0a0a` dark; 4.8:1 and 7.6:1 against `--danger`,

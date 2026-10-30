@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -167,13 +167,19 @@ describe("Dialog", () => {
     });
 
     // implements FR-3 of delete-poem: an uncancelable second Escape (Gate 1 P7)
-    it("re-opens at once after a close that happens anyway, without reporting it", () => {
-      const { dialog, close, onClose } = renderClosableDialog(false);
+    it("re-opens after a close that happens anyway, without reporting it", () => {
+      vi.useFakeTimers();
+      try {
+        const { dialog, close, onClose } = renderClosableDialog(false);
 
-      close();
+        close();
+        act(() => vi.runAllTimers());
 
-      expect(dialog).toHaveAttribute("open");
-      expect(onClose).not.toHaveBeenCalled();
+        expect(dialog).toHaveAttribute("open");
+        expect(onClose).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it("closes through the caller and reports it once closable again", () => {
@@ -184,6 +190,23 @@ describe("Dialog", () => {
 
       expect(dialog).not.toHaveAttribute("open");
       expect(onClose).toHaveBeenCalledOnce();
+    });
+
+    // Gate 4 CR-01: allowing the close and closing in the same tick, before the re-render lands
+    it("lets a caller's close stand when closable turns true before the deferred check", () => {
+      vi.useFakeTimers();
+      try {
+        const { dialog, close, onClose, setClosable } = renderClosableDialog(false);
+
+        close();
+        setClosable(true);
+        act(() => vi.runAllTimers());
+
+        expect(dialog).not.toHaveAttribute("open");
+        expect(onClose).toHaveBeenCalledOnce();
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 });
