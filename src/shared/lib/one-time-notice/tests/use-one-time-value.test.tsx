@@ -104,6 +104,31 @@ describe("useOneTimeValue", () => {
     expect(screen.getByText(EMPTY_TEXT)).toBeInTheDocument();
   });
 
+  it("stays shown when the page shows again before the dismissal runs", async () => {
+    const { rerender } = render(renderInActivity("visible"));
+    await flushTimers();
+
+    rerender(renderInActivity("hidden"));
+    rerender(renderInActivity("visible"));
+    await flushTimers();
+
+    expect(screen.getByText(FIRST_VALUE)).toBeInTheDocument();
+  });
+
+  it("leaves no pending update behind after an unmount", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const { unmount } = render(<Probe />);
+      unmount();
+      await flushTimers();
+
+      expect(vi.getTimerCount()).toBe(0);
+      expect(consoleError).not.toHaveBeenCalled();
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
   // implements FR-3 of delete-poem: list → poem → delete reveals the already-visited list (Gate 1 P1)
   it("shows a value written while the page was hidden when it shows again", async () => {
     const { rerender } = render(renderInActivity("visible"));
