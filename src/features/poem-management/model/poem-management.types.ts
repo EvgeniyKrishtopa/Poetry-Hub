@@ -64,8 +64,6 @@ export type OwnPoemTitleResult =
 /**
  * The delete action's answer (delete-poem design D3): another author's poem and a missing one are both
  * `not-found`, so the answer tells them apart for nobody.
- *
- * @public scaffold: first imported in task 2.4.
  */
 export type DeletePoemResult =
   | { readonly status: typeof DELETE_POEM_STATUS.deleted }
@@ -74,8 +72,6 @@ export type DeletePoemResult =
 
 /**
  * `delete_my_poem()`'s answer, or why it couldn't be read (delete-poem design D2, D3).
- *
- * @public scaffold: first imported in task 2.3.
  */
 export type DeleteOwnPoemResult =
   | {

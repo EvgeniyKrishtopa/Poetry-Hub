@@ -28,22 +28,22 @@ already consumes (tests count as consumers for knip), so `npm run knip` stays gr
 
 ## 2. Delete DAL and action (no visible change) <!-- judgement-heavy -->
 
-- [ ] 2.1 (NFR-5) Move `describeError`, `logFailure`, `toServiceFailure`, and `withStatus` from
+- [x] 2.1 (NFR-5) Move `describeError`, `logFailure`, `toServiceFailure`, and `withStatus` from
   `poem-writes.ts` to `dal/write-log.ts`, `removeIllustrationBestEffort` to
   `dal/illustration-cleanup.ts`, and `expirePoemsTag` from `create-poem.actions.ts` to the
   server-only `actions/expire-poems-tag.ts` (design D1).
   - Verify: the existing `poem-writes` and create-action tests pass unchanged.
-- [ ] 2.2 (FR-3, FR-4) Add `DELETE_POEM_STATUS`, `DeletePoemResult`, `DeleteOwnPoemResult`, and
+- [x] 2.2 (FR-3, FR-4) Add `DELETE_POEM_STATUS`, `DeletePoemResult`, `DeleteOwnPoemResult`, and
   `model/delete-poem.schema.ts`: the input schema checks only that `poemId` is a string; the
   lowercase-hex UUID guard is a separate function the action runs first, so a malformed id answers
   `not-found`, never `validationErrors` (design D1, D3; Gate 2b).
   - Verify with `tests/delete-poem.schema.test.ts`.
-- [ ] 2.3 (FR-3, FR-4, FR-6, NFR-5) Add `dal/poem-delete.ts`: `deleteOwnPoem(poemId)` (RPC, Zod parse
+- [x] 2.3 (FR-3, FR-4, FR-6, NFR-5) Add `dal/poem-delete.ts`: `deleteOwnPoem(poemId)` (RPC, Zod parse
   of the answer, `classifySupabaseError` with the response status) (design D3).
   - Verify with `tests/poem-delete.test.ts`: each status; a rejected JWT → `unauthenticated`; a 5xx
     → `unavailable`; an unexpected shape → `unknown`; log lines carry no title, id, or path
     (implements NFR-5 of delete-poem).
-- [ ] 2.4 (FR-3, FR-4, FR-5, FR-6, FR-7, FR-8) Add `actions/delete-poem.actions.ts`: `deletePoemAction` in design D3's
+- [x] 2.4 (FR-3, FR-4, FR-5, FR-6, FR-7, FR-8) Add `actions/delete-poem.actions.ts`: `deletePoemAction` in design D3's
   order: UUID guard, session, RPC, `updateTag(poemsTag(authorId))` only on `deleted`, then the
   best-effort file removal.
   - Verify with `tests/delete-poem.actions.test.ts`: a malformed id reaches no I/O and answers
