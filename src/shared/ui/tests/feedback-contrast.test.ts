@@ -51,6 +51,9 @@ const PAIRS: readonly [string, string, number, string][] = [
   ["foreground", "surface", TEXT_MIN_RATIO, "alert body text"],
   ["danger", "surface", NON_TEXT_MIN_RATIO, "danger alert border"],
   ["success", "surface", NON_TEXT_MIN_RATIO, "success alert border"],
+  // implements NFR-6 of delete-poem: the danger button's text (design D7)
+  ["on-danger", "danger", TEXT_MIN_RATIO, "danger button text"],
+  ["muted", "surface", NON_TEXT_MIN_RATIO, "neutral alert border"],
 ];
 
 describe("feedback tone contrast", () => {

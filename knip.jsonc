@@ -5,10 +5,8 @@
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
     ".ncurc.cjs",
     // Temporary, delete-poem scaffold: these stubs have no importer until a task wires or tests them. Each entry
-    // is removed by that task: the one-time-notice hook 3.1, the session-expired store 3.2, DeletePoemButton and
-    // the deleted-notice store 4.1, DeletedPoemNotice 4.2, SessionExpiredNotice 4.3.
-    "src/shared/lib/one-time-notice/use-one-time-value.ts",
-    "src/shared/lib/one-time-notice/session-expired-notice.store.ts",
+    // is removed by that task: DeletePoemButton and the deleted-notice store 4.1, DeletedPoemNotice 4.2,
+    // SessionExpiredNotice 4.3.
     "src/features/poem-management/components/DeletePoemButton/DeletePoemButton.tsx",
     "src/features/poem-management/components/DeletePoemButton/DeletePoemButton.types.ts",
     "src/features/poem-management/components/DeletedPoemNotice/DeletedPoemNotice.tsx",

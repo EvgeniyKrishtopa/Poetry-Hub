@@ -283,7 +283,10 @@ also reads the store each time it runs and, when it finds a value, replaces the 
 un-dismisses. A route Next keeps hidden in `Activity` and reveals again re-runs the effect but not
 the initializer, so without this a `router.replace` back to an already-visited `/account/poems`
 (list → poem → delete, the main path) or `/login` would show the old, dismissed state and wipe the
-new value. `CreatedPoemNotice` is unaffected: its store is only set for a never-visited poem page. Three consumers now —
+new value. That state update runs in a `queueMicrotask` callback, not in the effect body
+(group 3, user decision 2026-10-30): `react-hooks/set-state-in-effect` rejects the direct call, the
+effect already runs after the paint so the delay is invisible, and the alternative, a reasoned
+`eslint-disable`, would be the project's first. `CreatedPoemNotice` is unaffected: its store is only set for a never-visited poem page. Three consumers now —
 `CreatedPoemNotice`, `DeletedPoemNotice`, `SessionExpiredNotice` — across two features, which
 meets architecture.md's "second consumer" rule. `CreatedPoemNotice` keeps its behaviour and tests.
 

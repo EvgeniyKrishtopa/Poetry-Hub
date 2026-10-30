@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type AlertTone = "danger" | "success";
+export type AlertTone = "danger" | "success" | "neutral";
 
 export interface AlertProps {
   tone: AlertTone;

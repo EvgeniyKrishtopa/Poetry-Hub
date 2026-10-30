@@ -56,7 +56,7 @@ already consumes (tests count as consumers for knip), so `npm run knip` stays gr
 
 ## 3. Shared building blocks (no visible change) <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-3, FR-4, FR-6) Add `src/shared/lib/one-time-notice/use-one-time-value.ts` with
+- [x] 3.1 (FR-3, FR-4, FR-6) Add `src/shared/lib/one-time-notice/use-one-time-value.ts` with
   `CreatedPoemNotice`'s snapshot / clear / `Activity`-dismiss logic, and move `CreatedPoemNotice`
   onto it (design D5).
   Its effect also reads the store on every run, so a route revealed from `Activity` picks up a
@@ -64,18 +64,18 @@ already consumes (tests count as consumers for knip), so `npm run knip` stays gr
   - Verify with `src/shared/lib/one-time-notice/tests/use-one-time-value.test.tsx` (snapshot,
     cleared store, Strict Mode re-run, hide-then-show, hide → new value → show shows it) and `CreatedPoemNotice`'s existing tests
     unchanged and green.
-- [ ] 3.2 (FR-6) Add `session-expired-notice.store.ts` in the same folder (design D6).
+- [x] 3.2 (FR-6) Add `session-expired-notice.store.ts` in the same folder (design D6).
   - Verify with its unit test (mark, clear).
-- [ ] 3.3 (FR-2, FR-3) `Dialog`: add `closable` (default `true`): `false` disables the corner button,
+- [x] 3.3 (FR-2, FR-3) `Dialog`: add `closable` (default `true`): `false` disables the corner button,
   ignores the backdrop, prevents Escape's `cancel`, and re-opens the dialog at once if it closes
   anyway (design D7).
   - Verify with `src/shared/ui/tests/Dialog.test.tsx` (new cases) and the contact dialog's tests
     unchanged.
-- [ ] 3.4 (NFR-6) `Button`: add `variant="danger"` (solid `danger` fill, `on-danger` text); add the
+- [x] 3.4 (NFR-6) `Button`: add `variant="danger"` (solid `danger` fill, `on-danger` text); add the
   `--on-danger` token to `globals.css` in light and dark with its theme mapping (design D7,
   artboard 22).
   - Verify with `Button.test.tsx` and the token literal search.
-- [ ] 3.5 (FR-6, NFR-6) `Alert`: add `tone="neutral"` (`muted` left border, `role="status"`)
+- [x] 3.5 (FR-6, NFR-6) `Alert`: add `tone="neutral"` (`muted` left border, `role="status"`)
   (design D7, artboard 24).
   - Verify with `Alert.test.tsx`.
 

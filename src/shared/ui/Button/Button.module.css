@@ -29,6 +29,15 @@
   background: color-mix(in srgb, var(--color-accent) 85%, black);
 }
 
+.danger {
+  background: var(--color-danger);
+  color: var(--color-on-danger);
+}
+
+.danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 85%, black);
+}
+
 .ghost {
   background: transparent;
   color: var(--color-foreground);

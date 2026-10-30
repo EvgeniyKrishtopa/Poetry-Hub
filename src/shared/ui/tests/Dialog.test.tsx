@@ -49,6 +49,34 @@ function renderOpenDialog(description?: string) {
   return { dialog, onClose };
 }
 
+/** An open dialog whose `closable` the test can flip, as a caller does around a request. */
+function renderClosableDialog(closable: boolean) {
+  const ref = createRef<HTMLDialogElement>();
+  const onClose = vi.fn();
+  const tree = (value: boolean) => (
+    <Dialog ref={ref} title={TITLE} closeLabel={CLOSE_LABEL} onClose={onClose} closable={value}>
+      <button type="button">{CONTENT_LABEL}</button>
+    </Dialog>
+  );
+  const { rerender } = render(tree(closable));
+  ref.current?.showModal();
+  const dialog = screen.getByRole("dialog", { hidden: true });
+  return {
+    dialog,
+    onClose,
+    closeButton: within(dialog).getByRole("button", { name: CLOSE_LABEL }),
+    close: () => ref.current?.close(),
+    setClosable: (value: boolean) => rerender(tree(value)),
+  };
+}
+
+/** Escape on a modal dialog: a cancelable `cancel` event, then a close unless it was prevented. */
+function pressEscape(dialog: HTMLElement): boolean {
+  const cancel = new Event("cancel", { cancelable: true });
+  fireEvent(dialog, cancel);
+  return cancel.defaultPrevented;
+}
+
 describe("Dialog", () => {
   it("is labelled by its heading and shows the description and content", () => {
     const { dialog } = renderOpenDialog(DESCRIPTION);
@@ -102,5 +130,60 @@ describe("Dialog", () => {
     await userEvent.click(within(dialog).getByRole("button", { name: CONTENT_LABEL }));
 
     expect(dialog).toHaveAttribute("open");
+  });
+
+  // implements FR-2 of delete-poem: Escape and the backdrop still cancel when the dialog is closable
+  it("lets Escape and a backdrop press close it while closable", () => {
+    const { dialog, closeButton } = renderClosableDialog(true);
+
+    expect(closeButton).toBeEnabled();
+    expect(pressEscape(dialog)).toBe(false);
+
+    fireEvent.pointerDown(dialog);
+    fireEvent.click(dialog);
+    expect(dialog).not.toHaveAttribute("open");
+  });
+
+  describe("with closable={false}", () => {
+    // implements FR-3 of delete-poem: the sending state's corner button and Escape
+    it("disables the corner button and prevents Escape's cancel", () => {
+      const { dialog, closeButton, onClose } = renderClosableDialog(false);
+
+      expect(closeButton).toBeDisabled();
+      expect(pressEscape(dialog)).toBe(true);
+      expect(dialog).toHaveAttribute("open");
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    // implements FR-3 of delete-poem
+    it("ignores a press on the backdrop", () => {
+      const { dialog, onClose } = renderClosableDialog(false);
+
+      fireEvent.pointerDown(dialog);
+      fireEvent.click(dialog);
+
+      expect(dialog).toHaveAttribute("open");
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    // implements FR-3 of delete-poem: an uncancelable second Escape (Gate 1 P7)
+    it("re-opens at once after a close that happens anyway, without reporting it", () => {
+      const { dialog, close, onClose } = renderClosableDialog(false);
+
+      close();
+
+      expect(dialog).toHaveAttribute("open");
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("closes through the caller and reports it once closable again", () => {
+      const { dialog, close, onClose, setClosable } = renderClosableDialog(false);
+
+      setClosable(true);
+      close();
+
+      expect(dialog).not.toHaveAttribute("open");
+      expect(onClose).toHaveBeenCalledOnce();
+    });
   });
 });
