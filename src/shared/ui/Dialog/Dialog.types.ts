@@ -11,5 +11,12 @@ export interface DialogProps {
   readonly closeLabel: string;
   /** Runs after the dialog closes, whatever closed it (the corner button, the backdrop, Escape, or the caller). */
   readonly onClose?: () => void;
+  /**
+   * `false` while the dialog must stay open (a request is running): the corner button is disabled, the
+   * backdrop and Escape do nothing, and a close that happens anyway re-opens it on the next task without
+   * calling `onClose` — unless `closable` is `true` again by then, so a caller may allow closing and close
+   * in the same tick. Defaults to `true`.
+   */
+  readonly closable?: boolean;
   readonly children: ReactNode;
 }

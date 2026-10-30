@@ -51,6 +51,9 @@ const PAIRS: readonly [string, string, number, string][] = [
   ["foreground", "surface", TEXT_MIN_RATIO, "alert body text"],
   ["danger", "surface", NON_TEXT_MIN_RATIO, "danger alert border"],
   ["success", "surface", NON_TEXT_MIN_RATIO, "success alert border"],
+  // implements NFR-6 of delete-poem: the danger button's text (design D7)
+  ["on-danger", "danger", TEXT_MIN_RATIO, "danger button text"],
+  ["muted", "surface", NON_TEXT_MIN_RATIO, "neutral alert border"],
 ];
 
 describe("feedback tone contrast", () => {
@@ -62,5 +65,32 @@ describe("feedback tone contrast", () => {
       expect(tokens[bg], `--${bg} missing`).toBeDefined();
       expect(contrastRatio(tokens[fg], tokens[bg])).toBeGreaterThanOrEqual(min);
     });
+  });
+});
+
+const BUTTON_CSS_PATH = new URL("../Button/Button.module.css", import.meta.url);
+const PERCENT = 100;
+
+/** The fill's share in the danger button's hover `color-mix(…, black)`, read from the stylesheet. */
+function dangerHoverFillShare(): number {
+  const css = readFileSync(BUTTON_CSS_PATH, "utf8");
+  const match = css.match(/\.danger:hover\s*{[^}]*color-mix\(in srgb,\s*var\(--color-danger\)\s*(\d+)%,\s*black\)/);
+  if (!match) throw new Error("Button.module.css: could not find the danger hover color-mix");
+  return Number(match[1]) / PERCENT;
+}
+
+/** `color-mix(in srgb, <hex> <share>, black)`: each sRGB channel scaled by the share. */
+function mixWithBlack(hex: string, share: number): string {
+  const channels = [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * share));
+  return `#${channels.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+}
+
+describe("danger button hover contrast", () => {
+  // implements NFR-6 of delete-poem: the hover fill keeps the button text at AA (design D7)
+  it.each(["light", "dark"] as const)("on-danger on the %s hover fill meets the text minimum", (theme) => {
+    const tokens = themes[theme];
+    const hoverFill = mixWithBlack(tokens.danger, dangerHoverFillShare());
+
+    expect(contrastRatio(tokens["on-danger"], hoverFill)).toBeGreaterThanOrEqual(TEXT_MIN_RATIO);
   });
 });
