@@ -119,3 +119,15 @@ Archived at `openspec/changes/archive/2026-10-29-add-poem-creation/`.
 - **Verified instead:** Gate 3 on 2026-10-29 passed it by hand (with and without an illustration) and with a scratchpad Playwright probe against `next start`: notice shown once, Back to an empty form, Forward without the notice, «Добавление…» while pending, the poem on the public page. Unit tests cover `CreatedPoemNotice` and `NewPoemForm`. On the long-running dev server the own page briefly showed the 404 right after a create; the production build did not (`openspec/changes/add-poem-creation/_debug/own-poem-404-right-after-create-in-dev.md`).
 - **Decision:** user, 2026-10-29 (Gate 3 recording question).
 - **Status:** open. To record it: once poems can be deleted, record the flow with a cleanup step that deletes the poem it created.
+
+## delete-poem
+
+### delete-poem · 3.1 — replace the one-time notice mechanism with a server message shown before the redirect
+
+- **State:** deferred (a requested redesign, not a gap in the delivered task)
+- **Requirement:** FR-3, FR-4, FR-6 of delete-poem; FR-5 of add-poem-creation
+- **What is missing:** a simpler notice flow. Today `useOneTimeValue` (`src/shared/lib/one-time-notice/`) carries the notice across a client-side navigation in a Zustand store, snapshots it on the first render, clears it in an effect, and dismisses it through a `setTimeout` in the effect cleanup (to tell a Strict Mode re-run from an `Activity` hide), plus a `queueMicrotask` re-read when a hidden route is revealed. The user wants instead: the action's result carries the message from the server, the page the author is on (the poem page) shows it, and only then the app navigates to the poem list. No store, no timer.
+- **Why:** user review of group 3 (2026-10-30): the mechanism does not follow KISS and is hard to read and understand. Kept as is for now so delete-poem can continue; the spec, design, and code were left unchanged on the user's instruction.
+- **Verified instead:** nothing; the current mechanism stays, covered by `use-one-time-value.test.tsx` and `CreatedPoemNotice.test.tsx`.
+- **Decision:** user, 2026-10-30.
+- **Status:** open. Open questions for the redesign: whether it also covers the session-expired notice on `/login` and the already-merged «Произведение добавлено» notice (add-poem-creation); how long the message stays on the poem page before the redirect; and how to keep the poem page from turning into the 404 first, since the delete action's `updateTag` re-renders the current route (design D4, Gate 1 P2). Needs its own OpenSpec change (or `opsx-update-review` on delete-poem before group 4) and new Claude Design mockups, since artboards 23 and 24 show the notices on the list and sign-in pages.
