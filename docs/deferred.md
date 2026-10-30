@@ -118,7 +118,7 @@ Archived at `openspec/changes/archive/2026-10-29-add-poem-creation/`.
 - **Why:** every run would create a real poem the app can't delete yet (no delete in this change). The rows pile up, change the seed authors' poem lists other scenarios rely on, and reach the 100-per-30-days limit after about 33 three-run recordings.
 - **Verified instead:** Gate 3 on 2026-10-29 passed it by hand (with and without an illustration) and with a scratchpad Playwright probe against `next start`: notice shown once, Back to an empty form, Forward without the notice, «Добавление…» while pending, the poem on the public page. Unit tests cover `CreatedPoemNotice` and `NewPoemForm`. On the long-running dev server the own page briefly showed the 404 right after a create; the production build did not (`openspec/changes/add-poem-creation/_debug/own-poem-404-right-after-create-in-dev.md`).
 - **Decision:** user, 2026-10-29 (Gate 3 recording question).
-- **Status:** open. To record it: once poems can be deleted, record the flow with a cleanup step that deletes the poem it created.
+- **Status:** open. Poems can be deleted since `delete-poem` (2026-10-30), so the flow can now be recorded with a cleanup step that deletes the poem it created, the way `tests/web-qa-scenarios/delete-poem-happy-path.spec.ts` does. That scenario creates a poem only as setup: it does not check the «created» notice, its absence after a reload or Back/Forward, the empty form after Back, or the public page, so this entry stays open for those.
 
 ## delete-poem
 
