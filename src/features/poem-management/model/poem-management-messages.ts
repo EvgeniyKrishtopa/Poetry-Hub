@@ -49,6 +49,21 @@ export const CREATE_POEM_FAILURE_MESSAGES = {
   unknown: "Что-то пошло не так. Попробуйте ещё раз.",
 } as const;
 
+/** The delete button, its dialog, and the notices `/account/poems` shows after a delete (delete-poem). */
+export const DELETE_POEM_COPY = {
+  open: "Удалить произведение",
+  dialogTitle: "Удалить произведение?",
+  dialogBody: (title: string) => `«${title}» будет удалено без возможности восстановления.`,
+  cancel: "Отмена",
+  confirm: "Удалить",
+  confirmPending: "Удаление…",
+  // The contact dialog's text; a copy here, since features don't share UI copy.
+  close: "Закрыть",
+  failure: "Не удалось удалить произведение. Попробуйте позже.",
+  deleted: (title: string) => `Произведение «${title}» удалено.`,
+  alreadyDeleted: "Произведение уже удалено.",
+} as const;
+
 /** Breadcrumb labels of the static management routes (design D10). */
 export const POEM_MANAGEMENT_TRAIL_LABELS = {
   list: "Управление произведениями",

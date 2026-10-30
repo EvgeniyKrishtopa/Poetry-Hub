@@ -248,6 +248,13 @@ the poem; it renders below `PoemArticle`.
 - The alert is cleared when the next confirm starts (FR-5) and when the dialog closes.
 - Cancel paths are the `Dialog`'s own (corner button, Escape, backdrop) plus «Отмена» calling
   `close()`; the native dialog returns focus to the opener (FR-2).
+- As built (group 4): opening focuses «Отмена» and every close focuses the opener explicitly, rather
+  than relying on `autoFocus` and the browser's focus return, so both hold in any browser and in
+  tests. Each navigating outcome closes the dialog before `router.replace`: the page left behind may
+  stay mounted but hidden (`Activity`), and an open modal there would block the next page. The
+  transition is still pending then, so the button first commits `closable` back to `true` with
+  `flushSync` and only then calls `close()`, which keeps the close from racing `Dialog`'s re-open
+  guard (D7, group 3 Gate 4 CR-01).
 
 **The deleted page re-renders before the navigation (Gate 1 P2).** An action that calls
 `updateTag` answers with the current route re-rendered, and the current route is the deleted
