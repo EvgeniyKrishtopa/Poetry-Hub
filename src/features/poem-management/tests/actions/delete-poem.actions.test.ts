@@ -146,7 +146,16 @@ describe("deletePoemAction", () => {
     },
   );
 
-  // A failed file removal never reaches the action: the helper logs it and resolves (illustration-cleanup test).
+  // implements FR-3, NFR-5 of delete-poem
+  it("still answers deleted when the file removal throws, logging the kind only", async () => {
+    vi.mocked(removeIllustrationBestEffort).mockRejectedValueOnce(new TypeError(`fetch failed for ${ILLUSTRATION_PATH}`));
+
+    const result = await deletePoemAction({ poemId: POEM_ID });
+
+    expect(result.data).toEqual({ status: "deleted" });
+    expect(console.error).toHaveBeenCalledExactlyOnceWith("[poem-management] remove illustration failed: TypeError");
+    expect(loggedText()).not.toContain(AUTHOR_ID);
+  });
 
   // implements FR-3, NFR-5 of delete-poem
   it("logs a failed tag expiry by kind only and still answers deleted", async () => {

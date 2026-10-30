@@ -5,6 +5,7 @@ import { SESSION_STATE } from "@/shared/config/constants";
 
 import { removeIllustrationBestEffort } from "../dal/illustration-cleanup";
 import { deleteOwnPoem } from "../dal/poem-delete";
+import { logFailure } from "../dal/write-log";
 import { deletePoemInputSchema, isPoemId } from "../model/delete-poem.schema";
 import { DELETE_POEM_STATUS } from "../model/poem-management.constants";
 import type { DeletePoemResult, ServiceFailure } from "../model/poem-management.types";
@@ -14,6 +15,8 @@ import { expirePoemsTag } from "./expire-poems-tag";
 
 // The owner is resolved from the session by the database, never from input (NFR-1). Only a deleted poem
 // expires a cache tag (FR-8). The client already has the title, so no poem data comes back.
+
+const CLEANUP_OPERATION = "remove illustration";
 
 const NOT_FOUND: DeletePoemResult = { status: DELETE_POEM_STATUS.notFound };
 
@@ -42,9 +45,21 @@ async function deletePoem(poemId: string): Promise<DeletePoemResult> {
 
   // 5. The file last: a row pointing at a missing file would show a broken image; a file with no row is
   //    invisible (clarify decision 2). Its failure is logged and changes nothing.
-  if (result.illustrationPath !== null) await removeIllustrationBestEffort(result.illustrationPath);
+  if (result.illustrationPath !== null) await removeFileAfterDelete(result.illustrationPath);
 
   return { status: DELETE_POEM_STATUS.deleted };
+}
+
+/**
+ * The helper already logs and swallows its own failures; this catch keeps the answer `deleted` even if that
+ * ever changes, because the row is gone and an error would invite a pointless retry.
+ */
+async function removeFileAfterDelete(path: string): Promise<void> {
+  try {
+    await removeIllustrationBestEffort(path);
+  } catch (error) {
+    logFailure(CLEANUP_OPERATION, error);
+  }
 }
 
 /** Deletes one of the caller's own poems by id (design D3). */
