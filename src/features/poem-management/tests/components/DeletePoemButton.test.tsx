@@ -178,11 +178,18 @@ describe("DeletePoemButton", () => {
   // implements FR-3 of delete-poem
   it("stores the deleted notice with the title, closes the dialog, and replaces the page with the list", async () => {
     vi.mocked(deletePoemAction).mockResolvedValue(respond({ status: "deleted" }));
+    // The transition is still pending at the navigation: the dialog must already be closable there, or its
+    // close would race Dialog's re-open guard (design D4, as built).
+    let closableAtNavigation: boolean | undefined;
+    replace.mockImplementationOnce(() => {
+      closableAtNavigation = !closeButton().hasAttribute("disabled");
+    });
     const user = await renderOpen();
 
     await user.click(confirmButton());
 
     await waitFor(() => expect(replace).toHaveBeenCalledExactlyOnceWith("/account/poems"));
+    expect(closableAtNavigation).toBe(true);
     expect(useDeletedPoemNotice.getState().notice).toEqual({ kind: "deleted", title: TITLE });
     expect(dialogElement().open).toBe(false);
     expect(refresh).not.toHaveBeenCalled();
