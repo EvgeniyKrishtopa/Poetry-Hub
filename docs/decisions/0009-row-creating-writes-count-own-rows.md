@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (2026-10-29)
+Accepted (2026-10-29); Amended by 0010 (counts creations, not live rows)
 
 Partially supersedes: 0007 (its Decisions 1 and 3, and Decision 6's poem example)
 

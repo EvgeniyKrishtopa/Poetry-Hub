@@ -270,6 +270,8 @@ decided ad hoc: before calling the action, `DeletePoemButton` writes
 re-renders nothing and keeps the normal path: the client overwrites the store with
 `{ kind: "already-deleted" }` and calls `router.replace`. On a failure the client clears the
 store. FR-4's separate text stays in both variants.
+As checked (group 5, Gate 3, 2026-10-30): no 404 was visible after confirming, so the fallback is
+not adopted and the action keeps returning a status.
 
 Why not `redirect()` inside the action by default: the client must set the notice store before navigating,
 and the session-expired path writes a different store; returning a status keeps both explicit and
