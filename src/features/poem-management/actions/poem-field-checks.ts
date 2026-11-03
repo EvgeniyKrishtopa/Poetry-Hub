@@ -32,13 +32,21 @@ type IllustrationCheck =
   | { readonly ok: true; readonly illustration: PoemIllustration | null }
   | { readonly ok: false; readonly result: FieldCheckFailure };
 
-/** No file, or an empty one, is no illustration; any other is checked by size and content. */
-export async function checkIllustration(file: File | undefined): Promise<IllustrationCheck> {
-  if (file === undefined || file.size === 0) return { ok: true, illustration: null };
+type IllustrationFileCheck =
+  | { readonly ok: true; readonly illustration: PoemIllustration }
+  | { readonly ok: false; readonly result: FieldCheckFailure };
 
+/** A non-empty file, checked by size and content. */
+export async function checkIllustrationFile(file: File): Promise<IllustrationFileCheck> {
   const check = await validateImageFile(file);
   if (!check.ok) {
     return { ok: false, result: { status: "invalid", fieldErrors: { illustration: ILLUSTRATION_ERROR_MESSAGES[check.error] } } };
   }
   return { ok: true, illustration: { file, type: check.type } };
+}
+
+/** No file, or an empty one, is no illustration; any other is checked by size and content. */
+export async function checkIllustration(file: File | undefined): Promise<IllustrationCheck> {
+  if (file === undefined || file.size === 0) return { ok: true, illustration: null };
+  return checkIllustrationFile(file);
 }

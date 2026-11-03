@@ -25,7 +25,7 @@ import type {
 
 import { poemManagementActionClient } from "./action-client";
 import { expirePoemsTag } from "./expire-poems-tag";
-import { checkGenre, checkIllustration } from "./poem-field-checks";
+import { checkGenre, checkIllustrationFile } from "./poem-field-checks";
 
 // The owner is resolved from the session, never from input (NFR-1). The limit runs before any other I/O, so a
 // blocked attempt reads no profile, calls no Contentful, reads no file, and uploads nothing (FR-7). Only a
@@ -41,10 +41,19 @@ function invalid(fieldErrors: PoemFieldErrors): UpdatePoemResult {
   return { status: UPDATE_POEM_STATUS.invalid, fieldErrors };
 }
 
-/** A replace must carry a non-empty file; the form never sends one without it. */
-function isReplacementMissing(input: UpdatePoemInput): boolean {
-  if (input.illustrationChange !== ILLUSTRATION_CHANGE.replace) return false;
-  return input.illustration === undefined || input.illustration.size === 0;
+type RequestedIllustration =
+  | { readonly kind: typeof ILLUSTRATION_CHANGE.keep }
+  | { readonly kind: typeof ILLUSTRATION_CHANGE.remove }
+  | { readonly kind: typeof ILLUSTRATION_CHANGE.replace; readonly file: File };
+
+/**
+ * What the save asks for the illustration, or `null` for a replace without a non-empty file (the form never
+ * sends one). `keep` and `remove` ignore any file sent with them.
+ */
+function requestedIllustration(input: UpdatePoemInput): RequestedIllustration | null {
+  if (input.illustrationChange !== ILLUSTRATION_CHANGE.replace) return { kind: input.illustrationChange };
+  if (input.illustration === undefined || input.illustration.size === 0) return null;
+  return { kind: ILLUSTRATION_CHANGE.replace, file: input.illustration };
 }
 
 /** Why the session can't write, or `null` when it is signed in. */
@@ -60,14 +69,10 @@ type IllustrationResolution =
   | { readonly ok: false; readonly result: UpdatePoemResult };
 
 /** `keep` and `remove` read no file; a replacement is checked by size and sniffed type (design D3 step 7). */
-async function resolveIllustration(input: UpdatePoemInput): Promise<IllustrationResolution> {
-  if (input.illustrationChange !== ILLUSTRATION_CHANGE.replace) {
-    return { ok: true, illustration: { kind: input.illustrationChange } };
-  }
-  const check = await checkIllustration(input.illustration);
+async function resolveIllustration(requested: RequestedIllustration): Promise<IllustrationResolution> {
+  if (requested.kind !== ILLUSTRATION_CHANGE.replace) return { ok: true, illustration: requested };
+  const check = await checkIllustrationFile(requested.file);
   if (!check.ok) return { ok: false, result: check.result };
-  // Unreachable after step 2, which rejects a replace without a non-empty file; kept so the type stays honest.
-  if (check.illustration === null) return { ok: false, result: invalid({ illustration: POEM_FIELD_ERRORS.required }) };
   return { ok: true, illustration: { kind: ILLUSTRATION_CHANGE.replace, file: check.illustration } };
 }
 
@@ -78,11 +83,11 @@ async function updatePoem(input: UpdatePoemInput): Promise<UpdatePoemResult> {
 
   // 2. Field rules: the same schema the form runs in the browser. Nothing is counted yet.
   const parsed = poemFormSchema.safeParse(input);
-  const replacementMissing = isReplacementMissing(input);
-  if (!parsed.success || replacementMissing) {
+  const requested = requestedIllustration(input);
+  if (!parsed.success || requested === null) {
     return invalid({
       ...(parsed.success ? {} : toPoemFieldErrors(parsed.error)),
-      ...(replacementMissing ? { illustration: POEM_FIELD_ERRORS.required } : {}),
+      ...(requested === null ? { illustration: POEM_FIELD_ERRORS.required } : {}),
     });
   }
   const form = parsed.data;
@@ -104,7 +109,7 @@ async function updatePoem(input: UpdatePoemInput): Promise<UpdatePoemResult> {
   // 6. Genre, 7. illustration.
   const genre = await checkGenre(form.genreId);
   if (!genre.ok) return genre.result;
-  const illustration = await resolveIllustration(input);
+  const illustration = await resolveIllustration(requested);
   if (!illustration.ok) return illustration.result;
 
   // 8. Upload, then the row; another author's poem and a missing one are the same not-found.
