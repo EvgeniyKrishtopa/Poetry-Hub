@@ -1,0 +1,3 @@
+{"ts":"2026-10-29T16:31:55Z","change":"delete-poem","group":"full","gate":"spec-review","verdict":"confirmed","skipReason":"","durationMs":80274,"tokensTotal":69206,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}
+{"ts":"2026-10-29T16:31:55Z","change":"delete-poem","kind":"finding","gate":"spec-review","finding":"SR-01: tasks 5.4 and 5.6 named no requirement identifier","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-29T16:31:55Z","change":"delete-poem","kind":"finding","gate":"spec-review","finding":"SR-03: proposal said fresh in the author's own browser; spec says the tab that ran the delete","outcome":"fixed","ruleNumber":""}

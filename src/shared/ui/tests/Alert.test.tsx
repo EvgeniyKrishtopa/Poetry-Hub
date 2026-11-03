@@ -25,6 +25,16 @@ describe("Alert", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  // implements FR-6, NFR-6 of delete-poem: the session-expired notice's tone
+  it("renders a neutral tone as one status with the muted border", () => {
+    render(<Alert tone="neutral">Note</Alert>);
+
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Note");
+    expect(status).toHaveClass(...BOX_CLASSES, "border-muted");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("appends layout classes without dropping the tone", () => {
     render(
       <Alert tone="success" className="flex flex-col gap-2">

@@ -5,6 +5,7 @@ import { requireSession } from "@/features/auth";
 import { PoemArticle, PoemPageSkeleton, type Poem } from "@/features/poems";
 
 import { CreatedPoemNotice } from "../../components/CreatedPoemNotice/CreatedPoemNotice";
+import { DeletePoemButton } from "../../components/DeletePoemButton/DeletePoemButton";
 import { OwnPoemContent } from "../../components/OwnPoemContent/OwnPoemContent";
 import { OwnPoemPage } from "../../components/OwnPoemPage/OwnPoemPage";
 import { getOwnPoem } from "../../dal/own-poem";
@@ -12,6 +13,7 @@ import { getOwnPoem } from "../../dal/own-poem";
 vi.mock("@/features/auth", () => ({ requireSession: vi.fn() }));
 vi.mock("@/features/poems", () => ({ PoemArticle: vi.fn(), PoemPageSkeleton: vi.fn() }));
 vi.mock("../../dal/own-poem", () => ({ getOwnPoem: vi.fn() }));
+vi.mock("../../actions/delete-poem.actions", () => ({ deletePoemAction: vi.fn() }));
 vi.mock("next/navigation", () => ({
   notFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
@@ -29,7 +31,13 @@ const POEM: Poem = {
   genreId: null,
 };
 
-type ContentElement = ReactElement<{ children: [ReactElement<{ poemId: string }>, ReactElement<{ poem: Poem }>] }>;
+type ContentElement = ReactElement<{
+  children: [
+    ReactElement<{ poemId: string }>,
+    ReactElement<{ poem: Poem }>,
+    ReactElement<{ poemId: string; title: string }>,
+  ];
+}>;
 
 async function content(): Promise<ContentElement> {
   return (await OwnPoemContent({ poemId: Promise.resolve(POEM_ID) })) as ContentElement;
@@ -58,7 +66,18 @@ describe("OwnPoemContent", () => {
     expect(article.props.poem).toBe(POEM);
   });
 
+  // implements FR-1 of delete-poem
+  it("renders the delete button below the poem, with the poem's id and title", async () => {
+    vi.mocked(getOwnPoem).mockResolvedValue({ ok: true, poem: POEM });
+
+    const [, , button] = (await content()).props.children;
+
+    expect(button.type).toBe(DeletePoemButton);
+    expect(button.props).toEqual({ poemId: POEM_ID, title: POEM.title });
+  });
+
   // implements FR-7 of add-poem-creation
+  // implements FR-1 of delete-poem: no poem, no button
   it("renders the 404 page for a poem that isn't the author's own", async () => {
     vi.mocked(getOwnPoem).mockResolvedValue({ ok: false, reason: "not-found" });
 

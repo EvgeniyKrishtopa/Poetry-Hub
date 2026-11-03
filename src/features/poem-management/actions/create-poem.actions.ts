@@ -1,10 +1,8 @@
 "use server";
 
-import { updateTag } from "next/cache";
-
 import { getSessionState } from "@/features/auth";
 import { getOwnPublicAuthor } from "@/features/authors";
-import { listPoemGenres, poemsTag } from "@/features/poems";
+import { listPoemGenres } from "@/features/poems";
 import { SESSION_STATE } from "@/shared/config/constants";
 import { validateImageFile } from "@/shared/lib/image-file/validate-image-file";
 
@@ -20,6 +18,7 @@ import { CREATE_POEM_STATUS } from "../model/poem-management.constants";
 import type { CreatePoemFailure, CreatePoemResult, PoemFieldErrors, PoemIllustration } from "../model/poem-management.types";
 
 import { poemManagementActionClient } from "./action-client";
+import { expirePoemsTag } from "./expire-poems-tag";
 
 // The user and the author are resolved from the session, never from input (NFR-1). The limit check runs
 // before any other I/O, so a blocked attempt reads no profile, calls no Contentful, and uploads nothing
@@ -106,22 +105,10 @@ async function createPoem(input: CreatePoemInput): Promise<CreatePoemResult> {
   });
   if (!created.ok) return failed(created.failure);
 
-  // 8. `updateTag`, not `revalidateTag`: the next request for any of the author's poem pages must wait
-  //    for the new list.
+  // 8. The poem is stored: a failed expiry is only logged, never an error the author would retry into a
+  //    duplicate.
   expirePoemsTag(author.authorId);
   return { status: CREATE_POEM_STATUS.created, poemId: created.poemId };
-}
-
-/**
- * The poem is already stored here, so a failed expiry must not turn it into an error the author would
- * retry, creating a duplicate. It is only logged; the list catches up when its cache lifetime ends.
- */
-function expirePoemsTag(authorId: string): void {
-  try {
-    updateTag(poemsTag(authorId));
-  } catch (error) {
-    console.error(`[poem-management] expire poems tag failed: ${error instanceof Error ? error.name : typeof error}`);
-  }
 }
 
 /** Creates one poem for the caller's own public profile (design D7). */

@@ -6,6 +6,7 @@ import { requireSession } from "@/features/auth";
 import { getOwnPublicAuthor } from "@/features/authors";
 import { listAuthorPoems, type Poem } from "@/features/poems";
 
+import { DeletedPoemNotice } from "../../components/DeletedPoemNotice/DeletedPoemNotice";
 import { MyPoemsContent } from "../../components/MyPoemsContent/MyPoemsContent";
 import { MyPoemsPage } from "../../components/MyPoemsPage/MyPoemsPage";
 import { MyPoemsSkeleton } from "../../components/MyPoemsSkeleton/MyPoemsSkeleton";
@@ -149,7 +150,7 @@ describe("MyPoemsPage", () => {
     const element = MyPoemsPage() as ReactElement<{ lang: string; children: ReactElement[] }>;
     expect(element.props.lang).toBe("ru");
 
-    const [heading, boundary] = element.props.children;
+    const [heading, , boundary] = element.props.children;
     render(heading);
     expect(screen.getByRole("heading", { level: 1, name: "Ваши Произведения" })).toBeInTheDocument();
 
@@ -157,6 +158,16 @@ describe("MyPoemsPage", () => {
     const { fallback, children } = boundary.props as SuspenseProps;
     expect(children.type).toBe(MyPoemsContent);
     expect(fallback.type).toBe(MyPoemsSkeleton);
+  });
+
+  // implements FR-3, FR-4 of delete-poem
+  it("puts the deleted notice between the heading and the boundary, so a failed list read keeps it", () => {
+    const element = MyPoemsPage() as ReactElement<{ children: ReactElement[] }>;
+
+    const [, notice, boundary] = element.props.children;
+
+    expect(notice.type).toBe(DeletedPoemNotice);
+    expect(boundary.type).toBe(Suspense);
   });
 });
 

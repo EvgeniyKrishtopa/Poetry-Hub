@@ -5,8 +5,6 @@ import { z } from "zod";
 
 import { POEM_ILLUSTRATIONS_BUCKET } from "@/features/poems";
 import { IMAGE_FORMATS } from "@/shared/lib/image-file/image-file.constants";
-import { SupabaseConfigError } from "@/shared/lib/supabase";
-import { classifySupabaseError } from "@/shared/lib/supabase/classify-error";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
 import type {
@@ -17,14 +15,16 @@ import type {
   ServiceFailure,
 } from "../model/poem-management.types";
 
+import { removeIllustrationBestEffort } from "./illustration-cleanup";
+import { toServiceFailure, withStatus } from "./write-log";
+
 // Every write runs with the cookie client as the signed-in owner; the database functions resolve the
 // caller from the session, so none of these takes a user id (design D2). Each returns a failure as a
-// value, never throws. Log lines carry the operation and the failure kind only (NFR-10).
+// value, never throws. Log lines carry the operation and the failure kind only (NFR-10, `write-log.ts`).
 
 const CHECK_OPERATION = "check poem limit";
 const CREATE_OPERATION = "create poem";
 const UPLOAD_OPERATION = "upload illustration";
-const CLEANUP_OPERATION = "remove illustration";
 
 /** `can_create_poem()`'s answer; any other shape fails the parse, so a changed function keeps the check closed. */
 const canCreateStatusSchema = z.object({ status: z.enum(["allowed", "not-public", "over-limit"]) });
@@ -34,42 +34,6 @@ const createStatusSchema = z.union([
   z.object({ status: z.literal("created"), id: z.uuid() }),
   z.object({ status: z.enum(["not-public", "over-limit"]) }),
 ]);
-
-/** A loggable label: the error class name, or the PostgREST code. Never a message: it can quote row values. */
-function describeError(error: unknown): string {
-  if (error instanceof Error) return error.name;
-  // A plain Storage error object carries its class name.
-  if (typeof error === "object" && error !== null && "name" in error && typeof error.name === "string") {
-    return error.name;
-  }
-  if (typeof error === "object" && error !== null && "code" in error) {
-    return typeof error.code === "string" && error.code !== "" ? `PostgrestError ${error.code}` : "PostgrestError";
-  }
-  return typeof error;
-}
-
-/** Logs `[poem-management] <operation> failed: <kind>`. */
-function logFailure(operation: string, error: unknown): void {
-  // The proxy already logs a missing config on every request.
-  if (!(error instanceof SupabaseConfigError)) {
-    console.error(`[poem-management] ${operation} failed: ${describeError(error)}`);
-  }
-}
-
-/** Logs the failure and classifies it for the form. */
-function toServiceFailure(operation: string, error: unknown): ServiceFailure {
-  logFailure(operation, error);
-  return classifySupabaseError(error);
-}
-
-/**
- * A PostgREST error with the response status merged in: postgrest-js keeps the status on the response, so
- * without it a 401, a 5xx, or a network failure (status 0) would classify as `unknown`. Only the code is
- * kept: the message and details can quote the poem.
- */
-function withStatus(error: { readonly code?: string }, status: number): { readonly code?: string; readonly status: number } {
-  return { code: error.code, status };
-}
 
 function logLimitReached(): void {
   // Expected, not an error, but worth seeing if one account keeps hitting it.
@@ -119,16 +83,6 @@ async function uploadIllustration(
     return { ok: true, path };
   } catch (error) {
     return { ok: false, failure: toServiceFailure(UPLOAD_OPERATION, error) };
-  }
-}
-
-/** Removes an upload no poem points at; a failure is only logged, an orphan is a known risk (design Risks). */
-async function removeIllustrationBestEffort(supabase: SupabaseClient, path: string): Promise<void> {
-  try {
-    const { error } = await supabase.storage.from(POEM_ILLUSTRATIONS_BUCKET).remove([path]);
-    if (error) logFailure(CLEANUP_OPERATION, error);
-  } catch (error) {
-    logFailure(CLEANUP_OPERATION, error);
   }
 }
 
@@ -186,6 +140,6 @@ export async function createOwnPoem(input: CreateOwnPoemInput): Promise<CreateOw
   }
 
   const result = await insertPoem(supabase, input, illustrationPath);
-  if (!result.ok && illustrationPath !== null) await removeIllustrationBestEffort(supabase, illustrationPath);
+  if (!result.ok && illustrationPath !== null) await removeIllustrationBestEffort(illustrationPath);
   return result;
 }

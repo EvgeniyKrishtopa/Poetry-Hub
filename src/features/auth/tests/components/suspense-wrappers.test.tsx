@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { HeaderAuthLinks } from "../../components/HeaderAuthLinks/HeaderAuthLinks";
 import { HeaderAuthLinksContent } from "../../components/HeaderAuthLinksContent/HeaderAuthLinksContent";
+import { SessionExpiredNotice } from "../../components/SessionExpiredNotice/SessionExpiredNotice";
 import { SignInFormWithError } from "../../components/SignInFormWithError/SignInFormWithError";
 import { SignInPanel } from "../../components/SignInPanel/SignInPanel";
 
@@ -21,10 +22,24 @@ function suspenseOf(element: ReactElement): SuspenseProps {
   return element.props as SuspenseProps;
 }
 
+function panelParts(error: Promise<string | undefined>): [ReactElement, ReactElement] {
+  const panel = SignInPanel({ error }) as ReactElement<{ children: [ReactElement, ReactElement] }>;
+  return panel.props.children;
+}
+
 describe("SignInPanel", () => {
+  // implements FR-6 of delete-poem: the notice sits above the form
+  it("renders the session-expired notice before the form, outside the Suspense boundary", () => {
+    const [notice, boundary] = panelParts(Promise.resolve(undefined));
+
+    expect(notice.type).toBe(SessionExpiredNotice);
+    expect(boundary.type).toBe(Suspense);
+  });
+
   it("wraps the error-reading form in Suspense, with the plain form as the fallback", () => {
     const error = Promise.resolve(undefined);
-    const { fallback, children } = suspenseOf(SignInPanel({ error }));
+    const [, boundary] = panelParts(error);
+    const { fallback, children } = suspenseOf(boundary);
 
     expect(children.type).toBe(SignInFormWithError);
     expect(children.props.error).toBe(error);

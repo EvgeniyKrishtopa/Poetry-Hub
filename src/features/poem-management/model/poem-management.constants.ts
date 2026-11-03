@@ -30,3 +30,10 @@ export const CREATE_POEM_STATUS = {
   invalid: "invalid",
   failed: "failed",
 } as const;
+
+/** The delete action's outcomes (delete-poem design D3). */
+export const DELETE_POEM_STATUS = {
+  deleted: "deleted",
+  notFound: "not-found",
+  failed: "failed",
+} as const;

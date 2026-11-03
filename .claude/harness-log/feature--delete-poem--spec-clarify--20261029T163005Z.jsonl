@@ -1,0 +1,5 @@
+{"ts":"2026-10-29T16:30:05Z","change":"delete-poem","kind":"finding","gate":"spec-clarify","finding":"FR-8 'author's own browser' — this tab only vs every tab of the browser","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-29T16:30:05Z","change":"delete-poem","kind":"finding","gate":"spec-clarify","finding":"FR-5 alert lifetime: spec (until next press) vs design (also on close)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-29T16:30:05Z","change":"delete-poem","kind":"finding","gate":"spec-clarify","finding":"FR-3 'Escape SHALL NOT close' vs Chromium uncancelable second Escape","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-29T16:30:05Z","change":"delete-poem","kind":"finding","gate":"spec-clarify","finding":"D7 page state while a pending dialog is hidden","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-10-29T16:30:05Z","change":"delete-poem","kind":"finding","gate":"spec-clarify","finding":"D4 404-flash trigger for the redirect fallback and the fallback's store shape","outcome":"fixed","ruleNumber":""}

@@ -37,6 +37,11 @@ git-ignored `PROGRESS.md`, so every clone sees them.
   policy, the `poem-illustrations` bucket policies). Ship it before the app: without it every poem read
   shows the unavailable state and every create fails. Rollback: revert the app first, then the down migration
   in the file's header.
+- **Delete migration** (`delete-poem`): `npx supabase db push` applies `20261029170000_delete_my_poem.sql`
+  (`delete_my_poem`, the `poem_creations` log with its trigger and backfill, and `poem_create_status`
+  counting creations instead of live poems). Ship it before the app: without it every delete fails
+  with the dialog's error alert. Rollback: revert the app first, then the down migration in the
+  file's header.
 - **`poem-illustrations` bucket** (`add-poem-creation`): on the hosted project, confirm it exists,
   public, 5 MiB file size limit, MIME types `image/png` and `image/jpeg` — the same as
   `supabase/config.toml`, which configures the local stack only.

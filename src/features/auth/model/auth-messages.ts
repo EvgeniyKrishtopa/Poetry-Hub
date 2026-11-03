@@ -13,6 +13,9 @@ export const ACCOUNT_LINK_LABEL = "Мастерская поэта";
 
 export const CHECK_EMAIL_TITLE = "Проверьте почту";
 
+/** The `/login` notice after a write found the session expired (delete-poem FR-6): the profile editor's text. */
+export const SESSION_EXPIRED_NOTICE = "Сессия истекла. Войдите снова.";
+
 /** The `/login` alert for its `error` search param, or none for any other value. */
 export function getLoginErrorMessage(error: string | string[] | undefined): string | undefined {
   return error === CONFIRM_FAILED_ERROR ? CONFIRM_FAILED_MESSAGE : undefined;
