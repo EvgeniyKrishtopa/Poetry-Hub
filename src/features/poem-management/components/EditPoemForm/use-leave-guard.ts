@@ -14,6 +14,8 @@ const PRIMARY_BUTTON = 0;
 
 /** The same-origin link a plain left click on `event` would follow in this tab, or `null`. */
 function linkFollowedInThisTab(event: MouseEvent): HTMLAnchorElement | null {
+  // Another handler already cancelled it (a menu trigger rendered as a link): nothing will navigate.
+  if (event.defaultPrevented) return null;
   if (event.button !== PRIMARY_BUTTON) return null;
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return null;
   if (!(event.target instanceof Element)) return null;

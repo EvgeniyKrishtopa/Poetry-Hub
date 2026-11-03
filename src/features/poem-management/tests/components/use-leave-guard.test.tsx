@@ -92,6 +92,19 @@ describe("useLeaveGuard", () => {
       expect(onBlocked).not.toHaveBeenCalled();
     });
 
+    it("ignores a link click another handler already cancelled", () => {
+      const { onBlocked } = renderGuard(true);
+      const label = addLink(BLOCKED_PATH);
+      // Capture on window runs before the guard's capture on document.
+      const cancelFirst = (event: Event) => event.preventDefault();
+      window.addEventListener("click", cancelFirst, { capture: true });
+
+      fireEvent.click(label);
+      window.removeEventListener("click", cancelFirst, { capture: true });
+
+      expect(onBlocked).not.toHaveBeenCalled();
+    });
+
     it("ignores a click outside any link", () => {
       const { onBlocked } = renderGuard(true);
       const button = document.createElement("button");
