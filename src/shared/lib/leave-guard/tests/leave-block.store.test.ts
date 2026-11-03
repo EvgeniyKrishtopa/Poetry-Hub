@@ -1,37 +1,39 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { askToStayOnPage, useLeaveBlock } from "../leave-block.store";
+import { askBeforeLeaving, useLeaveBlock } from "../leave-block.store";
+import { LEAVE_ANSWER } from "../leave-guard.constants";
 
 afterEach(() => {
-  useLeaveBlock.getState().setBlock(null);
+  useLeaveBlock.getState().setAskToLeave(null);
 });
 
 describe("useLeaveBlock", () => {
-  it("starts with no block", () => {
-    expect(useLeaveBlock.getState().block).toBeNull();
+  it("starts with no question registered", () => {
+    expect(useLeaveBlock.getState().askToLeave).toBeNull();
   });
 
-  // implements FR-13 of edit-poem
-  it("holds the registered callback until it is cleared", () => {
-    const block = vi.fn();
+  it("holds the registered question until it is cleared", () => {
+    const askToLeave = vi.fn(() => Promise.resolve(LEAVE_ANSWER.stay));
 
-    useLeaveBlock.getState().setBlock(block);
-    expect(useLeaveBlock.getState().block).toBe(block);
+    useLeaveBlock.getState().setAskToLeave(askToLeave);
+    expect(useLeaveBlock.getState().askToLeave).toBe(askToLeave);
 
-    useLeaveBlock.getState().setBlock(null);
-    expect(useLeaveBlock.getState().block).toBeNull();
+    useLeaveBlock.getState().setAskToLeave(null);
+    expect(useLeaveBlock.getState().askToLeave).toBeNull();
+  });
+});
+
+// implements FR-13 of edit-poem
+describe("askBeforeLeaving", () => {
+  it("answers leave when no page guards", async () => {
+    await expect(askBeforeLeaving()).resolves.toBe(LEAVE_ANSWER.leave);
   });
 
-  // implements FR-13 of edit-poem
-  it("askToStayOnPage calls the registered block and answers true", () => {
-    const block = vi.fn();
-    useLeaveBlock.getState().setBlock(block);
+  it.each(Object.values(LEAVE_ANSWER))("passes the guarding page's answer %s through", async (answer) => {
+    const askToLeave = vi.fn(() => Promise.resolve(answer));
+    useLeaveBlock.getState().setAskToLeave(askToLeave);
 
-    expect(askToStayOnPage()).toBe(true);
-    expect(block).toHaveBeenCalledTimes(1);
-  });
-
-  it("askToStayOnPage answers false with no block registered", () => {
-    expect(askToStayOnPage()).toBe(false);
+    await expect(askBeforeLeaving()).resolves.toBe(answer);
+    expect(askToLeave).toHaveBeenCalledTimes(1);
   });
 });

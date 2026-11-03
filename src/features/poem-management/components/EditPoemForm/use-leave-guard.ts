@@ -1,13 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { useLeaveBlock } from "@/shared/lib/leave-guard/leave-block.store";
+import { LEAVE_ANSWER, type LeaveAnswer } from "@/shared/lib/leave-guard/leave-guard.constants";
 
 export interface LeaveGuardOptions {
   /** On while the form is changed or a save is sending, off after a `saved` result (design D10). */
   readonly active: boolean;
   /** Paths a link may still go to: the poem's owner page and its edit page. */
   readonly isAllowed: (pathname: string) => boolean;
+  /** Opens the leave dialog's link form. */
   readonly onBlocked: () => void;
+  /** Opens the leave dialog's sign-out form and answers with the author's choice. */
+  readonly askToLeave: () => Promise<LeaveAnswer>;
+  /** Closes the leave dialog, either form; called on the guard's cleanup. */
+  readonly closePrompt: () => void;
 }
 
 const PRIMARY_BUTTON = 0;
@@ -62,26 +68,58 @@ function useUnloadConfirmation(active: boolean) {
   }, [active]);
 }
 
-/** «Выйти» is a button in `auth`, out of the link listener's reach: it asks this block first (design D10). */
-function useSignOutBlock(active: boolean, onBlocked: () => void) {
+/**
+ * «Выйти» is a button in `auth`, out of the link listener's reach: it asks this guard's question through the
+ * shared store first. At most one question is pending; cleanup (inactive, hidden, unmounted) and a newer
+ * question answer it `dismissed`, and cleanup closes the dialog, so nothing waits on a page that's gone.
+ */
+function useSignOutQuestion(active: boolean, askToLeave: () => Promise<LeaveAnswer>, closePrompt: () => void) {
+  // The latest callbacks, so a re-render with new function identities neither re-registers nor closes the dialog.
+  const latest = useRef({ askToLeave, closePrompt });
+  useEffect(() => {
+    latest.current = { askToLeave, closePrompt };
+  });
+
   useEffect(() => {
     if (!active) return;
 
-    const { setBlock } = useLeaveBlock.getState();
-    setBlock(onBlocked);
+    let settlePending: ((answer: LeaveAnswer) => void) | null = null;
+
+    function dismissPending() {
+      settlePending?.(LEAVE_ANSWER.dismissed);
+      settlePending = null;
+    }
+
+    function ask(): Promise<LeaveAnswer> {
+      dismissPending();
+      return new Promise((resolve) => {
+        settlePending = resolve;
+        void latest.current.askToLeave().then((answer) => {
+          // A late answer to a question already dismissed changes nothing.
+          if (settlePending !== resolve) return;
+          settlePending = null;
+          resolve(answer);
+        });
+      });
+    }
+
+    const { setAskToLeave } = useLeaveBlock.getState();
+    setAskToLeave(ask);
     return () => {
-      // Clear only our own block, never one a newer guard registered meanwhile.
-      if (useLeaveBlock.getState().block === onBlocked) setBlock(null);
+      dismissPending();
+      latest.current.closePrompt();
+      // Clear only our own registration, never one a newer guard made meanwhile.
+      if (useLeaveBlock.getState().askToLeave === ask) setAskToLeave(null);
     };
-  }, [active, onBlocked]);
+  }, [active]);
 }
 
 /**
  * Keeps the author on the edit page while active and visible (edit-poem design D10). A hidden `Activity` cleans
  * the effects up, so a hidden edit page never guards another page.
  */
-export function useLeaveGuard({ active, isAllowed, onBlocked }: LeaveGuardOptions): void {
+export function useLeaveGuard({ active, isAllowed, onBlocked, askToLeave, closePrompt }: LeaveGuardOptions): void {
   useBlockedLinks(active, isAllowed, onBlocked);
   useUnloadConfirmation(active);
-  useSignOutBlock(active, onBlocked);
+  useSignOutQuestion(active, askToLeave, closePrompt);
 }

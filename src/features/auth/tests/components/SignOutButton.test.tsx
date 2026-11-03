@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useLeaveBlock } from "@/shared/lib/leave-guard/leave-block.store";
+import { LEAVE_ANSWER, type LeaveAnswer } from "@/shared/lib/leave-guard/leave-guard.constants";
 
 import { signOutAction } from "../../actions/auth.actions";
 import { SignOutButton } from "../../components/SignOutButton/SignOutButton";
@@ -16,7 +17,7 @@ const FAILURE_TEXT = "Не удалось выйти. Попробуйте ещ�
 describe("SignOutButton", () => {
   afterEach(() => {
     vi.clearAllMocks();
-    useLeaveBlock.getState().setBlock(null);
+    useLeaveBlock.getState().setAskToLeave(null);
   });
 
   // implements FR-4 of remove-browser-session-read
@@ -66,17 +67,84 @@ describe("SignOutButton", () => {
     await vi.waitFor(() => expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled());
   });
 
-  // implements FR-13 of edit-poem for sign-out
-  it("calls the registered leave block instead of signing out while an edit form has unsaved changes", async () => {
-    const block = vi.fn();
-    useLeaveBlock.getState().setBlock(block);
-    render(<SignOutButton />);
+  describe("while an edit form has unsaved changes", () => {
+    /** A page guard whose question the test answers as the author would. */
+    function guardWithQuestion() {
+      let answer: (value: LeaveAnswer) => void = () => {};
+      const askToLeave = vi.fn(() => new Promise<LeaveAnswer>((resolve) => (answer = resolve)));
+      useLeaveBlock.getState().setAskToLeave(askToLeave);
+      return { askToLeave, answer: (value: LeaveAnswer) => answer(value) };
+    }
 
-    await userEvent.setup().click(screen.getByRole("button", { name: "Выйти" }));
+    // implements FR-13 of edit-poem for sign-out
+    it("asks the page first and keeps the button enabled while the question is open", async () => {
+      const guard = guardWithQuestion();
+      render(<SignOutButton />);
 
-    expect(block).toHaveBeenCalledTimes(1);
-    expect(signOutAction).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled();
+      await userEvent.setup().click(screen.getByRole("button", { name: "Выйти" }));
+
+      expect(guard.askToLeave).toHaveBeenCalledTimes(1);
+      expect(signOutAction).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled();
+    });
+
+    // implements FR-13, NFR-4 of edit-poem
+    it("sends nothing and puts focus back on «Выйти» when the author stays", async () => {
+      const guard = guardWithQuestion();
+      render(<SignOutButton />);
+      const elsewhere = document.createElement("button");
+      document.body.append(elsewhere);
+
+      await userEvent.setup().click(screen.getByRole("button", { name: "Выйти" }));
+      elsewhere.focus();
+      guard.answer(LEAVE_ANSWER.stay);
+
+      await vi.waitFor(() => expect(screen.getByRole("button", { name: "Выйти" })).toHaveFocus());
+      expect(signOutAction).not.toHaveBeenCalled();
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      elsewhere.remove();
+    });
+
+    it("sends nothing and leaves focus alone when the page dismisses the question", async () => {
+      const guard = guardWithQuestion();
+      render(<SignOutButton />);
+      const elsewhere = document.createElement("button");
+      document.body.append(elsewhere);
+
+      await userEvent.setup().click(screen.getByRole("button", { name: "Выйти" }));
+      elsewhere.focus();
+      guard.answer(LEAVE_ANSWER.dismissed);
+      // Let the answer travel through the wrapper; a wrong focus() would have run by then.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(elsewhere).toHaveFocus();
+      expect(signOutAction).not.toHaveBeenCalled();
+      elsewhere.remove();
+    });
+
+    it("signs out once after the author confirms", async () => {
+      vi.mocked(signOutAction).mockResolvedValue({ data: { ok: true } } as SignOutResult);
+      const guard = guardWithQuestion();
+      render(<SignOutButton />);
+
+      await userEvent.setup().click(screen.getByRole("button", { name: "Выйти" }));
+      guard.answer(LEAVE_ANSWER.leave);
+
+      await vi.waitFor(() => expect(signOutAction).toHaveBeenCalledTimes(1));
+      await vi.waitFor(() => expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled());
+    });
+
+    it("shows the usual failure when the confirmed sign-out fails", async () => {
+      vi.mocked(signOutAction).mockResolvedValue({ data: { ok: false } } as SignOutResult);
+      const guard = guardWithQuestion();
+      render(<SignOutButton />);
+
+      await userEvent.setup().click(screen.getByRole("button", { name: "Выйти" }));
+      guard.answer(LEAVE_ANSWER.leave);
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(FAILURE_TEXT);
+      expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled();
+    });
   });
 
   it("clears the alert when a retry succeeds", async () => {

@@ -1,7 +1,8 @@
 import { fireEvent, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { useLeaveBlock } from "@/shared/lib/leave-guard/leave-block.store";
+import { askBeforeLeaving, useLeaveBlock } from "@/shared/lib/leave-guard/leave-block.store";
+import { LEAVE_ANSWER, type LeaveAnswer } from "@/shared/lib/leave-guard/leave-guard.constants";
 
 import { type LeaveGuardOptions, useLeaveGuard } from "../../components/EditPoemForm/use-leave-guard";
 
@@ -11,10 +12,24 @@ const MIDDLE_BUTTON = 1;
 
 const isAllowed = (pathname: string) => pathname === ALLOWED_PATH;
 
+/** A sign-out question the test answers by hand, as the author would in the dialog. */
+function controlledQuestion() {
+  let answer: (value: LeaveAnswer) => void = () => {};
+  const askToLeave = vi.fn(
+    () =>
+      new Promise<LeaveAnswer>((resolve) => {
+        answer = resolve;
+      }),
+  );
+  return { askToLeave, answer: (value: LeaveAnswer) => answer(value) };
+}
+
 function renderGuard(active: boolean, onBlocked = vi.fn()) {
-  const options: LeaveGuardOptions = { active, isAllowed, onBlocked };
+  const question = controlledQuestion();
+  const closePrompt = vi.fn();
+  const options: LeaveGuardOptions = { active, isAllowed, onBlocked, askToLeave: question.askToLeave, closePrompt };
   const hook = renderHook((props: LeaveGuardOptions) => useLeaveGuard(props), { initialProps: options });
-  return { ...hook, onBlocked, options };
+  return { ...hook, onBlocked, options, question, closePrompt };
 }
 
 /** Adds a link to the page; the test's click lands on a child span, as with an icon inside a link. */
@@ -54,7 +69,7 @@ function unloadPrevented() {
 
 afterEach(() => {
   document.body.replaceChildren();
-  useLeaveBlock.getState().setBlock(null);
+  useLeaveBlock.getState().setAskToLeave(null);
 });
 
 // implements FR-13 of edit-poem
@@ -120,10 +135,38 @@ describe("useLeaveGuard", () => {
       expect(unloadPrevented()).toBe(true);
     });
 
-    it("registers onBlocked for «Выйти»", () => {
-      const { onBlocked } = renderGuard(true);
+    it.each([LEAVE_ANSWER.leave, LEAVE_ANSWER.stay])(
+      "registers the sign-out question, answered %s by the author",
+      async (choice) => {
+        const { question } = renderGuard(true);
 
-      expect(useLeaveBlock.getState().block).toBe(onBlocked);
+        const asked = askBeforeLeaving();
+        question.answer(choice);
+
+        await expect(asked).resolves.toBe(choice);
+        expect(question.askToLeave).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it("answers an earlier pending question dismissed when a second one is asked", async () => {
+      const { question } = renderGuard(true);
+
+      const first = askBeforeLeaving();
+      const second = askBeforeLeaving();
+      question.answer(LEAVE_ANSWER.stay);
+
+      await expect(first).resolves.toBe(LEAVE_ANSWER.dismissed);
+      await expect(second).resolves.toBe(LEAVE_ANSWER.stay);
+    });
+
+    it("keeps the registration and the open dialog when the callbacks change identity", () => {
+      const { rerender, options, closePrompt } = renderGuard(true);
+      const registered = useLeaveBlock.getState().askToLeave;
+
+      rerender({ ...options, askToLeave: vi.fn(), closePrompt: vi.fn() });
+
+      expect(useLeaveBlock.getState().askToLeave).toBe(registered);
+      expect(closePrompt).not.toHaveBeenCalled();
     });
   });
 
@@ -134,39 +177,54 @@ describe("useLeaveGuard", () => {
       expect(click(addLink(BLOCKED_PATH)).followed).toBe(true);
       expect(unloadPrevented()).toBe(false);
       expect(onBlocked).not.toHaveBeenCalled();
-      expect(useLeaveBlock.getState().block).toBeNull();
+      expect(useLeaveBlock.getState().askToLeave).toBeNull();
     });
   });
 
-  it("removes both listeners and its block when it turns inactive", () => {
-    const { rerender, onBlocked, options } = renderGuard(true);
+  it("removes both listeners and its question when it turns inactive, closing the dialog", () => {
+    const { rerender, onBlocked, options, closePrompt } = renderGuard(true);
 
     rerender({ ...options, active: false });
 
     expect(click(addLink(BLOCKED_PATH)).followed).toBe(true);
     expect(unloadPrevented()).toBe(false);
     expect(onBlocked).not.toHaveBeenCalled();
-    expect(useLeaveBlock.getState().block).toBeNull();
+    expect(useLeaveBlock.getState().askToLeave).toBeNull();
+    expect(closePrompt).toHaveBeenCalledTimes(1);
   });
 
-  it("removes both listeners and its block on unmount", () => {
-    const { unmount, onBlocked } = renderGuard(true);
+  it("removes both listeners and its question on unmount, closing the dialog", () => {
+    const { unmount, onBlocked, closePrompt } = renderGuard(true);
 
     unmount();
 
     expect(click(addLink(BLOCKED_PATH)).followed).toBe(true);
     expect(unloadPrevented()).toBe(false);
     expect(onBlocked).not.toHaveBeenCalled();
-    expect(useLeaveBlock.getState().block).toBeNull();
+    expect(useLeaveBlock.getState().askToLeave).toBeNull();
+    expect(closePrompt).toHaveBeenCalledTimes(1);
   });
 
-  it("leaves a block registered by someone else in place on cleanup", () => {
+  it.each<[string, (guard: ReturnType<typeof renderGuard>) => void]>([
+    ["it turns inactive", ({ rerender, options }) => rerender({ ...options, active: false })],
+    ["it unmounts", ({ unmount }) => unmount()],
+  ])("answers a pending question dismissed when %s, ignoring a late answer", async (_label, cleanUp) => {
+    const guard = renderGuard(true);
+    const asked = askBeforeLeaving();
+
+    cleanUp(guard);
+    guard.question.answer(LEAVE_ANSWER.leave);
+
+    await expect(asked).resolves.toBe(LEAVE_ANSWER.dismissed);
+  });
+
+  it("leaves a question registered by someone else in place on cleanup", () => {
     const { unmount } = renderGuard(true);
-    const otherBlock = vi.fn();
-    useLeaveBlock.getState().setBlock(otherBlock);
+    const otherQuestion = vi.fn(() => Promise.resolve(LEAVE_ANSWER.stay));
+    useLeaveBlock.getState().setAskToLeave(otherQuestion);
 
     unmount();
 
-    expect(useLeaveBlock.getState().block).toBe(otherBlock);
+    expect(useLeaveBlock.getState().askToLeave).toBe(otherQuestion);
   });
 });

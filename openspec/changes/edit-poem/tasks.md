@@ -92,7 +92,7 @@ consumers for knip), so `npm run knip` stays green per group PR.
     click, `target="_blank"`, `download`, and an external link pass; `beforeunload` is prevented
     while active; both listeners are gone when inactive and on unmount.
 
-- [ ] 4.3 (FR-13) `src/shared/lib/leave-guard/leave-guard.constants.ts` (`LEAVE_ANSWER`: `leave`,
+- [x] 4.3 (FR-13) `src/shared/lib/leave-guard/leave-guard.constants.ts` (`LEAVE_ANSWER`: `leave`,
   `stay`, `dismissed`; `LeaveAnswer`); `leave-block.store.ts` holds the active guard's
   `askToLeave: (() => Promise<LeaveAnswer>) | null` and exports `askBeforeLeaving()` (`leave` with
   no guard); `useLeaveGuard` takes `askToLeave` and `closePrompt`, registers a wrapper that keeps one
