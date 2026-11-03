@@ -357,6 +357,12 @@ request the hook already knows how to run).
   иллюстрацию», so it shows no visible change (group 3's promise). The edit page's order (preview
   above the picker row, «Удалить» beside the picker, ui-plan) is added with `EditPoemForm` in
   group 5; until then the field keeps the add form's order.
+- **Open for group 5 (group 3 review, CR-01).** With a stored illustration, a rejected new pick
+  shows the stored preview, the error, and «Удалить иллюстрацию»; that button today both clears the
+  error and removes the stored illustration (`removeIllustration` sets the stored one aside). Group
+  5 decides, with the edit layout, whether clearing the error keeps the stored illustration, and
+  adds an `EditPoemForm` test for the chosen behaviour. The add form is not affected (it starts with
+  no illustration).
 - **`usePoemForm(initial, genres, isPending)` (group 3).** The hook takes the caller's sending
   state as a third argument: focus waits for the fieldset to be enabled again, and the sending
   state belongs to the form that owns the action. It is generic over the form's failure type, so
