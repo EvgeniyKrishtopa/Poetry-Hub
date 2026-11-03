@@ -9,7 +9,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(100);
+select plan(101);
 
 -- Start from empty tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -382,14 +382,20 @@ select throws_ok(
 );
 
 select throws_ok(
+  $$select public.update_my_poem('b0000000-0000-4000-8000-000000000001', 'Новое', 'X', 'not a genre/id', true, null)$$,
+  '23514', null,
+  'an update to a malformed genre id is rejected'
+);
+
+select throws_ok(
   $$select public.update_my_poem('b0000000-0000-4000-8000-000000000001', 'Новое', 'X', null, null, null)$$,
   '22004', null,
   'an update without keep_illustration is rejected, not read as a removal'
 );
 
 select results_eq(
-  $$select title, text, illustration_path from public.poems where id = 'b0000000-0000-4000-8000-000000000001'$$,
-  $$values ('Новое', 'X', null::text)$$,
+  $$select title, text, genre_id, illustration_path from public.poems where id = 'b0000000-0000-4000-8000-000000000001'$$,
+  $$values ('Новое', 'X', null::text, null::text)$$,
   'the rejected updates changed nothing'
 );
 
