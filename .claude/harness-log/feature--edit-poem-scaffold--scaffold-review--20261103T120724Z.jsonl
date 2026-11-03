@@ -1,0 +1,2 @@
+{"ts":"2026-11-03T12:07:24Z","change":"edit-poem","group":"full","gate":"scaffold-review","verdict":"confirmed","skipReason":"","durationMs":123943,"tokensTotal":83053,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}
+{"ts":"2026-11-03T12:07:24Z","change":"edit-poem","kind":"finding","gate":"scaffold-review","finding":"SC-2: LeaveBlockedDialog ref typed Ref<HTMLDialogElement>, not the shared Dialog RefObject<HTMLDialogElement | null>","outcome":"fixed","ruleNumber":"SC-2"}

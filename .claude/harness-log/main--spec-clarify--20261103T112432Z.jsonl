@@ -1,0 +1,5 @@
+{"ts":"2026-11-03T11:24:32Z","change":"edit-poem","kind":"finding","gate":"spec-clarify","finding":"Profile no longer public at save time: spec redirects with already-deleted, design shows failed: unknown","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-03T11:24:32Z","change":"edit-poem","kind":"finding","gate":"spec-clarify","finding":"Leave-guard hook location: shared/lib/leave-guard vs components/EditPoemForm","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-03T11:24:32Z","change":"edit-poem","kind":"finding","gate":"spec-clarify","finding":"Guard while a save is sending: off (result may pull the author back) vs on until the result","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-03T11:24:32Z","change":"edit-poem","kind":"finding","gate":"spec-clarify","finding":"Offline notice after a rejected request: live online state only vs kept until the next submit","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-03T11:24:32Z","change":"edit-poem","kind":"finding","gate":"spec-clarify","finding":"Which invalid attempts count against the edit limit: genre/file rejections after the limit count or not","outcome":"fixed","ruleNumber":""}
