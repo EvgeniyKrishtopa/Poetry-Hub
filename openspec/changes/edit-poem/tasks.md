@@ -2,9 +2,11 @@
 
 Order: group 1 is the database. Group 2 is the server side (DAL and action) with no visuals.
 Group 3 splits the add form into shared parts with no visible change. Group 4 adds the
-offline and leave-guard building blocks, with no visible change until a form uses them. Groups 5
-and 6 add the screens and wait for the approved Claude Design link (`docs/claude-design.md`).
-Group 7 is docs and verification. Each group exports only what it already consumes (tests count as
+offline and leave-guard building blocks, with no visible change until a form uses them. Groups 5,
+6, and 7 add the screens and wait for the approved Claude Design link (`docs/claude-design.md`):
+group 5 (edit page and form) on the approved artboards 25–26, group 6 (leave dialog) on the
+updated artboard 27 with the sign-out form (split out in the PR #168 review, 2026-11-03), group 7
+on artboards 28–29. Group 8 is docs and verification. Each group exports only what it already consumes (tests count as
 consumers for knip), so `npm run knip` stays green per group PR.
 
 ## 1. Update operation and edit limit in the database <!-- judgement-heavy -->
@@ -72,7 +74,7 @@ consumers for knip), so `npm run knip` stays green per group PR.
   label as a prop (design D6). The add form passes its current labels.
   - Verify with `IllustrationField.test.tsx` (new cases) and the add form's tests unchanged.
 
-## 4. Connection-status and leave-guard building blocks (no visible change until group 5 activates the guard; 4.3 changes «Выйти» only then) <!-- judgement-heavy -->
+## 4. Connection-status and leave-guard building blocks (no visible change until group 6 activates the guard; 4.3 changes «Выйти» only then; 6.1 needs the sign-out form of the leave dialog in the mockups) <!-- judgement-heavy -->
 
 - [x] 4.1 (FR-11) Add `src/shared/lib/network/use-connection-status.ts` (`online | slow | offline`),
   `network.constants.ts` (`SLOW_EFFECTIVE_TYPES`, `SLOW_RTT_MS`), and `src/shared/ui/ConnectionNotice/`
@@ -90,14 +92,29 @@ consumers for knip), so `npm run knip` stays green per group PR.
     click, `target="_blank"`, `download`, and an external link pass; `beforeunload` is prevented
     while active; both listeners are gone when inactive and on unmount.
 
-- [x] 4.3 (FR-13) `src/shared/lib/leave-guard/leave-block.store.ts` exists from the scaffold, complete; `useLeaveGuard` registers
-  and clears its `onBlocked` there; `SignOutButton` calls the registered block instead of the
-  sign-out when one is set (design D10).
-  - Verify with the store's unit test, new `use-leave-guard` cases (registered while active, cleared
-    when inactive and on unmount), and `SignOutButton.test.tsx` (blocked: no action call, block
-    called; unblocked: unchanged behaviour) (implements FR-13 of edit-poem for sign-out).
+- [ ] 4.3 (FR-13) `src/shared/lib/leave-guard/leave-guard.constants.ts` (`LEAVE_ANSWER`: `leave`,
+  `stay`, `dismissed`; `LeaveAnswer`); `leave-block.store.ts` holds the active guard's
+  `askToLeave: (() => Promise<LeaveAnswer>) | null` and exports `askBeforeLeaving()` (`leave` with
+  no guard); `useLeaveGuard` takes `askToLeave` and `closePrompt`, registers a wrapper that keeps one
+  pending question, and on inactive, hide, and unmount answers it `dismissed`, calls `closePrompt`,
+  and clears its registration; add `src/features/auth/components/SignOutButton/sign-out-with-confirmation.ts`
+  (`signOutWithConfirmation(send)`) with `SIGN_OUT_STATUS` (`sent`, `stayed`, `dismissed`) in
+  `auth/model/auth.constants.ts` and its result type in `auth/model/auth.types.ts`: `send` only
+  after `leave`; `SignOutButton` passes its `startSignOut` step as `send`, so it is disabled only
+  while sending, and focuses «Выйти» on `stayed` only (design D10, revised in the PR #168 review
+  and spec-clarify).
+  - Verify with the store's unit test (no guard → `leave`; the registered answer passed through),
+    new `use-leave-guard` cases (registered while active; cleared when inactive and on unmount, a
+    newer registration kept; a pending question answered `dismissed` with `closePrompt` called on
+    inactive and on unmount; a second question answers the first `dismissed`),
+    `tests/components/sign-out-with-confirmation.test.ts` (no guard → `send` once, `sent`; `stay` →
+    no `send`, `stayed`; `dismissed` → no `send`, `dismissed`; `leave` → `send` once, `sent`), and
+    `SignOutButton.test.tsx` (while the question is open the button is enabled; stayed: no action
+    call, no alert, and with focus moved elsewhere before the answer, focus back on «Выйти» (the ref,
+    design D10); dismissed: no action call, focus left where it was; leave then a failed action: the
+    alert; existing cases unchanged) (implements FR-13 of edit-poem for sign-out).
 
-## 5. Edit page, form, button, and notices (UI — waits for the approved mockups) <!-- judgement-heavy -->
+## 5. Edit page, form, button, and notices (UI — approved artboards 25–26) <!-- judgement-heavy -->
 
 - [ ] 5.1 (FR-1, FR-2, FR-15, NFR-8) Add the route
   `src/app/(authorized)/account/poems/[poemId]/edit/page.tsx`, its breadcrumb slot page,
@@ -121,38 +138,48 @@ consumers for knip), so `npm run knip` stays green per group PR.
     rejected call while offline → offline notice, no alert; offline and slow disable the button and keep
     fields editable (implements FR-3, FR-6 – FR-11 of edit-poem); and `CreatedPoemNotice.test.tsx`
     (both texts, once).
-- [ ] 5.3 (FR-13, NFR-4) Add `LeaveBlockedDialog` and wire `useLeaveGuard` into `EditPoemForm`
-  (active while changed and while a save is sending, off after a `saved` result; allowed: this poem's page and edit page) (design D10).
-  - Verify with `tests/LeaveBlockedDialog.test.tsx` (copy, focus in and back) and `EditPoemForm`
-    cases: guard off while unchanged, on while changed, still on while sending, off after `saved` before the navigation (implements FR-13 of
-    edit-poem).
 
-## 6. Connection state on the add form and the profile editor (UI — waits for the approved mockups) <!-- judgement-heavy -->
+## 6. Leave dialog and the guard in the edit form (UI — waits for the updated artboard 27 with the sign-out form) <!-- judgement-heavy -->
 
-- [ ] 6.1 (FR-11) `NewPoemForm`: the connection notice above the form, «Добавить произведение»
+- [ ] 6.1 (FR-13, NFR-4) Add `LeaveBlockedDialog` (link and sign-out forms) and wire `useLeaveGuard`
+  into `EditPoemForm` (active while changed and while a save is sending, off after a `saved` result;
+  allowed: this poem's page and edit page; `askToLeave` opens the sign-out form and resolves with
+  the choice, `closePrompt` closes it) (design D10).
+  - Verify with `tests/LeaveBlockedDialog.test.tsx` (both forms' copy; sign-out form: «Продолжить
+    редактирование» focused, it, × and Escape answer stay, «Выйти без сохранения» answers leave;
+    focus in, and back by hand to the element focused at opening for the link form) and `EditPoemForm` cases: guard off while unchanged, on while changed, still
+    on while sending, off after `saved` before the navigation; `askToLeave` resolves `stay` on
+    «Продолжить редактирование», × and Escape and `leave` on «Выйти без сохранения»; a `saved` result
+    while either form is open closes it, and the page shown again after a hide shows no dialog; a
+    save failing while either form is open: after the author closes it, focus is on the failure
+    alert and a pending sign-out question resolves `dismissed` (implements FR-13, NFR-4 of edit-poem).
+
+## 7. Connection state on the add form and the profile editor (UI — waits for the approved mockups) <!-- judgement-heavy -->
+
+- [ ] 7.1 (FR-11) `NewPoemForm`: the connection notice above the form, «Добавить произведение»
   disabled while offline or slow, a rejected call while the latest connection status is `offline`
   shows the notice, read from the hook through a ref (design D8).
   - Verify with `NewPoemForm.test.tsx` (new cases; existing ones unchanged).
-- [ ] 6.2 (FR-11) Profile editor: `ConnectionNotice` in `AuthorProfileEditor`, `FieldEditActions`'
+- [ ] 7.2 (FR-11) Profile editor: `ConnectionNotice` in `AuthorProfileEditor`, `FieldEditActions`'
   «Сохранить» and `FieldActions`' «Удалить» disabled while offline or slow (design D8).
   - Verify with `AuthorProfileEditor`, `FieldEditActions`, and `FieldActions` tests (new cases; existing unchanged).
-- [ ] 6.3 (NFR-2, NFR-3, NFR-6) Static checks: `"use client"` only in the listed modules; no
+- [ ] 7.3 (NFR-2, NFR-3, NFR-6) Static checks: `"use client"` only in the listed modules; no
   `navigator.onLine` or `navigator.connection` outside `src/shared/` and no `beforeunload` outside the edit form's leave guard; no colour literals; both forms use
   `usePoemForm` and `PoemFormFields`.
 
-## 7. Docs and verification <!-- isolated -->
+## 8. Docs and verification <!-- isolated -->
 
-- [ ] 7.1 (NFR-3) `docs/architecture.md`: the edit route, action, and DAL in poem-management's line,
+- [ ] 8.1 (NFR-3) `docs/architecture.md`: the edit route, action, and DAL in poem-management's line,
   `PoemForm/`, `EditPoemForm/use-leave-guard.ts`, `shared/lib/network/`, `ConnectionNotice`; refresh
   `docs/design-system.md` for any new primitive or token the mockups add.
-- [ ] 7.2 (NFR-2) `docs/state-management.md`: the created-or-saved store's `kind`; the shared
+- [ ] 8.2 (NFR-2) `docs/state-management.md`: the created-or-saved store's `kind`; the shared
   leave-block store (a callback, no data); the edit draft lives in the route's `Activity` state, not
   a store.
-- [ ] 7.3 (FR-7) ADR 0007: add `poem_edit` to its scope list (status-line note).
-- [ ] 7.4 (NFR-1) Add `npx supabase db push` for `update_my_poem` to `docs/environment.md`'s deploy
+- [ ] 8.3 (FR-7) ADR 0007: add `poem_edit` to its scope list (status-line note).
+- [ ] 8.4 (NFR-1) Add `npx supabase db push` for `update_my_poem` to `docs/environment.md`'s deploy
   checklist.
-- [ ] 7.5 (FR-1 – FR-15) Gate 3 (web-qa): the flows in design D13; record the happy path as a
+- [ ] 8.5 (FR-1 – FR-15) Gate 3 (web-qa): the flows in design D13; record the happy path as a
   scenario under `tests/web-qa-scenarios` with a restore step.
-- [ ] 7.6 (NFR-8) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`
+- [ ] 8.6 (NFR-8) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`
   and confirm the build's route list adds `/account/poems/[poemId]/edit` with the management
   routes' marker and keeps every other marker.

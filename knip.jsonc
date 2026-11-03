@@ -6,7 +6,7 @@
     ".ncurc.cjs",
     // Temporary, edit-poem scaffold: these stubs have no importer until a task wires or tests them. Each entry
     // is removed by that task: the edit page, content and button 5.1, the edit form and its save hook 5.2,
-    // LeaveBlockedDialog 5.3.
+    // LeaveBlockedDialog 6.1.
     "src/features/poem-management/components/EditPoemPage/EditPoemPage.tsx",
     "src/features/poem-management/components/EditPoemPage/EditPoemPage.types.ts",
     "src/features/poem-management/components/EditPoemContent/EditPoemContent.tsx",

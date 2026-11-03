@@ -70,8 +70,10 @@ browser is offline or its connection is slow, the author is told so and can't pr
   link to a page other than this poem's page or its edit page does not navigate; a dialog «Есть
   несохранённые изменения» says «Сначала сохраните изменения.» with the button «Продолжить
   редактирование». Closing the tab, reloading, or typing another address shows the browser's own
-  leave-page confirmation, where leaving stays possible. The header's «Выйти» is blocked the same
-  way, with the same dialog (spec-clarify, 2026-11-03). The browser's Back and Forward buttons are
+  leave-page confirmation, where leaving stays possible. The header's «Выйти» asks first: the same
+  dialog says «Если выйти сейчас, изменения пропадут.» with «Продолжить редактирование» and
+  «Выйти без сохранения», and the sign-out runs only after the second (spec-clarify, 2026-11-03;
+  revised in the PR #168 review, 2026-11-03: confirm instead of refuse). The browser's Back and Forward buttons are
   not blocked (the browser doesn't let a page cancel them); the draft then stays in the hidden page
   as above.
 - **Database**: one new owner-only update operation; poem-management NFR-1's "nobody updates a
@@ -102,7 +104,8 @@ None.
   editor; the per-user
   write limit gains the `poem_edit` scope.
 - `breadcrumbs`: the trail of `/account/poems/<poemId>/edit`.
-- `auth`: the header's «Выйти» doesn't sign out while the edit form holds unsaved changes.
+- `auth`: while the edit form holds unsaved changes, the header's «Выйти» signs out only after the
+  author confirms in the edit form's dialog.
 
 ## UI copy
 
@@ -126,8 +129,10 @@ Every new user-facing string, verbatim.
 | Edit form: unknown failure | `Что-то пошло не так. Попробуйте ещё раз.` (the add form's text) |
 | Poem page: saved notice | `Изменения сохранены.` |
 | Leave dialog: title | `Есть несохранённые изменения` |
-| Leave dialog: body | `Сначала сохраните изменения.` |
-| Leave dialog: button | `Продолжить редактирование` |
+| Leave dialog: body (a link) | `Сначала сохраните изменения.` |
+| Leave dialog: body (sign-out) | `Если выйти сейчас, изменения пропадут.` |
+| Leave dialog: stay button | `Продолжить редактирование` |
+| Leave dialog: sign-out button (sign-out only) | `Выйти без сохранения` |
 | Leave dialog: corner close button, accessible name | `Закрыть` (the existing text) |
 | Add form, edit form, profile editor: offline notice | `Нет подключения к интернету. Сохранение станет доступно, когда связь восстановится.` |
 | Add form, edit form, profile editor: slow connection notice | `Медленное подключение к интернету. Сохранение станет доступно, когда связь улучшится.` |
@@ -147,7 +152,7 @@ artboards 25-29, each in light and dark at 1280 px and 375 px.
 | Edit page a-c: unchanged, changed, illustration removed | 26 · edit — a–c (`EditPoem.dc.html`) |
 | Edit page d-f: sending, the four failures, field error | 26 · edit — d–f (`EditPoemStates.dc.html`) |
 | Edit page g-j: offline, slow, loading, genres unavailable | 26 · edit — g–j (`EditPoemMore.dc.html`) |
-| Leave dialog | 27 · диалог «Есть несохранённые изменения» (`LeaveDialog.dc.html`) |
+| Leave dialog | 27 · диалог «Есть несохранённые изменения» (`LeaveDialog.dc.html`); the sign-out form awaits a Claude Design update (PR #168 review, 2026-11-03) |
 | `/account/poems/new` offline and slow | 28 (`NewPoemOffline.dc.html`) |
 | `/account/author` offline and slow, view and one field in edit mode | 29 (`AuthorOffline.dc.html`) |
 
@@ -172,7 +177,7 @@ Each requirement is specified with its scenarios in the delta specs. Summary:
 | FR-10 | Poem gone meanwhile: `/account/poems` with «Произведение уже удалено.»; profile no longer public: alert, values kept | poem-management |
 | FR-11 | Offline or slow: notice and disabled save on the edit form, the add form, and the profile editor | poem-management, author-profiles |
 | FR-12 | Draft kept between the poem page and the edit page | poem-management |
-| FR-13 | Leave guard: links blocked with a dialog, the browser's own confirmation on close or reload | poem-management |
+| FR-13 | Leave guard: links blocked with a dialog, the browser's own confirmation on close or reload, sign-out asks to confirm | poem-management, auth |
 | FR-14 | Freshness: the edit shows to the author at once and to guests on their next load | poem-management, author-poems |
 | FR-15 | Breadcrumb trail of the edit page | breadcrumbs |
 | NFR-1 | Database integrity: only the owner updates, only through the update operation | poem-management (modifies NFR-1) |
@@ -193,7 +198,8 @@ Each requirement is specified with its scenarios in the delta specs. Summary:
 - **Code**: `src/features/poem-management/` (route component, action, DAL write, the shared
   create/edit form, edit button, saved notice and its store, leave dialog);
   `src/features/authors/` (connection notice, disabled «Сохранить» and «Удалить» in the profile
-  editor); `src/features/auth/` (`SignOutButton` asks the leave-block store first);
+  editor); `src/features/auth/` (`signOutWithConfirmation`, a client wrapper that asks the leave-block store
+  before calling the sign-out action; `SignOutButton` calls it);
   `src/features/breadcrumbs/` (the edit route's trail); `src/shared/` (connection status hook,
   `ConnectionNotice`, the leave-block store); `src/app/(authorized)/account/poems/[poemId]/edit/` and its breadcrumb slot.
 - **Tests**: unit and component tests per module; pgTAP; a web-qa pass and a recorded scenario for
