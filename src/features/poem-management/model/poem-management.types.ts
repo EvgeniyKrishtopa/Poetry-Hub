@@ -14,6 +14,15 @@ export type PoemFormField = "title" | "text" | "genreId" | "illustration";
 /** One message per field. */
 export type PoemFieldErrors = Readonly<Partial<Record<PoemFormField, string>>>;
 
+/** The illustration field's button texts, chosen by each form (edit-poem design D6). */
+export interface IllustrationLabels {
+  /** The picker's text while no preview shows. */
+  readonly choose: string;
+  /** The picker's text while the stored or a newly picked illustration shows. */
+  readonly replace: string;
+  readonly remove: string;
+}
+
 /** A service read or write that failed, classified like the profile editor's failures. */
 export type ServiceFailure = "unauthenticated" | "unavailable" | "unknown";
 

@@ -346,6 +346,16 @@ request the hook already knows how to run).
   иллюстрацию» otherwise; remove label as a prop — «Убрать иллюстрацию» on create (unchanged),
   «Удалить иллюстрацию» on edit, for a stored and a newly picked file alike. Removing a new file
   ends in `{ kind: "none" }`, not back at the stored one.
+- **Labels per form (group 3, 2026-11-03).** The three button texts are one `IllustrationLabels`
+  prop (`choose`, `replace`, `remove`), so the «Заменить» rule applies only where a form asks for
+  it: the add form passes «Выбрать иллюстрацию» for both picker texts and keeps «Убрать
+  иллюстрацию», so it shows no visible change (group 3's promise). The edit page's order (preview
+  above the picker row, «Удалить» beside the picker, ui-plan) is added with `EditPoemForm` in
+  group 5; until then the field keeps the add form's order.
+- **`usePoemForm(initial, genres, isPending)` (group 3).** The hook takes the caller's sending
+  state as a third argument: focus waits for the fieldset to be enabled again, and the sending
+  state belongs to the form that owns the action. It is generic over the form's failure type, so
+  each form's alert map stays exhaustive.
 
 ### D7 — Outcomes and the saved notice (FR-6, FR-8, FR-9, FR-10)
 

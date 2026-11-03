@@ -1,7 +1,10 @@
+import type { IllustrationLabels } from "../../model/poem-management.types";
+
 import type { PoemFormState } from "./use-poem-form";
 
 export interface PoemFormFieldsProps {
-  readonly form: PoemFormState;
-  /** The remove button's text: «Убрать иллюстрацию» on create, «Удалить иллюстрацию» on edit (design D6). */
-  readonly removeIllustrationLabel: string;
+  /** Either form's state; the failure is the form's own, so the fields don't read it. */
+  readonly form: Omit<PoemFormState<string>, "failure" | "showFailure">;
+  /** The illustration buttons' texts: the add form keeps its own, the edit form names replace and delete (design D6). */
+  readonly illustrationLabels: IllustrationLabels;
 }

@@ -10,8 +10,11 @@ const FIELD_CONTROLS = [
   { field: "illustration", controlClass: "h-9 w-48 rounded-full" },
 ] as const;
 
-/** `NewPoemContent` while it loads: four field blocks (input, tall textarea, select, picker) and a button (design D11). */
-export function NewPoemSkeleton() {
+/**
+ * The add or edit form while it loads: four field blocks (input, tall textarea, select, picker) and a button
+ * (add-poem-creation design D11, edit-poem design D6).
+ */
+export function PoemFormSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       {/* Absolutely positioned (`sr-only`), so it adds no flex gap. */}
