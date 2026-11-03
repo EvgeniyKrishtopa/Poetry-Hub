@@ -94,12 +94,14 @@ function useSignOutQuestion(active: boolean, askToLeave: () => Promise<LeaveAnsw
       dismissPending();
       return new Promise((resolve) => {
         settlePending = resolve;
-        void latest.current.askToLeave().then((answer) => {
+        function settle(answer: LeaveAnswer) {
           // A late answer to a question already dismissed changes nothing.
           if (settlePending !== resolve) return;
           settlePending = null;
           resolve(answer);
-        });
+        }
+        // A dialog that fails to answer counts as dismissed: nothing is sent and nothing waits forever.
+        latest.current.askToLeave().then(settle, () => settle(LEAVE_ANSWER.dismissed));
       });
     }
 

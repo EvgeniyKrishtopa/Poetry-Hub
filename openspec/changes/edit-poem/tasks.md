@@ -144,7 +144,9 @@ consumers for knip), so `npm run knip` stays green per group PR.
 - [ ] 6.1 (FR-13, NFR-4) Add `LeaveBlockedDialog` (link and sign-out forms) and wire `useLeaveGuard`
   into `EditPoemForm` (active while changed and while a save is sending, off after a `saved` result;
   allowed: this poem's page and edit page; `askToLeave` opens the sign-out form and resolves with
-  the choice, `closePrompt` closes it) (design D10).
+  the choice, `closePrompt` closes it; the dialog holds one question at a time — a new `askToLeave` while
+  one is open settles the earlier one, as the guard already ignores its late answer (PR #168 review,
+  CR-01)) (design D10).
   - Verify with `tests/LeaveBlockedDialog.test.tsx` (both forms' copy; sign-out form: «Продолжить
     редактирование» focused, it, × and Escape answer stay, «Выйти без сохранения» answers leave;
     focus in, and back by hand to the element focused at opening for the link form) and `EditPoemForm` cases: guard off while unchanged, on while changed, still

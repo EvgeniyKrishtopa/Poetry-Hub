@@ -159,14 +159,25 @@ describe("useLeaveGuard", () => {
       await expect(second).resolves.toBe(LEAVE_ANSWER.stay);
     });
 
-    it("keeps the registration and the open dialog when the callbacks change identity", () => {
-      const { rerender, options, closePrompt } = renderGuard(true);
+    it("keeps the registration and the open dialog when the callbacks change identity, and asks the latest", async () => {
+      const { rerender, options, closePrompt, question } = renderGuard(true);
       const registered = useLeaveBlock.getState().askToLeave;
+      const newerAskToLeave = vi.fn(() => Promise.resolve(LEAVE_ANSWER.stay));
 
-      rerender({ ...options, askToLeave: vi.fn(), closePrompt: vi.fn() });
+      rerender({ ...options, askToLeave: newerAskToLeave, closePrompt: vi.fn() });
 
       expect(useLeaveBlock.getState().askToLeave).toBe(registered);
       expect(closePrompt).not.toHaveBeenCalled();
+      await expect(askBeforeLeaving()).resolves.toBe(LEAVE_ANSWER.stay);
+      expect(newerAskToLeave).toHaveBeenCalledTimes(1);
+      expect(question.askToLeave).not.toHaveBeenCalled();
+    });
+
+    it("answers dismissed when the dialog fails to answer", async () => {
+      const { rerender, options } = renderGuard(true);
+      rerender({ ...options, askToLeave: () => Promise.reject(new Error("dialog failed")) });
+
+      await expect(askBeforeLeaving()).resolves.toBe(LEAVE_ANSWER.dismissed);
     });
   });
 
