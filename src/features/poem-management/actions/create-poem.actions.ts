@@ -2,9 +2,7 @@
 
 import { getSessionState } from "@/features/auth";
 import { getOwnPublicAuthor } from "@/features/authors";
-import { listPoemGenres } from "@/features/poems";
 import { SESSION_STATE } from "@/shared/config/constants";
-import { validateImageFile } from "@/shared/lib/image-file/validate-image-file";
 
 import { checkCanCreatePoem, createOwnPoem } from "../dal/poem-writes";
 import {
@@ -13,12 +11,12 @@ import {
   poemFormSchema,
   toPoemFieldErrors,
 } from "../model/poem-form.schema";
-import { ILLUSTRATION_ERROR_MESSAGES, POEM_FIELD_ERRORS } from "../model/poem-management-messages";
 import { CREATE_POEM_STATUS } from "../model/poem-management.constants";
-import type { CreatePoemFailure, CreatePoemResult, PoemFieldErrors, PoemIllustration } from "../model/poem-management.types";
+import type { CreatePoemFailure, CreatePoemResult, PoemFieldErrors } from "../model/poem-management.types";
 
 import { poemManagementActionClient } from "./action-client";
 import { expirePoemsTag } from "./expire-poems-tag";
+import { checkGenre, checkIllustration } from "./poem-field-checks";
 
 // The user and the author are resolved from the session, never from input (NFR-1). The limit check runs
 // before any other I/O, so a blocked attempt reads no profile, calls no Contentful, and uploads nothing
@@ -38,33 +36,6 @@ async function sessionFailure(): Promise<CreatePoemFailure | null> {
   if (state === SESSION_STATE.signedIn) return null;
   // A session that can't be checked gets the outage message, not "expired".
   return state === SESSION_STATE.signedOut ? "unauthenticated" : "unavailable";
-}
-
-type GenreCheck = { readonly ok: true; readonly genreId: string | null } | { readonly ok: false; readonly result: CreatePoemResult };
-
-/** The no-genre option is `null`; any other id must still be in the cached genre list (design D7 step 5). */
-async function checkGenre(genreId: string | null): Promise<GenreCheck> {
-  if (genreId === null) return { ok: true, genreId };
-
-  const genres = await listPoemGenres();
-  if (!genres.ok) return { ok: false, result: failed("unavailable") };
-  if (!genres.genres.some((genre) => genre.id === genreId)) {
-    return { ok: false, result: invalid({ genreId: POEM_FIELD_ERRORS.genreUnavailable }) };
-  }
-  return { ok: true, genreId };
-}
-
-type IllustrationCheck =
-  | { readonly ok: true; readonly illustration: PoemIllustration | null }
-  | { readonly ok: false; readonly result: CreatePoemResult };
-
-/** No file, or an empty one, is no illustration; any other is checked by size and content (design D7 step 6). */
-async function checkIllustration(file: File | undefined): Promise<IllustrationCheck> {
-  if (file === undefined || file.size === 0) return { ok: true, illustration: null };
-
-  const check = await validateImageFile(file);
-  if (!check.ok) return { ok: false, result: invalid({ illustration: ILLUSTRATION_ERROR_MESSAGES[check.error] }) };
-  return { ok: true, illustration: { file, type: check.type } };
 }
 
 /** The steps of design D7, in order; each failure stops the rest. */

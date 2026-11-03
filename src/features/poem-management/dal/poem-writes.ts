@@ -63,9 +63,10 @@ type UploadResult = { readonly ok: true; readonly path: string } | { readonly ok
 
 /**
  * Uploads into the author's own folder under a fresh name. The extension and content type come from the
- * sniffed type, never from the browser-supplied `file.type` (FR-4).
+ * sniffed type, never from the browser-supplied `file.type` (FR-4). Shared with the update path
+ * (`poem-update.ts`).
  */
-async function uploadIllustration(
+export async function uploadIllustration(
   supabase: SupabaseClient,
   authorId: string,
   illustration: PoemIllustration,

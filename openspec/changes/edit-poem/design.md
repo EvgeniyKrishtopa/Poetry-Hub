@@ -231,7 +231,9 @@ own:
 
 1. `poemId` not a lowercase-hex UUID → `{ status: "not-found" }`, nothing else runs.
 2. Field rules (`poemFormSchema`) → `invalid` with field errors; `replace` without a non-empty file
-   → `invalid` on `illustration`. Nothing counted.
+   → `invalid` on `illustration` with «Обязательное поле.» (`POEM_FIELD_ERRORS.required`; only a
+   bypassed form sends it, so no new copy, decided 2026-11-03), reported together with any field-rule
+   errors. Nothing counted.
 3. Session (`getSessionState`): `signed-out` → `failed: unauthenticated`; `unknown` →
    `failed: unavailable`.
 4. `consumePoemEditAllowance()` → `failed: too-many-saves` or the failure. From here every attempt

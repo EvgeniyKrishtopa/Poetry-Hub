@@ -29,22 +29,22 @@ consumers for knip), so `npm run knip` stays green per group PR.
 
 ## 2. Update DAL and action (no visible change) <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-5, FR-6) `model/`: `UPDATE_POEM_STATUS`, `ILLUSTRATION_CHANGE`, `UpdatePoemResult`,
+- [x] 2.1 (FR-5, FR-6) `model/`: `UPDATE_POEM_STATUS`, `ILLUSTRATION_CHANGE`, `UpdatePoemResult`,
   `UpdateOwnPoemResult`, `updatePoemInputSchema` (types only), export `normalizeTitle` and
   `normalizeText` from `poem-form.schema.ts`; move `checkGenre` / `checkIllustration` out of
   `create-poem.actions.ts` into a server-only module both actions use; export `uploadIllustration`
   from `poem-writes.ts` (design D1, D3).
   - Verify: the create action's and `poem-writes`' existing tests pass unchanged.
-- [ ] 2.2 (FR-7) Add `dal/poem-edit-allowance.ts`: `consumePoemEditAllowance()` (design D3).
+- [x] 2.2 (FR-7) Add `dal/poem-edit-allowance.ts`: `consumePoemEditAllowance()` (design D3).
   - Verify with `tests/poem-edit-allowance.test.ts`: allowed, over the limit → `too-many-saves`, a
     5xx → `unavailable`, a rejected JWT → `unauthenticated`, a non-boolean → `unknown`.
-- [ ] 2.3 (FR-4, FR-6, FR-10, NFR-5) Add `dal/poem-update.ts`: `updateOwnPoem(input)` — upload on
+- [x] 2.3 (FR-4, FR-6, FR-10, NFR-5) Add `dal/poem-update.ts`: `updateOwnPoem(input)` — upload on
   `replace`, RPC, Zod parse, the author check, removal of the new upload when the row wasn't
   written, classification with the response status (design D3).
   - Verify with `tests/poem-update.test.ts`: each status; `keep` and `remove` upload nothing; an
     upload failure calls no RPC; the upload is removed on `not-found` and on an RPC failure; error
     classes; log lines carry no title, text, id, or path (implements NFR-5 of edit-poem).
-- [ ] 2.4 (FR-4 – FR-10, FR-14) Add `actions/update-poem.actions.ts`: `updatePoemAction` in design D3's
+- [x] 2.4 (FR-4 – FR-10, FR-14) Add `actions/update-poem.actions.ts`: `updatePoemAction` in design D3's
   order.
   - Verify with `tests/update-poem.actions.test.ts`: a malformed id reaches no I/O and answers
     `not-found`; invalid fields and `replace` without a file → `invalid`, nothing counted; signed-out
