@@ -1,7 +1,12 @@
 import type { Poem } from "@/features/poems";
 import type { ImageType } from "@/shared/lib/image-file/image-file.types";
 
-import type { CREATE_POEM_STATUS, DELETE_POEM_STATUS } from "./poem-management.constants";
+import type {
+  CREATE_POEM_STATUS,
+  DELETE_POEM_STATUS,
+  ILLUSTRATION_CHANGE,
+  UPDATE_POEM_STATUS,
+} from "./poem-management.constants";
 
 /** The add form's fields, as named in the submitted `FormData`. */
 export type PoemFormField = "title" | "text" | "genreId" | "illustration";
@@ -85,3 +90,61 @@ export type DeleteOwnPoemResult =
 
 /** What `/account/poems` shows once after a delete (delete-poem design D5). */
 export type DeletedPoemNotice = { readonly kind: "deleted"; readonly title: string } | { readonly kind: "already-deleted" };
+
+/**
+ * What a save does with the illustration (edit-poem design D3).
+ *
+ * @public scaffold: first imported in task 2.1.
+ */
+export type IllustrationChange = (typeof ILLUSTRATION_CHANGE)[keyof typeof ILLUSTRATION_CHANGE];
+
+/** @public scaffold: first imported in task 2.4. */
+export type UpdatePoemFailure = ServiceFailure | "too-many-saves" | "not-public";
+
+/**
+ * The update action's answer (edit-poem design D3): success is explicit, never "no error".
+ *
+ * @public scaffold: first imported in task 2.4.
+ */
+export type UpdatePoemResult =
+  | { readonly status: typeof UPDATE_POEM_STATUS.saved }
+  | { readonly status: typeof UPDATE_POEM_STATUS.invalid; readonly fieldErrors: PoemFieldErrors }
+  | { readonly status: typeof UPDATE_POEM_STATUS.notFound }
+  | { readonly status: typeof UPDATE_POEM_STATUS.failed; readonly failure: UpdatePoemFailure };
+
+/**
+ * `consume_write_allowance('poem_edit')`'s answer, or why it couldn't be read (edit-poem design D3).
+ *
+ * @public scaffold: first imported in task 2.2.
+ */
+export type PoemEditAllowance =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly failure: ServiceFailure | "too-many-saves" };
+
+/**
+ * What `updateOwnPoem` stores: already trimmed and checked by the action (edit-poem design D3).
+ *
+ * @public scaffold: first imported in task 2.3.
+ */
+export interface UpdateOwnPoemInput {
+  readonly authorId: string;
+  readonly poemId: string;
+  readonly title: string;
+  readonly text: string;
+  /** `null` for the no-genre option. */
+  readonly genreId: string | null;
+  readonly illustration:
+    | { readonly kind: typeof ILLUSTRATION_CHANGE.keep }
+    | { readonly kind: typeof ILLUSTRATION_CHANGE.remove }
+    | { readonly kind: typeof ILLUSTRATION_CHANGE.replace; readonly file: PoemIllustration };
+}
+
+/**
+ * `update_my_poem()`'s answer after any upload and cleanup, or why it failed (edit-poem design D2, D3).
+ *
+ * @public scaffold: first imported in task 2.3.
+ */
+export type UpdateOwnPoemResult =
+  | { readonly ok: true; readonly status: "updated"; readonly replacedPath: string | null }
+  | { readonly ok: true; readonly status: "not-found" }
+  | { readonly ok: false; readonly failure: ServiceFailure };

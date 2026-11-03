@@ -7,3 +7,13 @@ export const NEW_POEM_PATH = `${POEM_MANAGEMENT_PATH}/new`;
 export function ownPoemPath(poemId: string): string {
   return `${POEM_MANAGEMENT_PATH}/${poemId}`;
 }
+
+/**
+ * The owner's edit page of one poem, `/account/poems/<poemId>/edit` (edit-poem design D6).
+ *
+ * @public scaffold: first imported in task 5.1.
+ */
+export function editPoemPath(poemId: string): string {
+  void poemId;
+  throw new Error("not implemented");
+}

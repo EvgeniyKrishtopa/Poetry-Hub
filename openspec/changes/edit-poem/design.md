@@ -58,7 +58,7 @@ src/features/poem-management/
 │   └── poem-writes.ts                   # uploadIllustration shared with poem-update.ts (moved as is)
 ├── model/
 │   ├── poem-form.schema.ts              # + updatePoemInputSchema; normalizeTitle/normalizeText exported
-│   ├── poem-form-values.ts              # new: PoemFormValues, isPoemFormChanged, toStoredFormValues (D5)
+│   ├── poem-form-values.ts              # new: PoemFormValues, IllustrationState, isPoemFormChanged (D5)
 │   ├── poem-management.constants.ts     # + UPDATE_POEM_STATUS, ILLUSTRATION_CHANGE, EDIT_SEGMENT
 │   ├── poem-management.types.ts         # + UpdatePoemResult, UpdateOwnPoemResult, IllustrationChange
 │   ├── poem-management-messages.ts      # + EDIT_POEM_COPY, trail label (the offline text lives in ConnectionNotice only)
@@ -641,6 +641,45 @@ sequenceDiagram
   W-->>A: browser's own leave confirmation (leaving stays possible)
   Note over G: active while changed and while a save is sending; removed on a saved result (before the navigation) or when the page is hidden
 ```
+
+## Scaffold map
+
+Written by `opsx-scaffold` after the files existed (map approved 2026-11-03). Stub bodies only. Not
+scaffolded: the migration (group 1), the `NewPoemForm` split, the `GenreSelect` / `IllustrationField`
+move and the `PoemFormSkeleton` rename (task 3.1), the created-notice store's `kind` (5.2), the route
+files, the breadcrumb match, `index.ts`, and the wiring into `OwnPoemContent`, `SignOutButton`,
+`AuthorProfileEditor`, `FieldEditActions`, and `FieldActions` (groups 4-6). The poem-management
+client stubs carry no `"use client"` yet: each gets it with its implementation, together with the
+`boundaries` test's client-module list (NFR-2). Temporary `knip.jsonc` ignore entries and `@public`
+tags name the task that removes each. The leave-block store is complete (a four-line Zustand store,
+as `session-expired-notice.store.ts`); task 4.3 adds its test (Gate 2b P1, accepted).
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/shared/lib/network/network.constants.ts` | slow-connection thresholds (D8) | `SLOW_EFFECTIVE_TYPES`, `SLOW_RTT_MS` |
+| `src/shared/lib/network/use-connection-status.ts` | online / slow / offline as a hook (D8) | `useConnectionStatus`, `ConnectionStatus` |
+| `src/shared/ui/ConnectionNotice/` | the offline or slow notice (D8) | `ConnectionNotice`, `ConnectionNoticeProps` |
+| `src/shared/lib/leave-guard/leave-block.store.ts` | the active guard's callback for «Выйти» (D10) | `useLeaveBlock`, `LeaveBlockState` |
+| `src/features/poem-management/model/poem-management.constants.ts` (added) | update outcomes, illustration change, edit segment | `UPDATE_POEM_STATUS`, `ILLUSTRATION_CHANGE`, `EDIT_SEGMENT` |
+| `src/features/poem-management/model/poem-management.types.ts` (added) | action and DAL results (D3) | `IllustrationChange`, `UpdatePoemFailure`, `UpdatePoemResult`, `PoemEditAllowance`, `UpdateOwnPoemInput`, `UpdateOwnPoemResult` |
+| `src/features/poem-management/model/poem-form.schema.ts` (added) | the update action's input, types only (D3) | `updatePoemInputSchema`, `UpdatePoemInput` |
+| `src/features/poem-management/model/poem-form-values.ts` | form values and change detection (D5) | `PoemFormValues`, `IllustrationState`, `isPoemFormChanged` |
+| `src/features/poem-management/model/poem-paths.ts` (added) | the edit page's path (D6) | `editPoemPath` |
+| `src/features/poem-management/dal/poem-edit-allowance.ts` | the `poem_edit` limit (D3) | `consumePoemEditAllowance` |
+| `src/features/poem-management/dal/poem-update.ts` | upload, `update_my_poem`, cleanup (D2, D3) | `updateOwnPoem` |
+| `src/features/poem-management/actions/update-poem.actions.ts` | `"use server"` save (D3) | `updatePoemAction` |
+| `src/features/poem-management/components/PoemForm/use-poem-form.ts` | shared drafts, checks, focus, discard (D4, D5) | `usePoemForm`, `PoemFormState` |
+| `src/features/poem-management/components/PoemForm/PoemFormFields.tsx` + `.types.ts` | the four fields (D4) | `PoemFormFields`, `PoemFormFieldsProps` |
+| `src/features/poem-management/components/EditPoemPage/` | heading and Suspense (D6) | `EditPoemPage`, `EditPoemPageProps` |
+| `src/features/poem-management/components/EditPoemContent/` | session, own poem, genres, keyed form (D6) | `EditPoemContent`, `EditPoemContentProps` |
+| `src/features/poem-management/components/EditPoemButton/` | «Редактировать произведение» link (D6) | `EditPoemButton`, `EditPoemButtonProps` |
+| `src/features/poem-management/components/EditPoemForm/EditPoemForm.tsx` + `.types.ts` | the edit form's composition (D4) | `EditPoemForm`, `EditPoemFormProps` |
+| `src/features/poem-management/components/EditPoemForm/use-save-poem.ts` | the call and its outcomes (D7) | `useSavePoem`, `SavePoem` |
+| `src/features/poem-management/components/EditPoemForm/use-leave-guard.ts` | link, close, and sign-out guard (D10) | `useLeaveGuard`, `LeaveGuardOptions` |
+| `src/features/poem-management/components/LeaveBlockedDialog/` | the "save first" dialog over the shared `Dialog` (D10) | `LeaveBlockedDialog`, `LeaveBlockedDialogProps` |
+
+`PoemFormState` is a starting contract: task 3.1/3.2 may widen it (the editor and picker keys
+`reset()` bumps, a focus request for the alert) without changing the files above (Gate 2b P3).
 
 ## Risks / Trade-offs
 

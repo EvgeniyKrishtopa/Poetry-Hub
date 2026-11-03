@@ -90,7 +90,7 @@ consumers for knip), so `npm run knip` stays green per group PR.
     click, `target="_blank"`, `download`, and an external link pass; `beforeunload` is prevented
     while active; both listeners are gone when inactive and on unmount.
 
-- [ ] 4.3 (FR-13) Add `src/shared/lib/leave-guard/leave-block.store.ts`; `useLeaveGuard` registers
+- [ ] 4.3 (FR-13) `src/shared/lib/leave-guard/leave-block.store.ts` exists from the scaffold, complete; `useLeaveGuard` registers
   and clears its `onBlocked` there; `SignOutButton` calls the registered block instead of the
   sign-out when one is set (design D10).
   - Verify with the store's unit test, new `use-leave-guard` cases (registered while active, cleared
