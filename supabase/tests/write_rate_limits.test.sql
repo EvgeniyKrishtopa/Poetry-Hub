@@ -7,7 +7,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(19);
+select plan(21);
 
 -- Fixtures, written as the superuser.
 insert into auth.users (id, email) values
@@ -124,6 +124,18 @@ select is(
   public.consume_write_allowance('profile_write'),
   true,
   'a spent photo_upload limit leaves profile_write allowed'
+);
+
+select is(
+  (select bool_and(public.consume_write_allowance('poem_edit')) from generate_series(1, 11)),
+  false,
+  'C spends the poem_edit limit'
+);
+
+select is(
+  public.consume_write_allowance('profile_write'),
+  true,
+  'a spent poem_edit limit leaves profile_write allowed'
 );
 
 reset role;
