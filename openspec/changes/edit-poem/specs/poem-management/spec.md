@@ -263,7 +263,7 @@ Unsaved values on the edit page SHALL still be there when the author goes from t
 - **THEN** the form holds the stored values
 
 ### Requirement: Leaving with unsaved changes (edit-poem FR-13)
-While the edit form is changed, and also while its save is sending until the save's result arrives, activating a link to any page other than this poem's owner page or its edit page SHALL NOT navigate; instead a modal dialog titled «Есть несохранённые изменения» with the text «Сначала сохраните изменения.» and the button «Продолжить редактирование» SHALL open, and closing it SHALL leave the form as it was. Links to this poem's owner page SHALL navigate as usual. Pressing the header's «Выйти» SHALL NOT sign out and SHALL open the same dialog. Closing the tab, reloading, or entering another address SHALL show the browser's own leave confirmation, in which leaving stays possible. The browser's Back and Forward buttons SHALL NOT be blocked, and nothing SHALL be blocked from the poem's owner page while a draft is kept on the hidden edit page. An unchanged form SHALL block nothing, and nothing SHALL be blocked once a save has succeeded.
+While the edit form is changed, and also while its save is sending until the save's result arrives, activating a link to any page other than this poem's owner page or its edit page SHALL NOT navigate; instead a modal dialog titled «Есть несохранённые изменения» with the text «Сначала сохраните изменения.» and the button «Продолжить редактирование» SHALL open, and closing it SHALL leave the form as it was. Links to this poem's owner page SHALL navigate as usual. Pressing the header's «Выйти» SHALL NOT sign out at once; it SHALL open the same dialog in its sign-out form: the text «Если выйти сейчас, изменения пропадут.» and two buttons, «Продолжить редактирование» (focused, closes the dialog and keeps the form) and «Выйти без сохранения» (signs out, the changes are lost); closing it any other way, leaving the page while it is open (Back/Forward), or a save succeeding while it is open SHALL close it, keep the form as it was, and SHALL NOT sign out. A save already sending when the author confirms is not cancelled (PR #168 review, 2026-11-03). Either form of the dialog SHALL close by itself when a save succeeds or the author leaves the page (Back/Forward) while it is open, and SHALL NOT be shown again when they return to the edit page (spec-clarify, 2026-11-03). Closing the tab, reloading, or entering another address SHALL show the browser's own leave confirmation, in which leaving stays possible. The browser's Back and Forward buttons SHALL NOT be blocked, and nothing SHALL be blocked from the poem's owner page while a draft is kept on the hidden edit page. An unchanged form SHALL block nothing, and nothing SHALL be blocked once a save has succeeded.
 
 #### Scenario: Header link blocked
 - **GIVEN** a changed edit form
@@ -271,10 +271,20 @@ While the edit form is changed, and also while its save is sending until the sav
 - **THEN** the URL doesn't change and the dialog «Есть несохранённые изменения» opens
 - **AND** after «Продолжить редактирование» the form still holds the changes
 
-#### Scenario: Sign-out blocked
+#### Scenario: Sign-out asks first
 - **GIVEN** a changed edit form
 - **WHEN** the author presses «Выйти» in the header
-- **THEN** the dialog «Есть несохранённые изменения» opens, the author is still signed in, and the form still holds the changes
+- **THEN** the dialog «Есть несохранённые изменения» opens with «Если выйти сейчас, изменения пропадут.», «Продолжить редактирование» focused, and «Выйти без сохранения»; the author is still signed in
+
+#### Scenario: Sign-out, author stays
+- **GIVEN** the sign-out form of the dialog is open over a changed edit form
+- **WHEN** the author presses «Продолжить редактирование», the close button, or Escape
+- **THEN** the dialog closes, the author is still signed in, and the form still holds the changes
+
+#### Scenario: Sign-out confirmed
+- **GIVEN** the sign-out form of the dialog is open over a changed edit form
+- **WHEN** the author presses «Выйти без сохранения»
+- **THEN** the author is signed out as from any other page, and the changes are not saved
 
 #### Scenario: Poem page allowed
 - **GIVEN** a changed edit form
@@ -316,12 +326,22 @@ After a successful save, the author's own tab SHALL show the new content on `/ac
 - **THEN** the new content is shown
 
 ### Requirement: Accessible edit flow (edit-poem NFR-4)
-The edit page SHALL have exactly one level-1 heading in its `main`. The add form's accessibility rules (poem-management NFR-7) SHALL hold for the edit form. The failure alert SHALL be a `role="alert"` element and receive focus; the saved notice and the offline notice SHALL be `role="status"` elements. The leave dialog SHALL be a modal dialog with an accessible name from its title, focus SHALL move into it on open, and SHALL return to the element focused before the blocked click when it closes. The stored and the new illustration previews SHALL have an empty `alt` (the field's label names them). A disabled save button SHALL be `disabled`, not only styled.
+The edit page SHALL have exactly one level-1 heading in its `main`. The add form's accessibility rules (poem-management NFR-7) SHALL hold for the edit form. The failure alert SHALL be a `role="alert"` element and receive focus; the saved notice and the offline notice SHALL be `role="status"` elements. The leave dialog SHALL be a modal dialog with an accessible name from its title, focus SHALL move into it on open; when it closes, focus SHALL return to the element focused before the blocked link click (link form) or to «Выйти» when the author closes the sign-out form without leaving («Продолжить редактирование», ×, Escape; every browser; spec-clarify, 2026-11-03). If a save failed while the dialog was open, focus SHALL instead go to the failure alert when the dialog closes (spec-clarify, 2026-11-03). The stored and the new illustration previews SHALL have an empty `alt` (the field's label names them). A disabled save button SHALL be `disabled`, not only styled.
 
 #### Scenario: Dialog focus
 - **GIVEN** a changed form with focus on a header link
 - **WHEN** the author presses Enter on it and then «Продолжить редактирование»
 - **THEN** focus moves into the dialog on open and back to that header link on close
+
+#### Scenario: Sign-out dialog focus
+- **GIVEN** a changed form, and the author clicks «Выйти» with the mouse
+- **WHEN** they press «Продолжить редактирование» or Escape
+- **THEN** focus is on «Выйти»
+
+#### Scenario: Save failed while the dialog was open
+- **GIVEN** a save is sending and the leave dialog (either form) is open
+- **WHEN** the save fails and the author then presses «Продолжить редактирование»
+- **THEN** the failure alert shows above the form and has focus, and the form still holds the changes
 
 ### Requirement: Design tokens for editing (edit-poem NFR-6)
 New and changed styles SHALL use named design-token utilities only: no colour literals and no Tailwind arbitrary-value colour classes.

@@ -74,7 +74,7 @@ src/features/poem-management/
     ├── NewPoemForm/                     # create: composes PoemForm parts + createPoemAction
     ├── EditPoemForm/                    # new, client: composes PoemForm parts, the save hook, and the guard (D4, D7, D10)
     │   ├── use-save-poem.ts             #   the update call and its outcomes: stores, navigation, alert, offline (D7)
-    │   └── use-leave-guard.ts           #   link-click and beforeunload guard (D10)
+    │   └── use-leave-guard.ts           #   link-click, beforeunload, and sign-out question guard (D10)
     ├── EditPoemPage/                    # new, server: heading in the shell, Suspense (D6)
     ├── EditPoemContent/                 # new, server: session, own poem, genres, form (D6)
     ├── EditPoemButton/                  # new, server: ButtonLink to the edit page (D6)
@@ -88,11 +88,14 @@ src/features/authors/components/
 └── FieldActions/                        # «Удалить» disabled while offline or slow (D8)
 
 src/features/breadcrumbs/model/match-route.ts   # + the own-poem-edit match (D12)
-src/features/auth/components/SignOutButton/     # asks the leave-block store first (D10)
+src/features/auth/components/SignOutButton/     # calls the wrapper instead of the action (D10)
+└── sign-out-with-confirmation.ts                #   client wrapper: ask, then signOutAction (D10)
+src/features/auth/model/                         # + SIGN_OUT_STATUS, the wrapper's result type (D10)
 
 src/shared/
 ├── lib/network/use-connection-status.ts # new: online | slow | offline as a hook (D8)
-├── lib/leave-guard/leave-block.store.ts # new: Zustand, the active guard's onBlocked, read by «Выйти» (D10)
+├── lib/leave-guard/leave-block.store.ts # new: Zustand, the active guard's askToLeave; askBeforeLeaving() for sign-out (D10)
+├── lib/leave-guard/leave-guard.constants.ts # new: LEAVE_ANSWER (leave | stay | dismissed) (D10)
 └── ui/ConnectionNotice/                 # new: the offline or slow Alert (D8)
 ```
 
@@ -107,8 +110,8 @@ their failure position. A flag would branch in most of the component; a hook plu
 component keeps the shared part shared and each form short (Gate 4's "god component" check).
 
 Why the connection status goes to `shared/`: it has three consumers in two features (edit form, add
-form, profile editor), and `authors` can't import `poem-management`. The leave guard has one
-consumer, the edit form, so it stays in `poem-management` next to it (architecture.md: no `shared/`
+form, profile editor), and `authors` can't import `poem-management`. The leave guard hook has one
+consumer, the edit form (`auth` reaches it only through the shared leave-block store, D10), so it stays in `poem-management` next to it (architecture.md: no `shared/`
 abstraction before a second feature needs it; Gate 1 C2). It takes the allowed paths from its
 caller and knows nothing about poems, so moving it later is a file move.
 
@@ -452,7 +455,9 @@ retries with the same button; values stay; the limit message says when.
 function useLeaveGuard(options: {
   active: boolean;                          // EditPoemForm passes (isChanged || isPending) && !saved
   isAllowed: (pathname: string) => boolean; // the poem page and the edit page
-  onBlocked: () => void;                    // opens LeaveBlockedDialog
+  onBlocked: () => void;                    // opens LeaveBlockedDialog, link form
+  askToLeave: () => Promise<LeaveAnswer>;   // opens LeaveBlockedDialog, sign-out form
+  closePrompt: () => void;                  // closes the dialog, either form, on the guard's cleanup
 }): void
 ```
 
@@ -477,23 +482,89 @@ Rejected: `<Link onNavigate>` — the supported Next API, but it would need a sh
 flag read by every link component in four features. A native capture listener (laziness ladder
 rung 3) does the same for every anchor from one place.
 
-**Sign-out (spec-clarify, 2026-11-03).** «Выйти» is a button in `auth`, so the link listener can't
-see it, and `auth` can't import `poem-management`. A tiny Zustand store in
-`shared/lib/leave-guard/leave-block.store.ts` holds `{ block: (() => void) | null; setBlock }`.
-`useLeaveGuard` registers its `onBlocked` there while active and clears it on inactive and on hide
-(same effect as the listeners). `SignOutButton` reads it: when `block` is set, it calls `block()`
-instead of the action. The store holds a callback, no data; two features use it, so it sits in
-`shared/` beside the session-expired store's precedent (state-management.md gets one line). The
-hook itself stays in `poem-management`.
+**Sign-out (spec-clarify, 2026-11-03; revised in the PR #168 review, 2026-11-03: confirm instead
+of refuse).** «Выйти» is a button in `auth`, so the link listener can't see it, and `auth` can't
+import `poem-management`. A tiny Zustand store in `shared/lib/leave-guard/leave-block.store.ts`
+holds `{ askToLeave: (() => Promise<LeaveAnswer>) | null; setAskToLeave }` (the raw registration)
+and exports `askBeforeLeaving(): Promise<LeaveAnswer>` — the safe call: the registered answer, or
+`leave` when no guard is registered. Askers use only `askBeforeLeaving()`; only `useLeaveGuard`
+registers. `LeaveAnswer` is one of the three values of `LEAVE_ANSWER` in
+`shared/lib/leave-guard/leave-guard.constants.ts` (spec-clarify, 2026-11-03):
+
+- `leave` — the author pressed «Выйти без сохранения»;
+- `stay` — the author pressed «Продолжить редактирование», ×, or Escape; the asker puts focus back
+  on its own control;
+- `dismissed` — the page took over the question and focus (the guard's cleanup, or a save failure
+  that arrived while the dialog was open, after the author closes it); the asker leaves focus alone.
+`useLeaveGuard` registers there while active and clears it (only if still its own) on inactive,
+hide, and unmount, like the listeners.
+
+**One pending question, never left hanging (Gate 1, PR #168 review).** The registration
+`useLeaveGuard` puts in the store wraps the form's `askToLeave` and keeps at most one pending
+question. Its cleanup (inactive — e.g. a `saved` result arriving while the dialog is open — hide
+by `Activity` after Back/Forward, unmount) answers a pending question `dismissed` and always calls
+`closePrompt()`, which closes the dialog in either form (spec-clarify, 2026-11-03: the link form
+too), so no dialog reappears over a returning edit page and «Выйти» never waits on a hidden page.
+A second question while one is pending answers the first `dismissed`. Only `leave` signs out:
+nothing signs out without a visible choice.
+
+**A save failing while the dialog is open (spec-clarify, 2026-11-03).** The dialog stays open; the
+failure alert renders behind it. When the author closes the dialog (either form, any way but
+«Выйти без сохранения»), `EditPoemForm` focuses the failure alert instead of the usual target, and
+a pending sign-out question is answered `dismissed`, so `SignOutButton` doesn't take focus back.
+
+The check sits in a client wrapper around the server action, not in the button and not in the
+action: `auth/components/SignOutButton/sign-out-with-confirmation.ts` (beside its only caller, as
+`EditPoemForm/use-save-poem.ts`; never in `actions/`, which holds `"use server"` modules only —
+there the store read would run on the server, see nothing, and skip the guard) exports
+`signOutWithConfirmation(send: () => void)`. It awaits `askBeforeLeaving()` and runs `send` only on
+`leave`, answering an explicit union `{ status: "sent" } | { status: "stayed" } | { status:
+"dismissed" }` (from `leave`, `stay`, `dismissed`). `SIGN_OUT_STATUS`
+lives in `auth/model/auth.constants.ts`, the result type in `auth/model/auth.types.ts`.
+`SignOutButton` passes its existing send step as `send`: `startSignOut` around `signOutAction()`
+with its current `try/catch` and failure state, so a rejected call stays the button's own failure
+path, not the wrapper's. The button is therefore disabled only while the request is sending,
+never while the question is open (Gate 1, PR #168 review). On `stayed` (only) `SignOutButton`
+focuses its own button through a ref, and leaves focus alone on `dismissed`, as `DeletePoemButton`'s `openerRef` does: native `<dialog>`
+focus restoration is not relied on (Safari doesn't focus a clicked button, and jsdom stubs the
+dialog, so only an explicit `focus()` is testable; Gate 1 third pass). The server action can't make the check itself: the
+unsaved draft lives only in the browser, so the server would only repeat a flag the client sent
+(rejected, PR #168 review). `EditPoemForm` implements `askToLeave` by opening `LeaveBlockedDialog`
+in its sign-out form and resolving with the author's choice, and `closePrompt` by closing it.
+
+After «Выйти без сохранения» the dialog is closed and `signOutAction` runs. On success the server
+tree refreshes as signed out. On failure (`{ ok: false }`, a `serverError`, or a rejected call)
+`SignOutButton` shows `SIGN_OUT_FAILED_MESSAGE` (`role="alert"`, announced) exactly as on any other
+page, and the form keeps its draft with the guard still on. Focus after a failed sign-out is the
+button's existing behaviour, unchanged by this change.
+
+The store holds a callback, no data; two features use it, so it sits in `shared/` beside the
+session-expired store's precedent (state-management.md gets one line). The hook itself stays in
+`poem-management`. A save already sending when the author confirms is not cancelled (as in D8);
+Next runs one client's Server Actions one after another, so the sign-out runs after the save
+returns: a `saved` result first navigates to the poem page, and the sign-out's refresh then finds
+no session there, so the author lands on `/login` (web-qa and any recorded scenario expect that).
 
 Not covered, by decision: the browser's Back/Forward (a `popstate` can't be cancelled; the draft
 stays in the hidden page, FR-12), programmatic navigations (a session-expired redirect), and
 leaving from the poem page while a draft is hidden on the edit page (the guard lives on the edit
 page only; spec-clarify, 2026-11-03).
 
-`LeaveBlockedDialog` (client): the shared `Dialog`, title «Есть несохранённые изменения», body
-«Сначала сохраните изменения.», one button «Продолжить редактирование» that closes it; focus
-returns to the element focused before the click.
+`LeaveBlockedDialog` (client): the shared `Dialog`, title «Есть несохранённые изменения», in one
+of two forms (a `reason: "link" | "sign-out"` prop):
+
+- link: body «Сначала сохраните изменения.», one button «Продолжить редактирование» that closes it;
+- sign-out: body «Если выйти сейчас, изменения пропадут.», «Продолжить редактирование» (primary,
+  focused, answers "stay") and «Выйти без сохранения» (danger, answers "leave"); the corner ×
+  and Escape answer "stay".
+
+Focus is set by hand on close, not left to the native `<dialog>`, and one place picks the target:
+`EditPoemForm` (not `LeaveBlockedDialog`) saves `document.activeElement` before opening the link
+form and, in the dialog's close handler, focuses the failure alert if a save failed while it was
+open, or that saved element otherwise; for the sign-out form
+`SignOutButton` focuses «Выйти» on a `stayed` answer (see Sign-out above). A save failure that
+arrived while either form was open takes precedence: focus goes to the failure alert. `EditPoemForm` resolves `askToLeave` from the dialog's close handler, as
+`DeletePoemButton`'s `handleClosed`, so the ref focus runs after the native close, never before it.
 
 ### D11 — Kept draft and freshness (FR-12, FR-14)
 
@@ -536,8 +607,13 @@ come from `@/features/poem-management`'s index.
   disable, guard activation incl. while sending); `NewPoemForm` tests unchanged plus the offline
   and slow rule; `IllustrationField` labels and stored preview; `useConnectionStatus`;
   `useLeaveGuard` in poem-management (allowed and blocked paths, modifier clicks, external links, `beforeunload`,
-  removal on inactive); `LeaveBlockedDialog`; the leave-block store and `SignOutButton` (blocked and
-  unblocked); `CreatedPoemNotice` both texts; `FieldEditActions` and `FieldActions` offline and
+  removal on inactive); `LeaveBlockedDialog` in both forms; the leave-block store,
+  `signOutWithConfirmation` (no guard → sent; stay → nothing sent; leave → sent once), the guard's
+  pending question (answered `dismissed` and `closePrompt` called on inactive, hide, and unmount;
+  a second question answers the first `dismissed`), and `SignOutButton` through the wrapper
+  (enabled while the question is open; stayed: nothing sent, no alert, focus on «Выйти»;
+  dismissed: nothing sent, focus left where it is; leave then failure: the alert, as today); a
+  save failing while the dialog is open → focus on the failure alert after close; `CreatedPoemNotice` both texts; `FieldEditActions` and `FieldActions` offline and
   slow; `matchRoute` for the edit path.
 - web-qa (Gate 3): edit each field and save; trimming-only edit keeps the back link; replace and
   remove the illustration (and the old file is gone); limit (11 saves in a minute); failure
@@ -545,7 +621,9 @@ come from `@/features/poem-management`'s index.
   (DevTools offline) and slow (DevTools throttling to a 2G-class profile, Chromium) on the edit form,
   the add form, and the profile editor, with profile «Удалить» disabled too; «Отменить изменения»
   restoring every field and the illustration; draft kept over link and Back/Forward round trips; a
-  header link and «Выйти» blocked with the dialog; a link click while a save is sending blocked;
+  header link blocked with the dialog; «Выйти» asking first, staying on «Продолжить
+  редактирование» (keyboard: focus back on «Выйти» after it and after Escape) and signing out on
+  «Выйти без сохранения»; a link click while a save is sending blocked;
   the profile no longer public at save time; reload shows the browser confirmation; public pages
   fresh after a reload; a recorded scenario for the happy path.
 
@@ -652,6 +730,8 @@ sequenceDiagram
   participant G as useLeaveGuard (EditPoemForm)
   participant L as next/link handler
   participant W as window (beforeunload)
+  participant S as signOutWithConfirmation (auth, client)
+  participant X as signOutAction (server)
   Note over G: active while the form differs from the stored poem
   A->>D: click on a header link to /authors
   D->>G: pathname allowed?
@@ -663,6 +743,26 @@ sequenceDiagram
   end
   A->>W: close tab / reload / typed address
   W-->>A: browser's own leave confirmation (leaving stays possible)
+  A->>S: «Выйти» (SignOutButton → signOutWithConfirmation)
+  S->>G: askBeforeLeaving() via the leave-block store («Выйти» stays enabled)
+  G-->>A: LeaveBlockedDialog, sign-out form
+  alt «Выйти без сохранения»
+    G-->>S: leave (dialog closed)
+    S->>X: send(): SignOutButton's startSignOut → signOutAction() («Выйти» disabled while sending)
+    alt { ok: true }
+      X-->>A: refresh() → header shows «Войти», signed out
+    else { ok: false }, serverError, or a rejected call
+      X-->>A: SignOutButton shows the failure as on any page; form and guard unchanged
+    end
+  else «Продолжить редактирование», × or Escape
+    G-->>S: stay → nothing sent, form kept
+    S-->>A: SignOutButton focuses «Выйти» (ref)
+  else the save failed while the dialog was open, then the author closes it
+    G-->>S: dismissed → nothing sent, form kept
+    G-->>A: EditPoemForm focuses the failure alert
+  else guard turns off or the page is hidden while the dialog is open
+    G-->>S: dismissed (closePrompt) → nothing sent, focus left as the page set it
+  end
   Note over G: active while changed and while a save is sending; removed on a saved result (before the navigation) or when the page is hidden
 ```
 
@@ -675,15 +775,19 @@ files, the breadcrumb match, `index.ts`, and the wiring into `OwnPoemContent`, `
 `AuthorProfileEditor`, `FieldEditActions`, and `FieldActions` (groups 4-6). The poem-management
 client stubs carry no `"use client"` yet: each gets it with its implementation, together with the
 `boundaries` test's client-module list (NFR-2). Temporary `knip.jsonc` ignore entries and `@public`
-tags name the task that removes each. The leave-block store is complete (a four-line Zustand store,
-as `session-expired-notice.store.ts`); task 4.3 adds its test (Gate 2b P1, accepted).
+tags name the task that removes each. The leave-block store was complete for the first D10 (a
+four-line Zustand store, as `session-expired-notice.store.ts`; Gate 2b P1, accepted); the PR #168
+review's revision replaces its API (`askToLeave`, `askBeforeLeaving`), and task 4.3 rewrites it.
 
 | File | Responsibility | Exports |
 | --- | --- | --- |
 | `src/shared/lib/network/network.constants.ts` | slow-connection thresholds (D8) | `SLOW_EFFECTIVE_TYPES`, `SLOW_RTT_MS` |
 | `src/shared/lib/network/use-connection-status.ts` | online / slow / offline as a hook (D8) | `useConnectionStatus`, `ConnectionStatus` |
 | `src/shared/ui/ConnectionNotice/` | the offline or slow notice (D8) | `ConnectionNotice`, `ConnectionNoticeProps` |
-| `src/shared/lib/leave-guard/leave-block.store.ts` | the active guard's callback for «Выйти» (D10) | `useLeaveBlock`, `LeaveBlockState` |
+| `src/shared/lib/leave-guard/leave-block.store.ts` | the active guard's question for «Выйти» (D10) | `useLeaveBlock`, `LeaveBlockState`, `askBeforeLeaving` |
+| `src/shared/lib/leave-guard/leave-guard.constants.ts` (added in spec-clarify, 2026-11-03) | the three answers to the leave question (D10) | `LEAVE_ANSWER`, `LeaveAnswer` |
+| `src/features/auth/components/SignOutButton/sign-out-with-confirmation.ts` (added in the PR #168 review) | ask, then the server sign-out (D10) | `signOutWithConfirmation` |
+| `src/features/auth/model/auth.constants.ts`, `auth.types.ts` (added in the PR #168 review) | the wrapper's outcomes (D10) | `SIGN_OUT_STATUS`, `SignOutWithConfirmationResult` |
 | `src/features/poem-management/model/poem-management.constants.ts` (added) | update outcomes, illustration change, edit segment | `UPDATE_POEM_STATUS`, `ILLUSTRATION_CHANGE`, `EDIT_SEGMENT` |
 | `src/features/poem-management/model/poem-management.types.ts` (added) | action and DAL results (D3) | `IllustrationChange`, `UpdatePoemFailure`, `UpdatePoemResult`, `PoemEditAllowance`, `UpdateOwnPoemInput`, `UpdateOwnPoemResult` |
 | `src/features/poem-management/model/poem-form.schema.ts` (added) | the update action's input, types only (D3) | `updatePoemInputSchema`, `UpdatePoemInput` |
@@ -700,7 +804,7 @@ as `session-expired-notice.store.ts`); task 4.3 adds its test (Gate 2b P1, accep
 | `src/features/poem-management/components/EditPoemForm/EditPoemForm.tsx` + `.types.ts` | the edit form's composition (D4) | `EditPoemForm`, `EditPoemFormProps` |
 | `src/features/poem-management/components/EditPoemForm/use-save-poem.ts` | the call and its outcomes (D7) | `useSavePoem`, `SavePoem` |
 | `src/features/poem-management/components/EditPoemForm/use-leave-guard.ts` | link, close, and sign-out guard (D10) | `useLeaveGuard`, `LeaveGuardOptions` |
-| `src/features/poem-management/components/LeaveBlockedDialog/` | the "save first" dialog over the shared `Dialog` (D10) | `LeaveBlockedDialog`, `LeaveBlockedDialogProps` |
+| `src/features/poem-management/components/LeaveBlockedDialog/` | the "save first" dialog over the shared `Dialog`, link and sign-out forms (D10) | `LeaveBlockedDialog`, `LeaveBlockedDialogProps` |
 
 `PoemFormState` is a starting contract: task 3.1/3.2 may widen it (the editor and picker keys
 `reset()` bumps, a focus request for the alert) without changing the files above (Gate 2b P3).

@@ -1,0 +1,3 @@
+{"ts":"2026-11-03T16:43:25Z","change":"edit-poem","kind":"finding","gate":"spec-clarify","finding":"spec.md:266 auto-close on saved/hide covered only the sign-out form; now both forms","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-03T16:43:25Z","change":"edit-poem","kind":"finding","gate":"spec-clarify","finding":"spec.md:329 NFR-4 focus return for the sign-out form; now always «Выйти»","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-03T16:43:25Z","change":"edit-poem","kind":"finding","gate":"spec-clarify","finding":"spec.md:329 failure alert focus vs dialog focus return; failure alert wins after close","outcome":"fixed","ruleNumber":""}

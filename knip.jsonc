@@ -5,15 +5,8 @@
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
     ".ncurc.cjs",
     // Temporary, edit-poem scaffold: these stubs have no importer until a task wires or tests them. Each entry
-    // is removed by that task: the connection hook, constants and notice 4.1, the leave guard 4.2, the
-    // leave-block store 4.3, the edit page, content and button 5.1, the edit form and its save hook 5.2,
-    // LeaveBlockedDialog 5.3.
-    "src/shared/lib/network/use-connection-status.ts",
-    "src/shared/lib/network/network.constants.ts",
-    "src/shared/ui/ConnectionNotice/ConnectionNotice.tsx",
-    "src/shared/ui/ConnectionNotice/ConnectionNotice.types.ts",
-    "src/features/poem-management/components/EditPoemForm/use-leave-guard.ts",
-    "src/shared/lib/leave-guard/leave-block.store.ts",
+    // is removed by that task: the edit page, content and button 5.1, the edit form and its save hook 5.2,
+    // LeaveBlockedDialog 6.1.
     "src/features/poem-management/components/EditPoemPage/EditPoemPage.tsx",
     "src/features/poem-management/components/EditPoemPage/EditPoemPage.types.ts",
     "src/features/poem-management/components/EditPoemContent/EditPoemContent.tsx",

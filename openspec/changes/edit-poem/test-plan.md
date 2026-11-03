@@ -56,7 +56,11 @@ MODIFIED block carries over unchanged keep their existing tests and are listed o
 | FR-12 | Round trip by Back and Forward keeps the changed text | web-qa: edit, Back, Forward | end-to-end |
 | FR-12 | Reload starts fresh | web-qa: reload, confirm leaving, stored values shown | end-to-end |
 | FR-13 | Header link blocked → URL unchanged, dialog opens; after «Продолжить редактирование» changes kept | `useLeaveGuard` test: disallowed same-origin anchor click is prevented and calls `onBlocked`; `LeaveBlockedDialog` test; web-qa: «Наши авторы» in the header | unit, end-to-end |
-| FR-13 | Sign-out blocked → dialog, still signed in, changes kept | leave-block store test; `useLeaveGuard` test (registers its block while active); `SignOutButton` test: block set → action not called, block called; web-qa | unit, end-to-end |
+| FR-13 | Sign-out asks first → dialog in its sign-out form (body, «Продолжить редактирование» focused, «Выйти без сохранения»), still signed in | leave-block store test (`askBeforeLeaving` passes the registered answer through); `useLeaveGuard` test (registers `askToLeave` while active); `LeaveBlockedDialog` test: sign-out form copy and initial focus; web-qa | unit, end-to-end |
+| FR-13 | Sign-out, author stays («Продолжить редактирование», ×, Escape) → dialog closes, still signed in, changes kept | `LeaveBlockedDialog` test: each of the three answers `stay`; `signOutWithConfirmation` test: `stay` → no `send`, `stayed`; `SignOutButton` test: stayed → no action call, no alert; web-qa | unit, end-to-end |
+| FR-13 | Sign-out confirmed → signed out, changes not saved | `LeaveBlockedDialog` test: «Выйти без сохранения» answers `leave`; `signOutWithConfirmation` test: `leave` → `send` once, `sent`; web-qa: confirm, header shows «Войти» | unit, end-to-end |
+| FR-13 | Either dialog form closes itself on a `saved` result or a hide (Back/Forward) and is not shown again | `useLeaveGuard` test: cleanup on inactive and unmount answers a pending question `dismissed` and calls `closePrompt`; a second question answers the first `dismissed`; `EditPoemForm` test: `saved` while either form is open closes it, no dialog after a hide and show; web-qa: Back while the dialog is open | unit, end-to-end |
+| FR-13 | A save already sending when the author confirms is not cancelled; the author ends on `/login` | web-qa: slow save, «Выйти» → «Выйти без сохранения», lands on `/login` | end-to-end |
 | FR-13 | Poem page allowed → navigates, no dialog | `useLeaveGuard` test: allowed pathname passes untouched; web-qa: breadcrumb to the poem title | unit, end-to-end |
 | FR-13 | Closing the tab or reloading → browser confirmation | `useLeaveGuard` test: `beforeunload` event `defaultPrevented` while active; web-qa: reload shows the confirmation | unit, end-to-end |
 | FR-13 | Leaving while the save is sending → blocked, confirmation on close; after success lands on the poem page | `EditPoemForm` test: guard active while pending, inactive after `saved` before `router.push`; web-qa: slow request, click a header link | unit, end-to-end |
@@ -64,17 +68,19 @@ MODIFIED block carries over unchanged keep their existing tests and are listed o
 | FR-13 | Ctrl/Cmd-click opens a new tab, no dialog | `useLeaveGuard` test: modifier and middle clicks, `target="_blank"`, `download`, external origin pass | unit |
 | FR-14 | Title change shows on `/account/poems` and the public author page | `updatePoemAction` test: `updateTag(poemsTag(authorId))` on `saved`; web-qa: both lists after a rename | unit, end-to-end |
 | FR-14 | Guest after reload sees new content | web-qa: second browser context reloads the public poem page | end-to-end |
-| NFR-4 | Dialog focus moves in on open and back to the header link on close | `LeaveBlockedDialog` / `EditPoemForm` test: focus inside on open, back to the previously focused element on close; web-qa keyboard pass | unit, end-to-end |
-| NFR-6 | No colour literals or arbitrary colour classes | static check (task 6.3) over new and changed component files | unit |
+| NFR-4 | Dialog focus moves in on open and back to the header link on close (link form) | `EditPoemForm` test: focus inside on open, back by hand to the element focused at opening on close; web-qa keyboard pass | unit, end-to-end |
+| NFR-4 | Sign-out form closed without leaving → focus on «Выйти» in every browser | `SignOutButton` test: focus moved elsewhere before a `stayed` answer → focus on «Выйти»; dismissed → focus left where it was; web-qa keyboard pass (after «Продолжить редактирование» and Escape) | unit, end-to-end |
+| NFR-4 | Save failed while the dialog was open → after close, the failure alert has focus, changes kept | `EditPoemForm` test (either form): failure while open, then close → focus on the alert; a pending sign-out question resolves `dismissed` | unit |
+| NFR-6 | No colour literals or arbitrary colour classes | static check (task 7.3) over new and changed component files | unit |
 | NFR-7 | Copy matches the table | tests assert each string verbatim against `poem-management-messages.ts` and `ConnectionNotice`; web-qa reads each state | unit, end-to-end |
 | NFR-1 [NFR-1] | Update operation for the owner: four fields change, path cleared, old path answered, id/author/date unchanged | pgTAP (`poems.test.sql`) | integration |
 | NFR-1 [NFR-1] | Update operation for anyone else: unchanged; B gets the unknown-id answer; guest rejected | pgTAP: author B → `not-found`; anon has no execute | integration |
 | NFR-1 [NFR-1] | Non-public own profile → unchanged, unknown-id answer | pgTAP | integration |
 | NFR-1 [NFR-1] | Path in another author's folder → rejected, unchanged | pgTAP: 23514 and the row unchanged | integration |
 | NFR-1 [NFR-1] | Direct table update changes nothing (carried "Update and delete" scenario, now for any role) | pgTAP: `update poems` as `authenticated` and `anon` affects no row | integration |
-| NFR-2 [NFR-2] | `"use client"` only in the listed modules | static check (task 6.3) | unit |
-| NFR-3 [NFR-3] | No cross-feature imports; no `navigator.onLine` / `navigator.connection` outside `shared/`; no `beforeunload` outside the leave guard | static check (task 6.3); existing boundary lint | unit |
-| NFR-3 [NFR-3] | Both forms render `PoemFormFields` and use `usePoemForm`, declaring no draft state themselves | static check (task 6.3) | unit |
+| NFR-2 [NFR-2] | `"use client"` only in the listed modules | static check (task 7.3) | unit |
+| NFR-3 [NFR-3] | No cross-feature imports; no `navigator.onLine` / `navigator.connection` outside `shared/`; no `beforeunload` outside the leave guard | static check (task 7.3); existing boundary lint | unit |
+| NFR-3 [NFR-3] | Both forms render `PoemFormFields` and use `usePoemForm`, declaring no draft state themselves | static check (task 7.3) | unit |
 | NFR-8 [NFR-9] | Build without env exits 0; the route list adds `/account/poems/[poemId]/edit` with the management marker, others unchanged | `npm run build` with no Supabase or Contentful env, route list compared (task 7.6) | integration |
 | NFR-5 [NFR-10] | Failed update, upload, and old-file removal logs carry no title, text, id, path, user or profile id | `updateOwnPoem` and `updatePoemAction` tests: captured `console.error` lines checked for each value | unit |
 
@@ -106,8 +112,10 @@ MODIFIED block carries over unchanged keep their existing tests and are listed o
 
 | Requirement | Criterion | Tests | Level |
 | --- | --- | --- | --- |
-| FR-13 | Unsaved changes → no sign-out request, dialog opens, header still shows «Выйти» | `SignOutButton` test: block set → `signOutAction` not called, block called; web-qa | unit, end-to-end |
-| FR-13 | No unsaved changes → signed out as before | `SignOutButton` existing tests unchanged with the store empty | unit |
+| FR-13 | Unsaved changes, author stays → no sign-out request, header still shows «Выйти», form keeps the changes | `signOutWithConfirmation` test: `stay` → no `send`; `SignOutButton` test: while the question is open the button is enabled; stayed → `signOutAction` not called, no alert; web-qa | unit, end-to-end |
+| FR-13 | Unsaved changes, author confirms → exactly one sign-out request, signed out | `signOutWithConfirmation` test: `leave` → `send` once; `SignOutButton` test: `leave` → `signOutAction` called once; web-qa | unit, end-to-end |
+| FR-13 | Confirmed, but the sign-out fails → dialog closed, the failure shows as on any page, still signed in, changes kept | `SignOutButton` test: `leave` then `{ ok: false }` / a rejected call → the alert, button enabled | unit |
+| FR-13 | No unsaved changes → signed out as before, no dialog | `signOutWithConfirmation` test: no guard → `send` once, `sent`; `SignOutButton` existing tests unchanged with the store empty | unit |
 
 ## Carried over unchanged
 
