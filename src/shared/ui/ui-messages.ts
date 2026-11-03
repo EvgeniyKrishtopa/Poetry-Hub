@@ -26,6 +26,12 @@ export const SESSION_UNAVAILABLE_MESSAGE = "Сервис временно нед
 
 export const RETRY_LABEL = "Повторить";
 
+/** `ConnectionNotice`'s two texts; the only place they live (edit-poem design D8, FR-11). */
+export const CONNECTION_NOTICE_MESSAGES = {
+  offline: "Нет подключения к интернету. Сохранение станет доступно, когда связь восстановится.",
+  slow: "Медленное подключение к интернету. Сохранение станет доступно, когда связь улучшится.",
+} as const;
+
 /** A text field's counter, e.g. "12 / 1000"; it may exceed the limit. */
 export function formatCharacterCounter(length: number, maxLength: number): string {
   return `${length} / ${maxLength}`;

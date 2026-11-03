@@ -74,7 +74,7 @@ consumers for knip), so `npm run knip` stays green per group PR.
 
 ## 4. Connection-status and leave-guard building blocks (no visible change until group 5 activates the guard; 4.3 changes «Выйти» only then) <!-- judgement-heavy -->
 
-- [ ] 4.1 (FR-11) Add `src/shared/lib/network/use-connection-status.ts` (`online | slow | offline`),
+- [x] 4.1 (FR-11) Add `src/shared/lib/network/use-connection-status.ts` (`online | slow | offline`),
   `network.constants.ts` (`SLOW_EFFECTIVE_TYPES`, `SLOW_RTT_MS`), and `src/shared/ui/ConnectionNotice/`
   (design D8).
   - Verify with `src/shared/lib/network/tests/use-connection-status.test.ts` (initial value;
@@ -83,14 +83,14 @@ consumers for knip), so `npm run knip` stays green per group PR.
     `slow`; offline wins over slow; server snapshot `online`) and
     `src/shared/ui/tests/ConnectionNotice.test.tsx` (both texts verbatim, `role="status"`, nothing
     while online).
-- [ ] 4.2 (FR-13) Add `src/features/poem-management/components/EditPoemForm/use-leave-guard.ts`
+- [x] 4.2 (FR-13) Add `src/features/poem-management/components/EditPoemForm/use-leave-guard.ts`
   (design D1, D10).
   - Verify with `src/features/poem-management/tests/use-leave-guard.test.tsx`: a click on a disallowed
     same-origin link is prevented and calls `onBlocked`; an allowed path, a modifier click, a middle
     click, `target="_blank"`, `download`, and an external link pass; `beforeunload` is prevented
     while active; both listeners are gone when inactive and on unmount.
 
-- [ ] 4.3 (FR-13) `src/shared/lib/leave-guard/leave-block.store.ts` exists from the scaffold, complete; `useLeaveGuard` registers
+- [x] 4.3 (FR-13) `src/shared/lib/leave-guard/leave-block.store.ts` exists from the scaffold, complete; `useLeaveGuard` registers
   and clears its `onBlocked` there; `SignOutButton` calls the registered block instead of the
   sign-out when one is set (design D10).
   - Verify with the store's unit test, new `use-leave-guard` cases (registered while active, cleared

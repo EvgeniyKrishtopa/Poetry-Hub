@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { useLeaveBlock } from "@/shared/lib/leave-guard/leave-block.store";
+
 import { signOutAction } from "../../actions/auth.actions";
 import { SignOutButton } from "../../components/SignOutButton/SignOutButton";
 
@@ -14,6 +16,7 @@ const FAILURE_TEXT = "Не удалось выйти. Попробуйте ещ�
 describe("SignOutButton", () => {
   afterEach(() => {
     vi.clearAllMocks();
+    useLeaveBlock.getState().setBlock(null);
   });
 
   // implements FR-4 of remove-browser-session-read
@@ -61,6 +64,19 @@ describe("SignOutButton", () => {
     // React entangles pending async transitions, so a never-settling one would keep later tests pending.
     settle({ data: { ok: true } } as SignOutResult);
     await vi.waitFor(() => expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled());
+  });
+
+  // implements FR-13 of edit-poem for sign-out
+  it("calls the registered leave block instead of signing out while an edit form has unsaved changes", async () => {
+    const block = vi.fn();
+    useLeaveBlock.getState().setBlock(block);
+    render(<SignOutButton />);
+
+    await userEvent.setup().click(screen.getByRole("button", { name: "Выйти" }));
+
+    expect(block).toHaveBeenCalledTimes(1);
+    expect(signOutAction).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled();
   });
 
   it("clears the alert when a retry succeeds", async () => {
