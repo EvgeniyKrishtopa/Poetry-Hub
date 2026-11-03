@@ -9,16 +9,16 @@ consumers for knip), so `npm run knip` stays green per group PR.
 
 ## 1. Update operation and edit limit in the database <!-- judgement-heavy -->
 
-- [ ] 1.1 (NFR-1, FR-4, FR-6, FR-10) Add `supabase/migrations/<ts>_update_my_poem.sql` with
+- [x] 1.1 (NFR-1, FR-4, FR-6, FR-10) Add `supabase/migrations/<ts>_update_my_poem.sql` with
   `public.update_my_poem(poem_id, title, text, genre_id, keep_illustration, illustration_path)`
   (design D2): `security definer`, `set search_path = ''`, owner and public profile from the
   session, old path read `for update`, only title/text/genre/illustration set, returns `updated`
   with `author_id` and `replaced_path`, or `not-found`; execute for `authenticated` only; no update
   grant or policy on `poems`; the down migration in the header.
-- [ ] 1.2 (FR-7) In the same migration: widen `write_rate_limits.scope`'s check with `poem_edit` and
+- [x] 1.2 (FR-7) In the same migration: widen `write_rate_limits.scope`'s check with `poem_edit` and
   replace `consume_write_allowance` with `('poem_edit', 10, interval '1 minute')` added to its
   limits (design D2).
-- [ ] 1.3 (NFR-1, FR-7) Extend `supabase/tests/poems.test.sql` and
+- [x] 1.3 (NFR-1, FR-7) Extend `supabase/tests/poems.test.sql` and
   `supabase/tests/write_rate_limits.test.sql` (design D13): direct `update poems` changes nothing for
   any role; anon can't execute `update_my_poem`; the owner's call changes the four fields and keeps
   `id`, `author_id`, `created_at`; keep / remove / replace of the illustration and `replaced_path`;

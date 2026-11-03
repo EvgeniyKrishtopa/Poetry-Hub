@@ -1,13 +1,15 @@
 -- RLS, grants, checks, the create function and its limit, and Storage policies for poems
--- (add-poem-creation, design D2, D13), and the delete function and the creation log (delete-poem, design D2, D9).
+-- (add-poem-creation, design D2, D13), the delete function and the creation log (delete-poem, design D2, D9),
+-- and the update function (edit-poem, design D2, D13).
 -- implements NFR-1 and FR-6 of add-poem-creation
 -- implements NFR-1 and FR-9 of delete-poem
+-- implements NFR-1, FR-4, FR-6 and FR-10 of edit-poem
 -- Run against the local stack: npx supabase test db
 begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(79);
+select plan(99);
 
 -- Start from empty tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -89,6 +91,12 @@ select throws_ok(
   'anon cannot call delete_my_poem()'
 );
 
+select throws_ok(
+  $$select public.update_my_poem('b0000000-0000-4000-8000-000000000001', 'Hacked', 'X', null, true, null)$$,
+  '42501', null,
+  'anon cannot call update_my_poem()'
+);
+
 select throws_ok($$select * from public.poem_creations$$, '42501', null, 'anon cannot read the creation log');
 
 select throws_ok(
@@ -107,6 +115,12 @@ select throws_ok(
   $$select public.delete_my_poem('b0000000-0000-4000-8000-000000000001')$$,
   '42501', null,
   'delete_my_poem() rejects a signed-in role without a user id'
+);
+
+select throws_ok(
+  $$select public.update_my_poem('b0000000-0000-4000-8000-000000000001', 'Hacked', 'X', null, true, null)$$,
+  '42501', null,
+  'update_my_poem() rejects a signed-in role without a user id'
 );
 
 reset role;
@@ -272,6 +286,127 @@ select is_empty(
   'the deleted poem is gone'
 );
 
+-- Updating through the function (edit-poem D2). B's old poem has no genre and no illustration yet; it was
+-- inserted at now() - 2 days, and now() is fixed for the whole transaction.
+select is(
+  public.update_my_poem(
+    'b0000000-0000-4000-8000-000000000001', 'Новое', E'Новая строка\nи ещё одна', '5KsDBWseXY6QegucYAoacS',
+    false, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/11111111-aaaa-4aaa-8aaa-111111111111.png'
+  ),
+  '{"status": "updated", "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "replaced_path": null}'::jsonb,
+  'the owner updates their poem and adds an illustration: no old file to remove'
+);
+
+select results_eq(
+  $$select id::text, author_id::text, title, text, genre_id, illustration_path, created_at = now() - interval '2 days'
+    from public.poems where id = 'b0000000-0000-4000-8000-000000000001'$$,
+  $$values (
+    'b0000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Новое',
+    E'Новая строка\nи ещё одна', '5KsDBWseXY6QegucYAoacS',
+    'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/11111111-aaaa-4aaa-8aaa-111111111111.png', true
+  )$$,
+  'the update changed the title, text, genre, and illustration, and kept the id, author, and creation time'
+);
+
+select is(
+  public.update_my_poem(
+    'b0000000-0000-4000-8000-000000000001', 'Новое', 'X', null,
+    true, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/22222222-aaaa-4aaa-8aaa-222222222222.jpg'
+  ),
+  '{"status": "updated", "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "replaced_path": null}'::jsonb,
+  'keeping the illustration answers no replaced path'
+);
+
+select is(
+  (select illustration_path from public.poems where id = 'b0000000-0000-4000-8000-000000000001'),
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/11111111-aaaa-4aaa-8aaa-111111111111.png',
+  'keeping the illustration ignores the passed path'
+);
+
+select is(
+  public.update_my_poem(
+    'b0000000-0000-4000-8000-000000000001', 'Новое', 'X', null,
+    false, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/22222222-aaaa-4aaa-8aaa-222222222222.jpg'
+  ),
+  '{"status": "updated", "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "replaced_path": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/11111111-aaaa-4aaa-8aaa-111111111111.png"}'::jsonb,
+  'replacing the illustration answers the old path'
+);
+
+select is(
+  (select illustration_path from public.poems where id = 'b0000000-0000-4000-8000-000000000001'),
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/22222222-aaaa-4aaa-8aaa-222222222222.jpg',
+  'the poem points at the new illustration'
+);
+
+select is(
+  public.update_my_poem('b0000000-0000-4000-8000-000000000001', 'Новое', 'X', null, false, null),
+  '{"status": "updated", "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "replaced_path": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/22222222-aaaa-4aaa-8aaa-222222222222.jpg"}'::jsonb,
+  'removing the illustration answers the old path'
+);
+
+select is(
+  (select illustration_path from public.poems where id = 'b0000000-0000-4000-8000-000000000001'),
+  null::text,
+  'the poem has no illustration after a removal'
+);
+
+select is(
+  public.update_my_poem('b0000000-0000-4000-8000-000000000001', 'Новое', 'X', null, false, null),
+  '{"status": "updated", "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "replaced_path": null}'::jsonb,
+  'removing an illustration the poem doesn''t have answers no replaced path'
+);
+
+-- Each rejected update fails as a whole statement, so it changes nothing.
+select throws_ok(
+  $$select public.update_my_poem(
+    'b0000000-0000-4000-8000-000000000001', 'Новое', 'X', null,
+    false, 'dddddddd-dddd-4ddd-8ddd-dddddddddddd/eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee.png'
+  )$$,
+  '23514', null,
+  'an update to an illustration path in another profile''s folder is rejected'
+);
+
+select throws_ok(
+  $$select public.update_my_poem(
+    'b0000000-0000-4000-8000-000000000001', 'Новое', 'X', null,
+    false, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/../dddddddd-dddd-4ddd-8ddd-dddddddddddd/eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee.png'
+  )$$,
+  '23514', null,
+  'an update to a path escaping the own folder with dot segments is rejected'
+);
+
+select throws_ok(
+  $$select public.update_my_poem('b0000000-0000-4000-8000-000000000001', '   ', 'X', null, true, null)$$,
+  '23514', null,
+  'an update to a blank title is rejected'
+);
+
+select results_eq(
+  $$select title, text, illustration_path from public.poems where id = 'b0000000-0000-4000-8000-000000000001'$$,
+  $$values ('Новое', 'X', null::text)$$,
+  'the rejected updates changed nothing'
+);
+
+select is(
+  public.update_my_poem('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Hacked', 'X', null, true, null),
+  '{"status": "not-found"}'::jsonb,
+  'update_my_poem() answers not-found for an unknown id'
+);
+
+select is(
+  public.update_my_poem(
+    (select id from public.poems where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' and title = 'Poem 1'),
+    'Hacked', 'X', null, false, null
+  ),
+  '{"status": "not-found"}'::jsonb,
+  'another author''s poem answers not-found, the same as an unknown id'
+);
+
+select is_empty(
+  $$select id from public.poems where title = 'Hacked'$$,
+  'the not-found updates changed no poem'
+);
+
 -- Storage, as B.
 select lives_ok(
   $$insert into storage.objects (bucket_id, name)
@@ -364,12 +499,25 @@ select throws_ok(
   'a non-public author cannot upload an illustration, not even into their own folder'
 );
 
+-- Unlike deleting, updating is gated by public status (edit-poem D2, FR-10).
+select is(
+  public.update_my_poem('a0000000-0000-4000-8000-000000000001', 'Hacked', 'X', null, false, null),
+  '{"status": "not-found"}'::jsonb,
+  'an owner with a non-public profile cannot update their own poem'
+);
+
 reset role;
 
 select results_eq(
   $$select count(*)::int from public.poems where author_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   array[1],
   'the not-public create stored nothing'
+);
+
+select results_eq(
+  $$select title, text from public.poems where id = 'a0000000-0000-4000-8000-000000000001'$$,
+  $$values ('Hidden', 'Not public yet')$$,
+  'the non-public owner''s update changed nothing'
 );
 
 -- Accepted (design D2, Risks): deleting is not gated by public status, so an owner can remove their own poem
