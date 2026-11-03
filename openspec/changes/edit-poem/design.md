@@ -168,7 +168,8 @@ grant execute on function public.update_my_poem(uuid, text, text, text, boolean,
   then too, FR-7 of add-poem-creation).
 - **Only title, text, genre, illustration change**: `id`, `author_id`, `created_at` are not in the
   `set` list, so no call can move a poem to another author or re-date it.
-- **`keep_illustration`** separates "leave it" from "set it to null" without a magic path value.
+- **`keep_illustration`** separates "leave it" from "set it to null" without a magic path value. A
+  null flag raises (22004) instead of reading as a removal (Gate 4 CR-01, 2026-11-03).
   With `false`, `illustration_path` is the new path (replace) or `null` (remove); the table's own
   check rejects a path outside the author's folder (23514 → `unknown`).
 - **`replaced_path`**: the old path when the illustration changed and there was one, so the action

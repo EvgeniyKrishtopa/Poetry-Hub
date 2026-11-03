@@ -1,12 +1,13 @@
 -- Per-user write limits: consume_write_allowance() and the counter table's privileges
--- (add-author-profiles, design D13).
+-- (add-author-profiles, design D13), and the poem_edit scope (edit-poem, design D2, D13).
 -- implements FR-21, NFR-2 of add-author-profiles
+-- implements FR-7 of edit-poem
 -- Run against the local stack: npx supabase test db
 begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(16);
+select plan(21);
 
 -- Fixtures, written as the superuser.
 insert into auth.users (id, email) values
@@ -50,6 +51,18 @@ select is(
   public.consume_write_allowance('photo_upload'),
   false,
   'photo_upload: the 6th call in the window is refused'
+);
+
+-- A's profile_write is already spent: poem_edit counts on its own.
+select ok(
+  (select bool_and(public.consume_write_allowance('poem_edit')) from generate_series(1, 10)),
+  'poem_edit: calls 1-10 are allowed, though profile_write is spent'
+);
+
+select is(
+  public.consume_write_allowance('poem_edit'),
+  false,
+  'poem_edit: the 11th call in the window is refused'
 );
 
 select throws_ok(
@@ -113,6 +126,18 @@ select is(
   'a spent photo_upload limit leaves profile_write allowed'
 );
 
+select is(
+  (select bool_and(public.consume_write_allowance('poem_edit')) from generate_series(1, 11)),
+  false,
+  'C spends the poem_edit limit'
+);
+
+select is(
+  public.consume_write_allowance('profile_write'),
+  true,
+  'a spent poem_edit limit leaves profile_write allowed'
+);
+
 reset role;
 
 -- ---------- windows that have passed restart; one that hasn't doesn't ----------
@@ -128,6 +153,12 @@ select is(
   public.consume_write_allowance('profile_write'),
   true,
   'profile_write: an attempt after the minute window is allowed again'
+);
+
+select is(
+  public.consume_write_allowance('poem_edit'),
+  true,
+  'poem_edit: an attempt after the minute window is allowed again'
 );
 
 select is(
