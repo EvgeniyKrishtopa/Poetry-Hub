@@ -1,6 +1,7 @@
 import type { ImageFileError } from "@/shared/lib/image-file/image-file.types";
 
 import { TEXT_MAX_LENGTH, TITLE_MAX_LENGTH } from "./poem-management.constants";
+import type { IllustrationLabels } from "./poem-management.types";
 
 // Every string of the proposal's UI copy table this feature shows, verbatim and in Russian.
 
@@ -26,6 +27,13 @@ export const POEM_MANAGEMENT_COPY = {
   // Not in the copy table: the same text as the root `loading.tsx` and the poem pages' skeleton (FR-13).
   loading: "Загрузка…",
 } as const;
+
+/** The add form's illustration buttons: the picker keeps its text after a pick (edit-poem design D6). */
+export const NEW_POEM_ILLUSTRATION_LABELS: IllustrationLabels = {
+  choose: POEM_MANAGEMENT_COPY.illustrationButton,
+  replace: POEM_MANAGEMENT_COPY.illustrationButton,
+  remove: POEM_MANAGEMENT_COPY.removeIllustration,
+};
 
 export const POEM_FIELD_ERRORS = {
   required: "Обязательное поле.",

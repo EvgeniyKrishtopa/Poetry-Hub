@@ -57,18 +57,18 @@ consumers for knip), so `npm run knip` stays green per group PR.
 
 ## 3. Shared form parts (no visible change) <!-- judgement-heavy -->
 
-- [ ] 3.1 (NFR-3) Split `NewPoemForm` into `PoemForm/use-poem-form.ts` and
+- [x] 3.1 (NFR-3) Split `NewPoemForm` into `PoemForm/use-poem-form.ts` and
   `PoemForm/PoemFormFields.tsx`; move `GenreSelect` and `IllustrationField` into `PoemForm/`;
   `NewPoemForm` composes them with its own create call and outcomes; rename `NewPoemSkeleton` to
   `PoemFormSkeleton` (design D4).
   - Verify: `NewPoemForm`'s, `GenreSelect`'s, and `IllustrationField`'s existing tests pass with
     import paths changed only.
-- [ ] 3.2 (FR-3) Add `model/poem-form-values.ts`: `PoemFormValues`, `IllustrationState`,
+- [x] 3.2 (FR-3) Add `model/poem-form-values.ts`: `PoemFormValues`, `IllustrationState`,
   `isPoemFormChanged` (design D5); `usePoemForm` exposes `isChanged` and `reset()`.
   - Verify with `tests/poem-form-values.test.ts`: each field; trimming-only edits unchanged; an
     edit undone unchanged; `stored → none`, `stored → new`, `none → new` changed; a rejected pick
     unchanged.
-- [ ] 3.3 (FR-4) `IllustrationField`: the stored preview, the picker label by state, the remove
+- [x] 3.3 (FR-4) `IllustrationField`: the stored preview, the picker label by state, the remove
   label as a prop (design D6). The add form passes its current labels.
   - Verify with `IllustrationField.test.tsx` (new cases) and the add form's tests unchanged.
 

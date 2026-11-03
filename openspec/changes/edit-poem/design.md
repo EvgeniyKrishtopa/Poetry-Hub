@@ -66,7 +66,8 @@ src/features/poem-management/
 │   └── created-poem-notice-ui.store.ts  # holds { poemId, kind: "created" | "saved" } (D7; name kept, see Risks)
 └── components/
     ├── PoemForm/                        # new home of the shared form parts (D4)
-    │   ├── use-poem-form.ts             #   drafts, browser check, focus, change detection
+    │   ├── use-poem-form.ts             #   drafts, browser check, change detection
+    │   ├── use-poem-form-focus.ts       #   field ids, focus requests, the editor's remount key
     │   ├── PoemFormFields.tsx           #   title, text, genre, illustration
     │   ├── GenreSelect.tsx              #   moved from NewPoemForm/
     │   └── IllustrationField.tsx        #   moved; + stored illustration preview and labels (D6)
@@ -279,6 +280,10 @@ Logs: `write-log.ts`, operation names `check edit limit`, `update poem`, `upload
   options (with the "genre removed" pruning), the illustration state (D6), field errors, focus
   requests and their effect, `validate()` (the browser check), `showFieldErrors`, `focusAlert`, and
   `isChanged` (D5). It holds no action and no navigation.
+- `use-poem-form-focus.ts` (`usePoemFormFocus`, review of group 3): one responsibility split out of
+  `usePoemForm` — the field ids, the focus request and its effect, and the editor's remount key. It
+  holds no field values. `usePoemForm` composes it and returns everything only the markup needs
+  (field ids, editor and picker keys) as one `rendering` object, apart from the form's data.
 - `PoemFormFields.tsx`: renders title, `MarkdownEditor`, `GenreSelect`, `IllustrationField` from
   the hook's values, with the picker labels as props.
 - `NewPoemForm`: `usePoemForm(EMPTY_VALUES)`, the fields, the failure alert above the submit
@@ -346,6 +351,22 @@ request the hook already knows how to run).
   иллюстрацию» otherwise; remove label as a prop — «Убрать иллюстрацию» on create (unchanged),
   «Удалить иллюстрацию» on edit, for a stored and a newly picked file alike. Removing a new file
   ends in `{ kind: "none" }`, not back at the stored one.
+- **Labels per form (group 3, 2026-11-03).** The three button texts are one `IllustrationLabels`
+  prop (`choose`, `replace`, `remove`), so the «Заменить» rule applies only where a form asks for
+  it: the add form passes «Выбрать иллюстрацию» for both picker texts and keeps «Убрать
+  иллюстрацию», so it shows no visible change (group 3's promise). The edit page's order (preview
+  above the picker row, «Удалить» beside the picker, ui-plan) is added with `EditPoemForm` in
+  group 5; until then the field keeps the add form's order.
+- **Open for group 5 (group 3 review, CR-01).** With a stored illustration, a rejected new pick
+  shows the stored preview, the error, and «Удалить иллюстрацию»; that button today both clears the
+  error and removes the stored illustration (`removeIllustration` sets the stored one aside). Group
+  5 decides, with the edit layout, whether clearing the error keeps the stored illustration, and
+  adds an `EditPoemForm` test for the chosen behaviour. The add form is not affected (it starts with
+  no illustration).
+- **`usePoemForm(initial, genres, isPending)` (group 3).** The hook takes the caller's sending
+  state as a third argument: focus waits for the fieldset to be enabled again, and the sending
+  state belongs to the form that owns the action. It is generic over the form's failure type, so
+  each form's alert map stays exhaustive.
 
 ### D7 — Outcomes and the saved notice (FR-6, FR-8, FR-9, FR-10)
 
