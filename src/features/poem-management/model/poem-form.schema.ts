@@ -20,16 +20,22 @@ function normalizeLineBreaks(value: string): string {
   return value.replace(LINE_BREAKS, "\n");
 }
 
-/** The title as stored: line breaks normalized, then trimmed (FR-4). */
-function normalizeTitle(value: string): string {
+/**
+ * The title as stored: line breaks normalized, then trimmed (FR-4).
+ *
+ * @public first imported in edit-poem task 3.2 (`isPoemFormChanged` compares stored forms).
+ */
+export function normalizeTitle(value: string): string {
   return normalizeLineBreaks(value).trim();
 }
 
 /**
  * The text as stored: line breaks normalized, leading empty lines and trailing whitespace removed, so a
  * text that is whitespace only becomes empty (FR-4, design D6).
+ *
+ * @public first imported in edit-poem task 3.2 (`isPoemFormChanged` compares stored forms).
  */
-function normalizeText(value: string): string {
+export function normalizeText(value: string): string {
   return normalizeLineBreaks(value).replace(LEADING_EMPTY_LINES, "").trimEnd();
 }
 
