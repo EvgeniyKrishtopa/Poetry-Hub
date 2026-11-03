@@ -122,6 +122,8 @@ Archived at `openspec/changes/archive/2026-10-29-add-poem-creation/`.
 
 ## delete-poem
 
+Archived at `openspec/changes/archive/2026-11-03-delete-poem/`.
+
 ### delete-poem · 3.1 — replace the one-time notice mechanism with a server message shown before the redirect
 
 - **State:** deferred (a requested redesign, not a gap in the delivered task)
