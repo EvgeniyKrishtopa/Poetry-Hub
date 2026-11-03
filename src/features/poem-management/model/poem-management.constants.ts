@@ -37,3 +37,25 @@ export const DELETE_POEM_STATUS = {
   notFound: "not-found",
   failed: "failed",
 } as const;
+
+/** The update action's outcomes (edit-poem design D3). */
+export const UPDATE_POEM_STATUS = {
+  saved: "saved",
+  invalid: "invalid",
+  notFound: "not-found",
+  failed: "failed",
+} as const;
+
+/** What a save does with the illustration (edit-poem design D2, D3). */
+export const ILLUSTRATION_CHANGE = {
+  keep: "keep",
+  remove: "remove",
+  replace: "replace",
+} as const;
+
+/**
+ * The edit page's last path segment, `/account/poems/<poemId>/edit`.
+ *
+ * @public scaffold: first imported in task 5.1.
+ */
+export const EDIT_SEGMENT = "edit";

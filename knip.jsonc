@@ -3,7 +3,36 @@
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignore": [
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
-    ".ncurc.cjs"
+    ".ncurc.cjs",
+    // Temporary, edit-poem scaffold: these stubs have no importer until a task wires or tests them. Each entry
+    // is removed by that task: the edit allowance 2.2, the update DAL 2.3, the action 2.4, the form hook and
+    // fields 3.1, the form values 3.2, the connection hook, constants and notice 4.1, the leave guard 4.2, the
+    // leave-block store 4.3, the edit page, content and button 5.1, the edit form and its save hook 5.2,
+    // LeaveBlockedDialog 5.3.
+    "src/features/poem-management/dal/poem-edit-allowance.ts",
+    "src/features/poem-management/dal/poem-update.ts",
+    "src/features/poem-management/actions/update-poem.actions.ts",
+    "src/features/poem-management/components/PoemForm/use-poem-form.ts",
+    "src/features/poem-management/components/PoemForm/PoemFormFields.tsx",
+    "src/features/poem-management/components/PoemForm/PoemFormFields.types.ts",
+    "src/features/poem-management/model/poem-form-values.ts",
+    "src/shared/lib/network/use-connection-status.ts",
+    "src/shared/lib/network/network.constants.ts",
+    "src/shared/ui/ConnectionNotice/ConnectionNotice.tsx",
+    "src/shared/ui/ConnectionNotice/ConnectionNotice.types.ts",
+    "src/features/poem-management/components/EditPoemForm/use-leave-guard.ts",
+    "src/shared/lib/leave-guard/leave-block.store.ts",
+    "src/features/poem-management/components/EditPoemPage/EditPoemPage.tsx",
+    "src/features/poem-management/components/EditPoemPage/EditPoemPage.types.ts",
+    "src/features/poem-management/components/EditPoemContent/EditPoemContent.tsx",
+    "src/features/poem-management/components/EditPoemContent/EditPoemContent.types.ts",
+    "src/features/poem-management/components/EditPoemButton/EditPoemButton.tsx",
+    "src/features/poem-management/components/EditPoemButton/EditPoemButton.types.ts",
+    "src/features/poem-management/components/EditPoemForm/EditPoemForm.tsx",
+    "src/features/poem-management/components/EditPoemForm/EditPoemForm.types.ts",
+    "src/features/poem-management/components/EditPoemForm/use-save-poem.ts",
+    "src/features/poem-management/components/LeaveBlockedDialog/LeaveBlockedDialog.tsx",
+    "src/features/poem-management/components/LeaveBlockedDialog/LeaveBlockedDialog.types.ts"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
