@@ -1,4 +1,5 @@
 import type { MarkdownFormat } from "@/shared/lib/markdown/markdown.types";
+import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
 
 // The shared primitives' own copy, verbatim and in Russian (add-author-profiles and add-poem-creation NFR-8).
 
@@ -28,8 +29,8 @@ export const RETRY_LABEL = "Повторить";
 
 /** `ConnectionNotice`'s two texts; the only place they live (edit-poem design D8, FR-11). */
 export const CONNECTION_NOTICE_MESSAGES = {
-  offline: "Нет подключения к интернету. Сохранение станет доступно, когда связь восстановится.",
-  slow: "Медленное подключение к интернету. Сохранение станет доступно, когда связь улучшится.",
+  [CONNECTION_STATUS.offline]: "Нет подключения к интернету. Сохранение станет доступно, когда связь восстановится.",
+  [CONNECTION_STATUS.slow]: "Медленное подключение к интернету. Сохранение станет доступно, когда связь улучшится.",
 } as const;
 
 /** A text field's counter, e.g. "12 / 1000"; it may exceed the limit. */

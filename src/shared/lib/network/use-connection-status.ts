@@ -2,10 +2,9 @@
 
 import { useSyncExternalStore } from "react";
 
-import { SLOW_EFFECTIVE_TYPES, SLOW_RTT_MS } from "./network.constants";
+import { CONNECTION_STATUS, SLOW_EFFECTIVE_TYPES, SLOW_RTT_MS } from "./network.constants";
 
-/** What the save forms read: no connection, a slow one by the browser's own estimate, or a normal one. */
-export type ConnectionStatus = "online" | "slow" | "offline";
+export type ConnectionStatus = (typeof CONNECTION_STATUS)[keyof typeof CONNECTION_STATUS];
 
 /** The part of the Network Information API this hook reads; TypeScript's DOM types don't include it. */
 interface ConnectionEstimate extends EventTarget {
@@ -31,13 +30,13 @@ function isSlow(estimate: ConnectionEstimate | null): boolean {
 }
 
 function getSnapshot(): ConnectionStatus {
-  if (!navigator.onLine) return "offline";
-  return isSlow(readConnectionEstimate()) ? "slow" : "online";
+  if (!navigator.onLine) return CONNECTION_STATUS.offline;
+  return isSlow(readConnectionEstimate()) ? CONNECTION_STATUS.slow : CONNECTION_STATUS.online;
 }
 
 // Pages render online; the client corrects the value right after hydration.
 function getServerSnapshot(): ConnectionStatus {
-  return "online";
+  return CONNECTION_STATUS.online;
 }
 
 function subscribe(onChange: () => void): () => void {
