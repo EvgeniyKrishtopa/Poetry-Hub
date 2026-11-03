@@ -9,7 +9,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(99);
+select plan(100);
 
 -- Start from empty tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -379,6 +379,12 @@ select throws_ok(
   $$select public.update_my_poem('b0000000-0000-4000-8000-000000000001', '   ', 'X', null, true, null)$$,
   '23514', null,
   'an update to a blank title is rejected'
+);
+
+select throws_ok(
+  $$select public.update_my_poem('b0000000-0000-4000-8000-000000000001', 'Новое', 'X', null, null, null)$$,
+  '22004', null,
+  'an update without keep_illustration is rejected, not read as a removal'
 );
 
 select results_eq(

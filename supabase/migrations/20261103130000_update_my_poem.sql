@@ -68,7 +68,8 @@ $$;
 -- non-public own profile answer alike (FR-10). Takes no author argument: the owner comes from the session only.
 --
 -- keep_illustration = true leaves the stored illustration as is and ignores illustration_path; false sets it
--- to illustration_path, a new path (replace) or null (remove). The table's check rejects a path outside the
+-- to illustration_path, a new path (replace) or null (remove). A null keep_illustration raises (22004)
+-- rather than reading as a removal, so a call that omits it can't drop an illustration by accident. The table's check rejects a path outside the
 -- author's own folder (23514), as for a create. replaced_path is the old path when the illustration changed
 -- and there was one, so the app removes that file once the row no longer points at it. The old path is read
 -- `for update`, so two concurrent saves can't both see it as theirs to remove.
@@ -96,6 +97,10 @@ declare
 begin
   if caller is null then
     raise exception 'not signed in' using errcode = '42501';
+  end if;
+
+  if update_my_poem.keep_illustration is null then
+    raise exception 'keep_illustration must be true or false' using errcode = '22004';
   end if;
 
   profile := public.my_author_profile_id();
