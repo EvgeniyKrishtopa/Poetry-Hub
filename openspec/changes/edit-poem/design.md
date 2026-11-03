@@ -708,6 +708,10 @@ as `session-expired-notice.store.ts`); task 4.3 adds its test (Gate 2b P1, accep
   group; its existing tests run unchanged in the same group.
 - [Orphan file when removing the old illustration fails] → logged; invisible; same as the delete
   flow.
+- [The connection drops after `update_my_poem` committed a replace, before its answer arrives] →
+  the DAL reads that as a failed write and removes the new upload, so the saved row points at a
+  missing file (a broken image until the next save). The window is one response long, and
+  `createOwnPoem` has the same rule; accepted (Gate 4 CR-01, 2026-11-03).
 - [Editing a poem whose genre was removed from Contentful forces a genre pick] → intended: a removed
   genre can't be stored again by the create rules either.
 - [The created-notice store gains a `kind`] → its tests are updated in the same group; the created
