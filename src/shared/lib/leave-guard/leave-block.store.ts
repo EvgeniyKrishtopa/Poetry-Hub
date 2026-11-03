@@ -13,3 +13,14 @@ export const useLeaveBlock = create<LeaveBlockState>()((set) => ({
   block: null,
   setBlock: (block) => set({ block }),
 }));
+
+/**
+ * For a control that leaves the page without a link: `true` when a page with unsaved changes is guarding and
+ * has shown its own "save first" prompt, so the control must stop there.
+ */
+export function askToStayOnPage(): boolean {
+  const { block } = useLeaveBlock.getState();
+  if (block === null) return false;
+  block();
+  return true;
+}

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 
-import { useLeaveBlock } from "@/shared/lib/leave-guard/leave-block.store";
+import { askToStayOnPage } from "@/shared/lib/leave-guard/leave-block.store";
 import { Button } from "@/shared/ui";
 
 import { signOutAction } from "../../actions/auth.actions";
@@ -18,12 +18,8 @@ export function SignOutButton() {
   const [signOutFailed, setSignOutFailed] = useState(false);
 
   function signOut() {
-    // An edit form with unsaved changes asks the author to save first (edit-poem design D10).
-    const leaveBlock = useLeaveBlock.getState().block;
-    if (leaveBlock !== null) {
-      leaveBlock();
-      return;
-    }
+    // Signing out would drop a poem's unsaved edits: its form asks to save first instead (edit-poem FR-13).
+    if (askToStayOnPage()) return;
     setSignOutFailed(false);
     startSignOut(async () => {
       let ok = false;

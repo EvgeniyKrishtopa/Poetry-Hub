@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { useLeaveBlock } from "../leave-block.store";
+import { askToStayOnPage, useLeaveBlock } from "../leave-block.store";
 
 afterEach(() => {
   useLeaveBlock.getState().setBlock(null);
@@ -20,5 +20,18 @@ describe("useLeaveBlock", () => {
 
     useLeaveBlock.getState().setBlock(null);
     expect(useLeaveBlock.getState().block).toBeNull();
+  });
+
+  // implements FR-13 of edit-poem
+  it("askToStayOnPage calls the registered block and answers true", () => {
+    const block = vi.fn();
+    useLeaveBlock.getState().setBlock(block);
+
+    expect(askToStayOnPage()).toBe(true);
+    expect(block).toHaveBeenCalledTimes(1);
+  });
+
+  it("askToStayOnPage answers false with no block registered", () => {
+    expect(askToStayOnPage()).toBe(false);
   });
 });
