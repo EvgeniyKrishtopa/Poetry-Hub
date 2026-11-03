@@ -98,6 +98,18 @@ describe("useConnectionStatus", () => {
     expect(result.current).toBe(expected);
   });
 
+  it.each<[string, string, string | undefined, number | undefined]>([
+    ["only a slow type", "slow", "2g", undefined],
+    ["only a good type", "online", "4g", undefined],
+    ["only a slow rtt", "slow", undefined, 1001],
+    ["only a good rtt", "online", undefined, GOOD_RTT_MS],
+  ])("reads an estimate with %s as %s", (_label, expected, effectiveType, rtt) => {
+    setConnection(new FakeConnection(effectiveType, rtt));
+    const { result } = renderHook(() => useConnectionStatus());
+
+    expect(result.current).toBe(expected);
+  });
+
   it("re-reads the estimate on its change event", () => {
     const connection = new FakeConnection("2g", GOOD_RTT_MS);
     setConnection(connection);
