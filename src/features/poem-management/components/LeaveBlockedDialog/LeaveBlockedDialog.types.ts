@@ -1,6 +1,6 @@
-import type { Ref } from "react";
+import type { RefObject } from "react";
 
 export interface LeaveBlockedDialogProps {
   /** Opened by the caller through `showModal()`. */
-  readonly ref: Ref<HTMLDialogElement>;
+  readonly ref: RefObject<HTMLDialogElement | null>;
 }
