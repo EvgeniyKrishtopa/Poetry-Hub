@@ -7,11 +7,12 @@ import { POEM_MARKDOWN_FORMATS, TEXT_MAX_LENGTH } from "../../model/poem-managem
 import { GenreSelect } from "./GenreSelect";
 import { IllustrationField } from "./IllustrationField";
 import type { PoemFormFieldsProps } from "./PoemFormFields.types";
-import { TITLE_FIELD_NAME } from "./use-poem-form";
+import { TITLE_FIELD_NAME } from "./use-poem-form-focus";
 
 /** Title, text, genre, and illustration, from the shared form state (edit-poem design D4). */
 export function PoemFormFields({ form, illustrationLabels }: PoemFormFieldsProps) {
-  const { values, fieldErrors, fieldIds } = form;
+  const { values, fieldErrors } = form;
+  const { fieldIds, editorKey, pickerKey } = form.rendering;
 
   return (
     <>
@@ -29,7 +30,7 @@ export function PoemFormFields({ form, illustrationLabels }: PoemFormFieldsProps
           {POEM_MANAGEMENT_COPY.textLabel}
         </label>
         <MarkdownEditor
-          key={form.editorKey}
+          key={editorKey}
           id={fieldIds.text}
           value={values.text}
           onChange={form.setText}
@@ -49,7 +50,7 @@ export function PoemFormFields({ form, illustrationLabels }: PoemFormFieldsProps
       />
       <IllustrationField
         id={fieldIds.illustration}
-        pickerKey={form.pickerKey}
+        pickerKey={pickerKey}
         illustration={values.illustration}
         error={form.illustrationError}
         labels={illustrationLabels}

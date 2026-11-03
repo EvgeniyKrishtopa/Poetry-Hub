@@ -66,7 +66,8 @@ src/features/poem-management/
 │   └── created-poem-notice-ui.store.ts  # holds { poemId, kind: "created" | "saved" } (D7; name kept, see Risks)
 └── components/
     ├── PoemForm/                        # new home of the shared form parts (D4)
-    │   ├── use-poem-form.ts             #   drafts, browser check, focus, change detection
+    │   ├── use-poem-form.ts             #   drafts, browser check, change detection
+    │   ├── use-poem-form-focus.ts       #   field ids, focus requests, the editor's remount key
     │   ├── PoemFormFields.tsx           #   title, text, genre, illustration
     │   ├── GenreSelect.tsx              #   moved from NewPoemForm/
     │   └── IllustrationField.tsx        #   moved; + stored illustration preview and labels (D6)
@@ -279,6 +280,10 @@ Logs: `write-log.ts`, operation names `check edit limit`, `update poem`, `upload
   options (with the "genre removed" pruning), the illustration state (D6), field errors, focus
   requests and their effect, `validate()` (the browser check), `showFieldErrors`, `focusAlert`, and
   `isChanged` (D5). It holds no action and no navigation.
+- `use-poem-form-focus.ts` (`usePoemFormFocus`, review of group 3): one responsibility split out of
+  `usePoemForm` — the field ids, the focus request and its effect, and the editor's remount key. It
+  holds no field values. `usePoemForm` composes it and returns everything only the markup needs
+  (field ids, editor and picker keys) as one `rendering` object, apart from the form's data.
 - `PoemFormFields.tsx`: renders title, `MarkdownEditor`, `GenreSelect`, `IllustrationField` from
   the hook's values, with the picker labels as props.
 - `NewPoemForm`: `usePoemForm(EMPTY_VALUES)`, the fields, the failure alert above the submit

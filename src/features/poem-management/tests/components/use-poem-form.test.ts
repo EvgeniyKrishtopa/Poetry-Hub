@@ -101,7 +101,7 @@ describe("usePoemForm", () => {
       result.current.showFailure("unavailable");
     });
     expect(result.current.fieldErrors.title).toBe(POEM_FIELD_ERRORS.required);
-    const { editorKey, pickerKey } = result.current;
+    const { editorKey, pickerKey } = result.current.rendering;
 
     act(() => result.current.reset());
 
@@ -110,8 +110,8 @@ describe("usePoemForm", () => {
     expect(result.current.fieldErrors).toEqual({});
     expect(result.current.failure).toBeNull();
     // The editor and the file input remount, so they forget their own state too.
-    expect(result.current.editorKey).not.toBe(editorKey);
-    expect(result.current.pickerKey).not.toBe(pickerKey);
+    expect(result.current.rendering.editorKey).not.toBe(editorKey);
+    expect(result.current.rendering.pickerKey).not.toBe(pickerKey);
   });
 
   it("drops a genre the server reports as removed and resets the dropdown to «—»", () => {
