@@ -1,0 +1,2 @@
+full
+# more than one module: yes (new collection-management feature, poem-management, breadcrumbs, shared); data schema: yes (collections table, creation log, three functions, a new write-limit scope); contract: yes (poem-management's list page renders a new feature's public component; leave guard moves to shared/)
