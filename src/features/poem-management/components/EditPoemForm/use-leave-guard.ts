@@ -36,22 +36,28 @@ function sameTabLink(target: EventTarget | null): HTMLAnchorElement | null {
 
 /** Cancels plain clicks on links to disallowed pages; every link on the page at once, from one listener. */
 function useBlockedLinks(active: boolean, isAllowed: LeaveGuardOptions["isAllowed"], onBlocked: () => void) {
+  // The latest callbacks, so the form's re-render on every keystroke doesn't re-add the listener (CR-11).
+  const latest = useRef({ isAllowed, onBlocked });
+  useEffect(() => {
+    latest.current = { isAllowed, onBlocked };
+  });
+
   useEffect(() => {
     if (!active) return;
 
     function blockLinkClick(event: MouseEvent) {
       if (!isPlainClick(event)) return;
       const link = sameTabLink(event.target);
-      if (link === null || isAllowed(link.pathname)) return;
+      if (link === null || latest.current.isAllowed(link.pathname)) return;
       // Capture phase plus stopPropagation: next/link's own click handler never runs.
       event.preventDefault();
       event.stopPropagation();
-      onBlocked();
+      latest.current.onBlocked();
     }
 
     document.addEventListener("click", blockLinkClick, { capture: true });
     return () => document.removeEventListener("click", blockLinkClick, { capture: true });
-  }, [active, isAllowed, onBlocked]);
+  }, [active]);
 }
 
 /** Asks the browser to confirm a close, reload, or typed address; the browser shows its own text. */

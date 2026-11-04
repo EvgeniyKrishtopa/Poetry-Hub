@@ -100,6 +100,16 @@ export const UPDATE_POEM_FAILURE_MESSAGES: Readonly<Record<SaveAlertFailure, str
   unknown: CREATE_POEM_FAILURE_MESSAGES.unknown,
 };
 
+/** The dialog over the edit page while changes are unsaved: a blocked link, or the header's sign-out (edit-poem D10). */
+export const LEAVE_DIALOG_COPY = {
+  title: "Есть несохранённые изменения",
+  linkBody: "Сначала сохраните изменения.",
+  signOutBody: "Если выйти сейчас, изменения пропадут.",
+  stay: "Продолжить редактирование",
+  leave: "Выйти без сохранения",
+  close: DELETE_POEM_COPY.close,
+} as const;
+
 /** Breadcrumb labels of the static management routes (design D10) and the edit page's last item (edit-poem D12). */
 export const POEM_MANAGEMENT_TRAIL_LABELS = {
   list: "Управление произведениями",

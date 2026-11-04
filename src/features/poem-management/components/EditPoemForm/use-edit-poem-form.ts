@@ -14,9 +14,12 @@ import { useDeletedPoemNotice } from "../../model/deleted-poem-notice-ui.store";
 import { illustrationChangeOf } from "../../model/poem-form-values";
 import { UPDATE_POEM_STATUS } from "../../model/poem-management.constants";
 import type { SaveAlertFailure, UpdatePoemResult } from "../../model/poem-management.types";
-import { ownPoemPath } from "../../model/poem-paths";
+import { editPoemPath, ownPoemPath } from "../../model/poem-paths";
+import type { LeaveBlockedDialogProps } from "../LeaveBlockedDialog/LeaveBlockedDialog.types";
 
 import type { EditPoemFormProps } from "./EditPoemForm.types";
+import { useLeaveGuard } from "./use-leave-guard";
+import { useLeavePrompt } from "./use-leave-prompt";
 
 /** Everything the edit form renders from; the component holds no logic of its own (PR #169 review). */
 export interface EditPoemFormModel {
@@ -36,6 +39,8 @@ export interface EditPoemFormModel {
   readonly backLinkRef: (link: HTMLAnchorElement | null) => void;
   readonly onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   readonly onDiscard: () => void;
+  /** The leave dialog, open while the guard holds the author on the page (design D10). */
+  readonly leaveDialog: LeaveBlockedDialogProps;
 }
 
 /** A rejected call: what happened to the request is unknown, so nothing on the page changes beyond the alert. */
@@ -55,7 +60,7 @@ export function useEditPoemForm({ poemId, stored, genres }: EditPoemFormProps): 
   const alertRef = useRef<HTMLDivElement>(null);
   const fields = usePoemForm<SaveAlertFailure>(stored, genres, { isPending, formRef, alertRef });
   const { values, isChanged, failure, validate, recheckIllustration, showFieldErrors, showFailure, reset } = fields;
-  // Set by a `saved` result, before the navigation; the leave guard reads it too in group 6 (design D10).
+  // Set by a `saved` result, before the navigation: it turns the leave guard off for that navigation (design D10).
   const [saved, setSaved] = useState(false);
   // Set synchronously on submit: a second click can arrive before the pending state disables the form.
   const sendingRef = useRef(false);
@@ -68,6 +73,20 @@ export function useEditPoemForm({ poemId, stored, genres }: EditPoemFormProps): 
   });
 
   const isOnline = connection === CONNECTION_STATUS.online;
+
+  const { dialog: leaveDialog, openForLink, askToLeave, closePrompt } = useLeavePrompt({
+    hasFailure: failure !== null,
+    alertRef,
+  });
+  useLeaveGuard({
+    // On while a save is sending too: its `saved` result would pull an author who left back here (design D10).
+    active: (isChanged || isPending) && !saved,
+    // This poem's own pages, the edit page included, so a same-page `#` link is never blocked.
+    isAllowed: (pathname) => pathname === ownPoemPath(poemId) || pathname === editPoemPath(poemId),
+    onBlocked: openForLink,
+    askToLeave,
+    closePrompt,
+  });
 
   // The notice stores are only written, after the answer: `getState()`, no subscription.
   function handleOutcome(outcome: SaveOutcome) {
@@ -163,5 +182,6 @@ export function useEditPoemForm({ poemId, stored, genres }: EditPoemFormProps): 
     backLinkRef,
     onSubmit,
     onDiscard,
+    leaveDialog,
   };
 }

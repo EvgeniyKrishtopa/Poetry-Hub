@@ -173,6 +173,23 @@ describe("useLeaveGuard", () => {
       expect(question.askToLeave).not.toHaveBeenCalled();
     });
 
+    // implements FR-13 of edit-poem: CR-11, one listener while active, whatever the callbacks' identity
+    it("keeps one link listener when the callbacks change identity, and calls the latest", () => {
+      const add = vi.spyOn(document, "addEventListener");
+      const { rerender, options, onBlocked } = renderGuard(true);
+      const added = add.mock.calls.length;
+      const newerOnBlocked = vi.fn();
+
+      rerender({ ...options, isAllowed: () => false, onBlocked: newerOnBlocked });
+      const result = click(addLink(ALLOWED_PATH));
+
+      expect(add.mock.calls.length).toBe(added);
+      expect(result.followed).toBe(false);
+      expect(newerOnBlocked).toHaveBeenCalledTimes(1);
+      expect(onBlocked).not.toHaveBeenCalled();
+      add.mockRestore();
+    });
+
     it("answers dismissed when the dialog fails to answer", async () => {
       const { rerender, options } = renderGuard(true);
       rerender({ ...options, askToLeave: () => Promise.reject(new Error("dialog failed")) });

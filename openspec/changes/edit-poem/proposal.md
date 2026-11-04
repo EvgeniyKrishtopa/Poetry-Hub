@@ -144,7 +144,8 @@ Field labels, field errors, the toolbar, and «Выберите жанр» are t
 ## Mockups
 
 Approved Claude Design canvas (2026-11-03): https://claude.ai/artifact/GCN2BZQF5eG454fA1PZG8z#play-f2a0b40a5e8c,
-artboards 25-29, each in light and dark at 1280 px and 375 px.
+artboards 25-29, each in light and dark at 1280 px and 375 px. Artboard 27's sign-out form was
+added to the same canvas on 2026-11-04.
 
 | Screen | Artboard |
 | --- | --- |
@@ -152,7 +153,7 @@ artboards 25-29, each in light and dark at 1280 px and 375 px.
 | Edit page a-c: unchanged, changed, illustration removed | 26 · edit — a–c (`EditPoem.dc.html`) |
 | Edit page d-f: sending, the four failures, field error | 26 · edit — d–f (`EditPoemStates.dc.html`) |
 | Edit page g-j: offline, slow, loading, genres unavailable | 26 · edit — g–j (`EditPoemMore.dc.html`) |
-| Leave dialog | 27 · диалог «Есть несохранённые изменения» (`LeaveDialog.dc.html`); the sign-out form awaits a Claude Design update (PR #168 review, 2026-11-03) |
+| Leave dialog: link form and sign-out form | 27 · диалог «Есть несохранённые изменения» — уход по ссылке и выход из аккаунта (`LeaveDialog.dc.html`); the sign-out form added 2026-11-04 after the PR #168 review |
 | `/account/poems/new` offline and slow | 28 (`NewPoemOffline.dc.html`) |
 | `/account/author` offline and slow, view and one field in edit mode | 29 (`AuthorOffline.dc.html`) |
 
