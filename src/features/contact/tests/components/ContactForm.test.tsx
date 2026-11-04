@@ -246,15 +246,18 @@ describe("ContactForm", () => {
     const { user } = renderForm();
 
     await fill(user, { name: NAME, email: EMAIL, message: MESSAGE });
+    // jsdom is always online: the flag is set to false so the log is seen to read it (edit-poem CR-08).
+    const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
     await user.click(submitButton());
 
     expect(await screen.findByRole("alert")).toHaveTextContent(CONTACT_COPY.sendFailed);
+    onLine.mockRestore();
     expect(nameInput()).toHaveValue(NAME);
     expect(messageInput()).toHaveValue(MESSAGE);
     expect(consoleError).toHaveBeenCalledTimes(1);
     const logged = consoleError.mock.calls.flat().join(" ");
     expect(logged).toContain("TypeError");
-    expect(logged).toContain(`online: ${navigator.onLine}`);
+    expect(logged).toContain("online: false");
     for (const value of [SECRET_IN_ERROR, NAME, EMAIL, MESSAGE]) expect(logged).not.toContain(value);
   });
 
