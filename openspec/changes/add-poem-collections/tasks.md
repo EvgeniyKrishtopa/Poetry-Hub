@@ -11,24 +11,24 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 1. Collections in the database <!-- judgement-heavy -->
 
-- [ ] 1.1 (NFR-1, FR-3) Add `supabase/migrations/<ts>_collections.sql`: `public.collections` with
+- [x] 1.1 (NFR-1, FR-3) Add `supabase/migrations/<ts>_collections.sql`: `public.collections` with
   its checks, index, RLS owner-only select policy for `authenticated`, no `anon` access, select-only
   column grant, no write grant; the down migration in the header (design D2).
-- [ ] 1.2 (FR-4, FR-5) In the same migration: `collection_creations`, the `log_collection_creation`
+- [x] 1.2 (FR-4, FR-5) In the same migration: `collection_creations`, the `log_collection_creation`
   trigger with pruning, `collection_create_limits()` (30 days, 50), `collection_create_status()`,
   and `create_my_collection(title, description)` with the per-author advisory lock (design D2,
   ADR 0010's shape).
-- [ ] 1.3 (FR-9, FR-11, FR-13) In the same migration: `update_my_collection(collection_id, title,
+- [x] 1.3 (FR-9, FR-11, FR-13) In the same migration: `update_my_collection(collection_id, title,
   description)` (public own profile required, only title and description set) and
   `delete_my_collection(collection_id)` (returns the stored title); execute for `authenticated`
   only.
-- [ ] 1.4 (FR-10) In the same migration: widen `write_rate_limits.scope`'s check with
+- [x] 1.4 (FR-10) In the same migration: widen `write_rate_limits.scope`'s check with
   `collection_edit` and replace `consume_write_allowance` with `('collection_edit', 10, interval
   '1 minute')` added to its limits.
-- [ ] 1.5 (NFR-1, FR-5, FR-10) Add `supabase/tests/collections.test.sql` and extend
+- [x] 1.5 (NFR-1, FR-5, FR-10) Add `supabase/tests/collections.test.sql` and extend
   `write_rate_limits.test.sql` with the cases in design D13.
   - Verify: `npx supabase db reset` and `npx supabase test db` pass.
-- [ ] 1.6 (NFR-3) Glossary first, so later groups load the right meaning (Gate 2 finding 4):
+- [x] 1.6 (NFR-3) Glossary first, so later groups load the right meaning (Gate 2 finding 4):
   `CONTEXT.md` gains «Collection (сборник)» — an author's own named group of their poems, not a
   reader's saved poems — and `openspec/config.yaml`'s context line is corrected to match.
 
