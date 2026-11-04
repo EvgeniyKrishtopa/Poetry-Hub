@@ -293,6 +293,20 @@ describe("EditPoemForm: saving", () => {
   });
 
   // implements FR-5 of edit-poem
+  it("shows «Обязательное поле.» under a cleared title, focuses it, and sends nothing", async () => {
+    const { user } = renderForm();
+    await user.clear(titleInput());
+
+    await user.click(saveButton());
+
+    const error = await screen.findByText("Обязательное поле.");
+    const [describedById] = (titleInput().getAttribute("aria-describedby") ?? "").split(" ");
+    expect(describedById).toBe(error.id);
+    expect(titleInput()).toHaveFocus();
+    expect(updatePoemAction).not.toHaveBeenCalled();
+  });
+
+  // implements FR-5 of edit-poem
   it("shows the server's field errors and focuses the first invalid field", async () => {
     vi.mocked(updatePoemAction).mockResolvedValue(
       respond({ status: "invalid", fieldErrors: { title: "Не более 80 символов." } }),
