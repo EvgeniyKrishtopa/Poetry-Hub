@@ -37,10 +37,10 @@ create table public.collections (
   -- Blank means what the app's trim() removes: the explicit class copied from 20261028160000_poems.sql
   -- (keep the two in step). char_length counts code points, like the form's trimmedLength. A blank
   -- description is stored as null by the app; the check rejects '' so there is one way to say "none".
-  title       text not null check (char_length(title) <= 80 and title !~ E'^[\t\n\u000B\f\r    -     　﻿]*$'),
+  title       text not null check (char_length(title) <= 80 and title !~ E'^[\t\n\u000B\f\r \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*$'),
   description text check (
     description is null
-    or (char_length(description) <= 1000 and description !~ E'^[\t\n\u000B\f\r    -     　﻿]*$')
+    or (char_length(description) <= 1000 and description !~ E'^[\t\n\u000B\f\r \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*$')
   ),
   created_at  timestamptz not null default now()
 );
