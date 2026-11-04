@@ -8,6 +8,7 @@ import { listAuthorPoems, type Poem } from "@/features/poems";
 
 import { DeletedPoemNotice } from "../../components/DeletedPoemNotice/DeletedPoemNotice";
 import { MyPoemsContent } from "../../components/MyPoemsContent/MyPoemsContent";
+import type { MyPoemsContentProps } from "../../components/MyPoemsContent/MyPoemsContent.types";
 import { MyPoemsPage } from "../../components/MyPoemsPage/MyPoemsPage";
 import { MyPoemsSkeleton } from "../../components/MyPoemsSkeleton/MyPoemsSkeleton";
 
@@ -34,8 +35,18 @@ function poem(id: string, title: string, publishedAt: string): Poem {
 const NIGHT_STATION = poem("30000000-0000-4000-8000-000000000032", "Ночной вокзал", "2026-10-02");
 const AUTUMN_GARDEN = poem("30000000-0000-4000-8000-000000000031", "Осенний сад", "2026-10-01");
 
-async function renderContent() {
-  return render(await MyPoemsContent());
+async function renderContent(props?: MyPoemsContentProps) {
+  return render(await MyPoemsContent(props));
+}
+
+const SLOTS: MyPoemsContentProps = {
+  actions: <a href="/slot-action">Slot action</a>,
+  beforeList: <section aria-label="Slot section" />,
+};
+
+/** True when `first` comes before `second` in document order. */
+function precedes(first: Element, second: Element) {
+  return Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
 }
 
 beforeEach(() => {
@@ -136,6 +147,54 @@ describe("MyPoemsContent", () => {
     expect(getOwnPublicAuthor).not.toHaveBeenCalled();
   });
 
+  // implements FR-1, FR-2 of add-poem-collections
+  it("renders actions after the add link in its row, then beforeList, then the poem list", async () => {
+    await renderContent(SLOTS);
+
+    const addLink = screen.getByRole("link", { name: "Добавить новое произведение" });
+    const action = screen.getByRole("link", { name: "Slot action" });
+    const section = screen.getByRole("region", { name: "Slot section" });
+    const list = screen.getByRole("list");
+
+    expect(action.parentElement).toBe(addLink.parentElement);
+    expect(addLink.parentElement).toHaveClass("flex", "flex-wrap", "gap-2");
+    expect(precedes(addLink, action)).toBe(true);
+    expect(addLink.parentElement?.contains(section)).toBe(false);
+    expect(precedes(action, section)).toBe(true);
+    expect(precedes(section, list)).toBe(true);
+  });
+
+  // implements FR-2 of add-poem-collections
+  it("keeps both slots when only the poem list read fails", async () => {
+    vi.mocked(listAuthorPoems).mockResolvedValue({ ok: false, reason: "unavailable" });
+
+    await renderContent(SLOTS);
+
+    expect(screen.getByRole("link", { name: "Slot action" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Slot section" })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Не удалось загрузить произведения. Попробуйте позже.");
+  });
+
+  // implements FR-2 of add-poem-collections
+  it("renders neither slot for a non-public profile", async () => {
+    vi.mocked(getOwnPublicAuthor).mockResolvedValue({ ok: true, status: "not-public" });
+
+    await renderContent(SLOTS);
+
+    expect(screen.queryByRole("link", { name: "Slot action" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Slot section" })).toBeNull();
+  });
+
+  // implements FR-2 of add-poem-collections
+  it("renders neither slot when the own profile read fails", async () => {
+    vi.mocked(getOwnPublicAuthor).mockResolvedValue({ ok: false, failure: "unavailable" });
+
+    await renderContent(SLOTS);
+
+    expect(screen.queryByRole("link", { name: "Slot action" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Slot section" })).toBeNull();
+  });
+
   // implements FR-2 of add-poem-creation
   it("reads nothing when the session gate redirects", async () => {
     const redirect = new Error("NEXT_REDIRECT");
@@ -158,7 +217,7 @@ describe("MyPoemsPage", () => {
     const element = MyPoemsPage() as ReactElement<{ lang: string; children: ReactElement[] }>;
     expect(element.props.lang).toBe("ru");
 
-    const [heading, , boundary] = element.props.children;
+    const [heading, , , boundary] = element.props.children;
     render(heading);
     expect(screen.getByRole("heading", { level: 1, name: "Ваши Произведения" })).toBeInTheDocument();
 
@@ -172,10 +231,27 @@ describe("MyPoemsPage", () => {
   it("puts the deleted notice between the heading and the boundary, so a failed list read keeps it", () => {
     const element = MyPoemsPage() as ReactElement<{ children: ReactElement[] }>;
 
-    const [, notice, boundary] = element.props.children;
+    const [, notice, , boundary] = element.props.children;
 
     expect(notice.type).toBe(DeletedPoemNotice);
     expect(boundary.type).toBe(Suspense);
+  });
+
+  // implements FR-1, FR-2 of add-poem-collections
+  it("puts the notices slot after the deleted notice, outside the boundary, and passes the other two slots down", () => {
+    const notices = <p>Slot notice</p>;
+    const actions = <a href="/slot-action">Slot action</a>;
+    const beforeList = <section aria-label="Slot section" />;
+
+    const element = MyPoemsPage({ notices, actions, beforeList }) as ReactElement<{ children: ReactElement[] }>;
+    const [, deletedNotice, slotNotices, boundary] = element.props.children;
+
+    expect(deletedNotice.type).toBe(DeletedPoemNotice);
+    expect(slotNotices).toBe(notices);
+    expect(boundary.type).toBe(Suspense);
+    const content = (boundary.props as SuspenseProps).children as ReactElement<MyPoemsContentProps>;
+    expect(content.type).toBe(MyPoemsContent);
+    expect(content.props).toEqual({ actions, beforeList });
   });
 });
 
