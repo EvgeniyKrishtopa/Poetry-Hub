@@ -34,7 +34,7 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 2. Slots on `/account/poems` (no visible change) <!-- isolated -->
 
-- [ ] 2.1 (FR-1, FR-2, NFR-3) `MyPoemsPage` gains the optional `notices`, `actions`, and
+- [x] 2.1 (FR-1, FR-2, NFR-3) `MyPoemsPage` gains the optional `notices`, `actions`, and
   `beforeList` slot props (`MyPoemsPage.types.ts`); `MyPoemsContent` renders `actions` in a wrapping
   button row after «Добавить новое произведение» and `beforeList` before the poem list, on the
   public-profile branch only (design D3). No caller passes them yet.
