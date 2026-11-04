@@ -139,9 +139,9 @@ consumers for knip), so `npm run knip` stays green per group PR.
     fields editable (implements FR-3, FR-6 – FR-11 of edit-poem); and `CreatedPoemNotice.test.tsx`
     (both texts, once).
 
-## 6. Leave dialog and the guard in the edit form (UI — waits for the updated artboard 27 with the sign-out form) <!-- judgement-heavy -->
+## 6. Leave dialog and the guard in the edit form (UI — artboard 27 with the sign-out form, approved 2026-11-04) <!-- judgement-heavy -->
 
-- [ ] 6.1 (FR-13, NFR-4) Add `LeaveBlockedDialog` (link and sign-out forms) and wire `useLeaveGuard`
+- [x] 6.1 (FR-13, NFR-4) Add `LeaveBlockedDialog` (link and sign-out forms) and wire `useLeaveGuard`
   into `EditPoemForm` (active while changed and while a save is sending, off after a `saved` result;
   allowed: this poem's page and edit page; `askToLeave` opens the sign-out form and resolves with
   the choice, `closePrompt` closes it; the dialog holds one question at a time — a new `askToLeave` while

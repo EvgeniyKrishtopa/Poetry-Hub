@@ -3,10 +3,7 @@
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignore": [
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
-    ".ncurc.cjs",
-    // Temporary, edit-poem scaffold: this stub has no importer until task 6.1 wires it, which removes these entries.
-    "src/features/poem-management/components/LeaveBlockedDialog/LeaveBlockedDialog.tsx",
-    "src/features/poem-management/components/LeaveBlockedDialog/LeaveBlockedDialog.types.ts"
+    ".ncurc.cjs"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.

@@ -58,3 +58,9 @@ export const ILLUSTRATION_CHANGE = {
 
 /** The edit page's last path segment, `/account/poems/<poemId>/edit`. */
 export const EDIT_SEGMENT = "edit";
+
+/** Why the leave dialog is open: a link the guard blocked, or the header's sign-out asking first (edit-poem D10). */
+export const LEAVE_DIALOG_REASON = {
+  link: "link",
+  signOut: "sign-out",
+} as const;

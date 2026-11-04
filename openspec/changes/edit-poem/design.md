@@ -76,7 +76,8 @@ src/features/poem-management/
     ├── NewPoemForm/                     # create: composes PoemForm parts + createPoemAction
     ├── EditPoemForm/                    # new, client: composes PoemForm parts, the save hook, and the guard (D4, D7, D10)
     │   ├── use-edit-poem-form.ts        #   the form's logic: fields, the update call and its outcomes, discard (D4, D7)
-    │   └── use-leave-guard.ts           #   link-click, beforeunload, and sign-out question guard (D10)
+    │   ├── use-leave-guard.ts           #   link-click, beforeunload, and sign-out question guard (D10)
+    │   └── use-leave-prompt.ts          #   the leave dialog's form, its answers, and focus after it (D10; task 6.1)
     ├── EditPoemPage/                    # new, server: heading in the shell, Suspense (D6)
     ├── EditPoemContent/                 # new, server: session, own poem, genres, form (D6)
     ├── EditPoemButton/                  # new, server: ButtonLink to the edit page (D6)
