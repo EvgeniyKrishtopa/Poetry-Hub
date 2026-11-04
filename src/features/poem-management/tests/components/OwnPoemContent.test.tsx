@@ -1,3 +1,4 @@
+import { render, screen } from "@testing-library/react";
 import { Suspense, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -6,6 +7,7 @@ import { PoemArticle, PoemPageSkeleton, type Poem } from "@/features/poems";
 
 import { CreatedPoemNotice } from "../../components/CreatedPoemNotice/CreatedPoemNotice";
 import { DeletePoemButton } from "../../components/DeletePoemButton/DeletePoemButton";
+import { EditPoemButton } from "../../components/EditPoemButton/EditPoemButton";
 import { OwnPoemContent } from "../../components/OwnPoemContent/OwnPoemContent";
 import { OwnPoemPage } from "../../components/OwnPoemPage/OwnPoemPage";
 import { getOwnPoem } from "../../dal/own-poem";
@@ -35,7 +37,7 @@ type ContentElement = ReactElement<{
   children: [
     ReactElement<{ poemId: string }>,
     ReactElement<{ poem: Poem }>,
-    ReactElement<{ poemId: string; title: string }>,
+    ReactElement<{ className: string; children: [ReactElement<{ poemId: string }>, ReactElement<{ poemId: string; title: string }>] }>,
   ];
 }>;
 
@@ -67,13 +69,19 @@ describe("OwnPoemContent", () => {
   });
 
   // implements FR-1 of delete-poem
-  it("renders the delete button below the poem, with the poem's id and title", async () => {
+  // implements FR-1 of edit-poem
+  it("renders the edit and the delete buttons in one wrapping row below the poem, edit first", async () => {
     vi.mocked(getOwnPoem).mockResolvedValue({ ok: true, poem: POEM });
 
-    const [, , button] = (await content()).props.children;
+    const [, , row] = (await content()).props.children;
+    const [edit, remove] = row.props.children;
 
-    expect(button.type).toBe(DeletePoemButton);
-    expect(button.props).toEqual({ poemId: POEM_ID, title: POEM.title });
+    expect(row.props.className).toContain("flex-wrap");
+    expect(row.props.className).toContain("gap-2");
+    expect(edit.type).toBe(EditPoemButton);
+    expect(edit.props).toEqual({ poemId: POEM_ID });
+    expect(remove.type).toBe(DeletePoemButton);
+    expect(remove.props).toEqual({ poemId: POEM_ID, title: POEM.title });
   });
 
   // implements FR-7 of add-poem-creation
@@ -98,6 +106,18 @@ describe("OwnPoemContent", () => {
 
     await expect(content()).rejects.toBe(redirect);
     expect(getOwnPoem).not.toHaveBeenCalled();
+  });
+});
+
+describe("EditPoemButton", () => {
+  // implements FR-1 of edit-poem
+  it("is a link «Редактировать произведение» to the poem's edit page", () => {
+    render(<EditPoemButton poemId={POEM_ID} />);
+
+    expect(screen.getByRole("link", { name: "Редактировать произведение" })).toHaveAttribute(
+      "href",
+      `/account/poems/${POEM_ID}/edit`,
+    );
   });
 });
 

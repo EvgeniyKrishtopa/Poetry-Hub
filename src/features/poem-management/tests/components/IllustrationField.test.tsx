@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { IllustrationField } from "../../components/PoemForm/IllustrationField";
+import type { IllustrationLayout } from "../../components/PoemForm/IllustrationField.types";
 import type { IllustrationState } from "../../model/poem-form-values";
 import type { IllustrationLabels } from "../../model/poem-management.types";
 
@@ -14,9 +15,10 @@ const EDIT_LABELS: IllustrationLabels = {
   remove: "Удалить иллюстрацию",
 };
 
-function renderField(illustration: IllustrationState, error?: string) {
+function renderField(illustration: IllustrationState, error?: string, layout: IllustrationLayout = "preview-first") {
   render(
     <IllustrationField
+      layout={layout}
       id="illustration"
       pickerKey={0}
       illustration={illustration}
@@ -64,5 +66,19 @@ describe("IllustrationField", () => {
 
     expect(screen.queryByRole("presentation")).toBeNull();
     expect(screen.getByRole("button", { name: "Удалить иллюстрацию" })).toBeInTheDocument();
+  });
+
+  // ui-plan, artboard 26: the edit page's preview comes before the picker, the remove button beside it.
+  it("puts the preview first on the edit page, and the picker first on the add form", () => {
+    const stored: IllustrationState = { kind: "stored", url: STORED_URL };
+    const follows = (first: Element, second: Element) =>
+      (first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+
+    renderField(stored, undefined, "preview-first");
+    expect(follows(screen.getByRole("presentation"), screen.getByText("Заменить иллюстрацию"))).toBe(true);
+    cleanup();
+
+    renderField(stored, undefined, "picker-first");
+    expect(follows(screen.getByText("Заменить иллюстрацию"), screen.getByRole("presentation"))).toBe(true);
   });
 });

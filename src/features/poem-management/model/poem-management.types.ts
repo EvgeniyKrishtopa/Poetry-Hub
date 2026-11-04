@@ -110,6 +110,15 @@ export type IllustrationChange = (typeof ILLUSTRATION_CHANGE)[keyof typeof ILLUS
 /** @public scaffold: first imported in task 2.4. */
 export type UpdatePoemFailure = ServiceFailure | "too-many-saves" | "not-public";
 
+/** A save failure shown in the edit form's alert; an expired session leaves for `/login` instead (design D7). */
+export type SaveAlertFailure = Exclude<UpdatePoemFailure, "unauthenticated">;
+
+/** Which success the owner's poem page announces once (edit-poem design D7). */
+export interface PoemNotice {
+  readonly poemId: string;
+  readonly kind: "created" | "saved";
+}
+
 /**
  * The update action's answer (edit-poem design D3): success is explicit, never "no error".
  *

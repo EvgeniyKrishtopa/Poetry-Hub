@@ -360,12 +360,13 @@ request the hook already knows how to run).
   иллюстрацию», so it shows no visible change (group 3's promise). The edit page's order (preview
   above the picker row, «Удалить» beside the picker, ui-plan) is added with `EditPoemForm` in
   group 5; until then the field keeps the add form's order.
-- **Open for group 5 (group 3 review, CR-01).** With a stored illustration, a rejected new pick
-  shows the stored preview, the error, and «Удалить иллюстрацию»; that button today both clears the
-  error and removes the stored illustration (`removeIllustration` sets the stored one aside). Group
-  5 decides, with the edit layout, whether clearing the error keeps the stored illustration, and
-  adds an `EditPoemForm` test for the chosen behaviour. The add form is not affected (it starts with
-  no illustration).
+- **Decided in group 5 (group 3 review, CR-01; 2026-11-04).** With a stored illustration, a
+  rejected new pick shows the stored preview, the error, and «Удалить иллюстрацию». That button
+  does what it says: it clears the error and removes the stored illustration too
+  (`removeIllustration` unchanged), as FR-4 reads. The author gets it back with «Отменить
+  изменения», which the removal makes available. Rejected alternative: a first press that only
+  clears the error, which would make the button's effect depend on an error it doesn't name. An
+  `EditPoemForm` test covers it. The add form is not affected (it starts with no illustration).
 - **`usePoemForm(initial, genres, isPending)` (group 3).** The hook takes the caller's sending
   state as a third argument: focus waits for the fieldset to be enabled again, and the sending
   state belongs to the form that owns the action. It is generic over the form's failure type, so
@@ -373,9 +374,10 @@ request the hook already knows how to run).
 
 ### D7 — Outcomes and the saved notice (FR-6, FR-8, FR-9, FR-10)
 
-`useSavePoem(poemId, form)`: `submit()` keeps the create form's guard order (in-flight ref, clear the alert, browser
-check, recheck the new file), then `updatePoemAction` in `useTransition`; the fieldset is disabled
-and dimmed while pending.
+`useSavePoem({ poemId, form, startTransition, connection })`: `submit()` keeps the create form's guard order (in-flight ref, clear the alert, browser
+check, recheck the new file), then `updatePoemAction` in the form's own `useTransition` (group 5:
+`usePoemForm` needs the pending state before the hook exists, so the form owns the transition and
+the live connection status and passes both in); the fieldset is disabled and dimmed while pending.
 
 | Result | Client |
 | --- | --- |

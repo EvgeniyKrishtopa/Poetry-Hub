@@ -16,6 +16,7 @@ import {
 import { CREATE_POEM_STATUS, GENRE_PLACEHOLDER } from "../../model/poem-management.constants";
 import type { CreatePoemFailure, CreatePoemResult } from "../../model/poem-management.types";
 import { ownPoemPath } from "../../model/poem-paths";
+import { POEM_FIELDSET_CLASS } from "../PoemForm/poem-fieldset-class";
 import { PoemFormFields } from "../PoemForm/PoemFormFields";
 import { usePoemForm } from "../PoemForm/use-poem-form";
 
@@ -23,13 +24,10 @@ import type { NewPoemFormProps } from "./NewPoemForm.types";
 
 const EMPTY_VALUES: PoemFormValues = { title: "", text: "", genreId: GENRE_PLACEHOLDER, illustration: { kind: "none" } };
 
-// The disabled fieldset dims the whole form; its buttons would dim a second time on their own `:disabled` style.
-const FIELDSET_CLASS = "flex min-w-0 flex-col gap-6 disabled:opacity-50 [&_button:disabled]:opacity-100";
-
 /** The add form: the shared fields, the create call and its outcomes (add-poem-creation design D8, edit-poem D4). */
 export function NewPoemForm({ genres }: NewPoemFormProps) {
   const router = useRouter();
-  const setCreatedPoemId = useCreatedPoemNotice((state) => state.setCreatedPoemId);
+  const setPoemNotice = useCreatedPoemNotice((state) => state.setPoemNotice);
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const alertRef = useRef<HTMLDivElement>(null);
@@ -46,7 +44,7 @@ export function NewPoemForm({ genres }: NewPoemFormProps) {
     if (result.status === CREATE_POEM_STATUS.created) {
       // Cleared first, so Back to the form shows it empty (FR-5).
       form.reset();
-      setCreatedPoemId(result.poemId);
+      setPoemNotice({ poemId: result.poemId, kind: "created" });
       router.push(ownPoemPath(result.poemId));
       return;
     }
@@ -87,8 +85,8 @@ export function NewPoemForm({ genres }: NewPoemFormProps) {
   return (
     // noValidate: the schema is the only validation, so its messages are what the author sees.
     <form ref={formRef} onSubmit={handleSubmit} noValidate>
-      <fieldset disabled={isPending} className={FIELDSET_CLASS}>
-        <PoemFormFields form={form} illustrationLabels={NEW_POEM_ILLUSTRATION_LABELS} />
+      <fieldset disabled={isPending} className={POEM_FIELDSET_CLASS}>
+        <PoemFormFields form={form} illustrationLabels={NEW_POEM_ILLUSTRATION_LABELS} illustrationLayout="picker-first" />
         {form.failure !== null && (
           // Focusable by script only: focus lands here when the failure names no field (NFR-7).
           <div ref={alertRef} tabIndex={-1}>

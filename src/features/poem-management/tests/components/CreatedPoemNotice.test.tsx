@@ -8,6 +8,7 @@ import { useCreatedPoemNotice } from "../../model/created-poem-notice-ui.store";
 const POEM_ID = "30000000-0000-4000-8000-000000000021";
 const OTHER_POEM_ID = "30000000-0000-4000-8000-000000000022";
 const CREATED_TEXT = "Поздравляем, Ваше произведение успешно добавлено.";
+const SAVED_TEXT = "Изменения сохранены.";
 
 /** Lets the notice's scheduled dismissal run, if one is pending. */
 async function flushTimers(): Promise<void> {
@@ -18,11 +19,11 @@ async function flushTimers(): Promise<void> {
 
 beforeEach(() => {
   vi.useFakeTimers();
-  useCreatedPoemNotice.getState().setCreatedPoemId(POEM_ID);
+  useCreatedPoemNotice.getState().setPoemNotice({ poemId: POEM_ID, kind: "created" });
 });
 
 afterEach(() => {
-  useCreatedPoemNotice.getState().clearCreatedPoemId();
+  useCreatedPoemNotice.getState().clearPoemNotice();
   vi.useRealTimers();
 });
 
@@ -33,7 +34,23 @@ describe("CreatedPoemNotice", () => {
     await flushTimers();
 
     expect(screen.getByRole("status")).toHaveTextContent(CREATED_TEXT);
-    expect(useCreatedPoemNotice.getState().createdPoemId).toBeNull();
+    expect(useCreatedPoemNotice.getState().notice).toBeNull();
+  });
+
+  // implements FR-6 of edit-poem
+  it("shows «Изменения сохранены.» once for the poem just saved", async () => {
+    useCreatedPoemNotice.getState().setPoemNotice({ poemId: POEM_ID, kind: "saved" });
+    const first = render(<CreatedPoemNotice poemId={POEM_ID} />);
+    await flushTimers();
+
+    expect(screen.getByRole("status")).toHaveTextContent(SAVED_TEXT);
+    expect(screen.queryByText(CREATED_TEXT)).toBeNull();
+    expect(useCreatedPoemNotice.getState().notice).toBeNull();
+
+    first.unmount();
+    render(<CreatedPoemNotice poemId={POEM_ID} />);
+    await flushTimers();
+    expect(screen.queryByRole("status")).toBeNull();
   });
 
   // implements FR-5 of add-poem-creation
@@ -46,7 +63,7 @@ describe("CreatedPoemNotice", () => {
     await flushTimers();
 
     expect(screen.getByRole("status")).toHaveTextContent(CREATED_TEXT);
-    expect(useCreatedPoemNotice.getState().createdPoemId).toBeNull();
+    expect(useCreatedPoemNotice.getState().notice).toBeNull();
   });
 
   // implements FR-5 of add-poem-creation

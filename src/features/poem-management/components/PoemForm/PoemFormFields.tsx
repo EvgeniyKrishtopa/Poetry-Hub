@@ -10,7 +10,7 @@ import type { PoemFormFieldsProps } from "./PoemFormFields.types";
 import { TITLE_FIELD_NAME } from "./use-poem-form-focus";
 
 /** Title, text, genre, and illustration, from the shared form state (edit-poem design D4). */
-export function PoemFormFields({ form, illustrationLabels }: PoemFormFieldsProps) {
+export function PoemFormFields({ form, illustrationLabels, illustrationLayout }: PoemFormFieldsProps) {
   const { values, fieldErrors } = form;
   const { fieldIds, editorKey, pickerKey } = form.rendering;
 
@@ -49,6 +49,7 @@ export function PoemFormFields({ form, illustrationLabels }: PoemFormFieldsProps
         onChange={form.setGenreId}
       />
       <IllustrationField
+        layout={illustrationLayout}
         id={fieldIds.illustration}
         pickerKey={pickerKey}
         illustration={values.illustration}

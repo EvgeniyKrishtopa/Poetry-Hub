@@ -6,10 +6,11 @@ import { PoemArticle } from "@/features/poems";
 import { getOwnPoem } from "../../dal/own-poem";
 import { CreatedPoemNotice } from "../CreatedPoemNotice/CreatedPoemNotice";
 import { DeletePoemButton } from "../DeletePoemButton/DeletePoemButton";
+import { EditPoemButton } from "../EditPoemButton/EditPoemButton";
 
 import type { OwnPoemContentProps } from "./OwnPoemContent.types";
 
-/** `getOwnPoem` → the notice, `PoemArticle`, and the delete button; `notFound()`; or a throw (design D4). */
+/** `getOwnPoem` → the notice, `PoemArticle`, then the edit and delete buttons; `notFound()`; or a throw (design D4). */
 export async function OwnPoemContent({ poemId }: OwnPoemContentProps) {
   // Redirects a signed-out reader to /login before any read (FR-7). A session that can't be checked fails
   // the profile read below, which shows the error screen.
@@ -28,7 +29,10 @@ export async function OwnPoemContent({ poemId }: OwnPoemContentProps) {
     <div className="flex flex-col gap-8">
       <CreatedPoemNotice poemId={id} />
       <PoemArticle poem={result.poem} />
-      <DeletePoemButton poemId={id} title={result.poem.title} />
+      <div className="flex flex-wrap items-start gap-2">
+        <EditPoemButton poemId={id} />
+        <DeletePoemButton poemId={id} title={result.poem.title} />
+      </div>
     </div>
   );
 }

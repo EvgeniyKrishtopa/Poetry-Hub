@@ -13,6 +13,7 @@ const CLIENT_MODULES = [
   "src/features/poem-management/components/CreatedPoemNotice/CreatedPoemNotice.tsx",
   "src/features/poem-management/components/DeletePoemButton/DeletePoemButton.tsx",
   "src/features/poem-management/components/DeletedPoemNotice/DeletedPoemNotice.tsx",
+  "src/features/poem-management/components/EditPoemForm/EditPoemForm.tsx",
   "src/features/poem-management/components/NewPoemForm/NewPoemForm.tsx",
 ];
 
@@ -43,7 +44,7 @@ function filesMatching(files: readonly string[], pattern: RegExp): string[] {
 
 describe("poem-management boundaries", () => {
   // implements NFR-2 of delete-poem
-  it("keeps client modules to the form, the created notice, the delete button, and the deleted notice", () => {
+  it("keeps client modules to the add and edit forms, the created notice, the delete button, and the deleted notice", () => {
     const files = [...sourceFiles(FEATURE_DIR), ...sourceFiles(ROUTE_DIR)];
 
     expect(filesMatching(files, /^\s*["']use client["']/m).sort()).toEqual(CLIENT_MODULES);
@@ -59,6 +60,13 @@ describe("poem-management boundaries", () => {
   // implements FR-1 of delete-poem: no other page offers deleting
   it("renders the delete button only on the owner's poem page", () => {
     const renderers = filesMatching(sourceFiles("src"), /<DeletePoemButton\b/);
+
+    expect(renderers).toEqual(["src/features/poem-management/components/OwnPoemContent/OwnPoemContent.tsx"]);
+  });
+
+  // implements FR-1 of edit-poem: no other page offers editing, not the public poem page, not the list
+  it("renders the edit button only on the owner's poem page", () => {
+    const renderers = filesMatching(sourceFiles("src"), /<EditPoemButton\b/);
 
     expect(renderers).toEqual(["src/features/poem-management/components/OwnPoemContent/OwnPoemContent.tsx"]);
   });
