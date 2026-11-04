@@ -27,6 +27,36 @@ const STYLED_FILES = [
   "src/shared/ui/Dialog/Dialog.tsx",
 ];
 
+/** The component files edit-poem adds or changes, searched for colour literals. */
+const EDIT_POEM_STYLED_FILES = [
+  "src/features/auth/components/SignOutButton/SignOutButton.tsx",
+  "src/features/authors/components/AuthorProfileEditor/AuthorProfileEditor.tsx",
+  "src/features/authors/components/FieldActions/FieldActions.tsx",
+  "src/features/authors/components/FieldEditActions/FieldEditActions.tsx",
+  "src/features/poem-management/components/CreatedPoemNotice/CreatedPoemNotice.tsx",
+  "src/features/poem-management/components/EditPoemButton/EditPoemButton.tsx",
+  "src/features/poem-management/components/EditPoemContent/EditPoemContent.tsx",
+  "src/features/poem-management/components/EditPoemForm/EditPoemForm.tsx",
+  "src/features/poem-management/components/EditPoemPage/EditPoemPage.tsx",
+  "src/features/poem-management/components/LeaveBlockedDialog/LeaveBlockedDialog.tsx",
+  "src/features/poem-management/components/NewPoemForm/NewPoemForm.tsx",
+  "src/features/poem-management/components/OwnPoemContent/OwnPoemContent.tsx",
+  "src/features/poem-management/components/PoemForm/IllustrationField.tsx",
+  "src/features/poem-management/components/PoemForm/PoemFormFields.tsx",
+  "src/shared/ui/ConnectionNotice/ConnectionNotice.tsx",
+];
+
+/** The two forms' own files: each renders the shared fields and takes its drafts from the shared hook. */
+const FORM_FILES = {
+  add: ["src/features/poem-management/components/NewPoemForm/NewPoemForm.tsx"],
+  edit: [
+    "src/features/poem-management/components/EditPoemForm/EditPoemForm.tsx",
+    "src/features/poem-management/components/EditPoemForm/use-edit-poem-form.ts",
+  ],
+} as const;
+
+const LEAVE_GUARD_FILE = "src/features/poem-management/components/EditPoemForm/use-leave-guard.ts";
+
 const SOURCE_FILE = /\.tsx?$/;
 // An arbitrary colour class only: the Dialog's corner glyph keeps its `text-[22px]` size, which is no colour.
 const COLOUR_LITERAL = /#[0-9a-f]{3,8}\b|\brgba?\(|\bhsla?\(|\b(text|bg|border)-\[(#|rgb|hsl|color|var)/i;
@@ -44,6 +74,7 @@ function filesMatching(files: readonly string[], pattern: RegExp): string[] {
 
 describe("poem-management boundaries", () => {
   // implements NFR-2 of delete-poem
+  // implements NFR-2 of edit-poem
   it("keeps client modules to the add and edit forms, the created notice, the delete button, and the deleted notice", () => {
     const files = [...sourceFiles(FEATURE_DIR), ...sourceFiles(ROUTE_DIR)];
 
@@ -74,5 +105,31 @@ describe("poem-management boundaries", () => {
   // implements NFR-6 of delete-poem
   it("uses no colour literals in the new and changed component files", () => {
     expect(filesMatching(STYLED_FILES, COLOUR_LITERAL)).toEqual([]);
+  });
+
+  // implements NFR-6 of edit-poem
+  it("uses no colour literals in the component files edit-poem adds or changes", () => {
+    expect(filesMatching(EDIT_POEM_STYLED_FILES, COLOUR_LITERAL)).toEqual([]);
+  });
+
+  // implements NFR-3 of edit-poem: the connection is read in one place
+  it("reads navigator.onLine and navigator.connection only in shared/", () => {
+    const readers = filesMatching(sourceFiles("src"), /\bnavigator\.(onLine|connection)\b/);
+
+    expect(readers.filter((file) => !file.startsWith("src/shared/"))).toEqual([]);
+  });
+
+  // implements NFR-3 of edit-poem: the leave guard exists once
+  it("listens for beforeunload only in the edit form's leave guard", () => {
+    expect(filesMatching(sourceFiles("src"), /\bbeforeunload\b/)).toEqual([LEAVE_GUARD_FILE]);
+  });
+
+  // implements NFR-3 of edit-poem: one implementation of the fields and their drafts
+  it.each(Object.entries(FORM_FILES))("makes the %s form render PoemFormFields with drafts from usePoemForm", (_, files) => {
+    const source = files.map((file) => readFileSync(file, "utf8")).join("\n");
+
+    expect(source).toMatch(/<PoemFormFields\b/);
+    expect(source).toMatch(/\busePoemForm\b/);
+    expect(readFileSync(files[0], "utf8")).not.toMatch(/\buseState\b/);
   });
 });

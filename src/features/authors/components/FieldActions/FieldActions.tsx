@@ -1,3 +1,5 @@
+import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
+import { useConnectionStatus } from "@/shared/lib/network/use-connection-status";
 import { Button } from "@/shared/ui";
 
 import { FIELD_ACTION } from "../../model/author.constants";
@@ -15,7 +17,8 @@ const BUTTON_KEYS = { saving: "saving", deleting: "deleting", add: "add", edit: 
 
 /**
  * A field's view-mode buttons: one disabled saving or deleting button while its action is pending,
- * else Edit and Delete for a value, or the add prompt for an empty field (FR-6, FR-7, FR-10).
+ * else Edit and Delete for a value, or the add prompt for an empty field (FR-6, FR-7, FR-10). Delete is
+ * disabled while offline or slow; Edit and the add prompt send nothing, so they stay (edit-poem design D8).
  */
 export function FieldActions({
   hasValue,
@@ -27,6 +30,8 @@ export function FieldActions({
   onEdit,
   onDelete,
 }: FieldActionsProps) {
+  const isOnline = useConnectionStatus() === CONNECTION_STATUS.online;
+
   if (pendingKind === FIELD_ACTION.save) {
     return (
       <div className="flex flex-wrap gap-2">
@@ -73,7 +78,13 @@ export function FieldActions({
       >
         {FIELD_ACTION_LABELS.edit}
       </Button>
-      <Button key={BUTTON_KEYS.delete} variant="ghost" disabled={disabled} aria-describedby={describedBy} onClick={onDelete}>
+      <Button
+        key={BUTTON_KEYS.delete}
+        variant="ghost"
+        disabled={disabled || !isOnline}
+        aria-describedby={describedBy}
+        onClick={onDelete}
+      >
         {FIELD_ACTION_LABELS.delete}
       </Button>
     </div>

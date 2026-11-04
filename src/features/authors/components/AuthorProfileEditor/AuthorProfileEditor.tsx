@@ -3,6 +3,8 @@
 import Link from "next/link";
 
 import { CONTENT_LANG } from "@/shared/config/constants";
+import { useConnectionStatus } from "@/shared/lib/network/use-connection-status";
+import { ConnectionNotice } from "@/shared/ui";
 
 import type { FieldEditorControls } from "../../hooks/profile-field.types";
 import { useFieldLock } from "../../hooks/use-field-lock";
@@ -18,10 +20,11 @@ import { SaveNotice } from "../SaveNotice/SaveNotice";
 
 import type { AuthorProfileEditorProps } from "./AuthorProfileEditor.types";
 
-/** The four field editors, the one-active-field rule, and the save notice (FR-6, FR-7). */
+/** The four field editors, the one-active-field rule, the save notice, and the connection notice (FR-6, FR-7). */
 export function AuthorProfileEditor({ profile }: AuthorProfileEditorProps) {
   const lock = useFieldLock();
   const notice = useSaveNotice();
+  const connection = useConnectionStatus();
 
   function controlsFor(field: ProfileField): FieldEditorControls {
     return {
@@ -48,6 +51,8 @@ export function AuthorProfileEditor({ profile }: AuthorProfileEditorProps) {
         )}
         <SaveNotice message={notice.shownNotice} />
       </div>
+      {/* Above the fields; each field's own buttons read the same status (edit-poem design D8, artboard 29). */}
+      <ConnectionNotice status={connection} />
       <div className="flex flex-col">
         <NameFieldEditor field="first_name" savedValue={profile?.firstName ?? null} {...controlsFor("first_name")} />
         <NameFieldEditor field="last_name" savedValue={profile?.lastName ?? null} {...controlsFor("last_name")} />

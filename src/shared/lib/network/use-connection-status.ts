@@ -29,8 +29,13 @@ function isSlow(estimate: ConnectionEstimate | null): boolean {
   return slowType || slowRtt;
 }
 
+/** The browser's own online flag, read once; outside `shared/` nothing reads `navigator.onLine` itself (edit-poem NFR-3). */
+export function isBrowserOnline(): boolean {
+  return navigator.onLine;
+}
+
 function getSnapshot(): ConnectionStatus {
-  if (!navigator.onLine) return CONNECTION_STATUS.offline;
+  if (!isBrowserOnline()) return CONNECTION_STATUS.offline;
   return isSlow(readConnectionEstimate()) ? CONNECTION_STATUS.slow : CONNECTION_STATUS.online;
 }
 
