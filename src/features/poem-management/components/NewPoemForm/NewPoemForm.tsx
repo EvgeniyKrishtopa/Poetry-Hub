@@ -27,7 +27,6 @@ const EMPTY_VALUES: PoemFormValues = { title: "", text: "", genreId: GENRE_PLACE
 /** The add form: the shared fields, the create call and its outcomes (add-poem-creation design D8, edit-poem D4). */
 export function NewPoemForm({ genres }: NewPoemFormProps) {
   const router = useRouter();
-  const setPoemNotice = useCreatedPoemNotice((state) => state.setPoemNotice);
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const alertRef = useRef<HTMLDivElement>(null);
@@ -44,7 +43,8 @@ export function NewPoemForm({ genres }: NewPoemFormProps) {
     if (result.status === CREATE_POEM_STATUS.created) {
       // Cleared first, so Back to the form shows it empty (FR-5).
       form.reset();
-      setPoemNotice({ poemId: result.poemId, kind: "created" });
+      // Only written, after the answer: `getState()`, no subscription.
+      useCreatedPoemNotice.getState().setPoemNotice({ poemId: result.poemId, kind: "created" });
       router.push(ownPoemPath(result.poemId));
       return;
     }

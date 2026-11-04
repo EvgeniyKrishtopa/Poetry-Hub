@@ -19,8 +19,6 @@ import type { DeletePoemButtonProps } from "./DeletePoemButton.types";
 /** The owner's delete button, its confirmation dialog, the action call, and the navigation (design D4). */
 export function DeletePoemButton({ poemId, title }: DeletePoemButtonProps) {
   const router = useRouter();
-  const setDeletedNotice = useDeletedPoemNotice((state) => state.setDeletedNotice);
-  const markSessionExpired = useSessionExpiredNotice((state) => state.markSessionExpired);
   const [isPending, startTransition] = useTransition();
   const [failed, setFailed] = useState(false);
   // The transition stays pending through the navigation, so leaving must allow the dialog to close by itself.
@@ -62,19 +60,20 @@ export function DeletePoemButton({ poemId, title }: DeletePoemButtonProps) {
     router.replace(path);
   }
 
+  // The notice stores are only written, after the answer: `getState()`, no subscription.
   function handleResult(result: DeletePoemResult | undefined) {
     if (result?.status === DELETE_POEM_STATUS.deleted) {
-      setDeletedNotice({ kind: "deleted", title });
+      useDeletedPoemNotice.getState().setDeletedNotice({ kind: "deleted", title });
       leaveFor(POEM_MANAGEMENT_PATH);
       return;
     }
     if (result?.status === DELETE_POEM_STATUS.notFound) {
-      setDeletedNotice({ kind: "already-deleted" });
+      useDeletedPoemNotice.getState().setDeletedNotice({ kind: "already-deleted" });
       leaveFor(POEM_MANAGEMENT_PATH);
       return;
     }
     if (result?.failure === "unauthenticated") {
-      markSessionExpired();
+      useSessionExpiredNotice.getState().markSessionExpired();
       leaveFor(SIGN_IN_PATH);
       // The root layout's header still shows the signed-in links until the server renders it again.
       router.refresh();

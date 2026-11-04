@@ -39,9 +39,6 @@ type SaveOutcome = UpdatePoemResult | undefined | typeof REJECTED;
 /** Calls `updatePoemAction` and routes every outcome: stores, navigation, alert, offline (edit-poem design D7). */
 export function useSavePoem({ poemId, form, startTransition, connection }: SavePoemOptions): SavePoem {
   const router = useRouter();
-  const setPoemNotice = useCreatedPoemNotice((state) => state.setPoemNotice);
-  const setDeletedNotice = useDeletedPoemNotice((state) => state.setDeletedNotice);
-  const markSessionExpired = useSessionExpiredNotice((state) => state.markSessionExpired);
   const [saved, setSaved] = useState(false);
   // Set synchronously on submit: a second click can arrive before the pending state disables the form.
   const sendingRef = useRef(false);
@@ -51,6 +48,7 @@ export function useSavePoem({ poemId, form, startTransition, connection }: SaveP
     connectionRef.current = connection;
   });
 
+  // The notice stores are only written, after the answer: `getState()`, no subscription.
   function handleOutcome(outcome: SaveOutcome) {
     if (outcome === REJECTED) {
       // Offline: the live notice already says why, so no alert is kept (FR-11).
@@ -65,7 +63,7 @@ export function useSavePoem({ poemId, form, startTransition, connection }: SaveP
     switch (outcome.status) {
       case UPDATE_POEM_STATUS.saved:
         setSaved(true);
-        setPoemNotice({ poemId, kind: "saved" });
+        useCreatedPoemNotice.getState().setPoemNotice({ poemId, kind: "saved" });
         // `push`: Back returns to the edit page, already reset to the saved values (design D7).
         router.push(ownPoemPath(poemId));
         return;
@@ -73,12 +71,12 @@ export function useSavePoem({ poemId, form, startTransition, connection }: SaveP
         form.showFieldErrors(outcome.fieldErrors);
         return;
       case UPDATE_POEM_STATUS.notFound:
-        setDeletedNotice({ kind: "already-deleted" });
+        useDeletedPoemNotice.getState().setDeletedNotice({ kind: "already-deleted" });
         router.replace(POEM_MANAGEMENT_PATH);
         return;
       case UPDATE_POEM_STATUS.failed:
         if (outcome.failure === "unauthenticated") {
-          markSessionExpired();
+          useSessionExpiredNotice.getState().markSessionExpired();
           router.replace(SIGN_IN_PATH);
           // The root layout's header still shows the signed-in links until the server renders it again.
           router.refresh();
