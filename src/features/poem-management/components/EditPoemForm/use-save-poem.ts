@@ -104,7 +104,8 @@ export function useSavePoem({ poemId, form, startTransition, connection }: SaveP
   }
 
   function submit() {
-    if (sendingRef.current || !form.validate()) return;
+    // Saved: the transition ends before the navigation does, and a second save would spend an attempt (CR-01).
+    if (saved || sendingRef.current || !form.validate()) return;
 
     sendingRef.current = true;
     startTransition(async () => {

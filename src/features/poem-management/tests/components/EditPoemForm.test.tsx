@@ -235,15 +235,32 @@ describe("EditPoemForm: saving", () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
+  // implements FR-6 of edit-poem: a double click saves once, also across the gap before the navigation ends
+  it("sends nothing more after a saved result, while the owner's poem page opens", async () => {
+    vi.mocked(updatePoemAction).mockResolvedValue(respond({ status: "saved" }));
+    const { user } = renderForm();
+    await changeTitle(user);
+
+    await user.click(saveButton());
+    await waitFor(() => expect(push).toHaveBeenCalledOnce());
+    expect(saveButton()).toBeDisabled();
+    fireEvent.submit(titleInput().closest("form") as HTMLFormElement);
+
+    expect(updatePoemAction).toHaveBeenCalledTimes(1);
+    expect(push).toHaveBeenCalledOnce();
+  });
+
   // implements FR-4 of edit-poem
   it("asks to remove a removed illustration and to replace with a newly picked file", async () => {
-    vi.mocked(updatePoemAction).mockResolvedValue(respond({ status: "saved" }));
+    // A failure keeps the form on the page for the second save.
+    vi.mocked(updatePoemAction).mockResolvedValue(respond({ status: "failed", failure: "unavailable" }));
     const { user } = renderForm();
     await user.click(removeButton());
     await user.click(saveButton());
     expect(updatePoemAction).toHaveBeenLastCalledWith(
       expect.objectContaining({ illustrationChange: "remove", illustration: undefined }),
     );
+    await waitFor(() => expect(saveButton()).toBeEnabled());
 
     const file = pngFile();
     await user.upload(illustrationInput(), file);

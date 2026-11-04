@@ -29,7 +29,7 @@ export function EditPoemForm({ poemId, stored, genres }: EditPoemFormProps) {
   // Set by the discard button: the back link it brings back takes focus as it mounts (FR-3).
   const focusBackLinkRef = useRef(false);
   const form = usePoemForm<SaveAlertFailure>(stored, genres, { isPending, formRef, alertRef });
-  const { submit } = useSavePoem({ poemId, form, startTransition, connection });
+  const { saved, submit } = useSavePoem({ poemId, form, startTransition, connection });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,7 +62,8 @@ export function EditPoemForm({ poemId, stored, genres }: EditPoemFormProps) {
         <PoemFormFields form={form} illustrationLabels={EDIT_POEM_ILLUSTRATION_LABELS} illustrationLayout="preview-first" />
         {form.isChanged ? (
           <div className="flex flex-wrap items-start gap-2">
-            <Button type="submit" disabled={connection !== CONNECTION_STATUS.online}>
+            {/* Stays disabled after a save while the poem page opens. */}
+            <Button type="submit" disabled={saved || connection !== CONNECTION_STATUS.online}>
               {isPending ? EDIT_POEM_COPY.submitPending : EDIT_POEM_COPY.submit}
             </Button>
             <Button variant="ghost" onClick={discard}>
