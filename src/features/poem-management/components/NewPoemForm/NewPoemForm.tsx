@@ -72,7 +72,9 @@ export function NewPoemForm({ genres }: NewPoemFormProps) {
     try {
       const file = illustration.kind === "new" ? illustration.draft.file : undefined;
       result = (await createPoemAction({ title, text, genreId, illustration: file })).data;
-    } catch {
+    } catch (error) {
+      // The error's type only: never the poem's content (edit-poem NFR-10).
+      console.error(`[poem-management] create call rejected: ${error instanceof Error ? error.name : typeof error}`);
       // Offline: the live notice already says why, so no alert is kept (edit-poem FR-11).
       if (connectionRef.current !== CONNECTION_STATUS.offline) showFailure("unknown");
       return;

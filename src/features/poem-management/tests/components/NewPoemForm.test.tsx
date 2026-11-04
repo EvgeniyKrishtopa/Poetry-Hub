@@ -441,4 +441,17 @@ describe("NewPoemForm: connection", () => {
     await user.click(submitButton());
     expect(await screen.findByRole("alert")).toHaveTextContent(UNKNOWN_TEXT);
   });
+
+  // implements NFR-10 of edit-poem: CR-05, a rejected create call is logged by its error type, never the poem
+  it("logs a rejected call by its error type only", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.mocked(createPoemAction).mockRejectedValue(new TypeError(`Failed to fetch ${TITLE}`));
+    const user = renderForm();
+    await fillValid(user);
+
+    await user.click(submitButton());
+
+    await screen.findByRole("alert");
+    expect(log).toHaveBeenCalledExactlyOnceWith("[poem-management] create call rejected: TypeError");
+  });
 });
