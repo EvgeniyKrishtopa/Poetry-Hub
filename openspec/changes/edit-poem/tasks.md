@@ -156,18 +156,19 @@ consumers for knip), so `npm run knip` stays green per group PR.
     save failing while either form is open: after the author closes it, focus is on the failure
     alert and a pending sign-out question resolves `dismissed` (implements FR-13, NFR-4 of edit-poem).
 
-## 7. Connection state on the add form and the profile editor (UI — waits for the approved mockups) <!-- judgement-heavy -->
+## 7. Connection state on the add form and the profile editor (UI — approved artboards 28–29) <!-- judgement-heavy -->
 
-- [ ] 7.1 (FR-11) `NewPoemForm`: the connection notice above the form, «Добавить произведение»
+- [x] 7.1 (FR-11) `NewPoemForm`: the connection notice above the form, «Добавить произведение»
   disabled while offline or slow, a rejected call while the latest connection status is `offline`
   shows the notice, read from the hook through a ref (design D8).
   - Verify with `NewPoemForm.test.tsx` (new cases; existing ones unchanged).
-- [ ] 7.2 (FR-11) Profile editor: `ConnectionNotice` in `AuthorProfileEditor`, `FieldEditActions`'
+- [x] 7.2 (FR-11) Profile editor: `ConnectionNotice` in `AuthorProfileEditor`, `FieldEditActions`'
   «Сохранить» and `FieldActions`' «Удалить» disabled while offline or slow (design D8).
   - Verify with `AuthorProfileEditor`, `FieldEditActions`, and `FieldActions` tests (new cases; existing unchanged).
-- [ ] 7.3 (NFR-2, NFR-3, NFR-6) Static checks: `"use client"` only in the listed modules; no
+- [x] 7.3 (NFR-2, NFR-3, NFR-6) Static checks: `"use client"` only in the listed modules; no
   `navigator.onLine` or `navigator.connection` outside `src/shared/` and no `beforeunload` outside the edit form's leave guard; no colour literals; both forms use
-  `usePoemForm` and `PoemFormFields`.
+  `usePoemForm` and `PoemFormFields`. The contact form's log line read `navigator.onLine` directly; it now calls
+  `isBrowserOnline()` from `shared/lib/network` (decided with the author, 2026-11-04).
 
 ## 8. Docs and verification <!-- isolated -->
 

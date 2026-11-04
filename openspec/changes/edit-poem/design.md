@@ -437,7 +437,9 @@ there only (Gate 1 P3).
   shows no alert. `useEditPoemForm` and `NewPoemForm` take that value from the hook and keep the latest
   one in a ref, read when the rejection is handled (the transition's closure holds the value from
   the render that started it); no module outside `shared/lib/network` reads `navigator.onLine`
-  or `navigator.connection` (Gate 2 C2). The notice is the live `useConnectionStatus()` value only, so it goes
+  or `navigator.connection` (Gate 2 C2). The contact form's existing log line, which read
+  `navigator.onLine` itself, calls `isBrowserOnline()` from the same module instead (group 7, decided with
+  the author 2026-11-04, over an allowed exception in the static check). The notice is the live `useConnectionStatus()` value only, so it goes
   when the connection returns and no "failed while offline" state is kept (spec-clarify,
   2026-11-03). A rejection while online (slow or not) shows the `unknown` alert.
 

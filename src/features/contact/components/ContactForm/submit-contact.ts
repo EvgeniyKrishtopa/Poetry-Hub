@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isBrowserOnline } from "@/shared/lib/network/use-connection-status";
+
 import { sendContactMessageAction } from "../../actions/contact.actions";
 import { CONTACT_STATUS } from "../../model/contact.constants";
 import { contactMessageSchema } from "../../model/contact.schema";
@@ -23,7 +25,7 @@ export async function submitContact(_previous: ContactFormState, formData: FormD
     // typed text. The error's type only: its message could echo what was submitted (NFR-2). The
     // online flag tells a visitor's dropped connection from a refusal on the way to the server.
     const errorType = error instanceof Error ? error.name : typeof error;
-    console.error(`[contact] action call rejected: ${errorType} (online: ${navigator.onLine})`);
+    console.error(`[contact] action call rejected: ${errorType} (online: ${isBrowserOnline()})`);
     return { status: CONTACT_STATUS.failed, values };
   }
 }
