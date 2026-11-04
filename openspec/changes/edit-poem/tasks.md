@@ -172,17 +172,17 @@ consumers for knip), so `npm run knip` stays green per group PR.
 
 ## 8. Docs and verification <!-- isolated -->
 
-- [ ] 8.1 (NFR-3) `docs/architecture.md`: the edit route, action, and DAL in poem-management's line,
+- [x] 8.1 (NFR-3) `docs/architecture.md`: the edit route, action, and DAL in poem-management's line,
   `PoemForm/`, `EditPoemForm/use-leave-guard.ts`, `shared/lib/network/`, `ConnectionNotice`; refresh
   `docs/design-system.md` for any new primitive or token the mockups add.
-- [ ] 8.2 (NFR-2) `docs/state-management.md`: the created-or-saved store's `kind`; the shared
+- [x] 8.2 (NFR-2) `docs/state-management.md`: the created-or-saved store's `kind`; the shared
   leave-block store (a callback, no data); the edit draft lives in the route's `Activity` state, not
   a store.
-- [ ] 8.3 (FR-7) ADR 0007: add `poem_edit` to its scope list (status-line note).
-- [ ] 8.4 (NFR-1) Add `npx supabase db push` for `update_my_poem` to `docs/environment.md`'s deploy
+- [x] 8.3 (FR-7) ADR 0007: add `poem_edit` to its scope list (status-line note).
+- [x] 8.4 (NFR-1) Add `npx supabase db push` for `update_my_poem` to `docs/environment.md`'s deploy
   checklist.
-- [ ] 8.5 (FR-1 – FR-15) Gate 3 (web-qa): the flows in design D13; record the happy path as a
+- [x] 8.5 (FR-1 – FR-15) Gate 3 (web-qa): the flows in design D13; record the happy path as a
   scenario under `tests/web-qa-scenarios` with a restore step.
-- [ ] 8.6 (NFR-8) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`
+- [x] 8.6 (NFR-8) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`
   and confirm the build's route list adds `/account/poems/[poemId]/edit` with the management
   routes' marker and keeps every other marker.

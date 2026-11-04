@@ -6,6 +6,10 @@ Accepted (2026-10-17)
 
 Partially superseded by 0009 (Decisions 1 and 3, and Decision 6's poem example: writes that create rows)
 
+Scope added by `edit-poem` (2026-11-04): `poem_edit`, 10 per minute, one attempt per save of an own
+poem's edit, with or without a new illustration (`20261103130000_update_my_poem.sql`; that change's
+design D2). An edit changes an existing row, so it follows this ADR, not 0009.
+
 ## Context
 
 ADR 0005 made every reader write a Server Action that, on success, expires the public pages'
@@ -22,7 +26,7 @@ to the database. Every photo upload also costs bandwidth, Storage, and a new ima
    checks the limit before it reads the file's bytes.
 2. **The limits live in a Postgres function, not in app code.** `consume_write_allowance(scope)` is
    security definer, takes only the scope, resolves the caller from `auth.uid()`, and holds the
-   numbers (`profile_write` 10 per minute, `photo_upload` 5 per hour). Its counter table has RLS on,
+   numbers (`profile_write` 10 per minute, `photo_upload` 5 per hour, `poem_edit` 10 per minute). Its counter table has RLS on,
    no policies, and no grants, so a client can neither raise a limit nor read or reset a counter.
    Changing a number is a migration.
 3. **Fixed windows, one row per user and scope.** One atomic upsert counts the attempt and restarts a

@@ -42,6 +42,11 @@ git-ignored `PROGRESS.md`, so every clone sees them.
   counting creations instead of live poems). Ship it before the app: without it every delete fails
   with the dialog's error alert. Rollback: revert the app first, then the down migration in the
   file's header.
+- **Update migration** (`edit-poem`): `npx supabase db push` applies `20261103130000_update_my_poem.sql`
+  (`update_my_poem`, and the `poem_edit` scope in `write_rate_limits` and `consume_write_allowance`,
+  10 saves per minute). Ship it before the app: without it every save on the edit page fails with
+  the form's error alert. Rollback: revert the app first, then the down migration in the file's
+  header.
 - **`poem-illustrations` bucket** (`add-poem-creation`): on the hosted project, confirm it exists,
   public, 5 MiB file size limit, MIME types `image/png` and `image/jpeg` — the same as
   `supabase/config.toml`, which configures the local stack only.
