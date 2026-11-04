@@ -6,7 +6,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(66);
+select plan(70);
 
 -- Fixtures, written as the superuser (bypasses RLS). A owns a non-public profile, B and D public ones, C has
 -- no profile. A and B each have one collection two days old.
@@ -226,6 +226,18 @@ select throws_ok(
   'an update to an empty-string description is rejected'
 );
 
+select throws_ok(
+  $$select public.update_my_collection('b0000000-0000-4000-8000-000000000001', repeat('я', 81), null)$$,
+  '23514', null,
+  'an update to an 81-character title is rejected'
+);
+
+select throws_ok(
+  $$select public.update_my_collection('b0000000-0000-4000-8000-000000000001', 'T', repeat('я', 1001))$$,
+  '23514', null,
+  'an update to a 1001-character description is rejected'
+);
+
 select is(
   public.update_my_collection('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Hacked', null),
   '{"status": "not-found"}'::jsonb,
@@ -434,6 +446,19 @@ select isnt_empty(
   $$select 1 from public.collection_creations
     where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' and created_at <= now() - interval '30 days'$$,
   'D''s create leaves another author''s aged creations alone'
+);
+
+-- ---------- removing a profile removes its collections and its creation log ----------
+delete from public.author_profiles where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+
+select is_empty(
+  $$select 1 from public.collections where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'$$,
+  'deleting a profile deletes its collections'
+);
+
+select is_empty(
+  $$select 1 from public.collection_creations where author_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'$$,
+  'deleting a profile deletes its creation log'
 );
 
 select * from finish();
