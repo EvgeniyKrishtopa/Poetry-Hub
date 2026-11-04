@@ -97,7 +97,9 @@ export function useSavePoem({ poemId, form, startTransition, connection }: SaveP
       const illustrationChange = illustrationChangeOf(illustration);
       outcome = (await updatePoemAction({ poemId, title, text, genreId, illustrationChange, illustration: file }))
         .data;
-    } catch {
+    } catch (error) {
+      // The error's type only: never the poem's content (NFR-10).
+      console.error(`[poem-management] save call rejected: ${error instanceof Error ? error.name : typeof error}`);
       outcome = REJECTED;
     }
     handleOutcome(outcome);

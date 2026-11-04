@@ -442,4 +442,17 @@ describe("EditPoemForm: connection", () => {
     await user.click(saveButton());
     expect(await screen.findByRole("alert")).toHaveTextContent(UNKNOWN_TEXT);
   });
+
+  // implements NFR-10 of edit-poem: CR-05, a rejected call is logged by its error type, never the poem
+  it("logs a rejected call by its error type only", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.mocked(updatePoemAction).mockRejectedValue(new TypeError("Failed to fetch Первый снег."));
+    const { user } = renderForm();
+    await changeTitle(user);
+
+    await user.click(saveButton());
+
+    await screen.findByRole("alert");
+    expect(log).toHaveBeenCalledExactlyOnceWith("[poem-management] save call rejected: TypeError");
+  });
 });
