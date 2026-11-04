@@ -442,6 +442,23 @@ describe("NewPoemForm: connection", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(UNKNOWN_TEXT);
   });
 
+  // implements FR-11 of edit-poem: CR-07, only offline hides the alert; a slow connection is still a connection
+  it("shows the unknown alert for a call rejected after the connection turned slow", async () => {
+    const lost = deferred<ActionResponse>();
+    vi.mocked(createPoemAction).mockReturnValueOnce(lost.promise);
+    const user = userEvent.setup();
+    const { rerender } = render(<NewPoemForm genres={GENRES} />);
+    await fillValid(user);
+    await user.click(submitButton());
+
+    setConnection("slow");
+    rerender(<NewPoemForm genres={GENRES} />);
+    await act(async () => lost.reject(new Error("network")));
+
+    expect(screen.getByRole("status")).toHaveTextContent(SLOW_TEXT);
+    expect(await screen.findByRole("alert")).toHaveTextContent(UNKNOWN_TEXT);
+  });
+
   // implements NFR-10 of edit-poem: CR-05, a rejected create call is logged by its error type, never the poem
   it("logs a rejected call by its error type only", async () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
