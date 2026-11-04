@@ -83,7 +83,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.resetAllMocks();
-  useCreatedPoemNotice.getState().clearCreatedPoemId();
+  useCreatedPoemNotice.getState().clearPoemNotice();
 });
 
 describe("NewPoemForm", () => {
@@ -248,7 +248,7 @@ describe("NewPoemForm", () => {
 
     expect(createPoemAction).toHaveBeenCalledExactlyOnceWith({ title: TITLE, text: TEXT, genreId: "lyric", illustration: file });
     await waitFor(() => expect(push).toHaveBeenCalledExactlyOnceWith(`/account/poems/${POEM_ID}`));
-    expect(useCreatedPoemNotice.getState().createdPoemId).toBe(POEM_ID);
+    expect(useCreatedPoemNotice.getState().notice).toEqual({ poemId: POEM_ID, kind: "created" });
     expect(titleInput()).toHaveValue("");
     expect(textArea()).toHaveValue("");
     expect(genreSelect()).toHaveDisplayValue("—");

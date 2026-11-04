@@ -1,8 +1,9 @@
 import type Link from "next/link";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentProps } from "react";
 
 import type { ButtonVariant } from "../Button/Button.types";
 
-export interface ButtonLinkProps extends ComponentPropsWithoutRef<typeof Link> {
+// With `ref`: a form moves focus to its link (edit-poem FR-3, discard).
+export interface ButtonLinkProps extends ComponentProps<typeof Link> {
   variant?: ButtonVariant;
 }

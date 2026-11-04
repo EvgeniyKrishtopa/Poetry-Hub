@@ -6,7 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { validateImageFile } from "@/shared/lib/image-file/validate-image-file";
 
 import { PoemFormFields } from "../../components/PoemForm/PoemFormFields";
-import { type PoemFormState, usePoemForm } from "../../components/PoemForm/use-poem-form";
+import { usePoemForm } from "../../hooks/use-poem-form";
+import type { PoemFormState } from "../../hooks/use-poem-form.types";
 import type { PoemFormValues } from "../../model/poem-form-values";
 import { NEW_POEM_ILLUSTRATION_LABELS, POEM_FIELD_ERRORS } from "../../model/poem-management-messages";
 import { GENRE_PLACEHOLDER } from "../../model/poem-management.constants";
@@ -47,7 +48,7 @@ function Harness({ initial, stateRef }: { readonly initial: PoemFormValues; read
   });
   return (
     <form ref={formRef}>
-      <PoemFormFields form={form} illustrationLabels={NEW_POEM_ILLUSTRATION_LABELS} />
+      <PoemFormFields fields={form} illustrationLabels={NEW_POEM_ILLUSTRATION_LABELS} illustrationLayout="picker-first" />
       {form.failure !== null && <div ref={alertRef} tabIndex={-1} data-testid="alert" />}
     </form>
   );

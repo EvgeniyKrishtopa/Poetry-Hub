@@ -2,17 +2,26 @@ import { MarkdownEditor, TextField } from "@/shared/ui";
 
 import { poemTextLength } from "../../model/poem-form.schema";
 import { POEM_MANAGEMENT_COPY } from "../../model/poem-management-messages";
-import { POEM_MARKDOWN_FORMATS, TEXT_MAX_LENGTH } from "../../model/poem-management.constants";
+import { POEM_MARKDOWN_FORMATS, TEXT_MAX_LENGTH, TITLE_FIELD_NAME } from "../../model/poem-management.constants";
 
 import { GenreSelect } from "./GenreSelect";
 import { IllustrationField } from "./IllustrationField";
 import type { PoemFormFieldsProps } from "./PoemFormFields.types";
-import { TITLE_FIELD_NAME } from "./use-poem-form-focus";
 
 /** Title, text, genre, and illustration, from the shared form state (edit-poem design D4). */
-export function PoemFormFields({ form, illustrationLabels }: PoemFormFieldsProps) {
-  const { values, fieldErrors } = form;
-  const { fieldIds, editorKey, pickerKey } = form.rendering;
+export function PoemFormFields({ fields, illustrationLabels, illustrationLayout }: PoemFormFieldsProps) {
+  const {
+    values,
+    fieldErrors,
+    genres,
+    illustrationError,
+    rendering: { fieldIds, editorKey, pickerKey },
+    setTitle,
+    setText,
+    setGenreId,
+    chooseIllustration,
+    removeIllustration,
+  } = fields;
 
   return (
     <>
@@ -22,7 +31,7 @@ export function PoemFormFields({ form, illustrationLabels }: PoemFormFieldsProps
         type="text"
         autoComplete="off"
         value={values.title}
-        onChange={(event) => form.setTitle(event.target.value)}
+        onChange={(event) => setTitle(event.target.value)}
         error={fieldErrors.title}
       />
       <div className="flex flex-col gap-1.5">
@@ -33,7 +42,7 @@ export function PoemFormFields({ form, illustrationLabels }: PoemFormFieldsProps
           key={editorKey}
           id={fieldIds.text}
           value={values.text}
-          onChange={form.setText}
+          onChange={setText}
           error={fieldErrors.text}
           length={poemTextLength(values.text)}
           maxLength={TEXT_MAX_LENGTH}
@@ -44,18 +53,19 @@ export function PoemFormFields({ form, illustrationLabels }: PoemFormFieldsProps
       <GenreSelect
         id={fieldIds.genreId}
         value={values.genreId}
-        genres={form.genres}
+        genres={genres}
         error={fieldErrors.genreId}
-        onChange={form.setGenreId}
+        onChange={setGenreId}
       />
       <IllustrationField
+        layout={illustrationLayout}
         id={fieldIds.illustration}
         pickerKey={pickerKey}
         illustration={values.illustration}
-        error={form.illustrationError}
+        error={illustrationError}
         labels={illustrationLabels}
-        onFileChange={form.chooseIllustration}
-        onRemove={form.removeIllustration}
+        onFileChange={chooseIllustration}
+        onRemove={removeIllustration}
       />
     </>
   );

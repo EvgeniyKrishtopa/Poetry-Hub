@@ -1,5 +1,5 @@
 import { AUTHOR_EDITOR_PATH, AUTHORS_PAGE_TITLES, AUTHORS_PATH } from "@/features/authors";
-import { NEW_POEM_PATH, POEM_MANAGEMENT_TRAIL_LABELS } from "@/features/poem-management";
+import { EDIT_SEGMENT, NEW_POEM_PATH, POEM_MANAGEMENT_TRAIL_LABELS } from "@/features/poem-management";
 import { POEMS_SEGMENT } from "@/features/poems";
 import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
 import { ABOUT_PATH, PRIVACY_PATH } from "@/shared/config/constants";
@@ -53,15 +53,17 @@ function matchAuthorRoute(path: string): RouteMatch {
 }
 
 /**
- * The owner's page of one poem, `[poemId]` after the management path (design D10). Any single segment
- * matches: the add form's own row wins before this, and a malformed id reads as not-found, so no trail.
+ * The owner's page of one poem, `[poemId]` after the management path (design D10), and its edit page,
+ * `[poemId, "edit"]` (edit-poem D12). Any id segment matches: the add form's own row wins before this, and
+ * a malformed id reads as not-found, so no trail.
  */
 function matchOwnPoemRoute(path: string): RouteMatch {
   if (!path.startsWith(OWN_POEM_PREFIX)) return NO_MATCH;
 
-  const [poemId, ...extra] = path.slice(OWN_POEM_PREFIX.length).split("/");
+  const [poemId, section, ...extra] = path.slice(OWN_POEM_PREFIX.length).split("/");
   if (poemId === undefined || poemId === "" || extra.length > 0) return NO_MATCH;
-  return { kind: "own-poem", poemId };
+  if (section === undefined) return { kind: "own-poem", poemId };
+  return section === EDIT_SEGMENT ? { kind: "own-poem-edit", poemId } : NO_MATCH;
 }
 
 /** Maps a URL's segments to its trail by the route table; anything not in the table is `none`. */

@@ -1,3 +1,4 @@
+import { render, screen } from "@testing-library/react";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -9,6 +10,7 @@ import type { PoemArticleProps } from "../../components/PoemArticle/PoemArticle.
 import { PoemPage } from "../../components/PoemPage/PoemPage";
 import { PoemPageContent } from "../../components/PoemPageContent/PoemPageContent";
 import { PoemPageSkeleton } from "../../components/PoemPageSkeleton/PoemPageSkeleton";
+import { PoemView } from "../../components/PoemView/PoemView";
 import { getAuthorPoem } from "../../dal/author-poems";
 import { AUTUMN_GARDEN, FIXTURE_AUTHOR_ID } from "../poem-fixtures";
 
@@ -42,6 +44,21 @@ describe("PoemPageContent", () => {
     expect(getAuthorPoem).toHaveBeenCalledWith(AUTHOR_ID, POEM_ID);
     expect(element.type).toBe(PoemArticle);
     expect(element.props.poem).toBe(AUTUMN_GARDEN);
+  });
+
+  // implements FR-1 of edit-poem: the public poem page offers no editing, even to its author
+  it("shows no «Редактировать произведение» link", async () => {
+    vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Anna Akhmatova" });
+    vi.mocked(getAuthorPoem).mockResolvedValue({ ok: true, poem: AUTUMN_GARDEN });
+
+    // The async article can't render in jsdom: the page is the article alone, and the view it renders has no link.
+    const element = (await renderContent()) as ReactElement<PoemArticleProps>;
+    expect(element.type).toBe(PoemArticle);
+    expect(Object.keys(element.props)).toEqual(["poem"]);
+
+    render(<PoemView poem={AUTUMN_GARDEN} genre={{ kind: "none" }} />);
+    expect(screen.getByText(AUTUMN_GARDEN.title)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Редактировать произведение" })).toBeNull();
   });
 
   // implements FR-5 of add-author-poems

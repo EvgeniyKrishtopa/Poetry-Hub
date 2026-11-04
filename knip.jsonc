@@ -4,18 +4,7 @@
   "ignore": [
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
     ".ncurc.cjs",
-    // Temporary, edit-poem scaffold: these stubs have no importer until a task wires or tests them. Each entry
-    // is removed by that task: the edit page, content and button 5.1, the edit form and its save hook 5.2,
-    // LeaveBlockedDialog 6.1.
-    "src/features/poem-management/components/EditPoemPage/EditPoemPage.tsx",
-    "src/features/poem-management/components/EditPoemPage/EditPoemPage.types.ts",
-    "src/features/poem-management/components/EditPoemContent/EditPoemContent.tsx",
-    "src/features/poem-management/components/EditPoemContent/EditPoemContent.types.ts",
-    "src/features/poem-management/components/EditPoemButton/EditPoemButton.tsx",
-    "src/features/poem-management/components/EditPoemButton/EditPoemButton.types.ts",
-    "src/features/poem-management/components/EditPoemForm/EditPoemForm.tsx",
-    "src/features/poem-management/components/EditPoemForm/EditPoemForm.types.ts",
-    "src/features/poem-management/components/EditPoemForm/use-save-poem.ts",
+    // Temporary, edit-poem scaffold: this stub has no importer until task 6.1 wires it, which removes these entries.
     "src/features/poem-management/components/LeaveBlockedDialog/LeaveBlockedDialog.tsx",
     "src/features/poem-management/components/LeaveBlockedDialog/LeaveBlockedDialog.types.ts"
   ],

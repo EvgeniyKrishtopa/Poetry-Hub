@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PoemGenre } from "@/features/poems";
 
-import { usePoemForm } from "../../components/PoemForm/use-poem-form";
+import { usePoemForm } from "../../hooks/use-poem-form";
 import type { PoemFormValues } from "../../model/poem-form-values";
 import { POEM_FIELD_ERRORS } from "../../model/poem-management-messages";
 import { GENRE_PLACEHOLDER } from "../../model/poem-management.constants";

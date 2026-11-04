@@ -116,7 +116,7 @@ consumers for knip), so `npm run knip` stays green per group PR.
 
 ## 5. Edit page, form, button, and notices (UI — approved artboards 25–26) <!-- judgement-heavy -->
 
-- [ ] 5.1 (FR-1, FR-2, FR-15, NFR-8) Add the route
+- [x] 5.1 (FR-1, FR-2, FR-15, NFR-8) Add the route
   `src/app/(authorized)/account/poems/[poemId]/edit/page.tsx`, its breadcrumb slot page,
   `EditPoemPage`, `EditPoemContent`, `EditPoemButton` (rendered with `DeletePoemButton` in one row in
   `OwnPoemContent`), `editPoemPath`, `EDIT_SEGMENT`, the trail label, and the `own-poem-edit` match
@@ -125,7 +125,7 @@ consumers for knip), so `npm run knip` stays green per group PR.
     «Без жанра», 404, error throw, genres alert, session unknown), `OwnPoemContent.test.tsx` (both
     buttons only when the poem renders), and `breadcrumbs`' `match-route` / trail tests (implements
     FR-15 of edit-poem).
-- [ ] 5.2 (FR-3 – FR-12, NFR-4, NFR-7) Add `EditPoemForm` and its `use-save-poem.ts` (design D4,
+- [x] 5.2 (FR-3 – FR-12, NFR-4, NFR-7) Add `EditPoemForm` and its `use-save-poem.ts` (design D4,
   D5, D7, D8) and the
   `{ poemId, kind }` created-or-saved store with `CreatedPoemNotice` showing both texts.
   - Verify with `tests/EditPoemForm.test.tsx`: link vs save and discard buttons by `isChanged`;

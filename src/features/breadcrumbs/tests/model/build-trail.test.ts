@@ -175,6 +175,7 @@ describe("buildTrail on the poem routes", () => {
 describe("buildTrail on the poem management routes", () => {
   const POEM_ID = "30000000-0000-4000-8000-000000000021";
   const OWN_POEM_MATCH = { kind: "own-poem", poemId: POEM_ID } as const;
+  const OWN_POEM_EDIT_MATCH = { kind: "own-poem-edit", poemId: POEM_ID } as const;
 
   const ACCOUNT_LINK = { kind: "link", label: "Мастерская поэта", href: ACCOUNT_PATH } as const;
   const MANAGEMENT_LINK = { kind: "link", label: "Управление произведениями", href: POEM_MANAGEMENT_PATH } as const;
@@ -216,5 +217,30 @@ describe("buildTrail on the poem management routes", () => {
 
   it("shows no trail for an owner's poem match that comes with no title result", () => {
     expect(buildTrail(OWN_POEM_MATCH)).toEqual({ kind: "none" });
+  });
+
+  // implements FR-15 of edit-poem
+  it("ends the edit page's trail on «Редактирование», after the title linking to the owner's poem page", () => {
+    expect(buildTrail(OWN_POEM_EDIT_MATCH, undefined, undefined, { ok: true, title: "Первый снег" })).toEqual({
+      kind: "shown",
+      items: [
+        HOME,
+        ACCOUNT_LINK,
+        MANAGEMENT_LINK,
+        { kind: "link", label: "Первый снег", href: `/account/poems/${POEM_ID}` },
+        { kind: "current", label: "Редактирование" },
+      ],
+    });
+  });
+
+  // implements FR-15 of edit-poem
+  it("shows no edit trail for a poem that isn't the owner's, and ends on the management item when unreadable", () => {
+    expect(buildTrail(OWN_POEM_EDIT_MATCH, undefined, undefined, { ok: false, reason: "not-found" })).toEqual({
+      kind: "none",
+    });
+    expect(buildTrail(OWN_POEM_EDIT_MATCH, undefined, undefined, { ok: false, reason: "unavailable" })).toEqual({
+      kind: "shown",
+      items: [HOME, ACCOUNT_LINK, { kind: "current", label: "Управление произведениями" }],
+    });
   });
 });

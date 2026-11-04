@@ -4,13 +4,14 @@ import type { PoemGenre } from "@/features/poems";
 import type { ImageDraft } from "@/shared/lib/image-file/image-file.types";
 import { useImageDraft } from "@/shared/lib/image-file/use-image-draft";
 
-import { type IllustrationState, isPoemFormChanged, type PoemFormValues } from "../../model/poem-form-values";
-import { poemFormSchema, toPoemFieldErrors } from "../../model/poem-form.schema";
-import { ILLUSTRATION_ERROR_MESSAGES, POEM_FIELD_ERRORS } from "../../model/poem-management-messages";
-import { GENRE_PLACEHOLDER, POEM_FORM_FIELDS } from "../../model/poem-management.constants";
-import type { PoemFieldErrors, PoemFormField } from "../../model/poem-management.types";
+import { type IllustrationState, isPoemFormChanged, type PoemFormValues } from "../model/poem-form-values";
+import { poemFormSchema, toPoemFieldErrors } from "../model/poem-form.schema";
+import { ILLUSTRATION_ERROR_MESSAGES, POEM_FIELD_ERRORS } from "../model/poem-management-messages";
+import { GENRE_PLACEHOLDER, POEM_FORM_FIELDS } from "../model/poem-management.constants";
+import type { PoemFieldErrors, PoemFormField } from "../model/poem-management.types";
 
-import { type PoemFormFieldIds, type PoemFormHost, usePoemFormFocus } from "./use-poem-form-focus";
+import { usePoemFormFocus } from "./use-poem-form-focus";
+import type { PoemFormHost, PoemFormState } from "./use-poem-form.types";
 
 const NO_FIELD_ERRORS: PoemFieldErrors = {};
 
@@ -24,42 +25,6 @@ function currentIllustration(
 ): IllustrationState {
   if (newDraft !== null) return { kind: "new", draft: newDraft };
   return storedRemoved ? NO_ILLUSTRATION : initial;
-}
-
-/** What only the fields' markup needs: ids to point labels and focus at, and keys that remount controls. */
-interface PoemFormRendering {
-  readonly fieldIds: PoemFormFieldIds;
-  /** A new key remounts the editor on its editor tab, so an invalid text can take focus. */
-  readonly editorKey: number;
-  /** A new key remounts the file input, so a removed file is forgotten by the browser too. */
-  readonly pickerKey: number;
-}
-
-/** What the add and edit forms share: drafts, errors, the browser check, change detection (edit-poem D4). */
-export interface PoemFormState<TFailure extends string> {
-  readonly values: PoemFormValues;
-  readonly genres: readonly PoemGenre[];
-  readonly fieldErrors: PoemFieldErrors;
-  /** The illustration's message: the browser check's while it fails, otherwise the server's. */
-  readonly illustrationError: string | undefined;
-  readonly failure: TFailure | null;
-  /** Derived on every render, never stored (edit-poem design D5). */
-  readonly isChanged: boolean;
-  readonly rendering: PoemFormRendering;
-  readonly setTitle: (title: string) => void;
-  readonly setText: (text: string) => void;
-  readonly setGenreId: (genreId: string) => void;
-  readonly chooseIllustration: (input: HTMLInputElement) => void;
-  readonly removeIllustration: () => void;
-  /** Hides the previous failure and runs the field rules; `false` shows the errors and focuses the first invalid field. */
-  readonly validate: () => boolean;
-  /** Reads a newly picked file again right before sending; `false` shows its error and focuses the field. */
-  readonly recheckIllustration: () => Promise<boolean>;
-  /** The server's field errors; a genre it reports as removed leaves the list for the rest of the visit. */
-  readonly showFieldErrors: (errors: PoemFieldErrors) => void;
-  readonly showFailure: (failure: TFailure) => void;
-  /** Back to `initial`: drafts, errors, the failure, and the illustration (edit-poem design D5, discard). */
-  readonly reset: () => void;
 }
 
 /** The shared form logic, with no action and no navigation; focus is `usePoemFormFocus`'s (edit-poem design D4). */

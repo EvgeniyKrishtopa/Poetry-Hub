@@ -109,8 +109,20 @@ describe("matchRoute", () => {
     expect(matchRoute(["account", "poems", poemId])).toEqual({ kind: "own-poem", poemId });
   });
 
+  // implements FR-15 of edit-poem
+  it("matches the owner's edit page of one poem by the poem id", () => {
+    const poemId = "30000000-0000-4000-8000-000000000021";
+
+    expect(matchRoute(["account", "poems", poemId, "edit"])).toEqual({ kind: "own-poem-edit", poemId });
+  });
+
   // implements FR-8 of add-poem-creation
-  it.each([[["account", "poems", "a", "b"]], [["account", "poems", ""]]])("matches nothing for %j", (segments) => {
+  it.each([
+    [["account", "poems", "a", "b"]],
+    [["account", "poems", ""]],
+    [["account", "poems", "", "edit"]],
+    [["account", "poems", "a", "edit", "b"]],
+  ])("matches nothing for %j", (segments) => {
     expect(matchRoute(segments)).toEqual({ kind: "none" });
   });
 

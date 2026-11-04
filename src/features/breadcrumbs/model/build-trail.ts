@@ -1,5 +1,5 @@
 import { AUTHORS_PAGE_TITLES, AUTHORS_PATH, authorPagePath, type PublicAuthorNameResult } from "@/features/authors";
-import { POEM_MANAGEMENT_TRAIL_LABELS, type OwnPoemTitleResult } from "@/features/poem-management";
+import { ownPoemPath, POEM_MANAGEMENT_TRAIL_LABELS, type OwnPoemTitleResult } from "@/features/poem-management";
 import type { AuthorPoemResult } from "@/features/poems";
 import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH } from "@/shared/config/account-paths";
 import { HOME_PATH } from "@/shared/config/constants";
@@ -15,11 +15,22 @@ const ACCOUNT_ITEM: BreadcrumbItem = { kind: "link", label: AUTHORS_PAGE_TITLES.
 
 const NO_TRAIL: Trail = { kind: "none" };
 
+type OwnPoemMatch = Extract<RouteMatch, { kind: "own-poem" | "own-poem-edit" }>;
+
+/** The title as the current item on the poem page; on its edit page a link to it, then the edit label. */
+function ownPoemItems(match: OwnPoemMatch, title: string): readonly BreadcrumbItem[] {
+  if (match.kind === "own-poem") return [{ kind: "current", label: title }];
+  return [
+    { kind: "link", label: title, href: ownPoemPath(match.poemId) },
+    { kind: "current", label: POEM_MANAGEMENT_TRAIL_LABELS.editPoem },
+  ];
+}
+
 /**
- * The owner's poem trail agrees with its page (design D10): the title as the current item; no trail when
- * the page is a 404; ending at the management item when the page shows the error screen.
+ * The owner's poem and edit trails agree with their pages (design D10, edit-poem D12): the title items; no
+ * trail when the page is a 404; ending at the management item when the page shows the error screen.
  */
-function ownPoemTrail(title: OwnPoemTitleResult | undefined): Trail {
+function ownPoemTrail(match: OwnPoemMatch, title: OwnPoemTitleResult | undefined): Trail {
   // Unreachable from the loader, which always reads the title here; without it there's no last item.
   if (title === undefined) return NO_TRAIL;
   if (title.ok) {
@@ -29,7 +40,7 @@ function ownPoemTrail(title: OwnPoemTitleResult | undefined): Trail {
         HOME_ITEM,
         ACCOUNT_ITEM,
         { kind: "link", label: POEM_MANAGEMENT_TRAIL_LABELS.list, href: POEM_MANAGEMENT_PATH },
-        { kind: "current", label: title.title },
+        ...ownPoemItems(match, title.title),
       ],
     };
   }
@@ -70,7 +81,7 @@ export function buildTrail(
 ): Trail {
   if (match.kind === "none") return NO_TRAIL;
   if (match.kind === "static") return { kind: "shown", items: [HOME_ITEM, ...match.items] };
-  if (match.kind === "own-poem") return ownPoemTrail(ownPoemTitle);
+  if (match.kind === "own-poem" || match.kind === "own-poem-edit") return ownPoemTrail(match, ownPoemTitle);
 
   if (authorName?.ok === false && authorName.reason === "not-found") return NO_TRAIL;
   // A switch over the reasons, not a check of `ok` alone: a new failure reason falls through to the poem

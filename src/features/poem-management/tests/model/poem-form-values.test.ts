@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isPoemFormChanged, type PoemFormValues } from "../../model/poem-form-values";
+import { illustrationChangeOf, isPoemFormChanged, type PoemFormValues } from "../../model/poem-form-values";
 import { NO_GENRE } from "../../model/poem-management.constants";
 
 const STORED_URL = "http://127.0.0.1:54321/storage/v1/object/public/poem-illustrations/a/b.png";
@@ -44,5 +44,14 @@ describe("isPoemFormChanged", () => {
     expect(isPoemFormChanged(STORED, { ...STORED, illustration: NEW_ILLUSTRATION })).toBe(true);
     expect(isPoemFormChanged(WITHOUT_ILLUSTRATION, { ...STORED, illustration: NEW_ILLUSTRATION })).toBe(true);
     expect(isPoemFormChanged(WITHOUT_ILLUSTRATION, { ...WITHOUT_ILLUSTRATION })).toBe(false);
+  });
+});
+
+describe("illustrationChangeOf", () => {
+  // implements FR-4 of edit-poem
+  it("keeps a shown stored file, removes for none, and replaces for a new pick", () => {
+    expect(illustrationChangeOf({ kind: "stored", url: STORED_URL })).toBe("keep");
+    expect(illustrationChangeOf({ kind: "none" })).toBe("remove");
+    expect(illustrationChangeOf(NEW_ILLUSTRATION)).toBe("replace");
   });
 });
