@@ -48,7 +48,7 @@ function Harness({ initial, stateRef }: { readonly initial: PoemFormValues; read
   });
   return (
     <form ref={formRef}>
-      <PoemFormFields form={form} illustrationLabels={NEW_POEM_ILLUSTRATION_LABELS} illustrationLayout="picker-first" />
+      <PoemFormFields fields={form} illustrationLabels={NEW_POEM_ILLUSTRATION_LABELS} illustrationLayout="picker-first" />
       {form.failure !== null && <div ref={alertRef} tabIndex={-1} data-testid="alert" />}
     </form>
   );

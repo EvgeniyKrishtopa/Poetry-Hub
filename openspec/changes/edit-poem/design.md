@@ -75,7 +75,7 @@ src/features/poem-management/
     │   └── IllustrationField.tsx        #   moved; + stored illustration preview and labels (D6)
     ├── NewPoemForm/                     # create: composes PoemForm parts + createPoemAction
     ├── EditPoemForm/                    # new, client: composes PoemForm parts, the save hook, and the guard (D4, D7, D10)
-    │   ├── use-save-poem.ts             #   the update call and its outcomes: stores, navigation, alert, offline (D7)
+    │   ├── use-edit-poem-form.ts        #   the form's logic: fields, the update call and its outcomes, discard (D4, D7)
     │   └── use-leave-guard.ts           #   link-click, beforeunload, and sign-out question guard (D10)
     ├── EditPoemPage/                    # new, server: heading in the shell, Suspense (D6)
     ├── EditPoemContent/                 # new, server: session, own poem, genres, form (D6)
@@ -294,11 +294,12 @@ Logs: `write-log.ts`, operation names `check edit limit`, `update poem`, `upload
 - `NewPoemForm`: `usePoemForm(EMPTY_VALUES)`, the fields, the failure alert above the submit
   button (unchanged), the create call and its outcomes (unchanged). Its existing tests stay as
   they are and must stay green in the same group (no behaviour change).
-- `EditPoemForm`: `usePoemForm(stored)`, `useSavePoem` (the update call and every outcome, D7),
-  `useLeaveGuard` (D10), and rendering only: the offline notice and the failure alert above the
+- `EditPoemForm`: rendering only, from `useEditPoemForm({ poemId, stored, genres })`
+  (`EditPoemForm/use-edit-poem-form.ts`): the offline notice and the failure alert above the
   form, the fields, then «Сохранить изменения» with «Отменить изменения», or the back link (D5), and
-  `LeaveBlockedDialog`.
-  The outcomes live in the hook so the component stays a composition (Gate 1 P4).
+  `LeaveBlockedDialog`. The hook composes `usePoemForm(stored)`, the update call and every outcome
+  (D7), discard, and `useLeaveGuard` (D10), so the component holds no logic (Gate 1 P4; PR #169
+  review: one hook per form rather than a separate save hook, and the component destructures it).
 
 ### D5 — Change detection (FR-3)
 
@@ -376,10 +377,10 @@ request the hook already knows how to run).
 
 ### D7 — Outcomes and the saved notice (FR-6, FR-8, FR-9, FR-10)
 
-`useSavePoem({ poemId, form, startTransition, connection })`: `submit()` keeps the create form's guard order (in-flight ref, clear the alert, browser
-check, recheck the new file), then `updatePoemAction` in the form's own `useTransition` (group 5:
-`usePoemForm` needs the pending state before the hook exists, so the form owns the transition and
-the live connection status and passes both in); the fieldset is disabled and dimmed while pending.
+`useEditPoemForm`'s `onSubmit` keeps the create form's guard order (in-flight ref, clear the alert, browser
+check, recheck the new file), then `updatePoemAction` in the hook's own `useTransition`; the
+fieldset is disabled and dimmed while pending. The notice stores are written with `getState()`
+after the answer, never subscribed to (PR #169 review).
 
 | Result | Client |
 | --- | --- |
@@ -432,7 +433,7 @@ there only (Gate 1 P3).
 - A save already sending when the status turns `slow` or `offline` is not cancelled; it finishes or
   fails on its own.
 - A call that rejects (`fetch` failed) while the latest `useConnectionStatus()` value is `offline`
-  shows no alert. `useSavePoem` and `NewPoemForm` take that value from the hook and keep the latest
+  shows no alert. `useEditPoemForm` and `NewPoemForm` take that value from the hook and keep the latest
   one in a ref, read when the rejection is handled (the transition's closure holds the value from
   the render that started it); no module outside `shared/lib/network` reads `navigator.onLine`
   or `navigator.connection` (Gate 2 C2). The notice is the live `useConnectionStatus()` value only, so it goes
@@ -477,7 +478,7 @@ While `active`, an effect adds:
 
 The guard stays on while a save is sending (spec-clarify, 2026-11-03): leaving mid-save would
 let the arriving `saved` result pull the author back to the poem page, and a tab closed mid-save
-would leave them unsure whether it was stored. `useSavePoem` sets `saved` on a `saved` result
+would leave them unsure whether it was stored. `useEditPoemForm` sets `saved` on a `saved` result
 before `router.push`, so the guard is off for its own navigation; a failure keeps the form changed,
 so the guard stays on. The hook lives in `components/EditPoemForm/use-leave-guard.ts` (D1). Both listeners are removed when `active` turns false and when the edit page is hidden by `Activity` (effects
 clean up on hide), so a hidden edit page never guards another page.
@@ -519,7 +520,7 @@ a pending sign-out question is answered `dismissed`, so `SignOutButton` doesn't 
 
 The check sits in a client wrapper around the server action, not in the button and not in the
 action: `auth/components/SignOutButton/sign-out-with-confirmation.ts` (beside its only caller, as
-`EditPoemForm/use-save-poem.ts`; never in `actions/`, which holds `"use server"` modules only —
+`EditPoemForm/use-edit-poem-form.ts`; never in `actions/`, which holds `"use server"` modules only —
 there the store read would run on the server, see nothing, and skip the guard) exports
 `signOutWithConfirmation(send: () => void)`. It awaits `askBeforeLeaving()` and runs `send` only on
 `leave`, answering an explicit union `{ status: "sent" } | { status: "stayed" } | { status:
@@ -606,7 +607,7 @@ come from `@/features/poem-management`'s index.
   counted before step 4; no upload, Contentful call, or file read over the limit; own-profile read
   failure → `failed`, not public → `failed: not-public`; genres unavailable → `failed: unavailable`;
   upload failure → `failed` with the row untouched and no tag expired; tag before the old file;
-  old-file failure still `saved`); `useSavePoem` (each outcome); `usePoemForm`; `EditPoemForm` (save and discard buttons vs link, discard restoring
+  old-file failure still `saved`); `useEditPoemForm` through `EditPoemForm` (each outcome); `usePoemForm`; `EditPoemForm` (save and discard buttons vs link, discard restoring
   every field, each outcome's store and navigation, alert position and focus, offline and slow
   disable, guard activation incl. while sending); `NewPoemForm` tests unchanged plus the offline
   and slow rule; `IllustrationField` labels and stored preview; `useConnectionStatus`;
@@ -806,7 +807,7 @@ review's revision replaces its API (`askToLeave`, `askBeforeLeaving`), and task 
 | `src/features/poem-management/components/EditPoemContent/` | session, own poem, genres, keyed form (D6) | `EditPoemContent`, `EditPoemContentProps` |
 | `src/features/poem-management/components/EditPoemButton/` | «Редактировать произведение» link (D6) | `EditPoemButton`, `EditPoemButtonProps` |
 | `src/features/poem-management/components/EditPoemForm/EditPoemForm.tsx` + `.types.ts` | the edit form's composition (D4) | `EditPoemForm`, `EditPoemFormProps` |
-| `src/features/poem-management/components/EditPoemForm/use-save-poem.ts` | the call and its outcomes (D7) | `useSavePoem`, `SavePoem` |
+| `src/features/poem-management/components/EditPoemForm/use-edit-poem-form.ts` (was `use-save-poem.ts`; merged with the form's logic in the PR #169 review) | the form's logic: fields, the call and its outcomes, discard (D4, D7) | `useEditPoemForm`, `EditPoemFormModel` |
 | `src/features/poem-management/components/EditPoemForm/use-leave-guard.ts` | link, close, and sign-out guard (D10) | `useLeaveGuard`, `LeaveGuardOptions` |
 | `src/features/poem-management/components/LeaveBlockedDialog/` | the "save first" dialog over the shared `Dialog`, link and sign-out forms (D10) | `LeaveBlockedDialog`, `LeaveBlockedDialogProps` |
 
