@@ -166,6 +166,42 @@ describe("EditPoemForm: leave guard", () => {
     expect(titleInput()).toHaveValue("Первый снег.");
   });
 
+  // implements FR-13, NFR-4 of edit-poem: CR-07, the corner button and Escape close the link form too
+  it("closes the link form on the corner button and on Escape, focus back on the link each time", async () => {
+    const { user } = renderPage();
+    await changeTitle(user);
+
+    await user.click(link("Наши авторы"));
+    await user.click(screen.getByRole("button", { name: "Закрыть" }));
+    expect(leaveDialog()).not.toHaveAttribute("open");
+    expect(link("Наши авторы")).toHaveFocus();
+
+    await user.click(link("Наши авторы"));
+    pressEscape(leaveDialog());
+    expect(leaveDialog()).not.toHaveAttribute("open");
+    expect(link("Наши авторы")).toHaveFocus();
+  });
+
+  // implements NFR-4 of edit-poem: CR-07, a link gone by the close: the dialog still closes, nothing thrown.
+  // Where focus lands then is the browser's (a closed dialog's button drops it to the body); jsdom keeps it.
+  it("closes quietly when the clicked link is gone from the page by then", async () => {
+    const { user } = renderPage();
+    await changeTitle(user);
+    // Outside React's tree, so the test may remove it.
+    const outside = document.createElement("a");
+    outside.href = AUTHORS_PATH;
+    outside.textContent = "Ещё одна ссылка";
+    document.body.append(outside);
+
+    await user.click(outside);
+    outside.remove();
+    await user.click(screen.getByRole("button", { name: STAY }));
+
+    expect(leaveDialog()).not.toHaveAttribute("open");
+    expect(outside).not.toHaveFocus();
+    expect(titleInput()).toHaveValue("Первый снег.");
+  });
+
   // implements FR-13 of edit-poem: this poem's page and the edit page itself stay reachable
   it("lets the poem's own page and a same-page link through while changed", async () => {
     const { user } = renderPage();
@@ -292,6 +328,19 @@ describe("EditPoemForm: the dialog and a save's result", () => {
     expect(screen.getByRole("alert").parentElement).toHaveFocus();
   });
 
+  // implements NFR-4 of edit-poem: CR-07, an alert shown before the dialog opened doesn't take focus on close
+  it("gives focus back to the link when the failure alert was already there before the link form opened", async () => {
+    const { user } = renderPage();
+    const call = await startSave(user);
+    await act(async () => call.resolve(respond({ status: "failed", failure: "unavailable" })));
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+
+    await user.click(link("Наши авторы"));
+    await user.click(screen.getByRole("button", { name: STAY }));
+
+    expect(link("Наши авторы")).toHaveFocus();
+  });
+
   // implements FR-13, NFR-4 of edit-poem: a failure during the sign-out form: alert focus, answer dismissed
   it("focuses the failure alert and answers dismissed after the sign-out form closes on a failed save", async () => {
     const { user } = renderPage();
@@ -319,5 +368,18 @@ describe("EditPoemForm: a hidden edit page", () => {
 
     expect(leaveDialog()).not.toHaveAttribute("open");
     expect(titleInput()).toHaveValue("Первый снег.");
+  });
+
+  // implements FR-13 of edit-poem: CR-07, the link form closes on hide too
+  it("closes the link form on hide and shows none when visible again", async () => {
+    const { user, rerender } = renderPage();
+    await changeTitle(user);
+    await user.click(link("Наши авторы"));
+    expect(leaveDialog()).toHaveAttribute("open");
+
+    rerender("hidden");
+    rerender("visible");
+
+    expect(leaveDialog()).not.toHaveAttribute("open");
   });
 });
