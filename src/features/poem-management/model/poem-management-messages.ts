@@ -1,6 +1,7 @@
 import type { ImageFileError } from "@/shared/lib/image-file/image-file.types";
 
 import { TEXT_MAX_LENGTH, TITLE_MAX_LENGTH } from "./poem-management.constants";
+import type { IllustrationLabels, SaveAlertFailure } from "./poem-management.types";
 
 // Every string of the proposal's UI copy table this feature shows, verbatim and in Russian.
 
@@ -26,6 +27,13 @@ export const POEM_MANAGEMENT_COPY = {
   // Not in the copy table: the same text as the root `loading.tsx` and the poem pages' skeleton (FR-13).
   loading: "Загрузка…",
 } as const;
+
+/** The add form's illustration buttons: the picker keeps its text after a pick (edit-poem design D6). */
+export const NEW_POEM_ILLUSTRATION_LABELS: IllustrationLabels = {
+  choose: POEM_MANAGEMENT_COPY.illustrationButton,
+  replace: POEM_MANAGEMENT_COPY.illustrationButton,
+  remove: POEM_MANAGEMENT_COPY.removeIllustration,
+};
 
 export const POEM_FIELD_ERRORS = {
   required: "Обязательное поле.",
@@ -64,8 +72,47 @@ export const DELETE_POEM_COPY = {
   alreadyDeleted: "Произведение уже удалено.",
 } as const;
 
-/** Breadcrumb labels of the static management routes (design D10). */
+/** The edit button, the edit page, its form, and the notice after a save (edit-poem). */
+export const EDIT_POEM_COPY = {
+  open: "Редактировать произведение",
+  heading: "Редактирование произведения",
+  submit: "Сохранить изменения",
+  submitPending: "Сохранение…",
+  discard: "Отменить изменения",
+  backToPoem: "Вернуться на страницу произведения",
+  replaceIllustration: "Заменить иллюстрацию",
+  removeIllustration: "Удалить иллюстрацию",
+  saved: "Изменения сохранены.",
+} as const;
+
+/** The edit form's illustration buttons: replace while a preview shows, delete for either file (design D6). */
+export const EDIT_POEM_ILLUSTRATION_LABELS: IllustrationLabels = {
+  choose: POEM_MANAGEMENT_COPY.illustrationButton,
+  replace: EDIT_POEM_COPY.replaceIllustration,
+  remove: EDIT_POEM_COPY.removeIllustration,
+};
+
+/** The edit form's failure alert, one text per failure that keeps the author on the page (FR-7, FR-8, FR-10). */
+export const UPDATE_POEM_FAILURE_MESSAGES: Readonly<Record<SaveAlertFailure, string>> = {
+  "too-many-saves": "Слишком много сохранений. Попробуйте через минуту.",
+  "not-public": "Чтобы сохранять изменения, укажите имя и фамилию в профиле автора.",
+  unavailable: CREATE_POEM_FAILURE_MESSAGES.unavailable,
+  unknown: CREATE_POEM_FAILURE_MESSAGES.unknown,
+};
+
+/** The dialog over the edit page while changes are unsaved: a blocked link, or the header's sign-out (edit-poem D10). */
+export const LEAVE_DIALOG_COPY = {
+  title: "Есть несохранённые изменения",
+  linkBody: "Сначала сохраните изменения.",
+  signOutBody: "Если выйти сейчас, изменения пропадут.",
+  stay: "Продолжить редактирование",
+  leave: "Выйти без сохранения",
+  close: DELETE_POEM_COPY.close,
+} as const;
+
+/** Breadcrumb labels of the static management routes (design D10) and the edit page's last item (edit-poem D12). */
 export const POEM_MANAGEMENT_TRAIL_LABELS = {
   list: "Управление произведениями",
   newPoem: "Добавление нового произведения",
+  editPoem: "Редактирование",
 } as const;

@@ -1,7 +1,9 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Activity } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { type ConnectionStatus, useConnectionStatus } from "@/shared/lib/network/use-connection-status";
 
 import { deleteProfileFieldAction, saveAboutAction, saveNameAction } from "../../actions/author-profile.actions";
 import { AuthorProfileEditor } from "../../components/AuthorProfileEditor/AuthorProfileEditor";
@@ -15,6 +17,7 @@ vi.mock("../../actions/author-profile.actions", () => ({
   savePhotoAction: vi.fn(),
   deleteProfileFieldAction: vi.fn(),
 }));
+vi.mock("@/shared/lib/network/use-connection-status", () => ({ useConnectionStatus: vi.fn() }));
 
 type NameResponse = Awaited<ReturnType<typeof saveNameAction>>;
 type DeleteResponse = Awaited<ReturnType<typeof deleteProfileFieldAction>>;
@@ -31,6 +34,16 @@ const PROFILE: AuthorProfile = {
 
 const SAVED = { data: { status: "saved", profile: PROFILE } } as const;
 const UNAVAILABLE = { data: { status: "failed", failure: "unavailable" } } as const;
+const OFFLINE_TEXT = "Нет подключения к интернету. Сохранение станет доступно, когда связь восстановится.";
+const SLOW_TEXT = "Медленное подключение к интернету. Сохранение станет доступно, когда связь улучшится.";
+
+function setConnection(status: ConnectionStatus) {
+  vi.mocked(useConnectionStatus).mockReturnValue(status);
+}
+
+beforeEach(() => {
+  setConnection("online");
+});
 
 afterEach(() => {
   vi.resetAllMocks();
@@ -344,6 +357,75 @@ describe("AuthorProfileEditor", () => {
       await user.click(screen.getByRole("button", { name: prompt }));
 
       expect(screen.getByLabelText(label)).toHaveFocus();
+    });
+  });
+
+  describe("connection", () => {
+    /** The connection notice: the save notice is a `role="status"` region too, so it is found by its text. */
+    function connectionNotice(text: string) {
+      return screen.getByText(text).closest('[role="status"]');
+    }
+
+    // implements FR-11 of edit-poem
+    it("while offline with a name in edit mode, shows the notice above the fields, disables «Сохранить» and every «Удалить», and keeps the draft", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<AuthorProfileEditor profile={PROFILE} />);
+      await user.click(editButtons()[0]);
+      const input = screen.getByRole("textbox", { name: "Имя" });
+      await user.clear(input);
+      await user.type(input, "Anya");
+
+      setConnection("offline");
+      rerender(<AuthorProfileEditor profile={PROFILE} />);
+
+      const notice = connectionNotice(OFFLINE_TEXT);
+      expect(notice).not.toBeNull();
+      expect((notice as Element).compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Сохранить" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Отмена" })).toBeEnabled();
+      for (const button of screen.getAllByRole("button", { name: "Удалить" })) expect(button).toBeDisabled();
+      await user.type(input, "!");
+      expect(input).toHaveValue("Anya!");
+      await user.keyboard("{Enter}");
+      expect(saveNameAction).not.toHaveBeenCalled();
+
+      setConnection("online");
+      rerender(<AuthorProfileEditor profile={PROFILE} />);
+      expect(screen.queryByText(OFFLINE_TEXT)).toBeNull();
+      expect(screen.getByRole("button", { name: "Сохранить" })).toBeEnabled();
+    });
+
+    // implements FR-11 of edit-poem
+    it("while slow, shows the slow notice and disables «Сохранить» in the about field", async () => {
+      setConnection("slow");
+      const user = userEvent.setup();
+      render(<AuthorProfileEditor profile={PROFILE} />);
+
+      await user.click(screen.getByRole("button", { name: "Добавить «О себе»" }));
+      await user.type(screen.getByLabelText("О себе"), "Поэт");
+
+      expect(connectionNotice(SLOW_TEXT)).not.toBeNull();
+      expect(screen.getByRole("button", { name: "Сохранить" })).toBeDisabled();
+      expect(screen.getByLabelText("О себе")).toHaveValue("Поэт");
+    });
+
+    // implements FR-11 of edit-poem
+    it("in view mode while offline, keeps «Изменить» and the add prompts enabled", () => {
+      setConnection("offline");
+      render(<AuthorProfileEditor profile={PROFILE} />);
+
+      for (const button of editButtons()) expect(button).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Добавить «О себе»" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Добавить фото" })).toBeEnabled();
+      for (const button of screen.getAllByRole("button", { name: "Удалить" })) expect(button).toBeDisabled();
+    });
+
+    // implements FR-11 of edit-poem
+    it("shows no connection notice while online", () => {
+      render(<AuthorProfileEditor profile={PROFILE} />);
+
+      expect(screen.queryByText(OFFLINE_TEXT)).toBeNull();
+      expect(screen.queryByText(SLOW_TEXT)).toBeNull();
     });
   });
 });

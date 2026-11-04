@@ -1,180 +1,92 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useId, useRef, useState, useTransition } from "react";
+import { type FormEvent, useEffect, useRef, useTransition } from "react";
 
-import { useImageDraft } from "@/shared/lib/image-file/use-image-draft";
-import { Alert, Button, MarkdownEditor, TextField } from "@/shared/ui";
+import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
+import { useConnectionStatus } from "@/shared/lib/network/use-connection-status";
+import { Alert, Button, ConnectionNotice } from "@/shared/ui";
 
 import { createPoemAction } from "../../actions/create-poem.actions";
 import { useCreatedPoemNotice } from "../../model/created-poem-notice-ui.store";
-import { poemFormSchema, poemTextLength, toPoemFieldErrors } from "../../model/poem-form.schema";
+import type { PoemFormValues } from "../../model/poem-form-values";
 import {
   CREATE_POEM_FAILURE_MESSAGES,
-  ILLUSTRATION_ERROR_MESSAGES,
-  POEM_FIELD_ERRORS,
+  NEW_POEM_ILLUSTRATION_LABELS,
   POEM_MANAGEMENT_COPY,
 } from "../../model/poem-management-messages";
-import {
-  CREATE_POEM_STATUS,
-  GENRE_PLACEHOLDER,
-  POEM_FORM_FIELDS,
-  POEM_MARKDOWN_FORMATS,
-  TEXT_MAX_LENGTH,
-} from "../../model/poem-management.constants";
-import type { CreatePoemFailure, CreatePoemResult, PoemFieldErrors, PoemFormField } from "../../model/poem-management.types";
+import { CREATE_POEM_STATUS, GENRE_PLACEHOLDER } from "../../model/poem-management.constants";
+import type { CreatePoemFailure, CreatePoemResult } from "../../model/poem-management.types";
 import { ownPoemPath } from "../../model/poem-paths";
+import { POEM_FIELDSET_CLASS } from "../PoemForm/poem-fieldset-class";
+import { PoemFormFields } from "../PoemForm/PoemFormFields";
+import { usePoemForm } from "../../hooks/use-poem-form";
 
-import { GenreSelect } from "./GenreSelect";
-import { IllustrationField } from "./IllustrationField";
-import type { FocusRequest, NewPoemFormProps } from "./NewPoemForm.types";
+import type { NewPoemFormProps } from "./NewPoemForm.types";
 
-const NO_FIELD_ERRORS: PoemFieldErrors = {};
+const EMPTY_VALUES: PoemFormValues = { title: "", text: "", genreId: GENRE_PLACEHOLDER, illustration: { kind: "none" } };
 
-const TITLE_FIELD_NAME = "title";
-
-// The disabled fieldset dims the whole form; its buttons would dim a second time on their own `:disabled` style.
-const FIELDSET_CLASS = "flex min-w-0 flex-col gap-6 disabled:opacity-50 [&_button:disabled]:opacity-100";
-
-/** The add form: local drafts, the same checks as the action, focus on the first error (design D8). */
+/** The add form: the shared fields, the create call and its outcomes (add-poem-creation design D8, edit-poem D4). */
 export function NewPoemForm({ genres }: NewPoemFormProps) {
   const router = useRouter();
-  const setCreatedPoemId = useCreatedPoemNotice((state) => state.setCreatedPoemId);
-  const illustration = useImageDraft();
-  const [title, setTitle] = useState("");
-  const [text, setText] = useState("");
-  const [genreId, setGenreId] = useState(GENRE_PLACEHOLDER);
-  // A genre the server reports as removed leaves the list for the rest of the visit.
-  const [genreOptions, setGenreOptions] = useState(genres);
-  const [fieldErrors, setFieldErrors] = useState<PoemFieldErrors>(NO_FIELD_ERRORS);
-  const [failure, setFailure] = useState<CreatePoemFailure | null>(null);
-  const [focusRequest, setFocusRequest] = useState<FocusRequest | null>(null);
-  // A new key remounts the editor on its editor tab, so an invalid text can take focus.
-  const [editorKey, setEditorKey] = useState(0);
-  // A new key remounts the file input, so a removed file is forgotten by the browser too.
-  const [pickerKey, setPickerKey] = useState(0);
   const [isPending, startTransition] = useTransition();
-  // Set synchronously on submit: a second click can arrive before the pending state disables the form.
-  const submittingRef = useRef(false);
-  const handledFocusRef = useRef<FocusRequest | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const alertRef = useRef<HTMLDivElement>(null);
-  const textId = useId();
-  const genreFieldId = useId();
-  const illustrationId = useId();
-
-  const illustrationError =
-    illustration.fileError === null ? fieldErrors.illustration : ILLUSTRATION_ERROR_MESSAGES[illustration.fileError];
-
-  // Focus waits for the fieldset to be enabled again: a disabled control can't take it.
+  const fields = usePoemForm<CreatePoemFailure>(EMPTY_VALUES, genres, { isPending, formRef, alertRef });
+  const { values, failure, validate, recheckIllustration, showFieldErrors, showFailure, reset } = fields;
+  // Set synchronously on submit: a second click can arrive before the pending state disables the form.
+  const submittingRef = useRef(false);
+  const connection = useConnectionStatus();
+  // The transition's closure holds the status of the render that started it; the rejection reads the latest.
+  const connectionRef = useRef(connection);
   useEffect(() => {
-    if (isPending || focusRequest === null || handledFocusRef.current === focusRequest) return;
-    handledFocusRef.current = focusRequest;
+    connectionRef.current = connection;
+  });
+  const isOnline = connection === CONNECTION_STATUS.online;
 
-    const { target } = focusRequest;
-    if (target === "alert") {
-      alertRef.current?.focus();
-      return;
-    }
-    // The title input's id is TextField's own, so it is found by name.
-    const fieldIds = { text: textId, genreId: genreFieldId, illustration: illustrationId };
-    const element =
-      target === TITLE_FIELD_NAME
-        ? formRef.current?.elements.namedItem(TITLE_FIELD_NAME)
-        : document.getElementById(fieldIds[target]);
-    if (element instanceof HTMLElement) element.focus();
-  }, [focusRequest, isPending, textId, genreFieldId, illustrationId]);
-
-  function requestFocus(target: FocusRequest["target"]) {
-    if (target === "text") setEditorKey((key) => key + 1);
-    setFocusRequest({ target });
-  }
-
-  function showFieldErrors(errors: PoemFieldErrors) {
-    setFieldErrors(errors);
-    const first = POEM_FORM_FIELDS.find((field) => isInvalid(field, errors));
-    if (first !== undefined) requestFocus(first);
-  }
-
-  function isInvalid(field: PoemFormField, errors: PoemFieldErrors): boolean {
-    if (field === "illustration" && illustration.fileError !== null) return true;
-    return errors[field] !== undefined;
-  }
-
-  function handleFileChange(input: HTMLInputElement) {
-    // The illustration's error follows the pick, not the next submit (FR-4).
-    setFieldErrors((errors) => ({ ...errors, illustration: undefined }));
-    void illustration.choose(input);
-  }
-
-  function removeIllustration() {
-    setFieldErrors((errors) => ({ ...errors, illustration: undefined }));
-    illustration.reset();
-    setPickerKey((key) => key + 1);
-  }
-
-  function clearDrafts() {
-    setTitle("");
-    setText("");
-    setGenreId(GENRE_PLACEHOLDER);
-    removeIllustration();
-  }
-
-  function handleResult(result: CreatePoemResult | undefined, sentGenreId: string) {
+  function handleResult(result: CreatePoemResult | undefined) {
     // No data: a malformed request or a rejected body, which the form never sends on purpose (design D7).
     if (result === undefined) {
-      setFailure("unknown");
-      requestFocus("alert");
+      showFailure("unknown");
       return;
     }
     if (result.status === CREATE_POEM_STATUS.created) {
       // Cleared first, so Back to the form shows it empty (FR-5).
-      clearDrafts();
-      setCreatedPoemId(result.poemId);
+      reset();
+      // Only written, after the answer: `getState()`, no subscription.
+      useCreatedPoemNotice.getState().setPoemNotice({ poemId: result.poemId, kind: "created" });
       router.push(ownPoemPath(result.poemId));
       return;
     }
     if (result.status === CREATE_POEM_STATUS.invalid) {
-      if (result.fieldErrors.genreId === POEM_FIELD_ERRORS.genreUnavailable) {
-        setGenreOptions((options) => options.filter((genre) => genre.id !== sentGenreId));
-        setGenreId(GENRE_PLACEHOLDER);
-      }
       showFieldErrors(result.fieldErrors);
       return;
     }
-    setFailure(result.failure);
-    requestFocus("alert");
+    showFailure(result.failure);
   }
 
   async function send() {
-    const chosen = illustration.draft;
-    // The file is read again right before sending: it may have changed on disk since the pick.
-    if (chosen !== null && !(await illustration.recheck(chosen))) {
-      requestFocus("illustration");
-      return;
-    }
+    if (!(await recheckIllustration())) return;
+    const { title, text, genreId, illustration } = values;
     let result: CreatePoemResult | undefined;
     try {
-      result = (await createPoemAction({ title, text, genreId, illustration: chosen?.file })).data;
-    } catch {
-      result = undefined;
+      const file = illustration.kind === "new" ? illustration.draft.file : undefined;
+      result = (await createPoemAction({ title, text, genreId, illustration: file })).data;
+    } catch (error) {
+      // The error's type only: never the poem's content (edit-poem NFR-10).
+      console.error(`[poem-management] create call rejected: ${error instanceof Error ? error.name : typeof error}`);
+      // Offline: the live notice already says why, so no alert is kept (edit-poem FR-11).
+      if (connectionRef.current !== CONNECTION_STATUS.offline) showFailure("unknown");
+      return;
     }
-    handleResult(result, genreId);
+    handleResult(result);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submittingRef.current) return;
+    // Checked here as well as by the disabled button, like the edit form (design D8).
+    if (!isOnline || submittingRef.current || !validate()) return;
 
-    // The next submit hides the previous outcome (FR-5).
-    setFailure(null);
-    const check = poemFormSchema.safeParse({ title, text, genreId });
-    if (!check.success || illustration.fileError !== null) {
-      showFieldErrors(check.success ? NO_FIELD_ERRORS : toPoemFieldErrors(check.error));
-      return;
-    }
-
-    setFieldErrors(NO_FIELD_ERRORS);
     submittingRef.current = true;
     startTransition(async () => {
       try {
@@ -186,59 +98,24 @@ export function NewPoemForm({ genres }: NewPoemFormProps) {
   }
 
   return (
-    // noValidate: the schema is the only validation, so its messages are what the author sees.
-    <form ref={formRef} onSubmit={handleSubmit} noValidate>
-      <fieldset disabled={isPending} className={FIELDSET_CLASS}>
-        <TextField
-          label={POEM_MANAGEMENT_COPY.titleLabel}
-          name={TITLE_FIELD_NAME}
-          type="text"
-          autoComplete="off"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          error={fieldErrors.title}
-        />
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={textId} className="text-sm font-medium">
-            {POEM_MANAGEMENT_COPY.textLabel}
-          </label>
-          <MarkdownEditor
-            key={editorKey}
-            id={textId}
-            value={text}
-            onChange={setText}
-            error={fieldErrors.text}
-            length={poemTextLength(text)}
-            maxLength={TEXT_MAX_LENGTH}
-            formats={POEM_MARKDOWN_FORMATS}
-            variant="poem"
-          />
-        </div>
-        <GenreSelect
-          id={genreFieldId}
-          value={genreId}
-          genres={genreOptions}
-          error={fieldErrors.genreId}
-          onChange={setGenreId}
-        />
-        <IllustrationField
-          id={illustrationId}
-          pickerKey={pickerKey}
-          draft={illustration.draft}
-          error={illustrationError}
-          onFileChange={handleFileChange}
-          onRemove={removeIllustration}
-        />
-        {failure !== null && (
-          // Focusable by script only: focus lands here when the failure names no field (NFR-7).
-          <div ref={alertRef} tabIndex={-1}>
-            <Alert tone="danger">{CREATE_POEM_FAILURE_MESSAGES[failure]}</Alert>
-          </div>
-        )}
-        <Button type="submit" className="self-start">
-          {isPending ? POEM_MANAGEMENT_COPY.submitPending : POEM_MANAGEMENT_COPY.submit}
-        </Button>
-      </fieldset>
-    </form>
+    <>
+      {/* Between the heading and the form, at the page's own gap (artboard 28). */}
+      <ConnectionNotice status={connection} />
+      {/* noValidate: the schema is the only validation, so its messages are what the author sees. */}
+      <form ref={formRef} onSubmit={handleSubmit} noValidate>
+        <fieldset disabled={isPending} className={POEM_FIELDSET_CLASS}>
+          <PoemFormFields fields={fields} illustrationLabels={NEW_POEM_ILLUSTRATION_LABELS} illustrationLayout="picker-first" />
+          {failure !== null && (
+            // Focusable by script only: focus lands here when the failure names no field (NFR-7).
+            <div ref={alertRef} tabIndex={-1}>
+              <Alert tone="danger">{CREATE_POEM_FAILURE_MESSAGES[failure]}</Alert>
+            </div>
+          )}
+          <Button type="submit" disabled={!isOnline} className="self-start">
+            {isPending ? POEM_MANAGEMENT_COPY.submitPending : POEM_MANAGEMENT_COPY.submit}
+          </Button>
+        </fieldset>
+      </form>
+    </>
   );
 }

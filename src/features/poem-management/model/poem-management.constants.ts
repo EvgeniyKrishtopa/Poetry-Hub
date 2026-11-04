@@ -17,6 +17,9 @@ export const GENRE_PLACEHOLDER = "";
 /** The form's fields in page order: the first invalid one takes focus (NFR-7). */
 export const POEM_FORM_FIELDS: readonly PoemFormField[] = ["title", "text", "genreId", "illustration"];
 
+/** The title input's name: its id is TextField's own, so focus finds it by name. */
+export const TITLE_FIELD_NAME = "title";
+
 /** The poem toolbar: no headings or lists (FR-3, design D6). */
 export const POEM_MARKDOWN_FORMATS: readonly MarkdownFormat[] = ["bold", "italic", "epigraph", "separator", "indent"];
 
@@ -36,4 +39,28 @@ export const DELETE_POEM_STATUS = {
   deleted: "deleted",
   notFound: "not-found",
   failed: "failed",
+} as const;
+
+/** The update action's outcomes (edit-poem design D3). */
+export const UPDATE_POEM_STATUS = {
+  saved: "saved",
+  invalid: "invalid",
+  notFound: "not-found",
+  failed: "failed",
+} as const;
+
+/** What a save does with the illustration (edit-poem design D2, D3). */
+export const ILLUSTRATION_CHANGE = {
+  keep: "keep",
+  remove: "remove",
+  replace: "replace",
+} as const;
+
+/** The edit page's last path segment, `/account/poems/<poemId>/edit`. */
+export const EDIT_SEGMENT = "edit";
+
+/** Why the leave dialog is open: a link the guard blocked, or the header's sign-out asking first (edit-poem D10). */
+export const LEAVE_DIALOG_REASON = {
+  link: "link",
+  signOut: "sign-out",
 } as const;

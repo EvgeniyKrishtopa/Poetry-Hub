@@ -1,0 +1,4 @@
+{"ts":"2026-11-03T11:43:04Z","change":"edit-poem","group":"full","gate":"spec-review","verdict":"confirmed","skipReason":"","durationMs":105640,"tokensTotal":83072,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}
+{"ts":"2026-11-03T11:43:04Z","change":"edit-poem","kind":"finding","gate":"spec-review","finding":"SR-03: proposal out-of-scope still excluded slow-connection detection","outcome":"fixed","ruleNumber":"SR-03"}
+{"ts":"2026-11-03T11:43:04Z","change":"edit-poem","kind":"finding","gate":"spec-review","finding":"SR-03: navigator.onLine read outside shared in failure handling vs NFR-3","outcome":"fixed","ruleNumber":"SR-03"}
+{"ts":"2026-11-03T11:43:04Z","change":"edit-poem","kind":"finding","gate":"spec-review","finding":"SR-03: MODIFIED NFR-3 silently dropped 'used by both the profile editor and the add form'","outcome":"fixed","ruleNumber":"SR-03"}

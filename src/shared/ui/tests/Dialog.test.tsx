@@ -1,40 +1,18 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { Dialog } from "../Dialog/Dialog";
+
+import { stubModalDialog } from "./stub-modal-dialog";
 
 const TITLE = "Title";
 const DESCRIPTION = "Description";
 const CLOSE_LABEL = "Close";
 const CONTENT_LABEL = "Content";
 
-// jsdom has no modal dialog: stand in for the parts the component relies on.
-const nativeShowModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, "showModal");
-const nativeClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, "close");
-
-beforeAll(() => {
-  Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
-    configurable: true,
-    value(this: HTMLDialogElement) {
-      this.open = true;
-    },
-  });
-  Object.defineProperty(HTMLDialogElement.prototype, "close", {
-    configurable: true,
-    value(this: HTMLDialogElement) {
-      if (!this.open) return;
-      this.open = false;
-      this.dispatchEvent(new Event("close"));
-    },
-  });
-});
-
-afterAll(() => {
-  if (nativeShowModal) Object.defineProperty(HTMLDialogElement.prototype, "showModal", nativeShowModal);
-  if (nativeClose) Object.defineProperty(HTMLDialogElement.prototype, "close", nativeClose);
-});
+stubModalDialog();
 
 function renderOpenDialog(description?: string) {
   const ref = createRef<HTMLDialogElement>();

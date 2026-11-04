@@ -1,0 +1,2 @@
+full
+# more than one module: yes (poem-management, authors profile editor, shared ui/lib, breadcrumbs, database); schema change: yes (update_my_poem function, poem_edit write-limit scope); contract change: yes (new updatePoemAction, NewPoemForm becomes a shared create/edit form)

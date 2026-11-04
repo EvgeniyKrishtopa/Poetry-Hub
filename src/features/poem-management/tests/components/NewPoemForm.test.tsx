@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PoemGenre } from "@/features/poems";
 import { validateImageFile } from "@/shared/lib/image-file/validate-image-file";
+import { type ConnectionStatus, useConnectionStatus } from "@/shared/lib/network/use-connection-status";
 
 import { createPoemAction } from "../../actions/create-poem.actions";
 import { NewPoemForm } from "../../components/NewPoemForm/NewPoemForm";
@@ -13,6 +14,7 @@ import type { CreatePoemResult } from "../../model/poem-management.types";
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("../../actions/create-poem.actions", () => ({ createPoemAction: vi.fn() }));
+vi.mock("@/shared/lib/network/use-connection-status", () => ({ useConnectionStatus: vi.fn() }));
 // The real check by default; a test overrides one call to control its result.
 vi.mock("@/shared/lib/image-file/validate-image-file", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/shared/lib/image-file/validate-image-file")>();
@@ -29,6 +31,9 @@ const GENRES: readonly PoemGenre[] = [
 ];
 const TITLE = "Первый снег";
 const TEXT = "строка один\nстрока два";
+const UNKNOWN_TEXT = "Что-то пошло не так. Попробуйте ещё раз.";
+const OFFLINE_TEXT = "Нет подключения к интернету. Сохранение станет доступно, когда связь восстановится.";
+const SLOW_TEXT = "Медленное подключение к интернету. Сохранение станет доступно, когда связь улучшится.";
 
 const PNG_HEADER = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0];
 const GIF_HEADER = [...new TextEncoder().encode("GIF89a"), 0, 0, 0, 0, 0, 0];
@@ -42,12 +47,18 @@ function respond(result: CreatePoemResult): ActionResponse {
 }
 
 /** A promise the test settles by hand, to observe the form while the action is pending. */
-function deferred<T>(): { readonly promise: Promise<T>; readonly resolve: (value: T) => void } {
+function deferred<T>(): {
+  readonly promise: Promise<T>;
+  readonly resolve: (value: T) => void;
+  readonly reject: (reason: Error) => void;
+} {
   let resolve: (value: T) => void = () => undefined;
-  const promise = new Promise<T>((onResolve) => {
+  let reject: (reason: Error) => void = () => undefined;
+  const promise = new Promise<T>((onResolve, onReject) => {
     resolve = onResolve;
+    reject = onReject;
   });
-  return { promise, resolve };
+  return { promise, resolve, reject };
 }
 
 const titleInput = () => screen.getByLabelText("Название произведения");
@@ -75,7 +86,12 @@ function describedBy(element: HTMLElement): HTMLElement | null {
   return id === "" ? null : document.getElementById(id);
 }
 
+function setConnection(status: ConnectionStatus) {
+  vi.mocked(useConnectionStatus).mockReturnValue(status);
+}
+
 beforeEach(() => {
+  setConnection("online");
   // jsdom has no object URLs.
   URL.createObjectURL = vi.fn(() => PREVIEW_URL);
   URL.revokeObjectURL = vi.fn();
@@ -83,7 +99,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.resetAllMocks();
-  useCreatedPoemNotice.getState().clearCreatedPoemId();
+  useCreatedPoemNotice.getState().clearPoemNotice();
 });
 
 describe("NewPoemForm", () => {
@@ -248,7 +264,7 @@ describe("NewPoemForm", () => {
 
     expect(createPoemAction).toHaveBeenCalledExactlyOnceWith({ title: TITLE, text: TEXT, genreId: "lyric", illustration: file });
     await waitFor(() => expect(push).toHaveBeenCalledExactlyOnceWith(`/account/poems/${POEM_ID}`));
-    expect(useCreatedPoemNotice.getState().createdPoemId).toBe(POEM_ID);
+    expect(useCreatedPoemNotice.getState().notice).toEqual({ poemId: POEM_ID, kind: "created" });
     expect(titleInput()).toHaveValue("");
     expect(textArea()).toHaveValue("");
     expect(genreSelect()).toHaveDisplayValue("—");
@@ -367,5 +383,92 @@ describe("NewPoemForm", () => {
     expect(screen.queryByRole("alert")).toBeNull();
 
     await act(async () => answer.resolve(respond({ status: "created", poemId: POEM_ID })));
+  });
+});
+
+describe("NewPoemForm: connection", () => {
+  // implements FR-11 of edit-poem
+  it.each([
+    ["offline", OFFLINE_TEXT],
+    ["slow", SLOW_TEXT],
+  ] as const)("while %s, shows the notice above the form and disables only the add button, until the connection is normal", async (status, text) => {
+    setConnection(status);
+    const user = userEvent.setup();
+    const { rerender } = render(<NewPoemForm genres={GENRES} />);
+    await fillValid(user);
+
+    const notice = screen.getByRole("status");
+    expect(notice).toHaveTextContent(text);
+    expect(notice.compareDocumentPosition(titleInput()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(submitButton()).toBeDisabled();
+    expect(titleInput()).toHaveValue(TITLE);
+    await user.type(titleInput(), "!");
+    expect(titleInput()).toHaveValue(`${TITLE}!`);
+    await user.click(submitButton());
+    fireEvent.submit(titleInput().closest("form") as HTMLFormElement);
+    expect(createPoemAction).not.toHaveBeenCalled();
+
+    setConnection("online");
+    rerender(<NewPoemForm genres={GENRES} />);
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(submitButton()).toBeEnabled();
+  });
+
+  // implements FR-11 of edit-poem
+  it("shows no alert for a call rejected after the connection dropped, and the unknown alert while online", async () => {
+    const lost = deferred<ActionResponse>();
+    vi.mocked(createPoemAction).mockReturnValueOnce(lost.promise).mockRejectedValueOnce(new Error("network"));
+    const user = userEvent.setup();
+    const { rerender } = render(<NewPoemForm genres={GENRES} />);
+    await fillValid(user);
+    await user.click(submitButton());
+
+    setConnection("offline");
+    rerender(<NewPoemForm genres={GENRES} />);
+    await act(async () => lost.reject(new Error("network")));
+
+    expect(screen.getByRole("status")).toHaveTextContent(OFFLINE_TEXT);
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(titleInput()).toHaveValue(TITLE);
+    expect(push).not.toHaveBeenCalled();
+
+    setConnection("online");
+    rerender(<NewPoemForm genres={GENRES} />);
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
+    await waitFor(() => expect(submitButton()).toBeEnabled());
+
+    await user.click(submitButton());
+    expect(await screen.findByRole("alert")).toHaveTextContent(UNKNOWN_TEXT);
+  });
+
+  // implements FR-11 of edit-poem: CR-07, only offline hides the alert; a slow connection is still a connection
+  it("shows the unknown alert for a call rejected after the connection turned slow", async () => {
+    const lost = deferred<ActionResponse>();
+    vi.mocked(createPoemAction).mockReturnValueOnce(lost.promise);
+    const user = userEvent.setup();
+    const { rerender } = render(<NewPoemForm genres={GENRES} />);
+    await fillValid(user);
+    await user.click(submitButton());
+
+    setConnection("slow");
+    rerender(<NewPoemForm genres={GENRES} />);
+    await act(async () => lost.reject(new Error("network")));
+
+    expect(screen.getByRole("status")).toHaveTextContent(SLOW_TEXT);
+    expect(await screen.findByRole("alert")).toHaveTextContent(UNKNOWN_TEXT);
+  });
+
+  // implements NFR-10 of edit-poem: CR-05, a rejected create call is logged by its error type, never the poem
+  it("logs a rejected call by its error type only", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.mocked(createPoemAction).mockRejectedValue(new TypeError(`Failed to fetch ${TITLE}`));
+    const user = renderForm();
+    await fillValid(user);
+
+    await user.click(submitButton());
+
+    await screen.findByRole("alert");
+    expect(log).toHaveBeenCalledExactlyOnceWith("[poem-management] create call rejected: TypeError");
   });
 });

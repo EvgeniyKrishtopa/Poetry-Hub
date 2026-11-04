@@ -8,7 +8,7 @@ import { listPoemGenres, type PoemGenre } from "@/features/poems";
 
 import { NewPoemContent } from "../../components/NewPoemContent/NewPoemContent";
 import { NewPoemPage } from "../../components/NewPoemPage/NewPoemPage";
-import { NewPoemSkeleton } from "../../components/NewPoemSkeleton/NewPoemSkeleton";
+import { PoemFormSkeleton } from "../../components/PoemFormSkeleton/PoemFormSkeleton";
 
 vi.mock("@/features/auth", () => ({ requireSession: vi.fn() }));
 vi.mock("@/features/authors", () => ({ getOwnPublicAuthor: vi.fn(), AUTHOR_EDITOR_PATH: "/account/author" }));
@@ -123,14 +123,14 @@ describe("NewPoemPage", () => {
     expect(boundary.type).toBe(Suspense);
     const { fallback, children } = boundary.props as SuspenseProps;
     expect(children.type).toBe(NewPoemContent);
-    expect(fallback.type).toBe(NewPoemSkeleton);
+    expect(fallback.type).toBe(PoemFormSkeleton);
   });
 });
 
-describe("NewPoemSkeleton", () => {
+describe("PoemFormSkeleton", () => {
   // implements FR-13 of add-poem-creation
   it("announces «Загрузка…» and draws four field blocks and a button block, hidden and still when reduced", () => {
-    const { container } = render(<NewPoemSkeleton />);
+    const { container } = render(<PoemFormSkeleton />);
 
     expect(screen.getByRole("status")).toHaveTextContent("Загрузка…");
     const blocks = container.querySelectorAll("[data-skeleton]");

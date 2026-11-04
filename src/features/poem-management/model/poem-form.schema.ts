@@ -1,7 +1,13 @@
 import { z } from "zod";
 
 import { POEM_FIELD_ERRORS } from "./poem-management-messages";
-import { NO_GENRE, POEM_FORM_FIELDS, TEXT_MAX_LENGTH, TITLE_MAX_LENGTH } from "./poem-management.constants";
+import {
+  ILLUSTRATION_CHANGE,
+  NO_GENRE,
+  POEM_FORM_FIELDS,
+  TEXT_MAX_LENGTH,
+  TITLE_MAX_LENGTH,
+} from "./poem-management.constants";
 import type { PoemFieldErrors, PoemFormField } from "./poem-management.types";
 
 /** `\r\n` and lone `\r`, as browsers send line breaks in a textarea's value. */
@@ -14,16 +20,22 @@ function normalizeLineBreaks(value: string): string {
   return value.replace(LINE_BREAKS, "\n");
 }
 
-/** The title as stored: line breaks normalized, then trimmed (FR-4). */
-function normalizeTitle(value: string): string {
+/**
+ * The title as stored: line breaks normalized, then trimmed (FR-4).
+ *
+ * @public first imported in edit-poem task 3.2 (`isPoemFormChanged` compares stored forms).
+ */
+export function normalizeTitle(value: string): string {
   return normalizeLineBreaks(value).trim();
 }
 
 /**
  * The text as stored: line breaks normalized, leading empty lines and trailing whitespace removed, so a
  * text that is whitespace only becomes empty (FR-4, design D6).
+ *
+ * @public first imported in edit-poem task 3.2 (`isPoemFormChanged` compares stored forms).
  */
-function normalizeText(value: string): string {
+export function normalizeText(value: string): string {
   return normalizeLineBreaks(value).replace(LEADING_EMPTY_LINES, "").trimEnd();
 }
 
@@ -77,6 +89,24 @@ export const createPoemInputSchema = z.object({
 });
 
 export type CreatePoemInput = z.output<typeof createPoemInputSchema>;
+
+/**
+ * What the update action accepts: the poem id, the form's raw fields, what to do with the illustration, and
+ * the new file for a replace. Types only, as for create; the action runs the rules (edit-poem design D3).
+ *
+ * @public scaffold: first imported in task 2.4.
+ */
+export const updatePoemInputSchema = z.object({
+  poemId: z.string(),
+  title: z.string(),
+  text: z.string(),
+  genreId: z.string(),
+  illustrationChange: z.enum([ILLUSTRATION_CHANGE.keep, ILLUSTRATION_CHANGE.remove, ILLUSTRATION_CHANGE.replace]),
+  illustration: z.instanceof(File).optional(),
+});
+
+/** @public scaffold: first imported in task 2.4. */
+export type UpdatePoemInput = z.output<typeof updatePoemInputSchema>;
 
 /** The first message of each invalid field, the shape the form shows under its fields. */
 export function toPoemFieldErrors(error: z.ZodError): PoemFieldErrors {

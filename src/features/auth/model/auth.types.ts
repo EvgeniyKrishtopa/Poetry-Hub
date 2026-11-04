@@ -1,3 +1,5 @@
+import type { SIGN_OUT_STATUS } from "./auth.constants";
+
 /** Why an auth call failed, in the terms the forms show (design D7). */
 export type AuthFailure =
   | "invalid-credentials"
@@ -23,6 +25,11 @@ export type SignInResult = AuthFailedResult;
 export type SignUpResult = { readonly status: "check-email"; readonly email: string } | AuthFailedResult;
 
 export type SignOutResult = { readonly ok: true } | { readonly ok: false };
+
+/** `signOutWithConfirmation`'s outcome: one of `SIGN_OUT_STATUS` (edit-poem design D10). */
+export interface SignOutWithConfirmationResult {
+  readonly status: (typeof SIGN_OUT_STATUS)[keyof typeof SIGN_OUT_STATUS];
+}
 
 /**
  * The part of a next-safe-action result the forms read, with the client's `"flattened"`
