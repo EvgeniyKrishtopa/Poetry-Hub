@@ -1,12 +1,13 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { Activity } from "react";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PoemGenre } from "@/features/poems";
 import { askBeforeLeaving } from "@/shared/lib/leave-guard/leave-block.store";
 import { LEAVE_ANSWER, type LeaveAnswer } from "@/shared/lib/leave-guard/leave-guard.constants";
 import { useConnectionStatus } from "@/shared/lib/network/use-connection-status";
+import { stubModalDialog } from "@/shared/ui/tests/stub-modal-dialog";
 
 import { updatePoemAction } from "../../actions/update-poem.actions";
 import { EditPoemForm } from "../../components/EditPoemForm/EditPoemForm";
@@ -39,31 +40,7 @@ const SIGN_OUT_BODY = "Если выйти сейчас, изменения пр
 const STAY = "Продолжить редактирование";
 const LEAVE = "Выйти без сохранения";
 
-// jsdom has no modal dialog: stand in for the parts the form relies on, as the browser does them.
-const nativeShowModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, "showModal");
-const nativeClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, "close");
-
-beforeAll(() => {
-  Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
-    configurable: true,
-    value(this: HTMLDialogElement) {
-      this.open = true;
-    },
-  });
-  Object.defineProperty(HTMLDialogElement.prototype, "close", {
-    configurable: true,
-    value(this: HTMLDialogElement) {
-      if (!this.open) return;
-      this.open = false;
-      this.dispatchEvent(new Event("close"));
-    },
-  });
-});
-
-afterAll(() => {
-  if (nativeShowModal) Object.defineProperty(HTMLDialogElement.prototype, "showModal", nativeShowModal);
-  if (nativeClose) Object.defineProperty(HTMLDialogElement.prototype, "close", nativeClose);
-});
+stubModalDialog();
 
 // A link click the guard lets through reaches this bubbling listener, which stops jsdom's own navigation.
 const passedThrough = vi.fn();

@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useSessionExpiredNotice } from "@/shared/lib/one-time-notice/session-expired-notice.store";
+import { stubModalDialog } from "@/shared/ui/tests/stub-modal-dialog";
 
 import { deletePoemAction } from "../../actions/delete-poem.actions";
 import { DeletePoemButton } from "../../components/DeletePoemButton/DeletePoemButton";
@@ -20,31 +21,7 @@ const POEM_ID = "30000000-0000-4000-8000-000000000021";
 const TITLE = "Первый снег";
 const FAILURE_TEXT = "Не удалось удалить произведение. Попробуйте позже.";
 
-// jsdom has no modal dialog: stand in for the parts the component relies on, as the browser does them.
-const nativeShowModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, "showModal");
-const nativeClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, "close");
-
-beforeAll(() => {
-  Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
-    configurable: true,
-    value(this: HTMLDialogElement) {
-      this.open = true;
-    },
-  });
-  Object.defineProperty(HTMLDialogElement.prototype, "close", {
-    configurable: true,
-    value(this: HTMLDialogElement) {
-      if (!this.open) return;
-      this.open = false;
-      this.dispatchEvent(new Event("close"));
-    },
-  });
-});
-
-afterAll(() => {
-  if (nativeShowModal) Object.defineProperty(HTMLDialogElement.prototype, "showModal", nativeShowModal);
-  if (nativeClose) Object.defineProperty(HTMLDialogElement.prototype, "close", nativeClose);
-});
+stubModalDialog();
 
 afterEach(() => {
   vi.clearAllMocks();

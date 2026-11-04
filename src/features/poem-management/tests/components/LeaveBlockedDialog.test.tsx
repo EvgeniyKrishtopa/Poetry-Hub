@@ -1,7 +1,9 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+import { stubModalDialog } from "@/shared/ui/tests/stub-modal-dialog";
 
 import { LeaveBlockedDialog } from "../../components/LeaveBlockedDialog/LeaveBlockedDialog";
 import type { LeaveDialogReason } from "../../components/LeaveBlockedDialog/LeaveBlockedDialog.types";
@@ -13,31 +15,7 @@ const SIGN_OUT_BODY = "Если выйти сейчас, изменения пр
 const STAY = "Продолжить редактирование";
 const LEAVE = "Выйти без сохранения";
 
-// jsdom has no modal dialog: stand in for the parts the component relies on, as the browser does them.
-const nativeShowModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, "showModal");
-const nativeClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, "close");
-
-beforeAll(() => {
-  Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
-    configurable: true,
-    value(this: HTMLDialogElement) {
-      this.open = true;
-    },
-  });
-  Object.defineProperty(HTMLDialogElement.prototype, "close", {
-    configurable: true,
-    value(this: HTMLDialogElement) {
-      if (!this.open) return;
-      this.open = false;
-      this.dispatchEvent(new Event("close"));
-    },
-  });
-});
-
-afterAll(() => {
-  if (nativeShowModal) Object.defineProperty(HTMLDialogElement.prototype, "showModal", nativeShowModal);
-  if (nativeClose) Object.defineProperty(HTMLDialogElement.prototype, "close", nativeClose);
-});
+stubModalDialog();
 
 function renderOpenDialog(reason: LeaveDialogReason) {
   const ref = createRef<HTMLDialogElement>();
