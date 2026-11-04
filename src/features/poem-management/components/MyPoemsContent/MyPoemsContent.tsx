@@ -8,8 +8,13 @@ import { POEM_MANAGEMENT_COPY } from "../../model/poem-management-messages";
 import { NEW_POEM_PATH, ownPoemPath } from "../../model/poem-paths";
 import { NotPublicNotice } from "../NotPublicNotice/NotPublicNotice";
 
+import type { MyPoemsContentProps } from "./MyPoemsContent.types";
+
 /** Session, own public author, then the list, the empty state, or a notice (design D4 table). */
-export async function MyPoemsContent() {
+export async function MyPoemsContent({ actions, beforeList }: MyPoemsContentProps = {}) {
+  // Slots are rendered by task 2.1; no caller passes them yet.
+  void actions;
+  void beforeList;
   // Redirects a signed-out reader to /login before any read (FR-2).
   const session = await requireSession();
   if (session.state === SESSION_STATE.unknown) return <SessionUnavailableAlert />;

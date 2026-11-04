@@ -679,6 +679,58 @@ sequenceDiagram
   end
 ```
 
+## Scaffold map
+
+Written by `opsx-scaffold` after the files existed (map approved 2026-11-04). Stub bodies only;
+the paths, the two stores, the copy, and the action client are complete (the edit-poem scaffold's
+precedent). Not scaffolded: the migration (group 1), the route and breadcrumb slot files (groups
+4–7), the breadcrumb matcher (group 7), docs. Client stubs carry no `"use client"` yet: each gets
+it with its implementation and the `boundaries` test's list (NFR-2). `knip.jsonc` ignores the new
+feature and `TextAreaField` until tasks 4.1 and 8.4 remove the entries (Gate 2b P1).
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/features/collection-management/index.ts` | public API (D1) | `CollectionListNotice`, `CollectionPage`, `CreateCollectionLink`, `EditCollectionPage`, `NewCollectionPage`, `OwnCollectionsSection`, `getOwnCollectionTitle`, `COLLECTION_TRAIL_LABELS`, `COLLECTION_EDIT_SEGMENT`, `COLLECTIONS_SEGMENT`, `OwnCollectionTitleResult`, `collectionPath`, `editCollectionPath`, `NEW_COLLECTION_PATH` |
+| `src/features/collection-management/actions/action-client.ts` | the feature's next-safe-action client | `collectionManagementActionClient` |
+| `src/features/collection-management/actions/create-collection.actions.ts` | `"use server"` create (D5) | `createCollectionAction` |
+| `src/features/collection-management/actions/update-collection.actions.ts` | `"use server"` save (D6) | `updateCollectionAction` |
+| `src/features/collection-management/actions/delete-collection.actions.ts` | `"use server"` delete (D7) | `deleteCollectionAction` |
+| `src/features/collection-management/dal/own-collections.ts` | owner reads under RLS (D4) | `listOwnCollections`, `getOwnCollection`, `getOwnCollectionTitle` |
+| `src/features/collection-management/dal/collection-writes.ts` | the three RPCs (D2) | `createOwnCollection`, `updateOwnCollection`, `deleteOwnCollection` |
+| `src/features/collection-management/dal/collection-edit-allowance.ts` | the `collection_edit` scope (D2, D6) | `consumeCollectionEditAllowance` |
+| `src/features/collection-management/dal/write-log.ts` | the feature's copy of the write-log helpers (D12) | `logFailure`, `toServiceFailure`, `withStatus` |
+| `src/features/collection-management/hooks/use-collection-form.ts` | drafts, check, focus, change, reset (D5, D6) | `useCollectionForm` |
+| `src/features/collection-management/hooks/use-collection-form.types.ts` | the hook's contract | `CollectionFormState`, `CollectionFormCheck` |
+| `src/features/collection-management/model/collection-form.schema.ts` | normalization and the action inputs (types only until 3.1) | `normalizeCollectionTitle`, `normalizeCollectionDescription`, `createCollectionInputSchema`, `updateCollectionInputSchema`, `deleteCollectionInputSchema`, their input types |
+| `src/features/collection-management/model/collection-form-values.ts` | form values and change detection (D6) | `CollectionFormValues`, `isCollectionFormChanged` |
+| `src/features/collection-management/model/collection-management.constants.ts` | limits, statuses, segments, the leave dialog's forms | `COLLECTION_TITLE_MAX_LENGTH`, `COLLECTION_DESCRIPTION_MAX_LENGTH`, `COLLECTIONS_SEGMENT`, `COLLECTION_EDIT_SEGMENT`, `CREATE_COLLECTION_STATUS`, `UPDATE_COLLECTION_STATUS`, `DELETE_COLLECTION_STATUS`, `LEAVE_DIALOG_REASON` |
+| `src/features/collection-management/model/collection-management.types.ts` | read, write, and action results; notices | `ServiceFailure`, `CollectionSummary`, `OwnCollection`, the `Own*Result` types, `CollectionFieldErrors`, the action results and failures, `CollectionEditAllowance`, `CollectionListNotice`, `SavedCollectionNotice`, `LeaveDialogReason` |
+| `src/features/collection-management/model/collection-management-messages.ts` | the proposal's copy table | `COLLECTION_LIST_COPY`, `COLLECTION_FORM_COPY`, `COLLECTION_FIELD_ERRORS`, `NEW_COLLECTION_COPY`, `CREATE_COLLECTION_FAILURE_MESSAGES`, `COLLECTION_PAGE_COPY`, `EDIT_COLLECTION_COPY`, `UPDATE_COLLECTION_FAILURE_MESSAGES`, `LEAVE_DIALOG_COPY`, `COLLECTION_TRAIL_LABELS` |
+| `src/features/collection-management/model/collection-paths.ts` | the three paths | `NEW_COLLECTION_PATH`, `collectionPath`, `editCollectionPath` |
+| `src/features/collection-management/model/collection-list-notice-ui.store.ts` | the `/account/poems` notice (D8) | `useCollectionListNotice`, `CollectionListNoticeState` |
+| `src/features/collection-management/model/saved-collection-notice-ui.store.ts` | the saved notice (D8) | `useSavedCollectionNotice`, `SavedCollectionNoticeState` |
+| `src/features/collection-management/components/OwnCollectionsSection/` | the section (D3) | `OwnCollectionsSection` |
+| `src/features/collection-management/components/CollectionListNotice/` | the one-time list notice (D8) | `CollectionListNotice` |
+| `src/features/collection-management/components/CreateCollectionLink/` | the `ghost` create link (D3) | `CreateCollectionLink` |
+| `src/features/collection-management/components/CollectionFormFields/` | title and description fields (D5) | `CollectionFormFields`, `CollectionFormFieldsProps` |
+| `src/features/collection-management/components/NewCollectionPage/, NewCollectionContent/, NewCollectionForm/` | create page, its reads, its form (D5) | `NewCollectionPage`, `NewCollectionContent`, `NewCollectionForm` |
+| `src/features/collection-management/components/CollectionFormSkeleton/, CollectionNotPublicNotice/` | the forms' loading state; the create page's not-public notice | `CollectionFormSkeleton`, `CollectionNotPublicNotice` |
+| `src/features/collection-management/components/CollectionPage/, CollectionContent/` | the collection page and its reads (D4) | `CollectionPage`, `CollectionContent` + props types |
+| `src/features/collection-management/components/CollectionActions/` | the connection notice over the button row (D4, D9) | `CollectionActions`, `CollectionActionsProps` |
+| `src/features/collection-management/components/SavedCollectionNotice/, EditCollectionButton/` | saved notice; the edit link | `SavedCollectionNotice`, `EditCollectionButton` + props types |
+| `src/features/collection-management/components/DeleteCollectionButton/` | opener, dialog, delete call (D7) | `DeleteCollectionButton`, `DeleteCollectionButtonProps` |
+| `src/features/collection-management/components/EditCollectionPage/, EditCollectionContent/` | the edit page and its reads (D6) | `EditCollectionPage`, `EditCollectionContent` + props types |
+| `src/features/collection-management/components/EditCollectionForm/EditCollectionForm.tsx + .types.ts` | the edit form's composition (D6) | `EditCollectionForm`, `EditCollectionFormProps` |
+| `src/features/collection-management/components/EditCollectionForm/use-edit-collection-form.ts` | the form's logic and outcomes (D6) | `useEditCollectionForm`, `EditCollectionFormModel`, `CollectionSaveAlertFailure` |
+| `src/features/collection-management/components/EditCollectionForm/use-leave-guard.ts, use-leave-prompt.ts` | the feature's copies of the guard and prompt (D12) | `useLeaveGuard`, `LeaveGuardOptions`, `useLeavePrompt` |
+| `src/features/collection-management/components/CollectionLeaveDialog/` | the feature's copy of the unsaved-changes dialog (D12) | `CollectionLeaveDialog`, `CollectionLeaveDialogProps` |
+| `src/shared/ui/TextAreaField/TextAreaField.tsx` + `.types.ts` | labelled multi-line field (D5) | `TextAreaField`, `TextAreaFieldProps` |
+| `src/features/poem-management/components/MyPoemsPage/MyPoemsPage.types.ts` | the three slots, optional (D3) | `MyPoemsPageProps` |
+| `src/features/poem-management/components/MyPoemsContent/MyPoemsContent.types.ts` | the two slots it renders (D3) | `MyPoemsContentProps` |
+
+`MyPoemsPage` and `MyPoemsContent` take their props with a `{}` default, so every existing caller and
+test compiles unchanged; task 2.1 renders the slots.
+
 ## Risks / Trade-offs
 
 - [Two copies of the leave guard, the leave dialog, and the write-log] → chosen by the user

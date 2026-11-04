@@ -66,7 +66,8 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 4. Create page and the section on `/account/poems` <!-- judgement-heavy -->
 
-- [ ] 4.1 (NFR-4, NFR-6) Add `shared/ui/TextAreaField` on `TextField`'s classes and wiring.
+- [ ] 4.1 (NFR-4, NFR-6) Add `shared/ui/TextAreaField` on `TextField`'s classes and wiring, and drop
+  the scaffold's `src/shared/ui/TextAreaField/**` entry from `knip.jsonc`.
   - Verify with `shared/ui/tests/TextAreaField.test.tsx`: label, error, `aria-*`.
 - [ ] 4.2 (FR-3, FR-14) `hooks/use-collection-form.ts` and `CollectionFormFields` (design D5).
   - Verify with `tests/hooks/use-collection-form.test.ts`: drafts, checks, focus order, `reset()`.
@@ -136,7 +137,9 @@ Each group exports only what it already consumes (tests count as consumers for k
   (`npx supabase db push` for the collections migration).
 - [ ] 8.3 (FR-1 – FR-17) Gate 3 (web-qa): the flows in design D13; record the create → edit →
   delete path as a scenario under `tests/web-qa-scenarios` with a cleanup step.
-- [ ] 8.4 (NFR-7, NFR-8) Compare the messages module with the proposal's copy table; run
+- [ ] 8.4 (NFR-7, NFR-8) Drop the scaffold's `src/features/collection-management/**` entry from
+  `knip.jsonc` (any export knip then reports unused is removed, not ignored); compare the messages
+  module with the proposal's copy table; run
   `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip` and
   confirm the build lists the three collection routes as partially prerendered and keeps every
   other marker.
