@@ -73,7 +73,8 @@ function filesMatching(files: readonly string[], pattern: RegExp): string[] {
 }
 
 describe("poem-management boundaries", () => {
-  // implements NFR-2 of delete-poem, NFR-2 of edit-poem
+  // implements NFR-2 of delete-poem
+  // implements NFR-2 of edit-poem
   it("keeps client modules to the add and edit forms, the created notice, the delete button, and the deleted notice", () => {
     const files = [...sourceFiles(FEATURE_DIR), ...sourceFiles(ROUTE_DIR)];
 
