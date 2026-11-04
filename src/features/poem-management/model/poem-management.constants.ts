@@ -17,6 +17,9 @@ export const GENRE_PLACEHOLDER = "";
 /** The form's fields in page order: the first invalid one takes focus (NFR-7). */
 export const POEM_FORM_FIELDS: readonly PoemFormField[] = ["title", "text", "genreId", "illustration"];
 
+/** The title input's name: its id is TextField's own, so focus finds it by name. */
+export const TITLE_FIELD_NAME = "title";
+
 /** The poem toolbar: no headings or lists (FR-3, design D6). */
 export const POEM_MARKDOWN_FORMATS: readonly MarkdownFormat[] = ["bold", "italic", "epigraph", "separator", "indent"];
 

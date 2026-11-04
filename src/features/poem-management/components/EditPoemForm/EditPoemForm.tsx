@@ -15,7 +15,7 @@ import type { SaveAlertFailure } from "../../model/poem-management.types";
 import { ownPoemPath } from "../../model/poem-paths";
 import { POEM_FIELDSET_CLASS } from "../PoemForm/poem-fieldset-class";
 import { PoemFormFields } from "../PoemForm/PoemFormFields";
-import { usePoemForm } from "../PoemForm/use-poem-form";
+import { usePoemForm } from "../../hooks/use-poem-form";
 
 import type { EditPoemFormProps } from "./EditPoemForm.types";
 import { useSavePoem } from "./use-save-poem";

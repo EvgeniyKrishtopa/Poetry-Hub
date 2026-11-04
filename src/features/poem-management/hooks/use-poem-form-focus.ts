@@ -1,35 +1,18 @@
-import { type RefObject, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
-import type { PoemFormField } from "../../model/poem-management.types";
+import { TITLE_FIELD_NAME } from "../model/poem-management.constants";
+import type { PoemFormField } from "../model/poem-management.types";
 
-/** The title input's id is TextField's own, so it is found by name. */
-export const TITLE_FIELD_NAME = "title";
+import type { PoemFormFieldIds, PoemFormHost } from "./use-poem-form.types";
 
 /** Where focus goes once the form is enabled again: a field, or the failure alert (add-poem-creation NFR-7). */
-type PoemFocusTarget =PoemFormField | "alert";
+type PoemFocusTarget = PoemFormField | "alert";
 
 interface FocusRequest {
   readonly target: PoemFocusTarget;
 }
 
-/** The ids the fields render with, so focus can find them. */
-export interface PoemFormFieldIds {
-  readonly text: string;
-  readonly genreId: string;
-  readonly illustration: string;
-}
-
-/** What focus needs from the form that owns the action and renders the alert. */
-export interface PoemFormHost {
-  /** The form's sending state: focus waits for the fieldset to be enabled again, since a disabled control can't take it. */
-  readonly isPending: boolean;
-  /** The form element, where the title input is found by name. */
-  readonly formRef: RefObject<HTMLFormElement | null>;
-  /** The failure alert's focusable wrapper, rendered by the form. */
-  readonly alertRef: RefObject<HTMLDivElement | null>;
-}
-
-export interface PoemFormFocus {
+interface PoemFormFocus {
   readonly fieldIds: PoemFormFieldIds;
   /** A new key remounts the editor on its editor tab, so an invalid text can take focus. */
   readonly editorKey: number;

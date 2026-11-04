@@ -2,12 +2,11 @@ import { MarkdownEditor, TextField } from "@/shared/ui";
 
 import { poemTextLength } from "../../model/poem-form.schema";
 import { POEM_MANAGEMENT_COPY } from "../../model/poem-management-messages";
-import { POEM_MARKDOWN_FORMATS, TEXT_MAX_LENGTH } from "../../model/poem-management.constants";
+import { POEM_MARKDOWN_FORMATS, TEXT_MAX_LENGTH, TITLE_FIELD_NAME } from "../../model/poem-management.constants";
 
 import { GenreSelect } from "./GenreSelect";
 import { IllustrationField } from "./IllustrationField";
 import type { PoemFormFieldsProps } from "./PoemFormFields.types";
-import { TITLE_FIELD_NAME } from "./use-poem-form-focus";
 
 /** Title, text, genre, and illustration, from the shared form state (edit-poem design D4). */
 export function PoemFormFields({ form, illustrationLabels, illustrationLayout }: PoemFormFieldsProps) {

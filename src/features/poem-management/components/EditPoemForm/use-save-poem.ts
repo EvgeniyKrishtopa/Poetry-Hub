@@ -13,7 +13,7 @@ import { illustrationChangeOf } from "../../model/poem-form-values";
 import { UPDATE_POEM_STATUS } from "../../model/poem-management.constants";
 import type { SaveAlertFailure, UpdatePoemResult } from "../../model/poem-management.types";
 import { ownPoemPath } from "../../model/poem-paths";
-import type { PoemFormState } from "../PoemForm/use-poem-form";
+import type { PoemFormState } from "../../hooks/use-poem-form.types";
 
 export interface SavePoemOptions {
   readonly poemId: string;

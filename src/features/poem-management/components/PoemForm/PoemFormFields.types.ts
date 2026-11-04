@@ -1,7 +1,7 @@
+import type { PoemFormState } from "../../hooks/use-poem-form.types";
 import type { IllustrationLabels } from "../../model/poem-management.types";
 
 import type { IllustrationLayout } from "./IllustrationField.types";
-import type { PoemFormState } from "./use-poem-form";
 
 export interface PoemFormFieldsProps {
   /** Either form's state; the failure is the form's own, so the fields don't read it. */

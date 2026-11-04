@@ -64,10 +64,12 @@ src/features/poem-management/
 │   ├── poem-management-messages.ts      # + EDIT_POEM_COPY, trail label (the offline text lives in ConnectionNotice only)
 │   ├── poem-paths.ts                    # + editPoemPath(poemId)
 │   └── created-poem-notice-ui.store.ts  # holds { poemId, kind: "created" | "saved" } (D7; name kept, see Risks)
+├── hooks/                               # the shared form hooks, used by both forms (architecture.md; PR #169 review)
+│   ├── use-poem-form.ts                 #   drafts, browser check, change detection
+│   ├── use-poem-form-focus.ts           #   field ids, focus requests, the editor's remount key
+│   └── use-poem-form.types.ts           #   PoemFormState and the focus host, shared with the components
 └── components/
     ├── PoemForm/                        # new home of the shared form parts (D4)
-    │   ├── use-poem-form.ts             #   drafts, browser check, change detection
-    │   ├── use-poem-form-focus.ts       #   field ids, focus requests, the editor's remount key
     │   ├── PoemFormFields.tsx           #   title, text, genre, illustration
     │   ├── GenreSelect.tsx              #   moved from NewPoemForm/
     │   └── IllustrationField.tsx        #   moved; + stored illustration preview and labels (D6)
@@ -798,7 +800,7 @@ review's revision replaces its API (`askToLeave`, `askBeforeLeaving`), and task 
 | `src/features/poem-management/dal/poem-edit-allowance.ts` | the `poem_edit` limit (D3) | `consumePoemEditAllowance` |
 | `src/features/poem-management/dal/poem-update.ts` | upload, `update_my_poem`, cleanup (D2, D3) | `updateOwnPoem` |
 | `src/features/poem-management/actions/update-poem.actions.ts` | `"use server"` save (D3) | `updatePoemAction` |
-| `src/features/poem-management/components/PoemForm/use-poem-form.ts` | shared drafts, checks, focus, discard (D4, D5) | `usePoemForm`, `PoemFormState` |
+| `src/features/poem-management/hooks/use-poem-form.ts` (moved from `components/PoemForm/` in the PR #169 review: two components use it) | shared drafts, checks, focus, discard (D4, D5) | `usePoemForm`; `PoemFormState` in `use-poem-form.types.ts` |
 | `src/features/poem-management/components/PoemForm/PoemFormFields.tsx` + `.types.ts` | the four fields (D4) | `PoemFormFields`, `PoemFormFieldsProps` |
 | `src/features/poem-management/components/EditPoemPage/` | heading and Suspense (D6) | `EditPoemPage`, `EditPoemPageProps` |
 | `src/features/poem-management/components/EditPoemContent/` | session, own poem, genres, keyed form (D6) | `EditPoemContent`, `EditPoemContentProps` |
