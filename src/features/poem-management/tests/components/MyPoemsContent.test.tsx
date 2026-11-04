@@ -66,6 +66,14 @@ describe("MyPoemsContent", () => {
     expect(within(screen.getByRole("list")).getAllByRole("listitem")).toHaveLength(2);
   });
 
+  // implements FR-1 of edit-poem: the list offers no editing, only links to each poem's owner page
+  it("shows no «Редактировать произведение» link", async () => {
+    await renderContent();
+
+    expect(screen.getByRole("list")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Редактировать произведение" })).toBeNull();
+  });
+
   // implements FR-2 of add-poem-creation
   it("shows only the add link, with no list and no empty text, when the author has no poems", async () => {
     vi.mocked(listAuthorPoems).mockResolvedValue({ ok: true, poems: [] });
