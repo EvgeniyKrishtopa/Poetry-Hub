@@ -8,5 +8,6 @@ export { ImagePicker } from "./ImagePicker/ImagePicker";
 export { MarkdownEditor } from "./MarkdownEditor/MarkdownEditor";
 export { MarkdownText } from "./MarkdownText/MarkdownText";
 export { SessionUnavailableAlert } from "./SessionUnavailableAlert/SessionUnavailableAlert";
+export { TextAreaField } from "./TextAreaField/TextAreaField";
 export { TextField } from "./TextField/TextField";
 export { FIELD_INPUT_CLASS } from "./TextField/text-field-classes";

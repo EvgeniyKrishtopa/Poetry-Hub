@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { AUTHOR_EDITOR_PATH, AUTHORS_PATH } from "@/features/authors";
+import { NEW_COLLECTION_PATH } from "@/features/collection-management";
 import { NEW_POEM_PATH } from "@/features/poem-management";
 import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
 import { ABOUT_PATH, PRIVACY_PATH } from "@/shared/config/constants";
@@ -72,6 +73,7 @@ describe("matchRoute", () => {
       AUTHOR_EDITOR_PATH,
       POEM_MANAGEMENT_PATH,
       NEW_POEM_PATH,
+      NEW_COLLECTION_PATH,
       SIGN_IN_PATH,
       SIGN_UP_PATH,
       ABOUT_PATH,
@@ -98,6 +100,18 @@ describe("matchRoute", () => {
         { kind: "link", label: "Мастерская поэта", href: ACCOUNT_PATH },
         { kind: "link", label: "Управление произведениями", href: POEM_MANAGEMENT_PATH },
         { kind: "current", label: "Добавление нового произведения" },
+      ],
+    });
+  });
+
+  // implements FR-17 of add-poem-collections
+  it("maps the create page to «Создание сборника» under both management parents", () => {
+    expect(matchRoute(["account", "poems", "collections", "new"])).toEqual({
+      kind: "static",
+      items: [
+        { kind: "link", label: "Мастерская поэта", href: ACCOUNT_PATH },
+        { kind: "link", label: "Управление произведениями", href: POEM_MANAGEMENT_PATH },
+        { kind: "current", label: "Создание сборника" },
       ],
     });
   });

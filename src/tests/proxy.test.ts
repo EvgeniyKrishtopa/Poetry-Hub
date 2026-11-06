@@ -111,6 +111,16 @@ describe("proxy redirect for account routes", () => {
     expect(response.status).toBe(307);
   });
 
+  // implements FR-16 of add-poem-collections
+  it("redirects a signed-out request for the collection create page to /login", async () => {
+    signedOut();
+
+    const response = await proxy(request("/account/poems/collections/new"));
+
+    expect(response.status).toBe(307);
+    expect(new URL(response.headers.get("Location") ?? "").pathname).toBe("/login");
+  });
+
   // implements FR-19 of add-author-profiles
   it.each(["/accounts", "/authors", "/"])("lets a signed-out %s through", async (path) => {
     signedOut();

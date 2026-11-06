@@ -192,6 +192,14 @@ describe("buildTrail on the poem management routes", () => {
     });
   });
 
+  // implements FR-17 of add-poem-collections
+  it("builds the collection create page's trail, «Управление произведениями» a link", () => {
+    expect(buildTrail(matchRoute(["account", "poems", "collections", "new"]))).toEqual({
+      kind: "shown",
+      items: [HOME, ACCOUNT_LINK, MANAGEMENT_LINK, { kind: "current", label: "Создание сборника" }],
+    });
+  });
+
   // implements FR-8 of add-poem-creation
   it("ends the owner's poem trail on the poem's title, after the management item linking to the list", () => {
     expect(buildTrail(OWN_POEM_MATCH, undefined, undefined, { ok: true, title: "Первый снег" })).toEqual({
