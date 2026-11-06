@@ -11,7 +11,7 @@ import type {
 export type ServiceFailure = SupabaseFailure;
 
 /** One row of the `/account/poems` section: only what the list shows (design D3, D4). */
-export interface CollectionSummary {
+interface CollectionSummary {
   readonly id: string;
   readonly title: string;
 }

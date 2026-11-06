@@ -77,7 +77,6 @@ export const deleteCollectionInputSchema = z.object({ collectionId: z.string() }
 
 export type CreateCollectionInput = z.infer<typeof createCollectionInputSchema>;
 export type UpdateCollectionInput = z.infer<typeof updateCollectionInputSchema>;
-export type DeleteCollectionInput = z.infer<typeof deleteCollectionInputSchema>;
 
 const FORM_FIELDS: ReadonlySet<unknown> = new Set<CollectionField>(["title", "description"]);
 
