@@ -270,6 +270,26 @@ describe("EditCollectionForm: sign-out question", () => {
     expect(leaveDialog()).not.toHaveAttribute("open");
   });
 
+  // implements FR-12 of add-poem-collections: a sign-out that then fails leaves the author here, still guarded
+  it("keeps guarding after a leave answer: links stay blocked and the next sign-out asks again", async () => {
+    const { user } = renderPage();
+    await changeTitle(user);
+    const answer = askAsSignOut();
+    await user.click(screen.getByRole("button", { name: LEAVE }));
+    await expect(answer).resolves.toBe(LEAVE_ANSWER.leave);
+
+    await user.click(link("Наши авторы"));
+    expect(passedThrough).not.toHaveBeenCalled();
+    expect(screen.getByText(LINK_BODY)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: STAY }));
+
+    const again = askAsSignOut();
+    expect(screen.getByText(SIGN_OUT_BODY)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: STAY }));
+    await expect(again).resolves.toBe(LEAVE_ANSWER.stay);
+    expect(titleInput()).toHaveValue(CHANGED_TITLE);
+  });
+
   // implements FR-12 of add-poem-collections: one question at a time
   it("settles an earlier question dismissed when a newer one is asked", async () => {
     const { user } = renderPage();
