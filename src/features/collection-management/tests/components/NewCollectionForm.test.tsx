@@ -134,6 +134,21 @@ describe("NewCollectionForm", () => {
     expect(refresh).not.toHaveBeenCalled();
   });
 
+  // implements FR-3, FR-4 of add-poem-collections: CR-01, the queued navigation leaves the form enabled for a moment
+  it("sends nothing more after a create succeeded, while the list is still opening", async () => {
+    vi.mocked(createCollectionAction).mockResolvedValue(respond({ status: "created", title: TITLE }));
+    const user = renderForm();
+    await fillValid(user);
+    await user.click(submitButton());
+    await waitFor(() => expect(submitButton()).toBeEnabled());
+
+    await user.click(submitButton());
+    fireEvent.submit(titleInput().closest("form") as HTMLFormElement);
+
+    expect(createCollectionAction).toHaveBeenCalledTimes(1);
+    expect(replace).toHaveBeenCalledTimes(1);
+  });
+
   // implements FR-3 of add-poem-collections
   it("sends once on a double click and reads «Создание…» with the whole form disabled while sending", async () => {
     const answer = deferred<ActionResponse>();
