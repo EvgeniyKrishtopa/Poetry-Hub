@@ -201,10 +201,20 @@ describe("consumeCollectionEditAllowance", () => {
     await expect(consumeCollectionEditAllowance()).resolves.toEqual({ ok: false, failure: "too-many-saves" });
   });
 
-  // implements FR-10 of add-poem-collections
+  // implements FR-10, NFR-5 of add-poem-collections
   it.each(FAILURES)("classifies %s", async (_case, arrange, failure) => {
     arrange();
 
     await expect(consumeCollectionEditAllowance()).resolves.toEqual({ ok: false, failure });
+    expectNothingSecretLogged();
+  });
+
+  // implements NFR-5 of add-poem-collections
+  it("logs the operation and the kind", async () => {
+    answer(rpcError("XX000", HTTP_UNAVAILABLE));
+
+    await consumeCollectionEditAllowance();
+
+    expect(loggedText()).toBe("[collection-management] check edit limit failed: PostgrestError XX000");
   });
 });
