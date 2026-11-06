@@ -89,12 +89,14 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 5. Collection page and delete <!-- judgement-heavy -->
 
-- [ ] 5.1 (FR-6, FR-14, FR-16) `CollectionPage`, `CollectionContent`, `CollectionActions`, `EditCollectionButton`,
-  `SavedCollectionNotice` and its store; the route file (design D4, D8).
+- [x] 5.1 (FR-6, FR-14, FR-16) `CollectionPage`, `CollectionContent`, `CollectionActions`, `EditCollectionButton`,
+  `SavedCollectionNotice` and its store; the route file (design D4, D8). Also `CollectionPageSkeleton` (one
+  component per file) and the collection page's breadcrumb slot page, with no trail until 7.1:
+  `app/tests/breadcrumbs-slot.test.ts` requires a slot page for every new page (user decision, 2026-11-06).
   - Verify with `CollectionContent.test.tsx`: title, paragraphs, no empty paragraph, 404 and
     error paths, the button order, the offline notice, `requireSession()` called first and `unknown`
     → `SessionUnavailableAlert`.
-- [ ] 5.2 (FR-13, FR-14, NFR-4) `DeleteCollectionButton` (design D7).
+- [x] 5.2 (FR-13, FR-14, NFR-4) `DeleteCollectionButton` (design D7).
   - Verify with `DeleteCollectionButton.test.tsx`: open/cancel focus, sending state, each
     outcome's store and navigation, the failure in the dialog, offline disabling (the opener
     `aria-disabled` and focusable, the confirm natively disabled, the notice inside the dialog).
@@ -120,7 +122,8 @@ Each group exports only what it already consumes (tests count as consumers for k
 ## 7. Breadcrumbs <!-- isolated -->
 
 - [ ] 7.1 (FR-17) `matchOwnCollectionRoute`, trails, and the collection and edit pages' slot
-  pages (design D11). The create page's `STATIC_ROUTES` row and slot page landed in 4.3.
+  pages (design D11). The create page's `STATIC_ROUTES` row and slot page landed in 4.3, the
+  collection page's slot page in 5.1 (and the edit page's in 6.2, if the slot test requires it there).
   - Verify with `matchRoute` and trail tests for the three paths and the not-found case;
     `app/tests/breadcrumbs-slot.test.ts` passes.
 
