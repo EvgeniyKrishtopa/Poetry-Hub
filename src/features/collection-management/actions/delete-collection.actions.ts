@@ -1,13 +1,44 @@
 "use server";
 
-import { deleteCollectionInputSchema } from "../model/collection-form.schema";
-import type { DeleteCollectionResult } from "../model/collection-management.types";
+import { refresh } from "next/cache";
+
+import { deleteOwnCollection } from "../dal/collection-writes";
+import { deleteCollectionInputSchema, isCollectionId } from "../model/collection-form.schema";
+import { DELETE_COLLECTION_STATUS } from "../model/collection-management.constants";
+import type { DeleteCollectionResult, ServiceFailure } from "../model/collection-management.types";
 
 import { collectionManagementActionClient } from "./action-client";
+import { checkSession } from "./session-check";
+
+// The owner is resolved from the session by the database, never from input (NFR-1). The deleted notice's title
+// is the stored one the database returns. Only a deleted collection refreshes the client router (design D10).
+
+const NOT_FOUND: DeleteCollectionResult = { status: DELETE_COLLECTION_STATUS.notFound };
+
+function failed(failure: ServiceFailure): DeleteCollectionResult {
+  return { status: DELETE_COLLECTION_STATUS.failed, failure };
+}
+
+/** The steps of design D7, in order; each failure stops the rest. */
+async function deleteCollection(collectionId: string): Promise<DeleteCollectionResult> {
+  // 1. A malformed id names no collection: no session read, no database call.
+  if (!isCollectionId(collectionId)) return NOT_FOUND;
+
+  // 2. Session.
+  const session = await checkSession();
+  if (!session.ok) return failed(session.failure);
+
+  // 3. The delete; another author's collection and a missing one are the same not-found.
+  const result = await deleteOwnCollection(collectionId);
+  if (!result.ok) return failed(result.failure);
+  if (result.status === "not-found") return NOT_FOUND;
+
+  // 4. Gone: the client router's copies of the author's pages must not list it.
+  refresh();
+  return { status: DELETE_COLLECTION_STATUS.deleted, title: result.title };
+}
 
 /** Deletes one of the caller's own collections (design D7). */
 export const deleteCollectionAction = collectionManagementActionClient
   .inputSchema(deleteCollectionInputSchema)
-  .action(async (): Promise<DeleteCollectionResult> => {
-    throw new Error("not implemented");
-  });
+  .action(async ({ parsedInput }): Promise<DeleteCollectionResult> => deleteCollection(parsedInput.collectionId));

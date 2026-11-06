@@ -44,22 +44,22 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 3. Collection model, DAL, and actions (no visible change) <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-3, FR-8) `model/`: constants, types, messages (the proposal's copy table), paths,
+- [x] 3.1 (FR-3, FR-8) `model/`: constants, types, messages (the proposal's copy table), paths,
   `collectionFormSchema` and the three action inputs (lowercase-hex UUID guard),
   `collection-form-values.ts` with `isCollectionFormChanged` (design D1, D5, D6).
   - Verify with `tests/model/` tests: trimming, blank description → none, both limits, the UUID
     guard, change detection on trimmed values.
-- [ ] 3.2 (FR-6, FR-7, FR-2, NFR-5) `dal/own-collections.ts`: `listOwnCollections`,
+- [x] 3.2 (FR-6, FR-7, FR-2, NFR-5) `dal/own-collections.ts`: `listOwnCollections`,
   `getOwnCollection` (React `cache`), `getOwnCollectionTitle` (design D4).
   - Verify with `tests/dal/own-collections.test.ts`: order, malformed id without a query,
     not-public → `not-found`, read errors → `unavailable`, log content.
-- [ ] 3.3 (FR-4, FR-9, FR-10, FR-13, NFR-5) `dal/write-log.ts` (the feature's copy, prefix
+- [x] 3.3 (FR-4, FR-9, FR-10, FR-13, NFR-5) `dal/write-log.ts` (the feature's copy, prefix
   `[collection-management]`, `SupabaseFailure`), `dal/collection-writes.ts`, and
   `dal/collection-edit-allowance.ts`: the three RPCs and the `collection_edit` scope, Zod-parsed,
   failures classified with the response status (design D2, D5–D7).
   - Verify with DAL tests: every status, a 5xx → `unavailable`, a rejected JWT →
     `unauthenticated`, a bad shape → `unknown`.
-- [ ] 3.4 (FR-4, FR-5, FR-9 – FR-11, FR-13, FR-15) The three actions in the order of design D5,
+- [x] 3.4 (FR-4, FR-5, FR-9 – FR-11, FR-13, FR-15) The three actions in the order of design D5,
   D6, D7, each calling `refresh()` only on success (design D10).
   - Verify with `tests/actions/` tests: the order (no RPC on invalid input or a malformed id;
     nothing counted before the limit step on edit), every result, `refresh()` only on success.
