@@ -7,7 +7,10 @@ import { getSessionState } from "@/features/auth";
 import { createCollectionAction } from "../../actions/create-collection.actions";
 import { createOwnCollection } from "../../dal/collection-writes";
 import { COLLECTION_FIELD_ERRORS } from "../../model/collection-management-messages";
-import { COLLECTION_TITLE_MAX_LENGTH } from "../../model/collection-management.constants";
+import {
+  COLLECTION_DESCRIPTION_MAX_LENGTH,
+  COLLECTION_TITLE_MAX_LENGTH,
+} from "../../model/collection-management.constants";
 
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 vi.mock("@/features/auth", () => ({ getSessionState: vi.fn() }));
@@ -57,6 +60,24 @@ describe("createCollectionAction", () => {
     const result = await createCollectionAction({ title: "a".repeat(COLLECTION_TITLE_MAX_LENGTH + 1), description: "" });
 
     expect(result.data).toEqual({ status: "invalid", fieldErrors: { title: COLLECTION_FIELD_ERRORS.titleTooLong } });
+  });
+
+  // implements FR-3 of add-poem-collections
+  it("answers invalid with both errors when both fields are too long, with no RPC", async () => {
+    const result = await createCollectionAction({
+      title: "a".repeat(COLLECTION_TITLE_MAX_LENGTH + 1),
+      description: "a".repeat(COLLECTION_DESCRIPTION_MAX_LENGTH + 1),
+    });
+
+    expect(result.data).toEqual({
+      status: "invalid",
+      fieldErrors: {
+        title: COLLECTION_FIELD_ERRORS.titleTooLong,
+        description: COLLECTION_FIELD_ERRORS.descriptionTooLong,
+      },
+    });
+    expect(getSessionState).not.toHaveBeenCalled();
+    expect(createOwnCollection).not.toHaveBeenCalled();
   });
 
   // implements FR-4 of add-poem-collections
