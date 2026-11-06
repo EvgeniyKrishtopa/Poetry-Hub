@@ -40,6 +40,9 @@ export function NewCollectionForm() {
   const handledAlertRef = useRef<FailureAlert | null>(null);
   // Set synchronously on submit: a second click can arrive before the pending state disables the form.
   const submittingRef = useRef(false);
+  // Set once a create succeeded: the form stays enabled until the queued navigation renders the list, and a
+  // press in that window must not create a second collection.
+  const createdRef = useRef(false);
   const connection = useConnectionStatus();
   // The transition's closure holds the status of the render that started it; the rejection reads the latest.
   const connectionRef = useRef(connection);
@@ -66,6 +69,7 @@ export function NewCollectionForm() {
       return;
     }
     if (result.status === CREATE_COLLECTION_STATUS.created) {
+      createdRef.current = true;
       // Only written, after the answer: `getState()`, no subscription.
       useCollectionListNotice.getState().setListNotice({ kind: "created", title: result.title });
       // Replaced, so Back from the list can't reach a filled form that would create a second collection.
@@ -103,7 +107,7 @@ export function NewCollectionForm() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     // Checked here as well as by the disabled button.
-    if (!isOnline || submittingRef.current) return;
+    if (!isOnline || submittingRef.current || createdRef.current) return;
     // The next submit hides the previous outcome.
     setFailureAlert(null);
     const check = form.validate();
