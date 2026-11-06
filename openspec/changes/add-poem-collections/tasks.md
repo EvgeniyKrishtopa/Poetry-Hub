@@ -129,11 +129,11 @@ Each group exports only what it already consumes (tests count as consumers for k
     `app/tests/breadcrumbs-slot.test.ts` passes.
 
 ## 8. Docs and verification <!-- judgement-heavy -->
-- [ ] 8.1 (NFR-2, NFR-3, NFR-5, NFR-6) Static checks: a `boundaries` test for
+- [x] 8.1 (NFR-2, NFR-3, NFR-5, NFR-6) Static checks: a `boundaries` test for
   `collection-management` (client-module list; no import of `poems` or `poem-management`; no
   import of `collection-management` from `poem-management`; no `navigator.onLine`; `beforeunload`
   only in its guard), no colour literals.
-- [ ] 8.2 (NFR-3) Docs: `docs/architecture.md` (the new feature, its routes, the slot props on
+- [x] 8.2 (NFR-3) Docs: `docs/architecture.md` (the new feature, its routes, the slot props on
   `MyPoemsPage`, and its copies of the leave guard, dialog, and write-log named next to the poem
   originals),
   `docs/state-management.md` (the two notice stores; uncached private reads with `refresh()`),
@@ -141,9 +141,9 @@ Each group exports only what it already consumes (tests count as consumers for k
   ADR 0009's note on later row-creating features, new ADR 0011 (private reader data read uncached
   under RLS, kept fresh with `refresh()`; design D4, D10), and `docs/environment.md`'s deploy checklist
   (`npx supabase db push` for the collections migration).
-- [ ] 8.3 (FR-1 – FR-17) Gate 3 (web-qa): the flows in design D13; record the create → edit →
+- [x] 8.3 (FR-1 – FR-17) Gate 3 (web-qa): the flows in design D13; record the create → edit →
   delete path as a scenario under `tests/web-qa-scenarios` with a cleanup step.
-- [ ] 8.4 (NFR-7, NFR-8) Drop the scaffold's `src/features/collection-management/**` entry from
+- [x] 8.4 (NFR-7, NFR-8) Drop the scaffold's `src/features/collection-management/**` entry from
   `knip.jsonc` (any export knip then reports unused is removed, not ignored); compare the messages
   module with the proposal's copy table; run
   `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip` and

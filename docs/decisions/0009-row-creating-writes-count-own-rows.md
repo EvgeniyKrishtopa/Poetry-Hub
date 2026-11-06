@@ -4,6 +4,13 @@
 
 Accepted (2026-10-29); Amended by 0010 (counts creations, not live rows)
 
+Later row-creating features (Decision 7's last sentence): `add-poem-collections` (2026-11-06) follows
+this record with 0010's amendment. `create_my_collection` counts the `collection_creations` log under a
+per-author advisory lock, 50 collections per 30 days (`collection_create_limits()`,
+`20261104180000_collections.sql`; that change's design D2). It has no read-only twin: the action uploads
+nothing before the insert, so there is nothing for a pre-check to spare (Decision 5 exists only for the
+illustration upload).
+
 Partially supersedes: 0007 (its Decisions 1 and 3, and Decision 6's poem example)
 
 ## Context

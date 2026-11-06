@@ -22,7 +22,7 @@ import { useLeaveGuard } from "./use-leave-guard";
 import { useLeavePrompt } from "./use-leave-prompt";
 
 /** A failure the alert above the form shows; the session-expired one navigates instead (design D6). */
-export type CollectionSaveAlertFailure = Exclude<UpdateCollectionFailure, "unauthenticated">;
+type CollectionSaveAlertFailure = Exclude<UpdateCollectionFailure, "unauthenticated">;
 
 /** Everything `EditCollectionForm` renders from (design D6). */
 export interface EditCollectionFormModel {
