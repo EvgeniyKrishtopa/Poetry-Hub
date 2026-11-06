@@ -254,6 +254,22 @@ describe("DeleteCollectionButton: sending and outcomes", () => {
     expect(screen.queryByRole("alert", { hidden: true })).toBeNull();
   });
 
+  // implements FR-13 of add-poem-collections
+  it("hides the alert while a retry is sending, then deletes", async () => {
+    vi.mocked(deleteCollectionAction).mockResolvedValueOnce(respond({ status: "failed", failure: "unavailable" }));
+    const user = await renderOpen();
+    await user.click(confirmButton());
+    await screen.findByRole("alert", { hidden: true });
+    const pending = deferred<ActionResponse>();
+    vi.mocked(deleteCollectionAction).mockReturnValueOnce(pending.promise);
+
+    await user.click(confirmButton());
+    expect(screen.queryByRole("alert", { hidden: true })).toBeNull();
+
+    await act(async () => pending.resolve(respond({ status: "deleted", title: TITLE })));
+    await waitFor(() => expect(replace).toHaveBeenCalledExactlyOnceWith("/account/poems"));
+  });
+
   // implements NFR-5 of add-poem-collections
   it("logs a rejected call by the error's type only", async () => {
     vi.mocked(deleteCollectionAction).mockRejectedValue(new TypeError(`fetch ${COLLECTION_ID} ${TITLE}`));
