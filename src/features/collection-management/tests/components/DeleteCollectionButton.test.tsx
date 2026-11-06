@@ -366,4 +366,23 @@ describe("DeleteCollectionButton: connection", () => {
     expect(dialogElement().open).toBe(true);
     expect(replace).not.toHaveBeenCalled();
   });
+
+  // implements FR-13, FR-14 of add-poem-collections
+  it("shows the failure text next to the slow notice for a call rejected after the connection turned slow", async () => {
+    const pending = deferred<ActionResponse>();
+    vi.mocked(deleteCollectionAction).mockReturnValue(pending.promise);
+    const user = userEvent.setup();
+    const { rerender } = renderButton();
+    await user.click(opener());
+    await user.click(confirmButton());
+
+    setConnection("slow");
+    rerender(<DeleteCollectionButton collectionId={COLLECTION_ID} title={TITLE} />);
+    await act(async () => pending.reject(new Error("network")));
+
+    expect(inDialog().getByRole("alert", { hidden: true })).toHaveTextContent(FAILURE_TEXT);
+    expect(inDialog().getByRole("status", { hidden: true })).toHaveTextContent(SLOW_TEXT);
+    expect(dialogElement().open).toBe(true);
+    expect(replace).not.toHaveBeenCalled();
+  });
 });
