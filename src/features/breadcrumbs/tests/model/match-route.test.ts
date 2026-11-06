@@ -130,6 +130,30 @@ describe("matchRoute", () => {
     expect(matchRoute(["account", "poems", poemId, "edit"])).toEqual({ kind: "own-poem-edit", poemId });
   });
 
+  // implements FR-17 of add-poem-collections
+  it("matches the owner's collection page and its edit page by the collection id", () => {
+    const collectionId = "40000000-0000-4000-8000-000000000041";
+
+    expect(matchRoute(["account", "poems", "collections", collectionId])).toEqual({
+      kind: "own-collection",
+      collectionId,
+    });
+    expect(matchRoute(["account", "poems", "collections", collectionId, "edit"])).toEqual({
+      kind: "own-collection-edit",
+      collectionId,
+    });
+  });
+
+  // implements FR-17 of add-poem-collections
+  it.each([
+    [["account", "poems", "collections", ""]],
+    [["account", "poems", "collections", "", "edit"]],
+    [["account", "poems", "collections", "a", "b"]],
+    [["account", "poems", "collections", "a", "edit", "b"]],
+  ])("matches nothing for the collection path %j", (segments) => {
+    expect(matchRoute(segments)).toEqual({ kind: "none" });
+  });
+
   // implements FR-8 of add-poem-creation
   it.each([
     [["account", "poems", "a", "b"]],

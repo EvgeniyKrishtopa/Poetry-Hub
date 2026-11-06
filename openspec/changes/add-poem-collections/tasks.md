@@ -122,7 +122,7 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 7. Breadcrumbs <!-- isolated -->
 
-- [ ] 7.1 (FR-17) `matchOwnCollectionRoute`, trails, and the collection and edit pages' slot
+- [x] 7.1 (FR-17) `matchOwnCollectionRoute`, trails, and the collection and edit pages' slot
   pages (design D11). The create page's `STATIC_ROUTES` row and slot page landed in 4.3, the
   collection page's slot page in 5.1 (and the edit page's in 6.2, if the slot test requires it there).
   - Verify with `matchRoute` and trail tests for the three paths and the not-found case;

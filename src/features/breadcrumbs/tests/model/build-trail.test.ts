@@ -176,6 +176,7 @@ describe("buildTrail on the poem management routes", () => {
   const POEM_ID = "30000000-0000-4000-8000-000000000021";
   const OWN_POEM_MATCH = { kind: "own-poem", poemId: POEM_ID } as const;
   const OWN_POEM_EDIT_MATCH = { kind: "own-poem-edit", poemId: POEM_ID } as const;
+  const COLLECTION_ID = "40000000-0000-4000-8000-000000000041";
 
   const ACCOUNT_LINK = { kind: "link", label: "Мастерская поэта", href: ACCOUNT_PATH } as const;
   const MANAGEMENT_LINK = { kind: "link", label: "Управление произведениями", href: POEM_MANAGEMENT_PATH } as const;
@@ -238,6 +239,45 @@ describe("buildTrail on the poem management routes", () => {
         { kind: "link", label: "Первый снег", href: `/account/poems/${POEM_ID}` },
         { kind: "current", label: "Редактирование" },
       ],
+    });
+  });
+
+  // implements FR-17 of add-poem-collections
+  it("ends the collection trail on its title, after the management item linking to the list", () => {
+    const match = { kind: "own-collection", collectionId: COLLECTION_ID } as const;
+
+    expect(buildTrail(match, undefined, undefined, undefined, { ok: true, title: "Осенний цикл" })).toEqual({
+      kind: "shown",
+      items: [HOME, ACCOUNT_LINK, MANAGEMENT_LINK, { kind: "current", label: "Осенний цикл" }],
+    });
+  });
+
+  // implements FR-17 of add-poem-collections
+  it("ends the collection edit trail on «Редактирование», after the title linking to the collection page", () => {
+    const match = { kind: "own-collection-edit", collectionId: COLLECTION_ID } as const;
+
+    expect(buildTrail(match, undefined, undefined, undefined, { ok: true, title: "Осенний цикл" })).toEqual({
+      kind: "shown",
+      items: [
+        HOME,
+        ACCOUNT_LINK,
+        MANAGEMENT_LINK,
+        { kind: "link", label: "Осенний цикл", href: `/account/poems/collections/${COLLECTION_ID}` },
+        { kind: "current", label: "Редактирование" },
+      ],
+    });
+  });
+
+  // implements FR-17 of add-poem-collections
+  it.each([
+    ["own-collection", { ok: false, reason: "not-found" }],
+    ["own-collection", { ok: false, reason: "unavailable" }],
+    ["own-collection-edit", { ok: false, reason: "not-found" }],
+    ["own-collection-edit", { ok: false, reason: "unavailable" }],
+    ["own-collection", undefined],
+  ] as const)("shows no %s trail when the title result is %j", (kind, title) => {
+    expect(buildTrail({ kind, collectionId: COLLECTION_ID }, undefined, undefined, undefined, title)).toEqual({
+      kind: "none",
     });
   });
 
