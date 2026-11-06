@@ -55,7 +55,11 @@ const FORM_FILES = {
   ],
 } as const;
 
-const LEAVE_GUARD_FILE = "src/features/poem-management/components/EditPoemForm/use-leave-guard.ts";
+// collection-management keeps its own copy of the guard (add-poem-collections design D12); the list is sorted.
+const LEAVE_GUARD_FILES = [
+  "src/features/collection-management/components/EditCollectionForm/use-leave-guard.ts",
+  "src/features/poem-management/components/EditPoemForm/use-leave-guard.ts",
+];
 
 const SOURCE_FILE = /\.tsx?$/;
 // An arbitrary colour class only: the Dialog's corner glyph keeps its `text-[22px]` size, which is no colour.
@@ -120,8 +124,8 @@ describe("poem-management boundaries", () => {
   });
 
   // implements NFR-3 of edit-poem: the leave guard exists once
-  it("listens for beforeunload only in the edit form's leave guard", () => {
-    expect(filesMatching(sourceFiles("src"), /\bbeforeunload\b/)).toEqual([LEAVE_GUARD_FILE]);
+  it("listens for beforeunload only in the edit forms' leave guards", () => {
+    expect(filesMatching(sourceFiles("src"), /\bbeforeunload\b/).sort()).toEqual(LEAVE_GUARD_FILES);
   });
 
   // implements NFR-3 of edit-poem: one implementation of the fields and their drafts

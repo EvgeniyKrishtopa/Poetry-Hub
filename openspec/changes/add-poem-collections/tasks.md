@@ -103,16 +103,17 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 6. Edit page <!-- judgement-heavy -->
 
-- [ ] 6.1 (FR-12, NFR-4) The feature's copies of the leave guard and the leave dialog:
+- [x] 6.1 (FR-12, NFR-4) The feature's copies of the leave guard and the leave dialog:
   `EditCollectionForm/use-leave-guard.ts`, `use-leave-prompt.ts`, `CollectionLeaveDialog`, the
   dialog's texts and `LEAVE_DIALOG_REASON` in the feature's model; registered with the shared
   leave-block store (design D12). Add the guard file to `poem-management/tests/boundaries.test.ts`'s
   expected `beforeunload` list.
   - Verify with the poem guard's and dialog's tests repeated for the collection paths (allowed and
     blocked paths, modifier clicks, `beforeunload`, the «Выйти» question and its pending answer).
-- [ ] 6.2 (FR-7, FR-8, FR-9, FR-11, FR-12, FR-14, FR-16) `EditCollectionPage`, `EditCollectionContent`
+- [x] 6.2 (FR-7, FR-8, FR-9, FR-11, FR-12, FR-14, FR-16) `EditCollectionPage`, `EditCollectionContent`
   (keyed form), `EditCollectionForm` and `use-edit-collection-form.ts` with the guard from 6.1; the
-  route file (design D6).
+  route file (design D6). Also the edit page's breadcrumb slot page, with no trail until 7.1:
+  `app/tests/breadcrumbs-slot.test.ts` requires a slot page for every new page (as 7.1 foresees).
   - Verify with `EditCollectionForm.test.tsx`: back link vs save and discard, discard restoring
     both fields with focus, each outcome, alert position and focus, offline and slow, guard
     activation (changed, sending, off after `saved`) and its allowed paths; and
