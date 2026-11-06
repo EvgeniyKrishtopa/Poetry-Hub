@@ -75,6 +75,21 @@ const FAILURES: readonly [string, () => void, string][] = [
   ["a missing config", () => vi.mocked(createSupabaseServerClient).mockRejectedValue(new SupabaseConfigError([CONFIG_VARIABLE])), "unavailable"],
 ];
 
+describe("a missing config", () => {
+  // The proxy already logs it on every request, so the DAL stays silent.
+  it.each([
+    ["createOwnCollection", () => createOwnCollection(TITLE, DESCRIPTION)],
+    ["updateOwnCollection", () => updateOwnCollection({ collectionId: COLLECTION_ID, title: TITLE, description: null })],
+    ["deleteOwnCollection", () => deleteOwnCollection(COLLECTION_ID)],
+    ["consumeCollectionEditAllowance", () => consumeCollectionEditAllowance()],
+  ])("logs nothing from %s", async (_case, call) => {
+    vi.mocked(createSupabaseServerClient).mockRejectedValue(new SupabaseConfigError([CONFIG_VARIABLE]));
+
+    await expect(call()).resolves.toEqual({ ok: false, failure: "unavailable" });
+    expect(console.error).not.toHaveBeenCalled();
+  });
+});
+
 describe("createOwnCollection", () => {
   // implements FR-4 of add-poem-collections
   it("calls create_my_collection with the title and description only and returns the new id", async () => {
