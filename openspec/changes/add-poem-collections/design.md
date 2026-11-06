@@ -237,8 +237,10 @@ textarea's value; the poem schema's rule, repeated), then trim; lengths measured
 and ≤ 80; description ≤ 1000, blank → `null`. The same transforms are exported as
 `normalizeCollectionTitle` / `normalizeCollectionDescription`.
 
-`useCollectionForm(initial, isPending)` (`hooks/`): title and description drafts, `validate()`,
-field errors, focus on the first invalid field, `isChanged` (D6), `reset()`. It holds no action.
+`useCollectionForm(initial, { isPending, formRef })` (`hooks/`): title and description drafts, `validate()`,
+field errors, focus on the first invalid field, `isChanged` (D6), `reset()`. It holds no action. The form
+component owns `formRef` and hands it in, as the poem forms do: the React Compiler's lint rejects passing
+on, during render, an object that holds a ref (group 4).
 `CollectionFormFields` renders `TextField` «Название сборника» and `TextAreaField` «Описание
 (необязательно)» (new `shared/ui` primitive: `TextField`'s label, error, and `aria-*` wiring over a
 `<textarea>`, reusing `text-field-classes`; no counter).
@@ -700,7 +702,7 @@ feature and `TextAreaField` until tasks 4.1 and 8.4 remove the entries (Gate 2b 
 | `src/features/collection-management/dal/collection-edit-allowance.ts` | the `collection_edit` scope (D2, D6) | `consumeCollectionEditAllowance` |
 | `src/features/collection-management/dal/write-log.ts` | the feature's copy of the write-log helpers (D12) | `logFailure`, `toServiceFailure`, `withStatus` |
 | `src/features/collection-management/hooks/use-collection-form.ts` | drafts, check, focus, change, reset (D5, D6) | `useCollectionForm` |
-| `src/features/collection-management/hooks/use-collection-form.types.ts` | the hook's contract | `CollectionFormState`, `CollectionFormCheck` |
+| `src/features/collection-management/hooks/use-collection-form.types.ts` | the hook's contract | `CollectionFormState`, `CollectionFormCheck`, `CollectionFormHost` (group 4) |
 | `src/features/collection-management/model/collection-form.schema.ts` | normalization and the action inputs (types only until 3.1) | `normalizeCollectionTitle`, `normalizeCollectionDescription`, `createCollectionInputSchema`, `updateCollectionInputSchema`, `deleteCollectionInputSchema`, their input types |
 | `src/features/collection-management/model/collection-form-values.ts` | form values and change detection (D6) | `CollectionFormValues`, `isCollectionFormChanged` |
 | `src/features/collection-management/model/collection-management.constants.ts` | limits, statuses, segments, the leave dialog's forms | `COLLECTION_TITLE_MAX_LENGTH`, `COLLECTION_DESCRIPTION_MAX_LENGTH`, `COLLECTIONS_SEGMENT`, `COLLECTION_EDIT_SEGMENT`, `CREATE_COLLECTION_STATUS`, `UPDATE_COLLECTION_STATUS`, `DELETE_COLLECTION_STATUS`, `LEAVE_DIALOG_REASON` |

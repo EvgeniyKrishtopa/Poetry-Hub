@@ -4,6 +4,15 @@ export const COLLECTION_TITLE_MAX_LENGTH = 80;
 /** The description's limit after trimming, in code points (design D2, D5). */
 export const COLLECTION_DESCRIPTION_MAX_LENGTH = 1000;
 
+/** The form's fields; also their inputs' `name`, by which the form finds them to move focus (design D5). */
+export const COLLECTION_FIELD = {
+  title: "title",
+  description: "description",
+} as const;
+
+/** The fields in form order: focus goes to the first invalid one (FR-3). */
+export const COLLECTION_FORM_FIELDS = [COLLECTION_FIELD.title, COLLECTION_FIELD.description] as const;
+
 /** The collections' segment under the poem management path: `/account/poems/collections/…` (design D1). */
 export const COLLECTIONS_SEGMENT = "collections";
 

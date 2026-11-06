@@ -22,5 +22,14 @@ export interface CollectionFormState {
   readonly showFieldErrors: (fieldErrors: CollectionFieldErrors) => void;
   /** Both drafts back to the initial values, errors cleared (FR-8). */
   readonly reset: () => void;
+}
+
+/**
+ * What the form component owns and hands in. The ref stays the component's: an object holding a ref can't
+ * be read or passed on during render (the React Compiler's rule), and the fields component takes the state.
+ */
+export interface CollectionFormHost {
+  readonly isPending: boolean;
+  /** Its fields are found by `name` to move focus. */
   readonly formRef: RefObject<HTMLFormElement | null>;
 }

@@ -66,19 +66,21 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 4. Create page and the section on `/account/poems` <!-- judgement-heavy -->
 
-- [ ] 4.1 (NFR-4, NFR-6) Add `shared/ui/TextAreaField` on `TextField`'s classes and wiring, and drop
+- [x] 4.1 (NFR-4, NFR-6) Add `shared/ui/TextAreaField` on `TextField`'s classes and wiring, and drop
   the scaffold's `src/shared/ui/TextAreaField/**` entry from `knip.jsonc`.
   - Verify with `shared/ui/tests/TextAreaField.test.tsx`: label, error, `aria-*`.
-- [ ] 4.2 (FR-3, FR-14) `hooks/use-collection-form.ts` and `CollectionFormFields` (design D5).
+- [x] 4.2 (FR-3, FR-14) `hooks/use-collection-form.ts` and `CollectionFormFields` (design D5).
   - Verify with `tests/hooks/use-collection-form.test.ts`: drafts, checks, focus order, `reset()`.
-- [ ] 4.3 (FR-3, FR-4, FR-5, FR-14, FR-16) `NewCollectionPage`, `NewCollectionContent`,
+- [x] 4.3 (FR-3, FR-4, FR-5, FR-14, FR-16, FR-17) `NewCollectionPage`, `NewCollectionContent`,
   `NewCollectionForm`, `CollectionFormSkeleton`, `CollectionNotPublicNotice`; the route file
-  (design D5).
+  (design D5). Also the create page's breadcrumb part of 7.1, its `STATIC_ROUTES` row and slot
+  page: `app/tests/breadcrumbs-slot.test.ts` requires a slot page for every new page (user
+  decision, 2026-11-06).
   - Verify with `NewCollectionForm.test.tsx`: each outcome's store and navigation, alert position
     and focus, sending state, offline and slow disabling, the offline rejection; and
     `NewCollectionContent.test.tsx`: the not-public notice instead of the form, the profile read
     failure, `requireSession()` called first and `unknown` → `SessionUnavailableAlert`.
-- [ ] 4.4 (FR-1, FR-2, FR-4, FR-13) `CreateCollectionLink`, `OwnCollectionsSection`,
+- [x] 4.4 (FR-1, FR-2, FR-4, FR-13) `CreateCollectionLink`, `OwnCollectionsSection`,
   `CollectionListNotice` and its store; `app/(authorized)/account/poems/page.tsx` passes them into
   `MyPoemsPage`'s slots (design D3, D8).
   - Verify with `OwnCollectionsSection.test.tsx` (order, hidden when empty, failure alert),
@@ -117,8 +119,8 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 7. Breadcrumbs <!-- isolated -->
 
-- [ ] 7.1 (FR-17) `matchOwnCollectionRoute`, the `STATIC_ROUTES` row, trails, and the three slot
-  pages (design D11).
+- [ ] 7.1 (FR-17) `matchOwnCollectionRoute`, trails, and the collection and edit pages' slot
+  pages (design D11). The create page's `STATIC_ROUTES` row and slot page landed in 4.3.
   - Verify with `matchRoute` and trail tests for the three paths and the not-found case;
     `app/tests/breadcrumbs-slot.test.ts` passes.
 

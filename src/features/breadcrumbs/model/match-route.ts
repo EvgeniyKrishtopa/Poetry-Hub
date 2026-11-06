@@ -1,4 +1,5 @@
 import { AUTHOR_EDITOR_PATH, AUTHORS_PAGE_TITLES, AUTHORS_PATH } from "@/features/authors";
+import { COLLECTION_TRAIL_LABELS, NEW_COLLECTION_PATH } from "@/features/collection-management";
 import { EDIT_SEGMENT, NEW_POEM_PATH, POEM_MANAGEMENT_TRAIL_LABELS } from "@/features/poem-management";
 import { POEMS_SEGMENT } from "@/features/poems";
 import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
@@ -22,6 +23,7 @@ export const STATIC_ROUTES: readonly RouteRow[] = [
   { path: AUTHOR_EDITOR_PATH, label: AUTHORS_PAGE_TITLES.authorEditor },
   { path: POEM_MANAGEMENT_PATH, label: POEM_MANAGEMENT_TRAIL_LABELS.list },
   { path: NEW_POEM_PATH, label: POEM_MANAGEMENT_TRAIL_LABELS.newPoem },
+  { path: NEW_COLLECTION_PATH, label: COLLECTION_TRAIL_LABELS.newCollection },
   { path: SIGN_IN_PATH, label: BREADCRUMB_LABELS.signIn },
   { path: SIGN_UP_PATH, label: BREADCRUMB_LABELS.signUp },
   { path: ABOUT_PATH, label: BREADCRUMB_LABELS.about },
