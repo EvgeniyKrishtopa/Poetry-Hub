@@ -115,6 +115,7 @@ describe("proxy redirect for account routes", () => {
   it.each([
     ["create page", "/account/poems/collections/new"],
     ["collection page", "/account/poems/collections/40000000-0000-4000-8000-000000000031"],
+    ["edit page", "/account/poems/collections/40000000-0000-4000-8000-000000000031/edit"],
   ])("redirects a signed-out request for the collection %s to /login", async (_page, path) => {
     signedOut();
 
