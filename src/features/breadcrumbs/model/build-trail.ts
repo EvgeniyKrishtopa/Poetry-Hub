@@ -1,4 +1,9 @@
 import { AUTHORS_PAGE_TITLES, AUTHORS_PATH, authorPagePath, type PublicAuthorNameResult } from "@/features/authors";
+import {
+  COLLECTION_TRAIL_LABELS,
+  collectionPath,
+  type OwnCollectionTitleResult,
+} from "@/features/collection-management";
 import { ownPoemPath, POEM_MANAGEMENT_TRAIL_LABELS, type OwnPoemTitleResult } from "@/features/poem-management";
 import type { AuthorPoemResult } from "@/features/poems";
 import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH } from "@/shared/config/account-paths";
@@ -55,6 +60,34 @@ function ownPoemTrail(match: OwnPoemMatch, title: OwnPoemTitleResult | undefined
   }
 }
 
+type OwnCollectionMatch = Extract<RouteMatch, { kind: "own-collection" | "own-collection-edit" }>;
+
+/** The title as the current item on the collection page; on its edit page a link to it, then the edit label. */
+function ownCollectionItems(match: OwnCollectionMatch, title: string): readonly BreadcrumbItem[] {
+  if (match.kind === "own-collection") return [{ kind: "current", label: title }];
+  return [
+    { kind: "link", label: title, href: collectionPath(match.collectionId) },
+    { kind: "current", label: COLLECTION_TRAIL_LABELS.editCollection },
+  ];
+}
+
+/**
+ * The collection and edit trails (design D11): the title items after the management link. Unlike the poem
+ * trail, any failed read hides the trail, whether the collection isn't the author's or can't be read.
+ */
+function ownCollectionTrail(match: OwnCollectionMatch, title: OwnCollectionTitleResult | undefined): Trail {
+  if (title?.ok !== true) return NO_TRAIL;
+  return {
+    kind: "shown",
+    items: [
+      HOME_ITEM,
+      ACCOUNT_ITEM,
+      { kind: "link", label: POEM_MANAGEMENT_TRAIL_LABELS.list, href: POEM_MANAGEMENT_PATH },
+      ...ownCollectionItems(match, title.title),
+    ],
+  };
+}
+
 /** The author's item: the name, or the author fallback label when the read failed for any reason but not-found. */
 function authorLabel(authorName: PublicAuthorNameResult | undefined): string {
   if (authorName?.ok === true) return authorName.name;
@@ -71,17 +104,21 @@ function shown(items: readonly BreadcrumbItem[]): Trail {
  * page; an unavailable author shows the author fallback label, as the page shows the error screen.
  * That error screen wins over an unknown poem, so the trail then ends on the fallback label; an
  * unavailable poem read also shows the error screen, so its trail ends on the author's item. The owner's
- * poem page reads only its title.
+ * poem and collection pages read only their titles.
  */
 export function buildTrail(
   match: RouteMatch,
   authorName?: PublicAuthorNameResult,
   poem?: AuthorPoemResult,
   ownPoemTitle?: OwnPoemTitleResult,
+  ownCollectionTitle?: OwnCollectionTitleResult,
 ): Trail {
   if (match.kind === "none") return NO_TRAIL;
   if (match.kind === "static") return { kind: "shown", items: [HOME_ITEM, ...match.items] };
   if (match.kind === "own-poem" || match.kind === "own-poem-edit") return ownPoemTrail(match, ownPoemTitle);
+  if (match.kind === "own-collection" || match.kind === "own-collection-edit") {
+    return ownCollectionTrail(match, ownCollectionTitle);
+  }
 
   if (authorName?.ok === false && authorName.reason === "not-found") return NO_TRAIL;
   // A switch over the reasons, not a check of `ok` alone: a new failure reason falls through to the poem

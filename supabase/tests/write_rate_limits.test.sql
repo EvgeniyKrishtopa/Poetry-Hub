@@ -1,13 +1,15 @@
 -- Per-user write limits: consume_write_allowance() and the counter table's privileges
--- (add-author-profiles, design D13), and the poem_edit scope (edit-poem, design D2, D13).
+-- (add-author-profiles, design D13), the poem_edit scope (edit-poem, design D2, D13), and the collection_edit
+-- scope (add-poem-collections, design D2, D13).
 -- implements FR-21, NFR-2 of add-author-profiles
 -- implements FR-7 of edit-poem
+-- implements FR-10 of add-poem-collections
 -- Run against the local stack: npx supabase test db
 begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(21);
+select plan(26);
 
 -- Fixtures, written as the superuser.
 insert into auth.users (id, email) values
@@ -65,6 +67,18 @@ select is(
   'poem_edit: the 11th call in the window is refused'
 );
 
+-- A's poem_edit is already spent: collection_edit counts on its own.
+select ok(
+  (select bool_and(public.consume_write_allowance('collection_edit')) from generate_series(1, 10)),
+  'collection_edit: calls 1-10 are allowed, though poem_edit is spent'
+);
+
+select is(
+  public.consume_write_allowance('collection_edit'),
+  false,
+  'collection_edit: the 11th call in the window is refused'
+);
+
 select throws_ok(
   $$select public.consume_write_allowance('poem_write')$$,
   '23514', null,
@@ -106,6 +120,18 @@ select is(
   public.consume_write_allowance('profile_write'),
   true,
   'another user has their own profile_write count'
+);
+
+select is(
+  (select bool_and(public.consume_write_allowance('collection_edit')) from generate_series(1, 11)),
+  false,
+  'B spends the collection_edit limit'
+);
+
+select is(
+  public.consume_write_allowance('poem_edit'),
+  true,
+  'a spent collection_edit limit leaves poem_edit allowed'
 );
 
 reset role;
@@ -159,6 +185,12 @@ select is(
   public.consume_write_allowance('poem_edit'),
   true,
   'poem_edit: an attempt after the minute window is allowed again'
+);
+
+select is(
+  public.consume_write_allowance('collection_edit'),
+  true,
+  'collection_edit: an attempt after the minute window is allowed again'
 );
 
 select is(

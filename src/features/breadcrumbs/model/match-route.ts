@@ -1,4 +1,10 @@
 import { AUTHOR_EDITOR_PATH, AUTHORS_PAGE_TITLES, AUTHORS_PATH } from "@/features/authors";
+import {
+  COLLECTION_EDIT_SEGMENT,
+  COLLECTION_TRAIL_LABELS,
+  COLLECTIONS_SEGMENT,
+  NEW_COLLECTION_PATH,
+} from "@/features/collection-management";
 import { EDIT_SEGMENT, NEW_POEM_PATH, POEM_MANAGEMENT_TRAIL_LABELS } from "@/features/poem-management";
 import { POEMS_SEGMENT } from "@/features/poems";
 import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
@@ -22,6 +28,7 @@ export const STATIC_ROUTES: readonly RouteRow[] = [
   { path: AUTHOR_EDITOR_PATH, label: AUTHORS_PAGE_TITLES.authorEditor },
   { path: POEM_MANAGEMENT_PATH, label: POEM_MANAGEMENT_TRAIL_LABELS.list },
   { path: NEW_POEM_PATH, label: POEM_MANAGEMENT_TRAIL_LABELS.newPoem },
+  { path: NEW_COLLECTION_PATH, label: COLLECTION_TRAIL_LABELS.newCollection },
   { path: SIGN_IN_PATH, label: BREADCRUMB_LABELS.signIn },
   { path: SIGN_UP_PATH, label: BREADCRUMB_LABELS.signUp },
   { path: ABOUT_PATH, label: BREADCRUMB_LABELS.about },
@@ -31,6 +38,8 @@ export const STATIC_ROUTES: readonly RouteRow[] = [
 const AUTHOR_PAGE_PREFIX = `${AUTHORS_PATH}/`;
 
 const OWN_POEM_PREFIX = `${POEM_MANAGEMENT_PATH}/`;
+
+const OWN_COLLECTION_PREFIX = `${POEM_MANAGEMENT_PATH}/${COLLECTIONS_SEGMENT}/`;
 
 const NO_MATCH: RouteMatch = { kind: "none" };
 
@@ -66,6 +75,20 @@ function matchOwnPoemRoute(path: string): RouteMatch {
   return section === EDIT_SEGMENT ? { kind: "own-poem-edit", poemId } : NO_MATCH;
 }
 
+/**
+ * The owner's page of one collection, `[collectionId]` after the collections path, and its edit page,
+ * `[collectionId, "edit"]` (design D11). Checked before the poem rows, which would read `collections` as a
+ * poem id. The create page's own row wins before this; a malformed id reads as not-found, so no trail.
+ */
+function matchOwnCollectionRoute(path: string): RouteMatch {
+  if (!path.startsWith(OWN_COLLECTION_PREFIX)) return NO_MATCH;
+
+  const [collectionId, section, ...extra] = path.slice(OWN_COLLECTION_PREFIX.length).split("/");
+  if (collectionId === undefined || collectionId === "" || extra.length > 0) return NO_MATCH;
+  if (section === undefined) return { kind: "own-collection", collectionId };
+  return section === COLLECTION_EDIT_SEGMENT ? { kind: "own-collection-edit", collectionId } : NO_MATCH;
+}
+
 /** Maps a URL's segments to its trail by the route table; anything not in the table is `none`. */
 export function matchRoute(segments: readonly string[]): RouteMatch {
   const path = `/${segments.join("/")}`;
@@ -78,6 +101,8 @@ export function matchRoute(segments: readonly string[]): RouteMatch {
     return { kind: "static", items: [...parents, { kind: "current", label: row.label }] };
   }
 
+  const ownCollection = matchOwnCollectionRoute(path);
+  if (ownCollection.kind !== "none") return ownCollection;
   const ownPoem = matchOwnPoemRoute(path);
   if (ownPoem.kind !== "none") return ownPoem;
   return matchAuthorRoute(path);

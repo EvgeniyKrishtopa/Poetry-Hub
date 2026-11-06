@@ -1,0 +1,1 @@
+{"ts":"2026-11-04T16:55:19Z","change":"add-poem-collections","group":"full","gate":"architecture-review","verdict":"plausible","skipReason":"","durationMs":67229,"tokensTotal":137614,"tokensNote":"re-check on the resumed reviewer; the figure may include the first pass's context","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}

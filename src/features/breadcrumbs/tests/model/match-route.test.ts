@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { AUTHOR_EDITOR_PATH, AUTHORS_PATH } from "@/features/authors";
+import { NEW_COLLECTION_PATH } from "@/features/collection-management";
 import { NEW_POEM_PATH } from "@/features/poem-management";
 import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
 import { ABOUT_PATH, PRIVACY_PATH } from "@/shared/config/constants";
@@ -72,6 +73,7 @@ describe("matchRoute", () => {
       AUTHOR_EDITOR_PATH,
       POEM_MANAGEMENT_PATH,
       NEW_POEM_PATH,
+      NEW_COLLECTION_PATH,
       SIGN_IN_PATH,
       SIGN_UP_PATH,
       ABOUT_PATH,
@@ -102,6 +104,18 @@ describe("matchRoute", () => {
     });
   });
 
+  // implements FR-17 of add-poem-collections
+  it("maps the create page to «Создание сборника» under both management parents", () => {
+    expect(matchRoute(["account", "poems", "collections", "new"])).toEqual({
+      kind: "static",
+      items: [
+        { kind: "link", label: "Мастерская поэта", href: ACCOUNT_PATH },
+        { kind: "link", label: "Управление произведениями", href: POEM_MANAGEMENT_PATH },
+        { kind: "current", label: "Создание сборника" },
+      ],
+    });
+  });
+
   // implements FR-8 of add-poem-creation
   it("matches the owner's poem page by the poem id", () => {
     const poemId = "30000000-0000-4000-8000-000000000021";
@@ -114,6 +128,30 @@ describe("matchRoute", () => {
     const poemId = "30000000-0000-4000-8000-000000000021";
 
     expect(matchRoute(["account", "poems", poemId, "edit"])).toEqual({ kind: "own-poem-edit", poemId });
+  });
+
+  // implements FR-17 of add-poem-collections
+  it("matches the owner's collection page and its edit page by the collection id", () => {
+    const collectionId = "40000000-0000-4000-8000-000000000041";
+
+    expect(matchRoute(["account", "poems", "collections", collectionId])).toEqual({
+      kind: "own-collection",
+      collectionId,
+    });
+    expect(matchRoute(["account", "poems", "collections", collectionId, "edit"])).toEqual({
+      kind: "own-collection-edit",
+      collectionId,
+    });
+  });
+
+  // implements FR-17 of add-poem-collections
+  it.each([
+    [["account", "poems", "collections", ""]],
+    [["account", "poems", "collections", "", "edit"]],
+    [["account", "poems", "collections", "a", "b"]],
+    [["account", "poems", "collections", "a", "edit", "b"]],
+  ])("matches nothing for the collection path %j", (segments) => {
+    expect(matchRoute(segments)).toEqual({ kind: "none" });
   });
 
   // implements FR-8 of add-poem-creation

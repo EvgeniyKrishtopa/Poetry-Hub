@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { requireSession } from "@/features/auth";
 import { getOwnPublicAuthor, getPublicAuthorName } from "@/features/authors";
+import { getOwnCollectionTitle } from "@/features/collection-management";
 import { getAuthorPoem } from "@/features/poems";
 
 import { Breadcrumbs } from "../../components/Breadcrumbs/Breadcrumbs";
@@ -25,6 +26,11 @@ vi.mock("@/features/auth", async (importOriginal) => ({
 vi.mock("@/features/poems", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/poems")>()),
   getAuthorPoem: vi.fn(),
+}));
+
+vi.mock("@/features/collection-management", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/collection-management")>()),
+  getOwnCollectionTitle: vi.fn(),
 }));
 
 const ANNA_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
@@ -203,6 +209,33 @@ describe("BreadcrumbsLoader", () => {
     vi.mocked(getAuthorPoem).mockResolvedValue({ ok: false, reason: "not-found" });
 
     await expect(load(["account", "poems", "30000000-0000-4000-8000-000000000031"])).resolves.toBeNull();
+  });
+
+  // implements FR-17 of add-poem-collections
+  it("reads the collection title for its edit page and links the title to the collection page", async () => {
+    const collectionId = "40000000-0000-4000-8000-000000000041";
+    vi.mocked(getOwnCollectionTitle).mockResolvedValue({ ok: true, title: "Осенний цикл" });
+
+    const element = (await load(["account", "poems", "collections", collectionId, "edit"])) as ReactElement<{
+      items: unknown;
+    }>;
+
+    expect(getOwnCollectionTitle).toHaveBeenCalledWith(collectionId);
+    expect(requireSession).not.toHaveBeenCalled();
+    expect(element.props.items).toEqual([
+      { kind: "link", label: "Главная", href: "/" },
+      { kind: "link", label: "Мастерская поэта", href: "/account" },
+      { kind: "link", label: "Управление произведениями", href: "/account/poems" },
+      { kind: "link", label: "Осенний цикл", href: `/account/poems/collections/${collectionId}` },
+      { kind: "current", label: "Редактирование" },
+    ]);
+  });
+
+  // implements FR-17 of add-poem-collections
+  it("renders nothing for another author's collection", async () => {
+    vi.mocked(getOwnCollectionTitle).mockResolvedValue({ ok: false, reason: "not-found" });
+
+    await expect(load(["account", "poems", "collections", "40000000-0000-4000-8000-000000000051"])).resolves.toBeNull();
   });
 
   // implements FR-4, FR-6 of add-breadcrumbs

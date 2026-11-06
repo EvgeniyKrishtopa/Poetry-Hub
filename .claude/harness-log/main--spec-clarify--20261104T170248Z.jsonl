@@ -1,0 +1,4 @@
+{"ts":"2026-11-04T17:02:48Z","change":"add-poem-collections","kind":"finding","gate":"spec-clarify","finding":"FR-12 kept draft vs FR-15 freshness when the collection is deleted while its edit page is hidden","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-04T17:02:48Z","change":"add-poem-collections","kind":"finding","gate":"spec-clarify","finding":"FR-15 Back after a delete scenario expected a history entry the replace navigation removes","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-04T17:02:48Z","change":"add-poem-collections","kind":"finding","gate":"spec-clarify","finding":"FR-13 focus return to «Удалить сборник» while FR-14 disables it offline","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-04T17:02:48Z","change":"add-poem-collections","kind":"finding","gate":"spec-clarify","finding":"FR-6 single line breaks inside a description paragraph","outcome":"fixed","ruleNumber":""}
