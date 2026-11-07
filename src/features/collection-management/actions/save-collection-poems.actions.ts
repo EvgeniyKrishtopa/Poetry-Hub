@@ -33,7 +33,11 @@ async function saveCollectionPoems(input: SaveCollectionPoemsInput): Promise<Sav
   // 1. A malformed id names no collection; any other bad input is one the form can't produce. Nothing counted.
   if (!isCollectionId(input.collectionId)) return NOT_FOUND;
   const change = collectionPoemsChangeSchema.safeParse(input);
-  if (!change.success) return failed("unknown");
+  if (!change.success) {
+    // The form only sends ids from its own choices, so this points at a client bug. No ids in the line (NFR-5).
+    console.error("[collection-management] save collection poems input rejected");
+    return failed("unknown");
+  }
 
   // 2. Session.
   const session = await checkSession();

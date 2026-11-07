@@ -86,10 +86,15 @@ describe("saveCollectionPoemsAction", () => {
     ["a duplicate", [ADDED_ID, ADDED_ID], []],
     ["one poem both added and removed", [ADDED_ID], [ADDED_ID]],
   ])("answers %s as failed: unknown, counting nothing", async (_case, added, removed) => {
+    const logError = vi.spyOn(console, "error").mockImplementation(() => {});
+
     const result = await saveCollectionPoemsAction({ collectionId: COLLECTION_ID, added, removed });
 
     expect(result.data).toEqual({ status: "failed", failure: "unknown" });
     expect(result.validationErrors).toBeUndefined();
+    // implements NFR-5 of add-poems-to-collections
+    expect(logError).toHaveBeenCalledExactlyOnceWith("[collection-management] save collection poems input rejected");
+    logError.mockRestore();
     expect(getSessionState).not.toHaveBeenCalled();
     expectNothingCounted();
   });
