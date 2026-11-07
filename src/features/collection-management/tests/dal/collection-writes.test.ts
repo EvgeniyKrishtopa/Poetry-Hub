@@ -195,10 +195,11 @@ describe("consumeCollectionEditAllowance", () => {
   });
 
   // implements FR-10 of add-poem-collections
-  it("answers too-many-saves over the limit", async () => {
+  it("answers too-many-saves over the limit and warns", async () => {
     answer(ok(false));
 
     await expect(consumeCollectionEditAllowance()).resolves.toEqual({ ok: false, failure: "too-many-saves" });
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith("[collection-management] edit limit reached");
   });
 
   // implements FR-10, NFR-5 of add-poem-collections
