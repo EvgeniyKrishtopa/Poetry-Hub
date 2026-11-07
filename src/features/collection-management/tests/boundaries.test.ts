@@ -17,14 +17,16 @@ const NON_IMPORTING_FEATURES = [
 ];
 
 /**
- * The only modules with the client directive: the forms, the button row, the delete button, and the two notices.
- * The shared fields, the form hook, the leave guard, and the leave dialog run on the client through the forms.
+ * The only modules with the client directive: the forms, the button row, the delete and manage buttons, and the
+ * two notices. The shared fields, the form hook, the leave guard, and the leave dialog run on the client through
+ * the forms.
  */
 const CLIENT_MODULES = [
   "src/features/collection-management/components/CollectionActions/CollectionActions.tsx",
   "src/features/collection-management/components/CollectionListNotice/CollectionListNotice.tsx",
   "src/features/collection-management/components/DeleteCollectionButton/DeleteCollectionButton.tsx",
   "src/features/collection-management/components/EditCollectionForm/EditCollectionForm.tsx",
+  "src/features/collection-management/components/ManageCollectionPoemsButton/ManageCollectionPoemsButton.tsx",
   "src/features/collection-management/components/NewCollectionForm/NewCollectionForm.tsx",
   "src/features/collection-management/components/SavedCollectionNotice/SavedCollectionNotice.tsx",
 ];
@@ -48,7 +50,8 @@ function filesMatching(files: readonly string[], pattern: RegExp): string[] {
 
 describe("collection-management boundaries", () => {
   // implements NFR-2 of add-poem-collections
-  it("keeps client modules to the forms, the button row, the delete button, and the two notices", () => {
+  // implements NFR-2 of add-poems-to-collections: the collection page's poem list stays a server module
+  it("keeps client modules to the forms, the button row, the delete and manage buttons, and the two notices", () => {
     const files = [...sourceFiles(FEATURE_DIR), ...sourceFiles(ROUTE_DIR)];
 
     expect(filesMatching(files, /^\s*["']use client["']/m).sort()).toEqual(CLIENT_MODULES);

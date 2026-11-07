@@ -70,18 +70,18 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 4. The collection page <!-- isolated -->
 
-- [ ] 4.1 (FR-2) `CollectionPoemList` and `CollectionContent` reading `getCollectionPoemChoices`;
+- [x] 4.1 (FR-2) `CollectionPoemList` and `CollectionContent` reading `getCollectionPoemChoices`;
   the choices failure throws (design D4).
   - Verify with `CollectionPoemList.test.tsx` (order, links to `/account/poems/<id>`, nothing when
     empty) and `CollectionContent.test.tsx` (list placement, button shown exactly when choices are
     non-empty, choices failure throws, existing cases unchanged).
-- [ ] 4.2 (FR-3, FR-9, NFR-4) `CollectionActions` with named slots and the manage button's error
+- [x] 4.2 (FR-3, FR-9, NFR-4) `CollectionActions` with named slots and the manage button's error
   below the row; `ManageCollectionPoemsButton` (design D4).
   - Verify with `ManageCollectionPoemsButton.test.tsx` and `CollectionActions.test.tsx`: each check
     outcome (push, the three alerts under the row, `/login`), focus kept on the button, the alert
     cleared on the next press, `aria-disabled` while offline, slow, or pending, button order edit →
     manage → delete; the delete button's existing tests pass.
-- [ ] 4.3 (NFR-2, NFR-3) Docs: `docs/architecture.md` (the collection page's new pieces, the
+- [x] 4.3 (NFR-2, NFR-3) Docs: `docs/architecture.md` (the collection page's new pieces, the
   check action, `ownPoemPagePath` named next to its twin `ownPoemPath`).
 
 ## 5. The collection poems page <!-- judgement-heavy -->
