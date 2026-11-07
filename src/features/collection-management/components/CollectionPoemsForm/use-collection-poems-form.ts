@@ -62,10 +62,14 @@ interface FailureAlert {
   readonly alert: CollectionPoemsAlert;
 }
 
-/** The save sending now: a second caller joins it instead of sending another (FR-6, FR-10). */
+/**
+ * The save sending now, or answered but not yet committed: a second caller joins it instead of sending another
+ * (FR-6, FR-10). `outcome` is set once the answer arrives, so a caller joining after it gets its callback at once.
+ */
 interface SaveInFlight {
   readonly promise: Promise<SaveCollectionPoemsOutcome>;
   readonly beforeHandled: BeforeSaveHandled[];
+  outcome?: SaveCollectionPoemsOutcome;
 }
 
 const REJECTED: SaveCollectionPoemsOutcome = { status: "rejected" };
@@ -107,8 +111,12 @@ export function useCollectionPoemsForm({ collectionId, choices }: CollectionPoem
   const [failureAlert, setFailureAlert] = useState<FailureAlert | null>(null);
   const handledAlertRef = useRef<FailureAlert | null>(null);
   const alertRef = useRef<HTMLDivElement>(null);
-  // Set synchronously on save: a double click, or the dialog opened meanwhile, joins it (FR-6, FR-10).
+  // Set synchronously on save: a double click, or the dialog opened meanwhile, joins it (FR-6, FR-10). Kept until
+  // the transition ends, since `isPending` stays true after the answer until the outcome commits.
   const inFlightRef = useRef<SaveInFlight | null>(null);
+  useEffect(() => {
+    if (!isPending) inFlightRef.current = null;
+  }, [isPending]);
   // The transition's closure holds the status of the render that started it; the rejection reads the latest.
   const connectionRef = useRef(connection);
   useEffect(() => {
@@ -168,7 +176,11 @@ export function useCollectionPoemsForm({ collectionId, choices }: CollectionPoem
   function save(beforeHandled?: BeforeSaveHandled): Promise<SaveCollectionPoemsOutcome> {
     const inFlight = inFlightRef.current;
     if (inFlight !== null) {
-      if (beforeHandled !== undefined) inFlight.beforeHandled.push(beforeHandled);
+      if (beforeHandled !== undefined) {
+        // Answered already: run the callback now, still before the outcome commits (Gate 1 C1).
+        if (inFlight.outcome === undefined) inFlight.beforeHandled.push(beforeHandled);
+        else beforeHandled(inFlight.outcome);
+      }
       return inFlight.promise;
     }
     // The button and the dialog's save are disabled here; nothing is sent, as when the request never left.
@@ -182,11 +194,12 @@ export function useCollectionPoemsForm({ collectionId, choices }: CollectionPoem
     const promise = new Promise<SaveCollectionPoemsOutcome>((resolve) => {
       settle = resolve;
     });
-    inFlightRef.current = { promise, beforeHandled: listeners };
+    const inFlightSave: SaveInFlight = { promise, beforeHandled: listeners };
+    inFlightRef.current = inFlightSave;
 
     startTransition(async () => {
       const outcome = await sendSave(collectionId, diff);
-      inFlightRef.current = null;
+      inFlightSave.outcome = outcome;
       for (const listener of listeners) listener(outcome);
       // Updates after an `await` leave the transition unless wrapped again: unwrapped, the reset would paint the
       // old stored selection before the refreshed payload commits (Gate 1 P1).

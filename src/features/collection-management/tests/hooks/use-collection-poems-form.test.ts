@@ -92,6 +92,33 @@ describe("useCollectionPoemsForm", () => {
     await expect(second).resolves.toEqual({ status: "saved" });
   });
 
+  // implements FR-10 of add-poems-to-collections: a caller joining after the answer, before it commits
+  it("lets a caller join a save that has answered but not yet committed, running its callback at once", async () => {
+    const call = deferred<ActionResponse>();
+    vi.mocked(saveCollectionPoemsAction).mockReturnValue(call.promise);
+    const { result } = renderForm();
+    act(() => result.current.toggle(FREE.id));
+    act(() => {
+      void result.current.save();
+    });
+    // Still pending in this render: the dialog would open now and join the save.
+    const pendingRender = result.current;
+    expect(pendingRender.isPending).toBe(true);
+
+    // The answer arrives outside `act`, so React hasn't committed the outcome yet.
+    call.resolve(SAVED);
+    await Promise.resolve();
+    await Promise.resolve();
+    const seen = vi.fn();
+    const late = pendingRender.save(seen);
+
+    expect(seen).toHaveBeenCalledExactlyOnceWith({ status: "saved" });
+    await expect(late).resolves.toEqual({ status: "saved" });
+    expect(saveCollectionPoemsAction).toHaveBeenCalledOnce();
+    await act(async () => undefined);
+    expect(result.current.isPending).toBe(false);
+  });
+
   // implements FR-10 of add-poems-to-collections: the dialog answers before the form resets (Gate 1 C1)
   it("runs every joined caller's callback with the outcome before the selection resets", async () => {
     const call = deferred<ActionResponse>();
