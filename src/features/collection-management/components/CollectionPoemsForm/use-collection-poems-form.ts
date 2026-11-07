@@ -200,11 +200,15 @@ export function useCollectionPoemsForm({ collectionId, choices }: CollectionPoem
     startTransition(async () => {
       const outcome = await sendSave(collectionId, diff);
       inFlightSave.outcome = outcome;
-      for (const listener of listeners) listener(outcome);
-      // Updates after an `await` leave the transition unless wrapped again: unwrapped, the reset would paint the
-      // old stored selection before the refreshed payload commits (Gate 1 P1).
-      startTransition(() => handleOutcome(outcome));
-      settle(outcome);
+      try {
+        for (const listener of listeners) listener(outcome);
+        // Updates after an `await` leave the transition unless wrapped again: unwrapped, the reset would paint the
+        // old stored selection before the refreshed payload commits (Gate 1 P1).
+        startTransition(() => handleOutcome(outcome));
+      } finally {
+        // Whatever threw above, every waiting caller gets its answer: the dialog never stays stuck sending.
+        settle(outcome);
+      }
     });
     return promise;
   }

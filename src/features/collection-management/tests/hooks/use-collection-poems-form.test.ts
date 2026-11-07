@@ -119,6 +119,34 @@ describe("useCollectionPoemsForm", () => {
     expect(result.current.isPending).toBe(false);
   });
 
+  // implements FR-10 of add-poems-to-collections: a failing callback never leaves a caller waiting
+  it("still answers every caller when a callback throws", async () => {
+    const call = deferred<ActionResponse>();
+    vi.mocked(saveCollectionPoemsAction).mockReturnValue(call.promise);
+    const { result } = renderForm();
+    act(() => result.current.toggle(FREE.id));
+    const failingCallback = () => {
+      throw new Error("callback failed");
+    };
+
+    let pending: Promise<SaveCollectionPoemsOutcome> = Promise.resolve({ status: "rejected" });
+    act(() => {
+      pending = result.current.save(failingCallback);
+    });
+    // The throw surfaces from the transition (React reports it); only the answer to the caller matters here.
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      await act(async () => {
+        call.resolve(SAVED);
+        await pending;
+      });
+    } catch {
+      // The transition's own rethrow.
+    }
+
+    await expect(pending).resolves.toEqual({ status: "saved" });
+  });
+
   // implements FR-10 of add-poems-to-collections: the dialog answers before the form resets (Gate 1 C1)
   it("runs every joined caller's callback with the outcome before the selection resets", async () => {
     const call = deferred<ActionResponse>();
