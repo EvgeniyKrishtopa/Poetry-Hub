@@ -331,6 +331,11 @@ No client role SHALL read which collection a poem belongs to from the poems tabl
 - **WHEN** they select `collection_id` from the poems table, update it directly, and call the read and save operations with own and others' collection and poem ids
 - **THEN** every direct select of `collection_id` and every direct update fails; `anon` can call nothing; another author's ids answer `not-found` or `stale` and change nothing; and a save with one invalid poem among valid ones changes nothing
 
+#### Scenario: Malformed save input (added by defect fix)
+- **GIVEN** a signed-in author calling the save operation directly
+- **WHEN** either list is missing, holds an empty element, a duplicate, or a nested list, both are empty, one poem is in both, or a list has more than 1000 poems
+- **THEN** the call is rejected as invalid input (22023), the same way for every one of these, and nothing changes
+
 ### Requirement: Accessible collection poems flow (add-poems-to-collections NFR-4)
 The checkboxes SHALL be a `<fieldset>` whose `<legend>` «Произведения» names the group (it may be visually hidden), each checkbox with a visible label tied to it; the failure and manage-error alerts SHALL use `role="alert"`, the saved notice and the connection notice `role="status"`; the leave dialog SHALL be the shared `Dialog` with its title as its accessible name; every action SHALL be reachable and usable by keyboard alone.
 
