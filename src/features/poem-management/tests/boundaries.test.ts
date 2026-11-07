@@ -57,7 +57,7 @@ const FORM_FILES = {
 
 // collection-management keeps its own copy of the guard (add-poem-collections design D12); the list is sorted.
 const LEAVE_GUARD_FILES = [
-  "src/features/collection-management/components/EditCollectionForm/use-leave-guard.ts",
+  "src/features/collection-management/hooks/use-leave-guard.ts",
   "src/features/poem-management/components/EditPoemForm/use-leave-guard.ts",
 ];
 

@@ -59,7 +59,7 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 3. One leave guard for the feature (no visible change) <!-- isolated -->
 
-- [ ] 3.1 (FR-10, NFR-3) Move `EditCollectionForm/use-leave-guard.ts` to `hooks/use-leave-guard.ts`
+- [x] 3.1 (FR-10, NFR-3) Move `EditCollectionForm/use-leave-guard.ts` to `hooks/use-leave-guard.ts`
   and its test from `tests/components/` to `tests/hooks/`; `onBlocked` receives the clicked link's
   `pathname + search + hash`; the edit form's prompt ignores it. Update the expected `beforeunload`
   path in both `poem-management/tests/boundaries.test.ts` and

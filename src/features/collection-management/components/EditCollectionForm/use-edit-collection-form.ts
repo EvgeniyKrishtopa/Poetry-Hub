@@ -9,6 +9,7 @@ import { useSessionExpiredNotice } from "@/shared/lib/one-time-notice/session-ex
 import { updateCollectionAction } from "../../actions/update-collection.actions";
 import { useCollectionForm } from "../../hooks/use-collection-form";
 import type { CollectionFormState } from "../../hooks/use-collection-form.types";
+import { useLeaveGuard } from "../../hooks/use-leave-guard";
 import type { CollectionFormValues } from "../../model/collection-form-values";
 import { useCollectionListNotice } from "../../model/collection-list-notice-ui.store";
 import { UPDATE_COLLECTION_STATUS } from "../../model/collection-management.constants";
@@ -18,7 +19,6 @@ import { useSavedCollectionNotice } from "../../model/saved-collection-notice-ui
 import type { CollectionLeaveDialogProps } from "../CollectionLeaveDialog/CollectionLeaveDialog.types";
 
 import type { EditCollectionFormProps } from "./EditCollectionForm.types";
-import { useLeaveGuard } from "./use-leave-guard";
 import { useLeavePrompt } from "./use-leave-prompt";
 
 /** A failure the alert above the form shows; the session-expired one navigates instead (design D6). */

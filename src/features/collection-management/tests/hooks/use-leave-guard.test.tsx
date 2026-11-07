@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { askBeforeLeaving, useLeaveBlock } from "@/shared/lib/leave-guard/leave-block.store";
 import { LEAVE_ANSWER, type LeaveAnswer } from "@/shared/lib/leave-guard/leave-guard.constants";
 
-import { type LeaveGuardOptions, useLeaveGuard } from "../../components/EditCollectionForm/use-leave-guard";
+import { type LeaveGuardOptions, useLeaveGuard } from "../../hooks/use-leave-guard";
 
 const ALLOWED_PATH = "/account/poems/collections/c1";
 const BLOCKED_PATH = "/authors";
@@ -83,6 +83,15 @@ describe("useLeaveGuard (collection-management)", () => {
 
       expect(result).toEqual({ followed: false, bubbled: false });
       expect(onBlocked).toHaveBeenCalledTimes(1);
+    });
+
+    // implements FR-10 of add-poems-to-collections
+    it("passes onBlocked the clicked link's relative path with its query and hash, never the absolute href", () => {
+      const { onBlocked } = renderGuard(true);
+
+      click(addLink(`${window.location.origin}${BLOCKED_PATH}?page=2#poems`));
+
+      expect(onBlocked).toHaveBeenCalledWith(`${BLOCKED_PATH}?page=2#poems`);
     });
 
     it("lets a link to an allowed path through", () => {

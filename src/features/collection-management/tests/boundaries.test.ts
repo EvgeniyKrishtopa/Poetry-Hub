@@ -29,7 +29,7 @@ const CLIENT_MODULES = [
   "src/features/collection-management/components/SavedCollectionNotice/SavedCollectionNotice.tsx",
 ];
 
-const LEAVE_GUARD_FILE = "src/features/collection-management/components/EditCollectionForm/use-leave-guard.ts";
+const LEAVE_GUARD_FILE = "src/features/collection-management/hooks/use-leave-guard.ts";
 
 const SOURCE_FILE = /\.tsx?$/;
 // The same colour pattern as poem-management's boundaries test: hex, rgb(a), hsl(a), and arbitrary colour classes.
@@ -74,7 +74,8 @@ describe("collection-management boundaries", () => {
   });
 
   // implements NFR-3 of add-poem-collections
-  it("listens for beforeunload only in the edit form's leave guard", () => {
+  // implements NFR-3 of add-poems-to-collections: one guard for the edit and poems pages
+  it("listens for beforeunload only in the feature's one leave guard", () => {
     expect(filesMatching(sourceFiles(FEATURE_DIR), /\bbeforeunload\b/)).toEqual([LEAVE_GUARD_FILE]);
   });
 
