@@ -1,9 +1,11 @@
 import type { SupabaseFailure } from "@/shared/lib/supabase/classify-error";
 
 import type {
+  CHECK_COLLECTION_POEMS_STATUS,
   CREATE_COLLECTION_STATUS,
   DELETE_COLLECTION_STATUS,
   LEAVE_DIALOG_REASON,
+  SAVE_COLLECTION_POEMS_STATUS,
   UPDATE_COLLECTION_STATUS,
 } from "./collection-management.constants";
 
@@ -99,3 +101,71 @@ export interface SavedCollectionNotice {
 }
 
 export type LeaveDialogReason = (typeof LEAVE_DIALOG_REASON)[keyof typeof LEAVE_DIALOG_REASON];
+
+/** One checkbox of the collection poems page: a poem in this collection (`selected`) or a free one (add-poems-to-collections D3). */
+export interface CollectionPoemChoice {
+  readonly id: string;
+  readonly title: string;
+  readonly selected: boolean;
+}
+
+/** One of the author's poems that is in a collection, for the `/account/poems` section (add-poems-to-collections D3, D10). */
+export interface CollectedPoem {
+  readonly collectionId: string;
+  readonly id: string;
+  readonly title: string;
+}
+
+export type CollectionPoemChoicesResult =
+  | { readonly ok: true; readonly choices: readonly CollectionPoemChoice[] }
+  | { readonly ok: false };
+
+export type CollectedPoemsResult =
+  | { readonly ok: true; readonly poems: readonly CollectedPoem[] }
+  | { readonly ok: false };
+
+export type CheckCollectionPoemsResult =
+  | { readonly status: typeof CHECK_COLLECTION_POEMS_STATUS.ready }
+  | { readonly status: typeof CHECK_COLLECTION_POEMS_STATUS.notFound }
+  | { readonly status: typeof CHECK_COLLECTION_POEMS_STATUS.nothingToManage }
+  | { readonly status: typeof CHECK_COLLECTION_POEMS_STATUS.failed; readonly failure: ServiceFailure };
+
+/** The manage button's alert under the row: every check outcome but `ready` and a lost session (add-poems-to-collections D4). */
+export type ManageCollectionPoemsError = "not-found" | "nothing-to-manage" | "unavailable";
+
+export type SaveCollectionPoemsFailure = ServiceFailure | "too-many-saves" | "not-public";
+
+export type SaveCollectionPoemsResult =
+  | { readonly status: typeof SAVE_COLLECTION_POEMS_STATUS.saved }
+  | { readonly status: typeof SAVE_COLLECTION_POEMS_STATUS.stale }
+  | { readonly status: typeof SAVE_COLLECTION_POEMS_STATUS.notFound }
+  | { readonly status: typeof SAVE_COLLECTION_POEMS_STATUS.failed; readonly failure: SaveCollectionPoemsFailure };
+
+/** A save as the form saw it: the action's answer, or `rejected` when the call never got one (network); the form has
+ * already shown the offline notice or the unknown alert (add-poems-to-collections D6). */
+export type SaveCollectionPoemsOutcome = SaveCollectionPoemsResult | { readonly status: "rejected" };
+
+/** What a save sends: the poems newly checked and newly unchecked (add-poems-to-collections D5, D6). */
+export interface SelectionDiff {
+  readonly added: readonly string[];
+  readonly removed: readonly string[];
+}
+
+export interface SaveOwnCollectionPoemsInput extends SelectionDiff {
+  readonly collectionId: string;
+}
+
+/** `save_my_collection_poems()`'s answer, or a classified failure (add-poems-to-collections D2). */
+export type SaveOwnCollectionPoemsResult =
+  | { readonly ok: true; readonly status: "saved" | "stale" | "not-found" }
+  | { readonly ok: false; readonly failure: ServiceFailure };
+
+/** The `collection_poems_save` scope's answer (add-poems-to-collections D2, D6). */
+export type CollectionPoemsSaveAllowance =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly failure: ServiceFailure | "too-many-saves" };
+
+/** Why the collection poems leave dialog is open: a blocked link with where it led, or the header's sign-out (add-poems-to-collections D7). */
+export type CollectionPoemsLeaveReason =
+  | { readonly kind: "link"; readonly href: string }
+  | { readonly kind: "sign-out" };

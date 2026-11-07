@@ -1,5 +1,10 @@
 import { COLLECTION_DESCRIPTION_MAX_LENGTH, COLLECTION_TITLE_MAX_LENGTH } from "./collection-management.constants";
-import type { CreateCollectionFailure, UpdateCollectionFailure } from "./collection-management.types";
+import type {
+  CreateCollectionFailure,
+  ManageCollectionPoemsError,
+  SaveCollectionPoemsFailure,
+  UpdateCollectionFailure,
+} from "./collection-management.types";
 
 // Every string of the proposal's UI copy table this feature shows, verbatim and in Russian.
 
@@ -87,8 +92,55 @@ export const LEAVE_DIALOG_COPY = {
   close: COLLECTION_PAGE_COPY.close,
 } as const;
 
-/** Breadcrumb labels: the create page and the edit page's last item (FR-17). */
+/** Breadcrumb labels: the create page's, the edit page's, and the poems page's last item (FR-17; add-poems-to-collections FR-14). */
 export const COLLECTION_TRAIL_LABELS = {
   newCollection: "Создание сборника",
   editCollection: "Редактирование",
+  collectionPoems: "Произведения сборника",
+} as const;
+
+/** The collection page's poem list and its manage button (add-poems-to-collections FR-2, FR-3). */
+export const COLLECTION_POEMS_ON_PAGE_COPY = {
+  poemsHeading: "Произведения",
+  manage: "Произведения сборника",
+} as const;
+
+/** The manage button's alert under the row (add-poems-to-collections FR-3). */
+export const MANAGE_COLLECTION_POEMS_ERRORS: Readonly<Record<ManageCollectionPoemsError, string>> = {
+  "not-found": COLLECTION_LIST_COPY.alreadyDeleted,
+  "nothing-to-manage": "Нет свободных произведений для добавления в сборник.",
+  unavailable: "Не удалось открыть произведения сборника. Попробуйте позже.",
+};
+
+/** The collection poems page (add-poems-to-collections FR-4 – FR-8). */
+export const COLLECTION_POEMS_PAGE_COPY = {
+  heading: "Произведения сборника",
+  hint: (title: string) =>
+    `Отметьте произведения сборника «${title}». Произведение может входить только в один сборник.`,
+  legend: "Произведения",
+  empty: MANAGE_COLLECTION_POEMS_ERRORS["nothing-to-manage"],
+  save: "Сохранить выбранное",
+  savePending: EDIT_COLLECTION_COPY.submitPending,
+  saved: "Произведения сборника сохранены.",
+  backToCollection: EDIT_COLLECTION_COPY.backToCollection,
+  stale: "Часть произведений уже недоступна: список обновлён. Отметьте произведения заново.",
+  loading: COLLECTION_FORM_COPY.loading,
+} as const;
+
+/** The collection poems page's failure alert: the edit form's texts (add-poems-to-collections FR-7, FR-8). */
+export const SAVE_COLLECTION_POEMS_FAILURE_MESSAGES: Readonly<
+  Record<Exclude<SaveCollectionPoemsFailure, "unauthenticated">, string>
+> = UPDATE_COLLECTION_FAILURE_MESSAGES;
+
+/** The collection poems page's leave dialog (add-poems-to-collections FR-10). */
+export const COLLECTION_POEMS_LEAVE_COPY = {
+  title: LEAVE_DIALOG_COPY.title,
+  linkBody: "Сохранить выбранные произведения перед уходом?",
+  signOutBody: "Сохранить выбранные произведения перед выходом?",
+  save: EDIT_COLLECTION_COPY.submit,
+  savePending: EDIT_COLLECTION_COPY.submitPending,
+  leaveLink: "Уйти без сохранения",
+  leaveSignOut: LEAVE_DIALOG_COPY.leave,
+  stay: "Остаться",
+  close: COLLECTION_PAGE_COPY.close,
 } as const;
