@@ -12,6 +12,7 @@ import { saveCollectionPoemsAction } from "../../actions/save-collection-poems.a
 import { CollectionPoemsForm } from "../../components/CollectionPoemsForm/CollectionPoemsForm";
 import {
   COLLECTION_POEMS_LEAVE_COPY,
+  COLLECTION_POEMS_PAGE_COPY,
   SAVE_COLLECTION_POEMS_FAILURE_MESSAGES,
 } from "../../model/collection-management-messages";
 import type { CollectionPoemChoice, SaveCollectionPoemsResult } from "../../model/collection-management.types";
@@ -260,6 +261,21 @@ describe("CollectionPoemsForm: the link form", () => {
     // The outcome commits in its own transition, after the dialog has closed.
     expect(await screen.findByRole("alert")).toHaveTextContent(SAVE_COLLECTION_POEMS_FAILURE_MESSAGES.unavailable);
     expect(box("Осенний сад")).toBeChecked();
+  });
+
+  // implements FR-8, FR-10 of add-poems-to-collections
+  it("closes on a stale save from the dialog and shows the stale alert on the page, without following the link", async () => {
+    vi.mocked(saveCollectionPoemsAction).mockResolvedValueOnce(respond({ status: "stale" }));
+    const { user } = renderPage();
+    await changeSelection(user);
+    await user.click(link("Наши авторы"));
+
+    await user.click(button(COPY.save));
+
+    expect(leaveDialog()).not.toHaveAttribute("open");
+    expect(push).not.toHaveBeenCalled();
+    // The outcome commits in its own transition, after the dialog has closed.
+    expect(await screen.findByRole("alert")).toHaveTextContent(COLLECTION_POEMS_PAGE_COPY.stale);
   });
 
   // implements FR-10 of add-poems-to-collections
