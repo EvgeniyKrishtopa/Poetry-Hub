@@ -24,6 +24,7 @@ const NON_IMPORTING_FEATURES = [
 const CLIENT_MODULES = [
   "src/features/collection-management/components/CollectionActions/CollectionActions.tsx",
   "src/features/collection-management/components/CollectionListNotice/CollectionListNotice.tsx",
+  "src/features/collection-management/components/CollectionPoemsForm/CollectionPoemsForm.tsx",
   "src/features/collection-management/components/DeleteCollectionButton/DeleteCollectionButton.tsx",
   "src/features/collection-management/components/EditCollectionForm/EditCollectionForm.tsx",
   "src/features/collection-management/components/ManageCollectionPoemsButton/ManageCollectionPoemsButton.tsx",

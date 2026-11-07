@@ -268,6 +268,33 @@ describe("buildTrail on the poem management routes", () => {
     });
   });
 
+  // implements FR-14 of add-poems-to-collections
+  it("ends the collection poems trail on «Произведения сборника», after the title linking to the collection page", () => {
+    const match = { kind: "own-collection-poems", collectionId: COLLECTION_ID } as const;
+
+    expect(buildTrail(match, undefined, undefined, undefined, { ok: true, title: "Осенний цикл" })).toEqual({
+      kind: "shown",
+      items: [
+        HOME,
+        ACCOUNT_LINK,
+        MANAGEMENT_LINK,
+        { kind: "link", label: "Осенний цикл", href: `/account/poems/collections/${COLLECTION_ID}` },
+        { kind: "current", label: "Произведения сборника" },
+      ],
+    });
+  });
+
+  // implements FR-14 of add-poems-to-collections
+  it.each([
+    [{ ok: false, reason: "not-found" }],
+    [{ ok: false, reason: "unavailable" }],
+    [undefined],
+  ] as const)("shows no collection poems trail when the title result is %j", (title) => {
+    const match = { kind: "own-collection-poems", collectionId: COLLECTION_ID } as const;
+
+    expect(buildTrail(match, undefined, undefined, undefined, title)).toEqual({ kind: "none" });
+  });
+
   // implements FR-17 of add-poem-collections
   it.each([
     ["own-collection", { ok: false, reason: "not-found" }],

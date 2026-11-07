@@ -1,7 +1,21 @@
+import { Suspense } from "react";
+
+import { CONTENT_LANG } from "@/shared/config/constants";
+
+import { COLLECTION_POEMS_PAGE_COPY } from "../../model/collection-management-messages";
+import { CollectionPoemsContent } from "../CollectionPoemsContent/CollectionPoemsContent";
+import { CollectionPoemsSkeleton } from "../CollectionPoemsSkeleton/CollectionPoemsSkeleton";
+
 import type { CollectionPoemsPageProps } from "./CollectionPoemsPage.types";
 
-/** The heading in the shell and the content inside a Suspense boundary with the skeleton (add-poems-to-collections D5). */
+/** `/account/poems/collections/<id>/poems`: the heading in the static shell, the content in Suspense (add-poems-to-collections D5). */
 export function CollectionPoemsPage({ collectionId }: CollectionPoemsPageProps) {
-  void collectionId;
-  return null;
+  return (
+    <div lang={CONTENT_LANG} className="flex flex-col gap-8">
+      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{COLLECTION_POEMS_PAGE_COPY.heading}</h1>
+      <Suspense fallback={<CollectionPoemsSkeleton />}>
+        <CollectionPoemsContent collectionId={collectionId} />
+      </Suspense>
+    </div>
+  );
 }

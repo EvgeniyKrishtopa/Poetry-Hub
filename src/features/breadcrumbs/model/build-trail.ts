@@ -60,20 +60,27 @@ function ownPoemTrail(match: OwnPoemMatch, title: OwnPoemTitleResult | undefined
   }
 }
 
-type OwnCollectionMatch = Extract<RouteMatch, { kind: "own-collection" | "own-collection-edit" }>;
+type OwnCollectionMatch = Extract<RouteMatch, { kind: "own-collection" | "own-collection-edit" | "own-collection-poems" }>;
 
-/** The title as the current item on the collection page; on its edit page a link to it, then the edit label. */
+/** The last item under a collection's own page: the edit page's label or the poems page's. */
+const COLLECTION_SUBPAGE_LABELS = {
+  "own-collection-edit": COLLECTION_TRAIL_LABELS.editCollection,
+  "own-collection-poems": COLLECTION_TRAIL_LABELS.collectionPoems,
+} as const;
+
+/** The title as the current item on the collection page; on its edit or poems page a link to it, then that page's label. */
 function ownCollectionItems(match: OwnCollectionMatch, title: string): readonly BreadcrumbItem[] {
   if (match.kind === "own-collection") return [{ kind: "current", label: title }];
   return [
     { kind: "link", label: title, href: collectionPath(match.collectionId) },
-    { kind: "current", label: COLLECTION_TRAIL_LABELS.editCollection },
+    { kind: "current", label: COLLECTION_SUBPAGE_LABELS[match.kind] },
   ];
 }
 
 /**
- * The collection and edit trails (design D11): the title items after the management link. Unlike the poem
- * trail, any failed read hides the trail, whether the collection isn't the author's or can't be read.
+ * The collection, edit, and poems trails (design D11, add-poems-to-collections D11): the title items after the
+ * management link. Unlike the poem trail, any failed read hides the trail, whether the collection isn't the
+ * author's or can't be read.
  */
 function ownCollectionTrail(match: OwnCollectionMatch, title: OwnCollectionTitleResult | undefined): Trail {
   if (title?.ok !== true) return NO_TRAIL;
@@ -116,7 +123,7 @@ export function buildTrail(
   if (match.kind === "none") return NO_TRAIL;
   if (match.kind === "static") return { kind: "shown", items: [HOME_ITEM, ...match.items] };
   if (match.kind === "own-poem" || match.kind === "own-poem-edit") return ownPoemTrail(match, ownPoemTitle);
-  if (match.kind === "own-collection" || match.kind === "own-collection-edit") {
+  if (match.kind === "own-collection" || match.kind === "own-collection-edit" || match.kind === "own-collection-poems") {
     return ownCollectionTrail(match, ownCollectionTitle);
   }
 

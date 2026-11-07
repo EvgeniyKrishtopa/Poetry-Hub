@@ -86,26 +86,26 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 5. The collection poems page <!-- judgement-heavy -->
 
-- [ ] 5.1 (FR-4, FR-13, FR-14) `CollectionPoemsPage`, `CollectionPoemsContent`,
+- [x] 5.1 (FR-4, FR-13, FR-14) `CollectionPoemsPage`, `CollectionPoemsContent`,
   `CollectionPoemsSkeleton`; the route file; `matchOwnCollectionRoute`'s `own-collection-poems`
   match, its trail, and the slot page (design D5, D11; `app/tests/breadcrumbs-slot.test.ts` requires
   a slot page for every new page).
   - Verify with `CollectionPoemsContent.test.tsx` (`requireSession()` first, `unknown` →
     `SessionUnavailableAlert`, `notFound()`, the throw, the hint with the title) and the `matchRoute` / trail tests for the new path and the not-found case.
-- [ ] 5.2 (FR-5, FR-6, FR-8, FR-9, NFR-4) `CollectionPoemsForm`, `use-collection-poems-form.ts`
+- [x] 5.2 (FR-5, FR-6, FR-8, FR-9, NFR-4) `CollectionPoemsForm`, `use-collection-poems-form.ts`
   (design D5, D6).
   - Verify with `use-collection-poems-form.test.ts` and `CollectionPoemsForm.test.tsx`: change
     detection, the empty state with the back link (also after a `stale` save, below the alert), the saved state (disabled button, notice, link) and its reset on the next change,
     each outcome's alert, focus, navigation and store, `draft` following the stored set after
     `saved` and `stale` (reset inside the action's transition), the offline and slow freeze, the dropped-connection rejection.
-- [ ] 5.3 (FR-10, NFR-4) `use-collection-poems-leave-prompt.ts` and `CollectionPoemsLeaveDialog`,
+- [x] 5.3 (FR-10, NFR-4) `use-collection-poems-leave-prompt.ts` and `CollectionPoemsLeaveDialog`,
   wired to the moved guard (design D7).
   - Verify with prompt and dialog tests: the three buttons in both forms, save-then-navigate and
     save-then-sign-out, a failed save closing the dialog with the alert on the page, offline focus
     on «Остаться», `stay`/`dismissed` answers, the guard off before `router.push`, and the sign-out
     form answering `leave` before the draft resets (the draft reset before the dialog's `close`
     event still yields exactly one sign-out; design D7, Gate 1 C1).
-- [ ] 5.4 (NFR-2) Docs: `docs/architecture.md` (the new page and route) and
+- [x] 5.4 (NFR-2) Docs: `docs/architecture.md` (the new page and route) and
   `docs/state-management.md` (the form's `draft | null` selection that follows the stored set after
   `refresh()`).
 
