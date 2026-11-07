@@ -12,7 +12,7 @@ import type { CollectionField, CollectionFieldErrors } from "./collection-manage
 const LINE_BREAKS = /\r\n?/g;
 
 /** The canonical lowercase UUID spelling the database returns; any other spelling names no row. */
-export const LOWERCASE_UUID =/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+export const LOWERCASE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 function normalizeLineBreaks(value: string): string {
   return value.replace(LINE_BREAKS, "\n");
