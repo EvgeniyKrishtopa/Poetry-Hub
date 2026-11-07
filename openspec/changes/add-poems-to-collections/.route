@@ -1,0 +1,2 @@
+full
+# more than one module: yes (collection-management, poem data in the database, breadcrumbs); data schema: yes (poems.collection_id); contract: yes (new RPCs, new server actions, MyPoemsPage section content)

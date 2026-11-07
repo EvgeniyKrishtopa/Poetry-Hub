@@ -1,0 +1,4 @@
+{"ts":"2026-11-07T12:12:56Z","change":"add-poems-to-collections","kind":"finding","gate":"spec-clarify","finding":"Dialog opened while a save is already sending: wait for that save or offer a fresh choice","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-07T12:12:56Z","change":"add-poems-to-collections","kind":"finding","gate":"spec-clarify","finding":"Kept poems page with an unsaved draft after another collection's save: draft over fresh list or fresh list","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-07T12:12:56Z","change":"add-poems-to-collections","kind":"finding","gate":"spec-clarify","finding":"Back/Forward after a save: restore the saved state or open fresh","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-07T12:12:56Z","change":"add-poems-to-collections","kind":"finding","gate":"spec-clarify","finding":"Stale save that empties the list: keep the stale alert above the empty state or drop it","outcome":"fixed","ruleNumber":""}
