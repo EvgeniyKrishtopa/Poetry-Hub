@@ -1,15 +1,17 @@
 -- Per-user write limits: consume_write_allowance() and the counter table's privileges
--- (add-author-profiles, design D13), the poem_edit scope (edit-poem, design D2, D13), and the collection_edit
--- scope (add-poem-collections, design D2, D13).
+-- (add-author-profiles, design D13), the poem_edit scope (edit-poem, design D2, D13), the collection_edit
+-- scope (add-poem-collections, design D2, D13), and the collection_poems_save scope (add-poems-to-collections,
+-- design D2, D13).
 -- implements FR-21, NFR-2 of add-author-profiles
 -- implements FR-7 of edit-poem
 -- implements FR-10 of add-poem-collections
+-- implements FR-7 of add-poems-to-collections
 -- Run against the local stack: npx supabase test db
 begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(26);
+select plan(30);
 
 -- Fixtures, written as the superuser.
 insert into auth.users (id, email) values
@@ -79,6 +81,18 @@ select is(
   'collection_edit: the 11th call in the window is refused'
 );
 
+-- A's collection_edit is already spent: collection_poems_save counts on its own.
+select ok(
+  (select bool_and(public.consume_write_allowance('collection_poems_save')) from generate_series(1, 10)),
+  'collection_poems_save: calls 1-10 are allowed, though collection_edit is spent'
+);
+
+select is(
+  public.consume_write_allowance('collection_poems_save'),
+  false,
+  'collection_poems_save: the 11th call in the window is refused'
+);
+
 select throws_ok(
   $$select public.consume_write_allowance('poem_write')$$,
   '23514', null,
@@ -132,6 +146,12 @@ select is(
   public.consume_write_allowance('poem_edit'),
   true,
   'a spent collection_edit limit leaves poem_edit allowed'
+);
+
+select is(
+  public.consume_write_allowance('collection_poems_save'),
+  true,
+  'a spent collection_edit limit leaves collection_poems_save allowed'
 );
 
 reset role;
@@ -191,6 +211,12 @@ select is(
   public.consume_write_allowance('collection_edit'),
   true,
   'collection_edit: an attempt after the minute window is allowed again'
+);
+
+select is(
+  public.consume_write_allowance('collection_poems_save'),
+  true,
+  'collection_poems_save: an attempt after the minute window is allowed again'
 );
 
 select is(

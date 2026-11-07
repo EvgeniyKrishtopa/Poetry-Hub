@@ -15,6 +15,10 @@ save of an own collection's edit (`20261104180000_collections.sql`; that change'
 Collections are private and expire no cache tag, so here the limit bounds the writes themselves, not
 cache churn.
 
+Scope added by `add-poems-to-collections` (2026-11-07): `collection_poems_save`, 10 per minute, one
+attempt per save on a collection poems page (`20261107140000_collection_poems.sql`; that change's design
+D2). The save changes existing poems, so it follows this ADR, not 0009.
+
 ## Context
 
 ADR 0005 made every reader write a Server Action that, on success, expires the public pages'
@@ -31,7 +35,7 @@ to the database. Every photo upload also costs bandwidth, Storage, and a new ima
    checks the limit before it reads the file's bytes.
 2. **The limits live in a Postgres function, not in app code.** `consume_write_allowance(scope)` is
    security definer, takes only the scope, resolves the caller from `auth.uid()`, and holds the
-   numbers (`profile_write` 10 per minute, `photo_upload` 5 per hour, `poem_edit` 10 per minute, `collection_edit` 10 per minute). Its counter table has RLS on,
+   numbers (`profile_write` 10 per minute, `photo_upload` 5 per hour, `poem_edit` 10 per minute, `collection_edit` 10 per minute, `collection_poems_save` 10 per minute). Its counter table has RLS on,
    no policies, and no grants, so a client can neither raise a limit nor read or reset a counter.
    Changing a number is a migration.
 3. **Fixed windows, one row per user and scope.** One atomic upsert counts the attempt and restarts a
