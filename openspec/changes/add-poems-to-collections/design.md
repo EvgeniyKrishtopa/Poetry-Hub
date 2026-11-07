@@ -213,7 +213,7 @@ mounted when a `stale` save's refresh empties the list and its stale alert stays
 
 - `storedSelection(choices): ReadonlySet<string>` — ids with `selected`.
 - `isSelectionChanged(stored, draft)` — set inequality.
-- `selectionDiff(stored, draft): { added: string[]; removed: string[] }` — what the save sends.
+- `selectionDiff(choices, stored, draft): { added: string[]; removed: string[] }` — what the save sends.
 
 `useCollectionPoemsForm({ collectionId, choices })` keeps `draft: ReadonlySet<string> | null` —
 `null` means "follow what is stored" — plus `justSaved: boolean`, the failure, and the pending flag.
@@ -582,3 +582,36 @@ sequenceDiagram
 2. Deploy: `npx supabase db push` before the app ships (added to `docs/environment.md`'s deploy
    checklist). Existing poems start free.
 3. Rollback: revert the app first, then the documented down migration (memberships are lost).
+
+## Scaffold map
+
+Written by `opsx-scaffold` after the files existed (map approved 2026-11-07). Stub bodies only; the
+copy, constants, types, and path helpers are complete (the add-poem-collections scaffold's
+precedent). Not scaffolded, left to their groups: the migration (1), the guard move (3),
+`CollectionActions`' named slots (4), `OwnCollectionsSection`'s nested lists (6), the route,
+breadcrumb slot, and matcher files (5), docs. Client stubs carry no `"use client"` yet: each gets it
+with its implementation and the boundaries test's list (NFR-2). `knip.jsonc` ignores the new files
+and the four extended model modules until task 7.3 removes the entries (Gate 2b P3: narrowed from
+the whole feature). Gate 2b P2: a save the network rejected is the explicit `rejected` outcome, not
+`null`.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/features/collection-management/actions/check-collection-poems.actions.ts` | `"use server"` manage-button check (D4) | `checkCollectionPoemsAction` |
+| `src/features/collection-management/actions/save-collection-poems.actions.ts` | `"use server"` save (D6) | `saveCollectionPoemsAction` |
+| `src/features/collection-management/dal/collection-poems.ts` | the two definer-function reads (D3) | `getCollectionPoemChoices`, `listCollectedPoems` |
+| `src/features/collection-management/dal/collection-poems-writes.ts` | the save RPC (D2) | `saveOwnCollectionPoems` |
+| `src/features/collection-management/dal/collection-poems-allowance.ts` | the `collection_poems_save` scope (D2, D6) | `consumeCollectionPoemsSaveAllowance` |
+| `src/features/collection-management/model/collection-poems.schema.ts` | the check and save inputs (types only until 2.1) | `checkCollectionPoemsInputSchema`, `saveCollectionPoemsInputSchema`, their input types |
+| `src/features/collection-management/model/collection-poems-selection.ts` | stored set, change detection, diff (D5) | `storedSelection`, `isSelectionChanged`, `selectionDiff` |
+| `src/features/collection-management/model/collection-management.constants.ts` (extended) | segment, statuses, cap | `COLLECTION_POEMS_SEGMENT`, `CHECK_COLLECTION_POEMS_STATUS`, `SAVE_COLLECTION_POEMS_STATUS`, `MAX_POEMS_PER_SAVE` |
+| `src/features/collection-management/model/collection-management.types.ts` (extended) | reads, results, outcome, leave reason | `CollectionPoemChoice`, `CollectedPoem`, `CollectionPoemChoicesResult`, `CollectedPoemsResult`, `CheckCollectionPoemsResult`, `ManageCollectionPoemsError`, `SaveCollectionPoemsFailure`, `SaveCollectionPoemsResult`, `SaveCollectionPoemsOutcome`, `SelectionDiff`, `SaveOwnCollectionPoemsInput`, `SaveOwnCollectionPoemsResult`, `CollectionPoemsSaveAllowance`, `CollectionPoemsLeaveReason` |
+| `src/features/collection-management/model/collection-paths.ts` (extended) | the poems page and the owner's poem page (D12) | `collectionPoemsPath`, `ownPoemPagePath` |
+| `src/features/collection-management/model/collection-management-messages.ts` (extended) | the proposal's new copy | `COLLECTION_POEMS_ON_PAGE_COPY`, `MANAGE_COLLECTION_POEMS_ERRORS`, `COLLECTION_POEMS_PAGE_COPY`, `SAVE_COLLECTION_POEMS_FAILURE_MESSAGES`, `COLLECTION_POEMS_LEAVE_COPY`; `COLLECTION_TRAIL_LABELS.collectionPoems` |
+| `src/features/collection-management/components/CollectionPoemList/` | the poem list on the collection page (D4) | `CollectionPoemList`, `CollectionPoemListProps` |
+| `src/features/collection-management/components/ManageCollectionPoemsButton/` | the check-then-open button (D4) | `ManageCollectionPoemsButton`, `ManageCollectionPoemsButtonProps` |
+| `src/features/collection-management/components/CollectionPoemsPage/, CollectionPoemsContent/, CollectionPoemsSkeleton/` | the poems page, its reads, its loading state (D5) | `CollectionPoemsPage`, `CollectionPoemsContent`, `CollectionPoemsSkeleton` + props types |
+| `src/features/collection-management/components/CollectionPoemsForm/CollectionPoemsForm.tsx + .types.ts` | the checkbox form's composition (D5–D8) | `CollectionPoemsForm`, `CollectionPoemsFormProps` |
+| `src/features/collection-management/components/CollectionPoemsForm/use-collection-poems-form.ts` | selection, save, outcomes (D5, D6) | `useCollectionPoemsForm`, `CollectionPoemsFormOptions`, `CollectionPoemsFormModel`, `CollectionPoemsAlert` |
+| `src/features/collection-management/components/CollectionPoemsForm/use-collection-poems-leave-prompt.ts` | the dialog's opening, save or wait, answer (D7) | `useCollectionPoemsLeavePrompt`, `CollectionPoemsLeavePromptHost`, `CollectionPoemsLeavePrompt` |
+| `src/features/collection-management/components/CollectionPoemsLeaveDialog/` | save / leave / stay dialog (D7) | `CollectionPoemsLeaveDialog`, `CollectionPoemsLeaveDialogProps` |
