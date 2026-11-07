@@ -6,7 +6,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(63);
+select plan(64);
 
 -- Fixtures, written as the superuser (bypasses RLS and grants). A owns a non-public profile, B and D public
 -- ones, C has no profile.
@@ -155,6 +155,14 @@ select throws_ok(
   $$select public.save_my_collection_poems('b0000000-0000-4000-8000-000000000001', array[null]::uuid[], '{}')$$,
   '22023', null,
   'save: a null element is rejected'
+);
+
+select throws_ok(
+  $$select public.save_my_collection_poems('b0000000-0000-4000-8000-000000000001',
+      '{}', array[['b1000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000002'],
+                  ['b1000000-0000-4000-8000-000000000003', 'b1000000-0000-4000-8000-000000000004']]::uuid[])$$,
+  '22023', null,
+  'save: a multi-dimensional list is rejected'
 );
 
 select throws_ok(

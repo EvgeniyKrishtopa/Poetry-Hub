@@ -124,6 +124,12 @@ begin
     raise exception 'not signed in' using errcode = '42501';
   end if;
 
+  -- Its own statement, ahead of the guard below: array_position() raises 0A000 on a multi-dimensional
+  -- array, and the order an `or` chain is evaluated in is not guaranteed. An empty list has no dimensions.
+  if array_ndims(save_my_collection_poems.added) > 1 or array_ndims(save_my_collection_poems.removed) > 1 then
+    raise exception 'invalid collection poems selection' using errcode = '22023';
+  end if;
+
   if save_my_collection_poems.added is null
     or save_my_collection_poems.removed is null
     or array_position(save_my_collection_poems.added, null) is not null
