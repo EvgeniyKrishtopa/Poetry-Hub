@@ -4,6 +4,8 @@
 
 Accepted (2026-10-16)
 
+Amended by 0012 (Decision 1, for a private column on a public table: see ADR 0012)
+
 ## Context
 
 `add-author-profiles` stored the first data a reader owns and edits: an author profile (names, a

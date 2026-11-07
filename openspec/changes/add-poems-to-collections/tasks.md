@@ -10,22 +10,22 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 1. Membership in the database <!-- judgement-heavy -->
 
-- [ ] 1.1 (NFR-1, FR-1) Add `supabase/migrations/<ts>_collection_poems.sql`: the `(id, author_id)`
+- [x] 1.1 (NFR-1, FR-1) Add `supabase/migrations/<ts>_collection_poems.sql`: the `(id, author_id)`
   unique constraint on `collections`, `poems.collection_id` with the composite foreign key `on
   delete set null (collection_id)`, the partial index, no grant; the down migration in the header
   (design D2).
-- [ ] 1.2 (NFR-1, FR-4, FR-11) In the same migration: `my_collection_poem_choices(collection_id)` and
+- [x] 1.2 (NFR-1, FR-4, FR-11) In the same migration: `my_collection_poem_choices(collection_id)` and
   `my_collected_poems()` (definer, own rows only, ordered `created_at desc, id`) (design D2).
-- [ ] 1.3 (NFR-1, FR-6, FR-8) In the same migration: `save_my_collection_poems(collection_id, added,
+- [x] 1.3 (NFR-1, FR-6, FR-8) In the same migration: `save_my_collection_poems(collection_id, added,
   removed)` with the input guard (22023), the public-profile and own-collection check, row locks in
   id order, the `stale` check after the locks, and the two updates (design D2).
-- [ ] 1.4 (FR-7) In the same migration: widen `write_rate_limits.scope`'s check with
+- [x] 1.4 (FR-7) In the same migration: widen `write_rate_limits.scope`'s check with
   `collection_poems_save` and replace `consume_write_allowance` with `('collection_poems_save', 10,
   interval '1 minute')` added.
-- [ ] 1.5 (NFR-1, FR-1, FR-7) Add `supabase/tests/collection_poems.test.sql` and extend
+- [x] 1.5 (NFR-1, FR-1, FR-7) Add `supabase/tests/collection_poems.test.sql` and extend
   `write_rate_limits.test.sql` with the cases in design D13.
   - Verify: `npx supabase db reset` and `npx supabase test db` pass.
-- [ ] 1.6 (NFR-1, FR-1) Docs: new ADR 0012 (a private column on a public table: no grant, read and
+- [x] 1.6 (NFR-1, FR-1) Docs: new ADR 0012 (a private column on a public table: no grant, read and
   written only through definer functions whose caller filter is the last defence; it explicitly
   amends ADR 0011 §1 and ADR 0005 §1 for this case, and both get a "see ADR 0012" note; design D2), ADR 0007's scope list gains
   `collection_poems_save`, `CONTEXT.md` gains «Free poem» (a poem in no collection),

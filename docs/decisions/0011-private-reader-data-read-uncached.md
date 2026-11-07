@@ -4,6 +4,8 @@
 
 Accepted (2026-11-06)
 
+Amended by 0012 (Decision 1, for a private column on a public table: see ADR 0012)
+
 ## Context
 
 Every Supabase read so far serves public data: an author's profile, an author's poems. Those reads run

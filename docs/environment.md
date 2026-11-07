@@ -54,6 +54,14 @@ git-ignored `PROGRESS.md`, so every clone sees them.
   10 saves per minute). Ship it before the app: without it the collections section on `/account/poems`
   shows its error alert and every collection page and write fails. Rollback: revert the app first, then
   the down migration in the file's header.
+- **Collection poems migration** (`add-poems-to-collections`): `npx supabase db push` applies
+  `20261107140000_collection_poems.sql` (`poems.collection_id` with no client grant and its composite
+  foreign key to `collections`, `my_collection_poem_choices` / `my_collected_poems` /
+  `save_my_collection_poems`, and the `collection_poems_save` scope in `write_rate_limits` and
+  `consume_write_allowance`, 10 saves per minute; ADR 0012). Ship it before the app: without it the
+  collection pages and the collections section on `/account/poems` fail their reads. Existing poems
+  start free. Rollback: revert the app first, then the down migration in the file's header (every
+  membership is lost).
 - **`poem-illustrations` bucket** (`add-poem-creation`): on the hosted project, confirm it exists,
   public, 5 MiB file size limit, MIME types `image/png` and `image/jpeg` — the same as
   `supabase/config.toml`, which configures the local stack only.
