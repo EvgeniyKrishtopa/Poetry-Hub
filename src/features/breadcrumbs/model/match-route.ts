@@ -1,6 +1,7 @@
 import { AUTHOR_EDITOR_PATH, AUTHORS_PAGE_TITLES, AUTHORS_PATH } from "@/features/authors";
 import {
   COLLECTION_EDIT_SEGMENT,
+  COLLECTION_POEMS_SEGMENT,
   COLLECTION_TRAIL_LABELS,
   COLLECTIONS_SEGMENT,
   NEW_COLLECTION_PATH,
@@ -76,17 +77,26 @@ function matchOwnPoemRoute(path: string): RouteMatch {
 }
 
 /**
- * The owner's page of one collection, `[collectionId]` after the collections path, and its edit page,
- * `[collectionId, "edit"]` (design D11). Checked before the poem rows, which would read `collections` as a
- * poem id. The create page's own row wins before this; a malformed id reads as not-found, so no trail.
+ * The owner's page of one collection, `[collectionId]` after the collections path, its edit page,
+ * `[collectionId, "edit"]` (design D11), and its poems page, `[collectionId, "poems"]` (add-poems-to-collections
+ * D11). Checked before the poem rows, which would read `collections` as a poem id. The create page's own row wins
+ * before this; a malformed id reads as not-found, so no trail.
  */
 function matchOwnCollectionRoute(path: string): RouteMatch {
   if (!path.startsWith(OWN_COLLECTION_PREFIX)) return NO_MATCH;
 
   const [collectionId, section, ...extra] = path.slice(OWN_COLLECTION_PREFIX.length).split("/");
   if (collectionId === undefined || collectionId === "" || extra.length > 0) return NO_MATCH;
-  if (section === undefined) return { kind: "own-collection", collectionId };
-  return section === COLLECTION_EDIT_SEGMENT ? { kind: "own-collection-edit", collectionId } : NO_MATCH;
+  switch (section) {
+    case undefined:
+      return { kind: "own-collection", collectionId };
+    case COLLECTION_EDIT_SEGMENT:
+      return { kind: "own-collection-edit", collectionId };
+    case COLLECTION_POEMS_SEGMENT:
+      return { kind: "own-collection-poems", collectionId };
+    default:
+      return NO_MATCH;
+  }
 }
 
 /** Maps a URL's segments to its trail by the route table; anything not in the table is `none`. */

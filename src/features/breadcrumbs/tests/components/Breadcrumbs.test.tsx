@@ -231,6 +231,34 @@ describe("BreadcrumbsLoader", () => {
     ]);
   });
 
+  // implements FR-14 of add-poems-to-collections
+  it("reads the collection title for its poems page and ends the trail on «Произведения сборника»", async () => {
+    const collectionId = "40000000-0000-4000-8000-000000000041";
+    vi.mocked(getOwnCollectionTitle).mockResolvedValue({ ok: true, title: "Осенний цикл" });
+
+    const element = (await load(["account", "poems", "collections", collectionId, "poems"])) as ReactElement<{
+      items: unknown;
+    }>;
+
+    expect(getOwnCollectionTitle).toHaveBeenCalledWith(collectionId);
+    expect(element.props.items).toEqual([
+      { kind: "link", label: "Главная", href: "/" },
+      { kind: "link", label: "Мастерская поэта", href: "/account" },
+      { kind: "link", label: "Управление произведениями", href: "/account/poems" },
+      { kind: "link", label: "Осенний цикл", href: `/account/poems/collections/${collectionId}` },
+      { kind: "current", label: "Произведения сборника" },
+    ]);
+  });
+
+  // implements FR-14 of add-poems-to-collections
+  it("renders nothing on the poems page of another author's collection", async () => {
+    vi.mocked(getOwnCollectionTitle).mockResolvedValue({ ok: false, reason: "not-found" });
+
+    await expect(
+      load(["account", "poems", "collections", "40000000-0000-4000-8000-000000000051", "poems"]),
+    ).resolves.toBeNull();
+  });
+
   // implements FR-17 of add-poem-collections
   it("renders nothing for another author's collection", async () => {
     vi.mocked(getOwnCollectionTitle).mockResolvedValue({ ok: false, reason: "not-found" });

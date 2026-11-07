@@ -144,6 +144,24 @@ describe("matchRoute", () => {
     });
   });
 
+  // implements FR-14 of add-poems-to-collections
+  it("matches the owner's collection poems page by the collection id", () => {
+    const collectionId = "40000000-0000-4000-8000-000000000041";
+
+    expect(matchRoute(["account", "poems", "collections", collectionId, "poems"])).toEqual({
+      kind: "own-collection-poems",
+      collectionId,
+    });
+  });
+
+  // implements FR-14 of add-poems-to-collections
+  it.each([
+    [["account", "poems", "collections", "", "poems"]],
+    [["account", "poems", "collections", "a", "poems", "b"]],
+  ])("matches nothing for the collection poems path %j", (segments) => {
+    expect(matchRoute(segments)).toEqual({ kind: "none" });
+  });
+
   // implements FR-17 of add-poem-collections
   it.each([
     [["account", "poems", "collections", ""]],
