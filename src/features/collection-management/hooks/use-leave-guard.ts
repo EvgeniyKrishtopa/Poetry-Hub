@@ -3,14 +3,17 @@ import { useEffect, useRef } from "react";
 import { useLeaveBlock } from "@/shared/lib/leave-guard/leave-block.store";
 import { LEAVE_ANSWER, type LeaveAnswer } from "@/shared/lib/leave-guard/leave-guard.constants";
 
-/** The feature's copy of poem-management's guard options (design D12). */
+/** The feature's copy of poem-management's guard options, shared by its edit and poems pages (design D7). */
 export interface LeaveGuardOptions {
-  /** On while the form is changed or a save is sending, off after a `saved` result. */
+  /** On while the page has unsaved changes or a save is sending, off after a `saved` result. */
   readonly active: boolean;
-  /** Paths a link may still go to: the collection's page and its edit page. */
+  /** Paths a link may still go to without the dialog. */
   readonly isAllowed: (pathname: string) => boolean;
-  /** Opens the leave dialog's link form. */
-  readonly onBlocked: () => void;
+  /**
+   * Opens the leave dialog's link form. Gets the clicked link's `pathname + search + hash`: a relative path
+   * `router.push` accepts, never the absolute `link.href`.
+   */
+  readonly onBlocked: (href: string) => void;
   /** Opens the leave dialog's sign-out form and answers with the author's choice. */
   readonly askToLeave: () => Promise<LeaveAnswer>;
   /** Closes the leave dialog, either form; called on the guard's cleanup. */
@@ -36,7 +39,11 @@ function sameTabLink(target: EventTarget | null): HTMLAnchorElement | null {
 }
 
 /** Cancels plain clicks on links to disallowed pages; every link on the page at once, from one listener. */
-function useBlockedLinks(active: boolean, isAllowed: LeaveGuardOptions["isAllowed"], onBlocked: () => void) {
+function useBlockedLinks(
+  active: boolean,
+  isAllowed: LeaveGuardOptions["isAllowed"],
+  onBlocked: LeaveGuardOptions["onBlocked"],
+) {
   // The latest callbacks, so the form's re-render on every keystroke doesn't re-add the listener.
   const latest = useRef({ isAllowed, onBlocked });
   useEffect(() => {
@@ -53,7 +60,7 @@ function useBlockedLinks(active: boolean, isAllowed: LeaveGuardOptions["isAllowe
       // Capture phase plus stopPropagation: next/link's own click handler never runs.
       event.preventDefault();
       event.stopPropagation();
-      latest.current.onBlocked();
+      latest.current.onBlocked(`${link.pathname}${link.search}${link.hash}`);
     }
 
     document.addEventListener("click", blockLinkClick, { capture: true });
@@ -124,8 +131,8 @@ function useSignOutQuestion(active: boolean, askToLeave: () => Promise<LeaveAnsw
 }
 
 /**
- * Keeps the author on the edit page while active and visible (design D12, a copy of poem-management's). A
- * hidden `Activity` cleans the effects up, so a hidden edit page never guards another page.
+ * Keeps the author on the page while active and visible (a copy of poem-management's, used by the edit and poems
+ * pages; design D7). A hidden `Activity` cleans the effects up, so a hidden page never guards another page.
  */
 export function useLeaveGuard({ active, isAllowed, onBlocked, askToLeave, closePrompt }: LeaveGuardOptions): void {
   useBlockedLinks(active, isAllowed, onBlocked);
