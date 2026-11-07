@@ -90,9 +90,6 @@ export type WriteAllowance =
   | { readonly ok: true }
   | { readonly ok: false; readonly failure: ServiceFailure | "too-many-saves" };
 
-/** The `collection_edit` scope's answer (design D2, D6). */
-export type CollectionEditAllowance = WriteAllowance;
-
 /** What `/account/poems` shows once after a write (design D8). */
 export type CollectionListNotice =
   | { readonly kind: "created" | "deleted"; readonly title: string }
@@ -162,9 +159,6 @@ export interface SaveOwnCollectionPoemsInput extends SelectionDiff {
 export type SaveOwnCollectionPoemsResult =
   | { readonly ok: true; readonly status: "saved" | "stale" | "not-found" }
   | { readonly ok: false; readonly failure: ServiceFailure };
-
-/** The `collection_poems_save` scope's answer (add-poems-to-collections D2, D6). */
-export type CollectionPoemsSaveAllowance = WriteAllowance;
 
 /** Why the collection poems leave dialog is open: a blocked link with where it led, or the header's sign-out (add-poems-to-collections D7). */
 export type CollectionPoemsLeaveReason =

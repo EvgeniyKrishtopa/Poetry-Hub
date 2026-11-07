@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { CollectionEditAllowance } from "../model/collection-management.types";
+import type { WriteAllowance } from "../model/collection-management.types";
 
 import { consumeWriteAllowance } from "./write-allowance";
 
@@ -8,6 +8,6 @@ import { consumeWriteAllowance } from "./write-allowance";
 const COLLECTION_EDIT_LIMIT = { scope: "collection_edit", operation: "check edit limit", name: "edit limit" } as const;
 
 /** Counts one save attempt against the caller's `collection_edit` limit, 10 per minute per account; never throws (design D2, D6). */
-export async function consumeCollectionEditAllowance(): Promise<CollectionEditAllowance> {
+export async function consumeCollectionEditAllowance(): Promise<WriteAllowance> {
   return consumeWriteAllowance(COLLECTION_EDIT_LIMIT);
 }
