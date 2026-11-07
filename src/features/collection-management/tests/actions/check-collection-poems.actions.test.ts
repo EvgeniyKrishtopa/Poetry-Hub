@@ -49,10 +49,10 @@ describe("checkCollectionPoemsAction", () => {
   it("runs the steps in order: session, collection, choices", async () => {
     await checkCollectionPoemsAction(INPUT);
 
-    const order = [getSessionState, getOwnCollection, getCollectionPoemChoices].map(
-      (mock) => vi.mocked(mock).mock.invocationCallOrder[0] ?? 0,
-    );
-    expect(order).toEqual([...order].sort((a, b) => a - b));
+    const steps = [getSessionState, getOwnCollection, getCollectionPoemChoices];
+    for (const step of steps) expect(step).toHaveBeenCalledOnce();
+    const order = steps.map((mock) => vi.mocked(mock).mock.invocationCallOrder[0]);
+    expect(order).toEqual([...order].sort((a = 0, b = 0) => a - b));
   });
 
   // implements FR-3 of add-poems-to-collections
