@@ -34,23 +34,23 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 2. Selection model, reads, and actions (no visible change) <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-5, FR-6) `model/`: `COLLECTION_POEMS_SEGMENT`, the check and save statuses,
+- [x] 2.1 (FR-5, FR-6) `model/`: `COLLECTION_POEMS_SEGMENT`, the check and save statuses,
   `MAX_POEMS_PER_SAVE`; the new types; `collection-poems.schema.ts` (UUIDs, no duplicates, no
   overlap, not both empty, caps); `collection-poems-selection.ts` (`storedSelection`,
   `isSelectionChanged`, `selectionDiff`); `collectionPoemsPath`, `ownPoemPagePath`; the proposal's
   new copy in the messages module (design D1, D5, D12).
   - Verify with `tests/model/` tests: set equality both ways, diff ignores ids not in the choices,
     every schema rejection (1000 ids pass, 1001 fail), both paths.
-- [ ] 2.2 (FR-2, FR-4, FR-11, NFR-5) `dal/collection-poems.ts`: `getCollectionPoemChoices` and
+- [x] 2.2 (FR-2, FR-4, FR-11, NFR-5) `dal/collection-poems.ts`: `getCollectionPoemChoices` and
   `listCollectedPoems` (design D3).
   - Verify with `tests/dal/collection-poems.test.ts`: parses, empty result, errors → `{ ok: false }`,
     log content carries no ids or titles.
-- [ ] 2.3 (FR-6, FR-7, FR-8, NFR-5) `dal/collection-poems-writes.ts` and
+- [x] 2.3 (FR-6, FR-7, FR-8, NFR-5) `dal/collection-poems-writes.ts` and
   `dal/collection-poems-allowance.ts`: the RPC and the `collection_poems_save` scope, Zod-parsed,
   failures classified with the response status (design D2, D6).
   - Verify with DAL tests: `saved`, `stale`, `not-found`, a 5xx → `unavailable`, a rejected JWT →
     `unauthenticated`, a bad shape → `unknown`.
-- [ ] 2.4 (FR-3, FR-6, FR-7, FR-8, FR-12) `checkCollectionPoemsAction` and
+- [x] 2.4 (FR-3, FR-6, FR-7, FR-8, FR-12) `checkCollectionPoemsAction` and
   `saveCollectionPoemsAction` in the order of design D4 and D6; `refresh()` only on `saved` and
   `stale`.
   - Verify with `tests/actions/` tests: the order (no read or RPC on a malformed id or invalid
