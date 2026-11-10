@@ -11,6 +11,7 @@ import { MyPoemsContent } from "../../components/MyPoemsContent/MyPoemsContent";
 import type { MyPoemsContentProps } from "../../components/MyPoemsContent/MyPoemsContent.types";
 import { MyPoemsPage } from "../../components/MyPoemsPage/MyPoemsPage";
 import { MyPoemsSkeleton } from "../../components/MyPoemsSkeleton/MyPoemsSkeleton";
+import type { CollectedPoemsRead } from "../../model/poem-management.types";
 
 vi.mock("@/features/auth", () => ({ requireSession: vi.fn() }));
 vi.mock("@/features/authors", () => ({ getOwnPublicAuthor: vi.fn(), AUTHOR_EDITOR_PATH: "/account/author" }));
@@ -35,14 +36,26 @@ function poem(id: string, title: string, publishedAt: string): Poem {
 const NIGHT_STATION = poem("30000000-0000-4000-8000-000000000032", "Ночной вокзал", "2026-10-02");
 const AUTUMN_GARDEN = poem("30000000-0000-4000-8000-000000000031", "Осенний сад", "2026-10-01");
 
-async function renderContent(props?: MyPoemsContentProps) {
-  return render(await MyPoemsContent(props));
+const FIRST_SNOW = poem("30000000-0000-4000-8000-000000000033", "Первый снег", "2026-10-03");
+
+const readCollectedPoems = vi.fn<() => Promise<CollectedPoemsRead>>();
+
+function collectedAre(...poems: readonly Poem[]) {
+  readCollectedPoems.mockResolvedValue({ ok: true, poems: poems.map(({ id }) => ({ id })) });
 }
 
-const SLOTS: MyPoemsContentProps = {
+async function renderContent(props?: Omit<MyPoemsContentProps, "readCollectedPoems">) {
+  return render(await MyPoemsContent({ ...props, readCollectedPoems }));
+}
+
+const SLOTS = {
   actions: <a href="/slot-action">Slot action</a>,
   beforeList: <section aria-label="Slot section" />,
 };
+
+function listedTitles() {
+  return within(screen.getByRole("list")).getAllByRole("link").map((link) => link.textContent);
+}
 
 /** True when `first` comes before `second` in document order. */
 function precedes(first: Element, second: Element) {
@@ -53,6 +66,7 @@ beforeEach(() => {
   vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID });
   vi.mocked(getOwnPublicAuthor).mockResolvedValue({ ok: true, status: "public", authorId: AUTHOR_ID });
   vi.mocked(listAuthorPoems).mockResolvedValue({ ok: true, poems: [NIGHT_STATION, AUTUMN_GARDEN] });
+  collectedAre();
 });
 
 afterEach(() => {
@@ -200,8 +214,94 @@ describe("MyPoemsContent", () => {
     const redirect = new Error("NEXT_REDIRECT");
     vi.mocked(requireSession).mockRejectedValue(redirect);
 
-    await expect(MyPoemsContent()).rejects.toBe(redirect);
+    await expect(MyPoemsContent({ readCollectedPoems })).rejects.toBe(redirect);
     expect(getOwnPublicAuthor).not.toHaveBeenCalled();
+    expect(readCollectedPoems).not.toHaveBeenCalled();
+  });
+});
+
+describe("MyPoemsContent: free poems only", () => {
+  // implements FR-1 of show-only-free-poems
+  it("lists only the poems in no collection, newest first, after the section", async () => {
+    vi.mocked(listAuthorPoems).mockResolvedValue({ ok: true, poems: [FIRST_SNOW, NIGHT_STATION, AUTUMN_GARDEN] });
+    collectedAre(NIGHT_STATION);
+
+    await renderContent(SLOTS);
+
+    expect(readCollectedPoems).toHaveBeenCalledOnce();
+    expect(listedTitles()).toEqual(["Первый снег", "Осенний сад"]);
+    expect(precedes(screen.getByRole("region", { name: "Slot section" }), screen.getByRole("list"))).toBe(true);
+  });
+
+  // implements FR-1 of show-only-free-poems
+  it("lists only «Первый снег» when the other two poems are in a collection", async () => {
+    vi.mocked(listAuthorPoems).mockResolvedValue({ ok: true, poems: [FIRST_SNOW, NIGHT_STATION, AUTUMN_GARDEN] });
+    collectedAre(NIGHT_STATION, AUTUMN_GARDEN);
+
+    await renderContent(SLOTS);
+
+    expect(listedTitles()).toEqual(["Первый снег"]);
+  });
+
+  // implements FR-1 of show-only-free-poems
+  it("shows no list and no text when every poem is in a collection", async () => {
+    collectedAre(NIGHT_STATION, AUTUMN_GARDEN);
+
+    const { container } = await renderContent();
+
+    expect(screen.queryByRole("list")).toBeNull();
+    expect(container).toHaveTextContent(/^Добавить новое произведение$/);
+  });
+
+  // implements FR-2 of show-only-free-poems
+  it("shows the list alert and no poem link when the membership read fails, keeping the buttons and the section", async () => {
+    readCollectedPoems.mockResolvedValue({ ok: false });
+
+    await renderContent(SLOTS);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Не удалось загрузить произведения. Попробуйте позже.");
+    expect(screen.queryByRole("list")).toBeNull();
+    for (const title of ["Ночной вокзал", "Осенний сад"]) expect(screen.queryByRole("link", { name: title })).toBeNull();
+    expect(screen.getByRole("link", { name: "Добавить новое произведение" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Slot action" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Slot section" })).toBeInTheDocument();
+  });
+
+  // implements FR-1, FR-2 of show-only-free-poems
+  it("still lists free poems only when the section shows its own collections alert", async () => {
+    collectedAre(NIGHT_STATION);
+
+    await renderContent({ ...SLOTS, beforeList: <p role="alert">Не удалось загрузить сборники. Попробуйте позже.</p> });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Не удалось загрузить сборники. Попробуйте позже.");
+    expect(listedTitles()).toEqual(["Осенний сад"]);
+  });
+
+  // implements FR-2 of show-only-free-poems
+  it("shows the list alert when the poem read fails, whatever the membership read says", async () => {
+    vi.mocked(listAuthorPoems).mockResolvedValue({ ok: false, reason: "unavailable" });
+    collectedAre(NIGHT_STATION);
+
+    await renderContent(SLOTS);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Не удалось загрузить произведения. Попробуйте позже.");
+    expect(screen.queryByRole("list")).toBeNull();
+  });
+
+  // implements FR-1, FR-2 of show-only-free-poems
+  it.each([
+    ["the session can't be checked", () => vi.mocked(requireSession).mockResolvedValue({ state: "unknown" })],
+    ["the profile isn't public", () => vi.mocked(getOwnPublicAuthor).mockResolvedValue({ ok: true, status: "not-public" })],
+    [
+      "the profile read fails",
+      () => vi.mocked(getOwnPublicAuthor).mockResolvedValue({ ok: false, failure: "unavailable" }),
+    ],
+  ])("doesn't read membership when %s", async (_case, arrange) => {
+    arrange();
+
+    await renderContent();
+
+    expect(readCollectedPoems).not.toHaveBeenCalled();
   });
 });
 
@@ -214,7 +314,7 @@ describe("MyPoemsPage", () => {
   // An async Server Component can't render in jsdom, so this checks the tree the wrapper returns.
   // implements FR-2, FR-13, NFR-7 of add-poem-creation
   it("puts the h1 «Ваши Произведения» in the shell on a lang=ru root, and streams the content behind its skeleton", () => {
-    const element = MyPoemsPage() as ReactElement<{ lang: string; children: ReactElement[] }>;
+    const element = MyPoemsPage({ readCollectedPoems }) as ReactElement<{ lang: string; children: ReactElement[] }>;
     expect(element.props.lang).toBe("ru");
 
     const [heading, , , boundary] = element.props.children;
@@ -229,7 +329,7 @@ describe("MyPoemsPage", () => {
 
   // implements FR-3, FR-4 of delete-poem
   it("puts the deleted notice between the heading and the boundary, so a failed list read keeps it", () => {
-    const element = MyPoemsPage() as ReactElement<{ children: ReactElement[] }>;
+    const element = MyPoemsPage({ readCollectedPoems }) as ReactElement<{ children: ReactElement[] }>;
 
     const [, notice, , boundary] = element.props.children;
 
@@ -243,7 +343,9 @@ describe("MyPoemsPage", () => {
     const actions = <a href="/slot-action">Slot action</a>;
     const beforeList = <section aria-label="Slot section" />;
 
-    const element = MyPoemsPage({ notices, actions, beforeList }) as ReactElement<{ children: ReactElement[] }>;
+    const element = MyPoemsPage({ notices, actions, beforeList, readCollectedPoems }) as ReactElement<{
+      children: ReactElement[];
+    }>;
     const [, deletedNotice, slotNotices, boundary] = element.props.children;
 
     expect(deletedNotice.type).toBe(DeletedPoemNotice);
@@ -251,7 +353,7 @@ describe("MyPoemsPage", () => {
     expect(boundary.type).toBe(Suspense);
     const content = (boundary.props as SuspenseProps).children as ReactElement<MyPoemsContentProps>;
     expect(content.type).toBe(MyPoemsContent);
-    expect(content.props).toEqual({ actions, beforeList });
+    expect(content.props).toEqual({ actions, beforeList, readCollectedPoems });
   });
 });
 

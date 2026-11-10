@@ -30,7 +30,9 @@ the pattern outlives the change).
    skeleton) still prerenders, so the route builds as partially prerendered with no route segment
    config.
 3. **A read shared by page and trail is still wrapped in React's `cache`** (ADR 0008), so both get one
-   result per request (`getOwnCollection`, `getOwnCollectionTitle`).
+   result per request (`getOwnCollection`, `getOwnCollectionTitle`). The same holds for a read a page
+   and one of its slots both call (amended 2026-11-10, `show-only-free-poems` D2: `listCollectedPoems`,
+   shared by the `/account/poems` collections section and its poem list, so the two always agree).
 4. **Freshness comes from `refresh()`, not tags.** Nothing private is tagged, so every successful write
    calls `refresh()` from `next/cache` inside its Server Action, which drops the client router's copies
    of the pages it kept (including Next's `Activity`-hidden routes); the next render reads the database

@@ -1,0 +1,2 @@
+full
+# more than one module: yes (poem-management, collection-management, account poems route); schema change: no; contract change: yes (MyPoemsPage props, collection-management public API)
