@@ -1,12 +1,12 @@
--- Collection membership: the hidden poems.collection_id, the composite foreign key, the two reads, and the save
--- (add-poems-to-collections, design D2, D13).
+-- Collection membership: poems.collection_id (readable for public authors' poems since public-collections),
+-- the composite foreign key, the two reads, and the save (add-poems-to-collections, design D2, D13).
 -- implements NFR-1, FR-1, FR-4, FR-6, FR-8 and FR-11 of add-poems-to-collections
 -- Run against the local stack: npx supabase test db
 begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(64);
+select plan(69);
 
 -- Fixtures, written as the superuser (bypasses RLS and grants). A owns a non-public profile, B and D public
 -- ones, C has no profile.
@@ -44,7 +44,24 @@ insert into public.poems (id, author_id, title, text, collection_id, created_at)
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 
-select throws_ok($$select collection_id from public.poems$$, '42501', null, 'anon cannot select poems.collection_id');
+-- implements NFR-1 and FR-1 of public-collections: every role reads collection_id of a public author's poems
+-- and of nobody else's.
+select results_eq(
+  $$select collection_id::text from public.poems where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+    order by created_at desc$$,
+  $$values
+    ('b0000000-0000-4000-8000-000000000001'),
+    ('b0000000-0000-4000-8000-000000000001'),
+    (null::text),
+    ('b0000000-0000-4000-8000-000000000002'),
+    (null::text)$$,
+  'anon selects collection_id of a public author''s poems'
+);
+
+select is_empty(
+  $$select collection_id from public.poems where author_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
+  'anon selects no collection_id of a non-public author''s poem'
+);
 
 select results_eq(
   $$select count(*)::integer from (
@@ -93,13 +110,19 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}', true);
 
-select throws_ok(
-  $$select collection_id from public.poems where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'$$,
-  '42501', null,
-  'the owner cannot select their poems'' collection_id directly'
+select results_eq(
+  $$select collection_id::text from public.poems where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+    order by created_at desc$$,
+  $$values
+    ('b0000000-0000-4000-8000-000000000001'),
+    ('b0000000-0000-4000-8000-000000000001'),
+    (null::text),
+    ('b0000000-0000-4000-8000-000000000002'),
+    (null::text)$$,
+  'the owner selects their poems'' collection_id directly'
 );
 
-select throws_ok($$select * from public.poems$$, '42501', null, 'select * on poems fails loudly instead of leaking collection_id');
+select lives_ok($$select * from public.poems$$, 'select * on poems succeeds now that every column is readable');
 
 select results_eq(
   $$select title from public.poems where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' order by created_at desc$$,
@@ -393,6 +416,19 @@ select is(
   'save: a non-public own profile answers not-found'
 );
 
+-- A non-public author's poems have no read policy for anyone, the owner included: the owner's own poems come
+-- only through the definer read, so their membership stays hidden from everyone else.
+select is_empty(
+  $$select collection_id from public.poems where author_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
+  'a non-public owner selects no collection_id directly'
+);
+
+select results_eq(
+  $$select collection_id::text, id::text from public.my_collected_poems()$$,
+  $$values ('a0000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000001')$$,
+  'a non-public owner still reads their own membership through my_collected_poems()'
+);
+
 reset role;
 
 -- ---------- signed in as C (no profile) ----------
@@ -444,10 +480,23 @@ select is(
   'save: D adding B''s free poem to D''s own collection answers stale'
 );
 
+-- B's saves and deletes above changed which poems are collected, so this checks the grant, not the data.
+select results_eq(
+  $$select count(*)::integer from public.poems
+    where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' and collection_id = 'b0000000-0000-4000-8000-000000000001'$$,
+  array[2],
+  'another author selects collection_id of a public author''s poems directly'
+);
+
+select is_empty(
+  $$select collection_id from public.poems where author_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
+  'another author selects no collection_id of a non-public author''s poem'
+);
+
 select throws_ok(
-  $$select collection_id from public.poems where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'$$,
+  $$update public.poems set collection_id = null where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'$$,
   '42501', null,
-  'another author cannot select collection_id directly'
+  'another author cannot update collection_id directly'
 );
 
 reset role;

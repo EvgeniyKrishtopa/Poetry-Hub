@@ -9,24 +9,24 @@ group lands its own tests.
 
 ## 1. Database: public collections and membership <!-- judgement-heavy -->
 
-- [ ] 1.1 (NFR-1, FR-1) New migration `supabase/migrations/<timestamp>_public_collections.sql` (design
+- [x] 1.1 (NFR-1, FR-1) New migration `supabase/migrations/<timestamp>_public_collections.sql` (design
   D2): the policy "anyone reads public authors' non-empty collections" for `anon, authenticated`;
   `grant select (id, author_id, title, description, created_at) on collections to anon`; `grant
   select (collection_id) on poems to anon, authenticated`; `delete_my_collection` recreated to also
   return `author_id` on `deleted`; the header comment and the documented down migration.
-- [ ] 1.2 (NFR-1, FR-1) pgTAP `supabase/tests/collections.test.sql`: anon and another author read a
+- [x] 1.2 (NFR-1, FR-1) pgTAP `supabase/tests/collections.test.sql`: anon and another author read a
   public author's non-empty collection; not an empty one, not one whose only poem was deleted, not a
   non-public author's; the owner still reads own empty and own while not public; direct writes still
   fail for every role; `delete_my_collection` returns `author_id` on `deleted` and `not-found` for
   another author's or a missing id.
-- [ ] 1.3 (NFR-1) pgTAP `supabase/tests/collection_poems.test.sql`: anon, another author, and the
+- [x] 1.3 (NFR-1) pgTAP `supabase/tests/collection_poems.test.sql`: anon, another author, and the
   owner select `collection_id` of a public author's poem; nobody but the owner reads a non-public
   author's poem; direct updates of `collection_id` still fail; the save and owner read functions'
   existing cases unchanged.
-- [ ] 1.4 (NFR-1) Pin the owner's reads: `collection-management/tests/dal/own-collections.test.ts`
+- [x] 1.4 (NFR-1) Pin the owner's reads: `collection-management/tests/dal/own-collections.test.ts`
   asserts `listOwnCollections` and `getOwnCollection` filter by the own author id, so the wider policy
   can't add another author's collections to `/account/poems` (design D2).
-- [ ] 1.5 (NFR-1, FR-1) Docs: ADR `docs/decisions/0013-public-collections.md` (supersedes 0012;
+- [x] 1.5 (NFR-1, FR-1) Docs: ADR `docs/decisions/0013-public-collections.md` (supersedes 0012;
   amends 0011 §1, §4, §5 for collections; Gate 1 accepted-decisions note); set 0012's status to
   "Superseded by 0013" and add "Amended by 0013" to 0011; `CONTEXT.md`: Collection — visible to everyone once it
   holds a poem and its author is public, managed only by its author; Free poem — only its last clause

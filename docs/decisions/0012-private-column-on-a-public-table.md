@@ -2,9 +2,9 @@
 
 ## Status
 
-Accepted (2026-11-07)
+Superseded by 0013 (2026-11-10)
 
-Amends ADR 0005 §1 and ADR 0011 §1 for this one case.
+Amended ADR 0005 §1 and ADR 0011 §1 for this one case.
 
 ## Context
 
