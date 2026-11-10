@@ -3,7 +3,13 @@
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignore": [
     // npm-check-updates loads this config at runtime (`npm run deps:outdated`); knip has no ncu plugin to see it.
-    ".ncurc.cjs"
+    ".ncurc.cjs",
+    // Temporary, public-collections scaffold: the new stubs have no importer until their tasks wire or test them.
+    // Only the new files, so knip still sees the rest of each feature. Task 7.5 removes these entries.
+    "src/features/collections/**",
+    "src/shared/config/cache-tags.ts",
+    "src/features/poems/model/uncollected-poems.ts",
+    "src/features/collection-management/actions/expire-author-works-tag.ts"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
