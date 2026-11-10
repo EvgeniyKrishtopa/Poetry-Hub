@@ -234,6 +234,16 @@ describe("MyPoemsContent: free poems only", () => {
   });
 
   // implements FR-1 of show-only-free-poems
+  it("lists only «Первый снег» when the other two poems are in a collection", async () => {
+    vi.mocked(listAuthorPoems).mockResolvedValue({ ok: true, poems: [FIRST_SNOW, NIGHT_STATION, AUTUMN_GARDEN] });
+    collectedAre(NIGHT_STATION, AUTUMN_GARDEN);
+
+    await renderContent(SLOTS);
+
+    expect(listedTitles()).toEqual(["Первый снег"]);
+  });
+
+  // implements FR-1 of show-only-free-poems
   it("shows no list and no text when every poem is in a collection", async () => {
     collectedAre(NIGHT_STATION, AUTUMN_GARDEN);
 
