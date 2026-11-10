@@ -13,7 +13,7 @@ import type {
 export type ServiceFailure = SupabaseFailure;
 
 /** One row of the `/account/poems` section: only what the list shows (design D3, D4). */
-interface CollectionSummary {
+export interface CollectionSummary {
   readonly id: string;
   readonly title: string;
 }
@@ -122,6 +122,15 @@ export type CollectionPoemChoicesResult =
 
 export type CollectedPoemsResult =
   | { readonly ok: true; readonly poems: readonly CollectedPoem[] }
+  | { readonly ok: false };
+
+/** One collection of the `/account/poems` section with its poems, newest first; empty when it holds none. */
+export interface CollectionWithPoems extends CollectionSummary {
+  readonly poems: readonly CollectedPoem[];
+}
+
+export type OwnCollectionsWithPoemsResult =
+  | { readonly ok: true; readonly collections: readonly CollectionWithPoems[] }
   | { readonly ok: false };
 
 export type CheckCollectionPoemsResult =

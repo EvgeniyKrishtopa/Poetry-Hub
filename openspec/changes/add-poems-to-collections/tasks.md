@@ -111,7 +111,7 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 6. Poems under each collection on `/account/poems` <!-- isolated -->
 
-- [ ] 6.1 (FR-11) `OwnCollectionsSection` reads `listCollectedPoems` in parallel and renders the
+- [x] 6.1 (FR-11) `OwnCollectionsSection` reads `listCollectedPoems` in parallel and renders the
   nested lists (design D10).
   - Verify with `OwnCollectionsSection.test.tsx`: nested order, title-only collection, either read
     failing → the section alert, existing cases unchanged.
