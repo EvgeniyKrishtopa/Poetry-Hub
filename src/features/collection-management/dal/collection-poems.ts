@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { z } from "zod";
 
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
@@ -67,8 +68,12 @@ export async function getCollectionPoemChoices(collectionId: string): Promise<Co
   return result.ok ? { ok: true, choices: result.rows } : READ_FAILED;
 }
 
-/** The author's poems that are in a collection, newest first, through `my_collected_poems` (add-poems-to-collections D3). */
-export async function listCollectedPoems(): Promise<CollectedPoemsResult> {
+/**
+ * The author's poems that are in a collection, newest first, through `my_collected_poems` (add-poems-to-collections D3).
+ * Memoized per request, so the `/account/poems` section and its poem list share one result and always agree
+ * (show-only-free-poems D2); still read afresh on every request (ADR 0011).
+ */
+export const listCollectedPoems = cache(async (): Promise<CollectedPoemsResult> => {
   const result = await readRows(COLLECTED_OPERATION, "my_collected_poems", {}, collectedRowsSchema);
   return result.ok ? { ok: true, poems: result.rows } : READ_FAILED;
-}
+});

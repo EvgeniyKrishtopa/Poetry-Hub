@@ -9,6 +9,22 @@ import { getCollectionPoemChoices, listCollectedPoems } from "../../dal/collecti
 
 vi.mock("@/shared/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
 
+// Vitest runs the client React build, whose `cache` doesn't memoize. Stand in a memo whose stores
+// are cleared before each test, so one test is one request.
+const memoStores = vi.hoisted(() => [] as Map<string, unknown>[]);
+vi.mock("react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react")>()),
+  cache: <A extends unknown[], R>(fn: (...args: A) => R) => {
+    const store = new Map<string, R>();
+    memoStores.push(store as Map<string, unknown>);
+    return (...args: A): R => {
+      const key = JSON.stringify(args);
+      if (!store.has(key)) store.set(key, fn(...args));
+      return store.get(key) as R;
+    };
+  },
+}));
+
 const HTTP_OK = 200;
 const HTTP_UNAVAILABLE = 503;
 
@@ -50,6 +66,7 @@ function expectNothingSecretLogged(): void {
 }
 
 beforeEach(() => {
+  for (const store of memoStores) store.clear();
   rpc = vi.fn<(fn: string, args?: unknown) => Promise<RpcResponse>>();
   vi.mocked(createSupabaseServerClient).mockResolvedValue({ rpc } as unknown as SupabaseClient);
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -128,6 +145,16 @@ describe("listCollectedPoems", () => {
     answer([]);
 
     await expect(listCollectedPoems()).resolves.toEqual({ ok: true, poems: [] });
+  });
+
+  // implements NFR-2 of show-only-free-poems
+  it("reads once per request and gives every caller the same result", async () => {
+    answer([{ collection_id: COLLECTION_ID, id: POEM_ID, title: TITLE }]);
+
+    const [first, second] = await Promise.all([listCollectedPoems(), listCollectedPoems()]);
+
+    expect(second).toBe(first);
+    expect(rpc).toHaveBeenCalledOnce();
   });
 
   // implements FR-11, NFR-5 of add-poems-to-collections

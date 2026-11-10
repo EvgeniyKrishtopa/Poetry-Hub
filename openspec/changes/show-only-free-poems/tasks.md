@@ -8,11 +8,11 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 1. One shared membership read (no visible change) <!-- isolated -->
 
-- [ ] 1.1 (NFR-2) Wrap `listCollectedPoems` in `collection-management/dal/collection-poems.ts` in
+- [x] 1.1 (NFR-2) Wrap `listCollectedPoems` in `collection-management/dal/collection-poems.ts` in
   React's `cache` (design D2); `listOwnCollectionsWithPoems` keeps calling it unchanged.
   - Verify with `tests/dal/collection-poems.test.ts`: two calls in one request reach the RPC once
     (proves the wrapper; real dedupe is checked at runtime in 3.2), existing cases unchanged.
-- [ ] 1.2 (NFR-2) Docs: a one-line amendment note in ADR 0011 §3 (a page and its slot may share a
+- [x] 1.2 (NFR-2) Docs: a one-line amendment note in ADR 0011 §3 (a page and its slot may share a
   memoized private read) and the matching line in `docs/state-management.md` (Gate 1 P2).
 
 ## 2. Free poems only on `/account/poems` <!-- judgement-heavy -->
