@@ -17,11 +17,11 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 2. Free poems only on `/account/poems` <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-1) `poem-management/model/free-poems.ts`: `selectFreePoems(poems, collected)` keeps
+- [x] 2.1 (FR-1) `poem-management/model/free-poems.ts`: `selectFreePoems(poems, collected)` keeps
   poems whose id is not collected, order kept (design D3).
   - Verify with `tests/model/free-poems.test.ts`: free only, newest-first order kept, unknown
     collected ids ignored, every poem collected → empty.
-- [ ] 2.2 (FR-1, FR-2, NFR-1) `MyPoemsPage` / `MyPoemsContent` take the required prop
+- [x] 2.2 (FR-1, FR-2, NFR-1) `MyPoemsPage` / `MyPoemsContent` take the required prop
   `readCollectedPoems` typed by `poem-management`'s own `CollectedPoemsRead`; `MyPoemsContent` reads
   it in parallel with `listAuthorPoems` after the public-profile check and renders the free poems,
   no list when empty, or the list alert when either read fails (design D1, D3).
@@ -30,7 +30,7 @@ Each group exports only what it already consumes (tests count as consumers for k
     fails → «Не удалось загрузить произведения. Попробуйте позже.» and no poem link; poem read fails
     → same alert; buttons and slot present in every case; `readCollectedPoems` not called on the
     not-public or session-unknown branch.
-- [ ] 2.3 (FR-1, NFR-1) Export `listCollectedPoems` from `collection-management/index.ts` and pass
+- [x] 2.3 (FR-1, NFR-1) Export `listCollectedPoems` from `collection-management/index.ts` and pass
   it from `src/app/(authorized)/account/poems/page.tsx` as `readCollectedPoems`.
   - Verify with both features' `tests/boundaries.test.ts`: still no import between
     `poem-management` and `collection-management`; `npm run typecheck` proves the route passes the

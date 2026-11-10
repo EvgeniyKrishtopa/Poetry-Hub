@@ -10,7 +10,7 @@ import { MyPoemsSkeleton } from "../MyPoemsSkeleton/MyPoemsSkeleton";
 import type { MyPoemsPageProps } from "./MyPoemsPage.types";
 
 /** `/account/poems`: heading in the static shell, the list in a Suspense boundary (FR-2, design D11). */
-export function MyPoemsPage({ notices, actions, beforeList }: MyPoemsPageProps = {}) {
+export function MyPoemsPage({ notices, actions, beforeList, readCollectedPoems }: MyPoemsPageProps) {
   return (
     <div lang={CONTENT_LANG} className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{POEM_MANAGEMENT_COPY.listHeading}</h1>
@@ -18,7 +18,7 @@ export function MyPoemsPage({ notices, actions, beforeList }: MyPoemsPageProps =
       <DeletedPoemNotice />
       {notices}
       <Suspense fallback={<MyPoemsSkeleton />}>
-        <MyPoemsContent actions={actions} beforeList={beforeList} />
+        <MyPoemsContent actions={actions} beforeList={beforeList} readCollectedPoems={readCollectedPoems} />
       </Suspense>
     </div>
   );
