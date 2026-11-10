@@ -130,7 +130,7 @@ export const COLLECTION_POEMS_PAGE_COPY = {
 /** The collection poems page's failure alert: the edit form's texts (add-poems-to-collections FR-7, FR-8). */
 export const SAVE_COLLECTION_POEMS_FAILURE_MESSAGES: Readonly<
   Record<Exclude<SaveCollectionPoemsFailure, "unauthenticated">, string>
-> = UPDATE_COLLECTION_FAILURE_MESSAGES;
+> = { ...UPDATE_COLLECTION_FAILURE_MESSAGES };
 
 /** The collection poems page's leave dialog (add-poems-to-collections FR-10). */
 export const COLLECTION_POEMS_LEAVE_COPY = {

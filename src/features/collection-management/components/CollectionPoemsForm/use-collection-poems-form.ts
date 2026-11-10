@@ -26,7 +26,7 @@ import { useCollectionPoemsLeavePrompt } from "./use-collection-poems-leave-prom
 export type CollectionPoemsAlert = Exclude<SaveCollectionPoemsFailure, "unauthenticated"> | "stale";
 
 /** Runs with a save's outcome before the form changes any state, so the leave dialog answers first (Gate 1 C1). */
-export type BeforeSaveHandled = (outcome: SaveCollectionPoemsOutcome) => void;
+type BeforeSaveHandled =(outcome: SaveCollectionPoemsOutcome) => void;
 
 export interface CollectionPoemsFormOptions {
   readonly collectionId: string;

@@ -18,8 +18,8 @@ const NON_IMPORTING_FEATURES = [
 
 /**
  * The only modules with the client directive: the forms, the button row, the delete and manage buttons, and the
- * two notices. The shared fields, the form hook, the leave guard, and the leave dialog run on the client through
- * the forms.
+ * two notices. The shared fields, the form hooks, the leave guard, the leave prompts, and the two leave dialogs run on
+ * the client through the forms.
  */
 const CLIENT_MODULES = [
   "src/features/collection-management/components/CollectionActions/CollectionActions.tsx",
