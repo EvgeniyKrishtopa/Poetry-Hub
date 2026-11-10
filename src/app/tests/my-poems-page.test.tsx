@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   CollectionListNotice,
   CreateCollectionLink,
+  listCollectedPoems,
   NewCollectionPage,
   OwnCollectionsSection,
 } from "@/features/collection-management";
@@ -16,6 +17,7 @@ vi.mock("@/features/poem-management", () => ({ MyPoemsPage: () => null }));
 vi.mock("@/features/collection-management", () => ({
   CollectionListNotice: () => null,
   CreateCollectionLink: () => null,
+  listCollectedPoems: vi.fn(),
   OwnCollectionsSection: () => null,
   NewCollectionPage: () => null,
 }));
@@ -24,6 +26,7 @@ type MyPoemsPageElement = ReactElement<{
   readonly notices: ReactElement;
   readonly actions: ReactElement;
   readonly beforeList: ReactElement;
+  readonly readCollectedPoems: unknown;
 }>;
 
 describe("/account/poems page", () => {
@@ -37,6 +40,13 @@ describe("/account/poems page", () => {
     expect(page.props.notices.type).toBe(CollectionListNotice);
     expect(page.props.actions.type).toBe(CreateCollectionLink);
     expect(page.props.beforeList.type).toBe(OwnCollectionsSection);
+  });
+
+  // implements FR-1, NFR-1 of show-only-free-poems
+  it("hands the poem list collection-management's membership read, so it shows free poems only", () => {
+    const element = MyPoemsRoutePage() as ReactElement<{ children: MyPoemsPageElement }>;
+
+    expect(element.props.children.props.readCollectedPoems).toBe(listCollectedPoems);
   });
 });
 
