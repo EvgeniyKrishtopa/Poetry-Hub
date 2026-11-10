@@ -38,12 +38,12 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 3. Verification <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-1 – FR-4, NFR-1, NFR-2) Gate 3 (web-qa) on `/account/poems`: free poems only; every
+- [x] 3.1 (FR-1 – FR-4, NFR-1, NFR-2) Gate 3 (web-qa) on `/account/poems`: free poems only; every
   poem collected → no list; delete a collection → its poems in the plain list, also after Back and
   Forward; save a collection's poems → the plain list follows (by link and by Back); each poem shown
   once. Record "delete a collection, its poems move to the plain list" as a scenario under
   `tests/web-qa-scenarios` with a cleanup step.
-- [ ] 3.2 (NFR-2) In the dev server log or a temporary probe in the scratchpad, confirm one
+- [x] 3.2 (NFR-2) In the dev server log or a temporary probe in the scratchpad, confirm one
   `my_collected_poems` call per `/account/poems` request; leave nothing in the repo.
-- [ ] 3.3 (FR-1 – FR-4, NFR-1, NFR-2) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run
+- [x] 3.3 (FR-1 – FR-4, NFR-1, NFR-2) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run
   knip`; confirm the build keeps `/account/poems`' rendering marker unchanged.

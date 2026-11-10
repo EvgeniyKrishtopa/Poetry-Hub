@@ -80,10 +80,11 @@ async function saveSelection(page: Page) {
 // other's rows and author3 ends as seeded. Every run counts two poem creates (100 per 30 days), two collection
 // creates (50 per 30 days), and two saves (10 per minute); `npx supabase db reset` starts the counts over.
 // implements FR-1, FR-2, FR-4, FR-5, FR-6, FR-11 of add-poems-to-collections: open → add → save → remove → save,
-// then deleting the collection frees its poems.
+// then deleting the collection frees its poems. implements FR-1, FR-4 of show-only-free-poems: a collected poem
+// is not in the free-poem list, a poem taken out of the collection is.
 test(
   "an author adds and removes collection poems, and deleting the collection frees them",
-  { tag: ["@add-poems-to-collections"] },
+  { tag: ["@add-poems-to-collections", "@show-only-free-poems"] },
   async ({ page }) => {
     // Unique per run, so parallel repeats never find each other's rows.
     const runId = `${Date.now()}-${test.info().repeatEachIndex}`;
@@ -119,11 +120,13 @@ test(
     await expect(main.getByRole("link", { name: kept })).toBeVisible();
     await expect(main.getByRole("link", { name: removed })).toHaveCount(0);
 
-    // /account/poems: the kept poem under the collection and in the full list; the removed one in the list only.
+    // /account/poems: the kept poem only under the collection, the removed one only in the free-poem list
+    // (show-only-free-poems FR-1, FR-4).
     await page.goto("/account/poems");
     const section = main.getByRole("region", { name: "Сборники произведений" });
     await expect(section.getByRole("link", { name: kept })).toBeVisible();
-    await expect(main.getByRole("link", { name: kept })).toHaveCount(2);
+    await expect(main.getByRole("link", { name: kept })).toHaveCount(1);
+    await expect(section.getByRole("link", { name: removed })).toHaveCount(0);
     await expect(main.getByRole("link", { name: removed })).toHaveCount(1);
 
     // Deleting the collection keeps its poem, now free: listed once, under no collection.
