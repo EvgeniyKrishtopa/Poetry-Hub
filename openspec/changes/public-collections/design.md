@@ -537,22 +537,23 @@ all four in step; the last group records this, with the owner-pages refactor fro
 
 ## Scaffold map
 
-| File | Contents (signatures, stub bodies) |
-| --- | --- |
-| `supabase/migrations/<ts>_public_collections.sql` | the policy and two grants (D2), with the down migration comment |
-| `src/shared/config/cache-tags.ts` | `authorWorksTag(authorId: string): string` |
-| `src/features/collections/index.ts` | public API: `PublicCollectionsSection`, `PublicCollectionPage`, `getPublicCollection`, `PUBLIC_COLLECTIONS_SEGMENT`, `publicCollectionPath`, type `PublicCollectionResult` |
-| `src/features/collections/model/public-collections.types.ts` | `PublicCollection`, `PublicCollectionPoem`, `AuthorCollectionsResult`, `PublicCollectionResult` |
-| `src/features/collections/model/public-collection-row.schema.ts` | Zod row schema |
-| `src/features/collections/model/nest-public-collections.ts` | `nestPublicCollections(collections, poems)` |
-| `src/features/collections/model/public-collection-paths.ts` | `PUBLIC_COLLECTIONS_SEGMENT`, `publicCollectionPath` |
-| `src/features/collections/model/public-collections-messages.ts` | the copy constants |
-| `src/features/collections/dal/public-collections.ts` | `listPublicCollections`, `listAuthorCollections`, `getPublicCollection` |
-| `src/features/collections/components/PublicCollectionsSection/` | component + `.types.ts` |
-| `src/features/collections/components/PublicCollectionPage/` | Suspense wrapper + `.types.ts` |
-| `src/features/collections/components/PublicCollectionContent/` | async content + `.types.ts` |
-| `src/features/collections/components/PublicCollectionSkeleton/` | skeleton |
-| `src/features/poems/model/uncollected-poems.ts` | `uncollectedPoems(poems)` |
-| `src/features/collection-management/actions/expire-author-works-tag.ts` | `expireAuthorWorksTag(authorId)` |
-| `src/app/(public)/authors/[id]/collections/[collectionId]/page.tsx` | route |
-| `src/app/@breadcrumbs/authors/[id]/collections/[collectionId]/page.tsx` | trail slot |
+Written from the files on disk after the scaffold (`feature/public-collections-scaffold`, approved
+2026-11-10). The migration, the route, and the breadcrumb slot are not scaffolded: groups 1 and 6
+add them. knip ignores the new files until task 7.5.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/shared/config/cache-tags.ts` | the one per-author public tag (D4) | `authorWorksTag` |
+| `src/features/collections/index.ts` | the feature's public API (D1) | `PublicCollectionPage`, `PublicCollectionsSection`, `getPublicCollection`, `PUBLIC_COLLECTIONS_SEGMENT`, `publicCollectionPath`, type `PublicCollectionResult` |
+| `src/features/collections/model/public-collections.types.ts` | the types between DAL, model, and components (D5) | `PublicCollectionPoem`, `PublicCollectionEntry`, `PublicCollection`, `PublicCollectionsResult`, `AuthorCollectionsResult`, `PublicCollectionResult` |
+| `src/features/collections/model/public-collection-row.schema.ts` | the row shape (Zod schema in 4.1) | `PublicCollectionRow` |
+| `src/features/collections/model/nest-public-collections.ts` | nesting and the empty-collection drop; whether any poem is in a collection (D5, D6) | `nestPublicCollections`, `hasCollectedPoems` |
+| `src/features/collections/model/public-collection-paths.ts` | the segment and the page path (D7) | `PUBLIC_COLLECTIONS_SEGMENT`, `publicCollectionPath` |
+| `src/features/collections/model/public-collections-messages.ts` | the copy (NFR-8) | `PUBLIC_COLLECTIONS_COPY` |
+| `src/features/collections/dal/public-collections.ts` | the cached read, the nested read, the one-collection read (D5) | `listPublicCollections`, `listAuthorCollections`, `getPublicCollection` |
+| `src/features/collections/components/PublicCollectionsSection/` | the author page's section (D6) | `PublicCollectionsSection`, `PublicCollectionsSectionProps` |
+| `src/features/collections/components/PublicCollectionPage/` | the page's Suspense boundary (D7) | `PublicCollectionPage`, `PublicCollectionPageProps` |
+| `src/features/collections/components/PublicCollectionContent/` | the page's content and its 404 / error branches (D7) | `PublicCollectionContent`, `PublicCollectionContentProps` |
+| `src/features/collections/components/PublicCollectionSkeleton/` | the page's loading state (D7) | `PublicCollectionSkeleton` |
+| `src/features/poems/model/uncollected-poems.ts` | the author page's free poems (D3) | `uncollectedPoems` |
+| `src/features/collection-management/actions/expire-author-works-tag.ts` | the feature's own tag expiry, logged, never failing the write (D4) | `expireAuthorWorksTag` |
