@@ -8,7 +8,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(78);
+select plan(79);
 
 -- Fixtures, written as the superuser (bypasses RLS). A owns a non-public profile, B and D public ones, C has
 -- no profile. A and B each have one collection two days old, each holding one poem; B has a second, empty
@@ -336,6 +336,11 @@ select results_eq(
   $$select id::text from public.collections where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' order by id$$,
   array['b0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000002'],
   'another author reads a public author''s non-empty collections'
+);
+
+select is_empty(
+  $$select id from public.collections where author_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
+  'another author does not read a non-public author''s collection, though it holds a poem'
 );
 
 reset role;
