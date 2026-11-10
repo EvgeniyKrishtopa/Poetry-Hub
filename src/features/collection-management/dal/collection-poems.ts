@@ -10,8 +10,9 @@ import type { CollectedPoemsResult, CollectionPoemChoicesResult } from "../model
 import { logFailure, withStatus } from "./write-log";
 
 // Uncached, like the feature's other reads (ADR 0011), but through definer functions instead of RLS: the poems
-// table is public and `collection_id` has no grant, so the functions' own caller filter keeps each author to
-// their own poems (add-poems-to-collections D3, ADR 0012). Log lines carry the failure kind only (NFR-5).
+// table is public, so the functions' own caller filter keeps each author to their own poems
+// (add-poems-to-collections D3). `collection_id` is readable by everyone since ADR 0013, which superseded
+// ADR 0012. Log lines carry the failure kind only (NFR-5).
 
 const CHOICES_OPERATION = "read collection poem choices";
 const COLLECTED_OPERATION = "list collected poems";

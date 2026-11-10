@@ -62,6 +62,13 @@ git-ignored `PROGRESS.md`, so every clone sees them.
   collection pages and the collections section on `/account/poems` fail their reads. Existing poems
   start free. Rollback: revert the app first, then the down migration in the file's header (every
   membership is lost).
+- **Public collections migration** (`public-collections`): `npx supabase db push` applies
+  `20261110180000_public_collections.sql` (a select policy and an `anon` column grant that let anyone read
+  a public author's non-empty collections, a select grant on `poems.collection_id`, and
+  `delete_my_collection` returning `author_id`; ADR 0013). Apply it after the collection poems migration
+  and before the app: without it the public collections reads return no rows and `collection_id` can't be
+  selected, so the author page fails its poems read. Rollback: revert the app first, then the down
+  migration in the file's header.
 - **`poem-illustrations` bucket** (`add-poem-creation`): on the hosted project, confirm it exists,
   public, 5 MiB file size limit, MIME types `image/png` and `image/jpeg` — the same as
   `supabase/config.toml`, which configures the local stack only.

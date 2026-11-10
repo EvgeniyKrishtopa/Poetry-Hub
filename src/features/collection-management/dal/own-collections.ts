@@ -15,8 +15,9 @@ import type {
 
 import { logFailure, withStatus } from "./write-log";
 
-// Uncached on purpose: the cookie client runs as the signed-in reader, so RLS limits every row to the caller,
-// and a cache scope can't read the session (design D4, ADR 0011). Log lines carry the failure kind only (NFR-5).
+// Uncached on purpose: the cookie client runs as the signed-in reader, and a cache scope can't read the session
+// (design D4, ADR 0011). RLS also lets this client read other public authors' non-empty collections (ADR 0013),
+// so every read here filters by the own author id itself. Log lines carry the failure kind only (NFR-5).
 
 const COLLECTIONS_TABLE = "collections";
 const LIST_OPERATION = "list collections";
@@ -36,7 +37,7 @@ const collectionRowSchema = z.object({
   description: z.string().min(1).nullable(),
 });
 
-/** The author's collections for the `/account/poems` section, newest first, through RLS (design D4). */
+/** The author's collections for the `/account/poems` section, newest first (design D4). */
 export async function listOwnCollections(authorId: string): Promise<OwnCollectionsResult> {
   try {
     const supabase = await createSupabaseServerClient();
@@ -64,7 +65,7 @@ export async function listOwnCollections(authorId: string): Promise<OwnCollectio
   }
 }
 
-/** The row by id and owner; RLS hides another author's row, so it reads as none (design D4). */
+/** The row by id and owner; another author's row doesn't match the owner filter, so it reads as none (design D4). */
 async function readOwnCollection(authorId: string, collectionId: string): Promise<OwnCollectionResult> {
   try {
     const supabase = await createSupabaseServerClient();
