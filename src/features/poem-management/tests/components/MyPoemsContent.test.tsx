@@ -267,6 +267,16 @@ describe("MyPoemsContent: free poems only", () => {
     expect(screen.getByRole("region", { name: "Slot section" })).toBeInTheDocument();
   });
 
+  // implements FR-1, FR-2 of show-only-free-poems
+  it("still lists free poems only when the section shows its own collections alert", async () => {
+    collectedAre(NIGHT_STATION);
+
+    await renderContent({ ...SLOTS, beforeList: <p role="alert">Не удалось загрузить сборники. Попробуйте позже.</p> });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Не удалось загрузить сборники. Попробуйте позже.");
+    expect(listedTitles()).toEqual(["Осенний сад"]);
+  });
+
   // implements FR-2 of show-only-free-poems
   it("shows the list alert when the poem read fails, whatever the membership read says", async () => {
     vi.mocked(listAuthorPoems).mockResolvedValue({ ok: false, reason: "unavailable" });
