@@ -1,10 +1,13 @@
 import { render, screen } from "@testing-library/react";
+import { Suspense, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { requireSession } from "@/features/auth";
 
 import { CollectionPoemsContent } from "../../components/CollectionPoemsContent/CollectionPoemsContent";
 import type { CollectionPoemsFormProps } from "../../components/CollectionPoemsForm/CollectionPoemsForm.types";
+import { CollectionPoemsPage } from "../../components/CollectionPoemsPage/CollectionPoemsPage";
+import { CollectionPoemsSkeleton } from "../../components/CollectionPoemsSkeleton/CollectionPoemsSkeleton";
 import { getCollectionPoemChoices } from "../../dal/collection-poems";
 import { getOwnCollection } from "../../dal/own-collections";
 import type { CollectionPoemChoice, OwnCollection } from "../../model/collection-management.types";
@@ -109,5 +112,28 @@ describe("CollectionPoemsContent", () => {
 
     await expect(renderContent()).rejects.toThrow("Collection poems page unavailable");
     expect(formProps).not.toHaveBeenCalled();
+  });
+});
+
+describe("CollectionPoemsPage", () => {
+  // implements FR-4, NFR-8 of add-poems-to-collections
+  it("keeps the heading in the static shell and streams the content behind its skeleton, on a lang=ru root", () => {
+    const collectionId = Promise.resolve(COLLECTION_ID);
+    const element = CollectionPoemsPage({ collectionId }) as ReactElement<{
+      lang: string;
+      children: readonly [
+        ReactElement<{ children: string }>,
+        ReactElement<{ fallback: ReactElement; children: ReactElement<{ collectionId: Promise<string> }> }>,
+      ];
+    }>;
+
+    expect(element.props.lang).toBe("ru");
+    const [heading, boundary] = element.props.children;
+    expect(heading.type).toBe("h1");
+    expect(heading.props.children).toBe("Произведения сборника");
+    expect(boundary.type).toBe(Suspense);
+    expect(boundary.props.fallback.type).toBe(CollectionPoemsSkeleton);
+    expect(boundary.props.children.type).toBe(CollectionPoemsContent);
+    expect(boundary.props.children.props.collectionId).toBe(collectionId);
   });
 });

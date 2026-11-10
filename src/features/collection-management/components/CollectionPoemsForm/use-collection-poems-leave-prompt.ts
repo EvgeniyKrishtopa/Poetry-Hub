@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { startTransition, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { LEAVE_ANSWER, type LeaveAnswer } from "@/shared/lib/leave-guard/leave-guard.constants";
@@ -54,6 +54,15 @@ export function useCollectionPoemsLeavePrompt(host: CollectionPoemsLeavePromptHo
   const settleRef = useRef<((answer: LeaveAnswer) => void) | null>(null);
   // The element `open` showed: a hidden `Activity` detaches `dialogRef` before the guard's cleanup asks to close.
   const shownDialogRef = useRef<HTMLDialogElement | null>(null);
+
+  // The connection dropping disables the focused save button, and the browser drops its focus to the page:
+  // hand it to the stay button, as an offline open does (FR-9, FR-10).
+  useEffect(() => {
+    const dialog = shownDialogRef.current;
+    if (host.connection === CONNECTION_STATUS.online || dialog === null || !dialog.open) return;
+    const focused = document.activeElement;
+    if (focused === saveRef.current || !dialog.contains(focused)) stayRef.current?.focus();
+  }, [host.connection]);
 
   function settle(answer: LeaveAnswer) {
     settleRef.current?.(answer);

@@ -207,6 +207,20 @@ describe("CollectionPoemsForm: the link form", () => {
     expect(button(COPY.stay)).toHaveFocus();
   });
 
+  // implements FR-9, FR-10 of add-poems-to-collections: the connection drops with the dialog already open
+  it.each(["offline", "slow"] as const)("going %s with save focused moves focus to «Остаться»", async (status) => {
+    const { user, rerender } = renderPage();
+    await changeSelection(user);
+    await user.click(link("Наши авторы"));
+    expect(button(COPY.save)).toHaveFocus();
+
+    setConnection(status);
+    rerender("visible");
+
+    expect(button(COPY.save)).toBeDisabled();
+    expect(button(COPY.stay)).toHaveFocus();
+  });
+
   // implements FR-10 of add-poems-to-collections
   it("leaves without saving: the link's relative path, no save sent", async () => {
     const { user } = renderPage();

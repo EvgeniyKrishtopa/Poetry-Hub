@@ -118,13 +118,13 @@ Each group exports only what it already consumes (tests count as consumers for k
 
 ## 7. Verification <!-- judgement-heavy -->
 
-- [ ] 7.1 (NFR-2, NFR-3, NFR-5, NFR-6) Static checks: the `collection-management` boundaries
+- [x] 7.1 (NFR-2, NFR-3, NFR-5, NFR-6) Static checks: the `collection-management` boundaries
   test's client-module list gains the new client modules and the moved guard; no import of `poems`
   or `poem-management`; `beforeunload` only in the feature's one guard; no colour literals.
-- [ ] 7.2 (FR-1 – FR-14) Gate 3 (web-qa): the flows in design D13, plus no flash of the old
+- [x] 7.2 (FR-1 – FR-14) Gate 3 (web-qa): the flows in design D13, plus no flash of the old
   selection after a save; record open → add → save →
   remove → save as a scenario under `tests/web-qa-scenarios` with a cleanup step.
-- [ ] 7.3 (NFR-7, NFR-8) Drop the scaffold's `knip.jsonc` entries for this change's files (any export knip then reports unused is removed, not ignored); compare the messages module with the proposal's copy table; run
+- [x] 7.3 (NFR-7, NFR-8) Drop the scaffold's `knip.jsonc` entries for this change's files (any export knip then reports unused is removed, not ignored); compare the messages module with the proposal's copy table; run
   `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip` and
   confirm the build lists `/account/poems/collections/[collectionId]/poems` as partially prerendered
   and keeps every other marker.
