@@ -46,3 +46,28 @@ export const LEAVE_DIALOG_REASON = {
   link: "link",
   signOut: "sign-out",
 } as const;
+
+/** The collection poems page's segment, `/account/poems/collections/<id>/poems` (add-poems-to-collections D12). */
+export const COLLECTION_POEMS_SEGMENT = "poems";
+
+/** The manage button's check outcomes (add-poems-to-collections D4). */
+export const CHECK_COLLECTION_POEMS_STATUS = {
+  ready: "ready",
+  notFound: "not-found",
+  nothingToManage: "nothing-to-manage",
+  failed: "failed",
+} as const;
+
+/** The collection poems save's outcomes (add-poems-to-collections D6). */
+export const SAVE_COLLECTION_POEMS_STATUS = {
+  saved: "saved",
+  stale: "stale",
+  notFound: "not-found",
+  failed: "failed",
+} as const;
+
+/**
+ * The most poems one save may add, and separately remove: far above the poem create limit. Kept in step with
+ * `save_my_collection_poems()`'s own guard; both are pinned by tests (add-poems-to-collections D2, D6).
+ */
+export const MAX_POEMS_PER_SAVE = 1000;

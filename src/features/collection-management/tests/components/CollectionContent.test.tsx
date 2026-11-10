@@ -8,22 +8,32 @@ import { CollectionContent } from "../../components/CollectionContent/Collection
 import { CollectionPage } from "../../components/CollectionPage/CollectionPage";
 import { CollectionPageSkeleton } from "../../components/CollectionPageSkeleton/CollectionPageSkeleton";
 import { EditCollectionButton } from "../../components/EditCollectionButton/EditCollectionButton";
+import { getCollectionPoemChoices } from "../../dal/collection-poems";
 import { getOwnCollection } from "../../dal/own-collections";
-import type { OwnCollection } from "../../model/collection-management.types";
+import type { CollectionPoemChoice, OwnCollection } from "../../model/collection-management.types";
 
 vi.mock("@/features/auth", () => ({ requireSession: vi.fn() }));
 vi.mock("../../dal/own-collections", () => ({ getOwnCollection: vi.fn() }));
+vi.mock("../../dal/collection-poems", () => ({ getCollectionPoemChoices: vi.fn() }));
 vi.mock("../../actions/delete-collection.actions", () => ({ deleteCollectionAction: vi.fn() }));
+vi.mock("../../actions/check-collection-poems.actions", () => ({ checkCollectionPoemsAction: vi.fn() }));
 vi.mock("next/navigation", () => ({
   notFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
   }),
-  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 
 const USER_ID = "2b3c4d5e-6f70-4a1b-9c2d-3e4f5a6b7c8d";
 const COLLECTION_ID = "40000000-0000-4000-8000-000000000031";
 const COLLECTION: OwnCollection = { id: COLLECTION_ID, title: "Осенний цикл", description: "Стихи октября" };
+const IN_COLLECTION: CollectionPoemChoice = {
+  id: "50000000-0000-4000-8000-000000000002",
+  title: "Ночной вокзал",
+  selected: true,
+};
+const FREE: CollectionPoemChoice = { id: "50000000-0000-4000-8000-000000000001", title: "Осенний сад", selected: false };
+const MANAGE_NAME = "Произведения сборника";
 
 async function renderContent() {
   return render(await CollectionContent({ collectionId: Promise.resolve(COLLECTION_ID) }));
@@ -37,6 +47,7 @@ function paragraphs(): HTMLParagraphElement[] {
 beforeEach(() => {
   vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID });
   vi.mocked(getOwnCollection).mockResolvedValue({ ok: true, collection: COLLECTION });
+  vi.mocked(getCollectionPoemChoices).mockResolvedValue({ ok: true, choices: [] });
 });
 
 afterEach(() => {
@@ -98,6 +109,61 @@ describe("CollectionContent", () => {
     await expect(CollectionContent({ collectionId: Promise.resolve(COLLECTION_ID) })).rejects.toThrow(
       "Collection page unavailable",
     );
+  });
+
+  // implements FR-2 of add-poems-to-collections
+  it("shows neither the poems heading nor the manage button when there is nothing to manage", async () => {
+    await renderContent();
+
+    expect(getCollectionPoemChoices).toHaveBeenCalledExactlyOnceWith(COLLECTION_ID);
+    expect(screen.queryByRole("heading", { level: 2 })).toBeNull();
+    expect(screen.queryByRole("button", { name: MANAGE_NAME })).toBeNull();
+    expect(screen.getByRole("link", { name: "Редактировать сборник" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Удалить сборник" })).toBeInTheDocument();
+  });
+
+  // implements FR-2 of add-poems-to-collections
+  it("lists only the collection's own poems between the description and the row, with the manage button", async () => {
+    vi.mocked(getCollectionPoemChoices).mockResolvedValue({ ok: true, choices: [IN_COLLECTION, FREE] });
+
+    await renderContent();
+
+    const heading = screen.getByRole("heading", { level: 2, name: "Произведения" });
+    const poemLink = screen.getByRole("link", { name: "Ночной вокзал" });
+    expect(poemLink).toHaveAttribute("href", `/account/poems/${IN_COLLECTION.id}`);
+    expect(screen.queryByRole("link", { name: "Осенний сад" })).toBeNull();
+    const [description] = paragraphs();
+    const edit = screen.getByRole("link", { name: "Редактировать сборник" });
+    expect((description as Node).compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(poemLink.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole("button", { name: MANAGE_NAME }).parentElement).toBe(edit.parentElement);
+  });
+
+  // implements FR-2 of add-poems-to-collections
+  it("shows the manage button but no poems heading for an empty collection while a free poem exists", async () => {
+    vi.mocked(getCollectionPoemChoices).mockResolvedValue({ ok: true, choices: [FREE] });
+
+    await renderContent();
+
+    expect(screen.getByRole("button", { name: MANAGE_NAME })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 2 })).toBeNull();
+  });
+
+  // implements FR-2 of add-poems-to-collections
+  it("throws to the error screen when the collection's poems can't be read", async () => {
+    vi.mocked(getCollectionPoemChoices).mockResolvedValue({ ok: false });
+
+    await expect(CollectionContent({ collectionId: Promise.resolve(COLLECTION_ID) })).rejects.toThrow(
+      "Collection poems unavailable",
+    );
+  });
+
+  // implements FR-2 of add-poems-to-collections
+  it("reads no poems for a collection that isn't the author's own", async () => {
+    vi.mocked(getOwnCollection).mockResolvedValue({ ok: false, reason: "not-found" });
+
+    await expect(CollectionContent({ collectionId: Promise.resolve(COLLECTION_ID) })).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(getCollectionPoemChoices).not.toHaveBeenCalled();
   });
 
   // implements FR-16 of add-poem-collections

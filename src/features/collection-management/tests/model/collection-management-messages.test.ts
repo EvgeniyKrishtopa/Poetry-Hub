@@ -5,10 +5,15 @@ import {
   COLLECTION_FORM_COPY,
   COLLECTION_LIST_COPY,
   COLLECTION_PAGE_COPY,
+  COLLECTION_POEMS_LEAVE_COPY,
+  COLLECTION_POEMS_ON_PAGE_COPY,
+  COLLECTION_POEMS_PAGE_COPY,
   COLLECTION_TRAIL_LABELS,
   CREATE_COLLECTION_FAILURE_MESSAGES,
   EDIT_COLLECTION_COPY,
+  MANAGE_COLLECTION_POEMS_ERRORS,
   NEW_COLLECTION_COPY,
+  SAVE_COLLECTION_POEMS_FAILURE_MESSAGES,
   UPDATE_COLLECTION_FAILURE_MESSAGES,
 } from "../../model/collection-management-messages";
 
@@ -79,5 +84,55 @@ describe("collection-management messages", () => {
     expect(UPDATE_COLLECTION_FAILURE_MESSAGES["not-public"]).toBe(
       "Чтобы сохранять изменения, укажите имя и фамилию в профиле автора.",
     );
+  });
+
+  // implements NFR-7 of add-poems-to-collections
+  it("match the collection page's poem list and manage button rows", () => {
+    expect(COLLECTION_POEMS_ON_PAGE_COPY.poemsHeading).toBe("Произведения");
+    expect(COLLECTION_POEMS_ON_PAGE_COPY.manage).toBe("Произведения сборника");
+    expect(MANAGE_COLLECTION_POEMS_ERRORS["not-found"]).toBe("Сборник уже удалён.");
+    expect(MANAGE_COLLECTION_POEMS_ERRORS["nothing-to-manage"]).toBe(
+      "Нет свободных произведений для добавления в сборник.",
+    );
+    expect(MANAGE_COLLECTION_POEMS_ERRORS.unavailable).toBe("Не удалось открыть произведения сборника. Попробуйте позже.");
+  });
+
+  // implements NFR-7 of add-poems-to-collections
+  it("match the collection poems page rows", () => {
+    expect(COLLECTION_POEMS_PAGE_COPY.heading).toBe("Произведения сборника");
+    expect(COLLECTION_TRAIL_LABELS.collectionPoems).toBe("Произведения сборника");
+    expect(COLLECTION_POEMS_PAGE_COPY.hint(TITLE)).toBe(
+      "Отметьте произведения сборника «Осень». Произведение может входить только в один сборник.",
+    );
+    expect(COLLECTION_POEMS_PAGE_COPY.legend).toBe("Произведения");
+    expect(COLLECTION_POEMS_PAGE_COPY.empty).toBe("Нет свободных произведений для добавления в сборник.");
+    expect(COLLECTION_POEMS_PAGE_COPY.save).toBe("Сохранить выбранное");
+    expect(COLLECTION_POEMS_PAGE_COPY.savePending).toBe("Сохранение…");
+    expect(COLLECTION_POEMS_PAGE_COPY.saved).toBe("Произведения сборника сохранены.");
+    expect(COLLECTION_POEMS_PAGE_COPY.backToCollection).toBe("Вернуться к сборнику");
+    expect(COLLECTION_POEMS_PAGE_COPY.stale).toBe(
+      "Часть произведений уже недоступна: список обновлён. Отметьте произведения заново.",
+    );
+    expect(SAVE_COLLECTION_POEMS_FAILURE_MESSAGES["too-many-saves"]).toBe(
+      "Слишком много сохранений. Попробуйте через минуту.",
+    );
+    expect(SAVE_COLLECTION_POEMS_FAILURE_MESSAGES["not-public"]).toBe(
+      "Чтобы сохранять изменения, укажите имя и фамилию в профиле автора.",
+    );
+    expect(SAVE_COLLECTION_POEMS_FAILURE_MESSAGES.unavailable).toBe("Сохранение сейчас недоступно. Попробуйте позже.");
+    expect(SAVE_COLLECTION_POEMS_FAILURE_MESSAGES.unknown).toBe("Что-то пошло не так. Попробуйте ещё раз.");
+  });
+
+  // implements NFR-7 of add-poems-to-collections
+  it("match the collection poems leave dialog rows", () => {
+    expect(COLLECTION_POEMS_LEAVE_COPY.title).toBe("Есть несохранённые изменения");
+    expect(COLLECTION_POEMS_LEAVE_COPY.linkBody).toBe("Сохранить выбранные произведения перед уходом?");
+    expect(COLLECTION_POEMS_LEAVE_COPY.signOutBody).toBe("Сохранить выбранные произведения перед выходом?");
+    expect(COLLECTION_POEMS_LEAVE_COPY.save).toBe("Сохранить изменения");
+    expect(COLLECTION_POEMS_LEAVE_COPY.savePending).toBe("Сохранение…");
+    expect(COLLECTION_POEMS_LEAVE_COPY.leaveLink).toBe("Уйти без сохранения");
+    expect(COLLECTION_POEMS_LEAVE_COPY.leaveSignOut).toBe("Выйти без сохранения");
+    expect(COLLECTION_POEMS_LEAVE_COPY.stay).toBe("Остаться");
+    expect(COLLECTION_POEMS_LEAVE_COPY.close).toBe("Закрыть");
   });
 });

@@ -39,6 +39,7 @@ async function readForMatch(match: RouteMatch): Promise<TrailReads> {
       return { ownPoemTitle: await getOwnPoemTitle(match.poemId) };
     case "own-collection":
     case "own-collection-edit":
+    case "own-collection-poems":
       return { ownCollectionTitle: await getOwnCollectionTitle(match.collectionId) };
     default:
       return {};
