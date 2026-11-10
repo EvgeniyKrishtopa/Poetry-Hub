@@ -84,6 +84,7 @@ describe("collection-management boundaries", () => {
   });
 
   // implements NFR-6 of add-poem-collections
+  // implements NFR-6 of add-poems-to-collections: the new pages, list, and dialog included
   it("uses no colour literals in the feature and TextAreaField", () => {
     const files = [...sourceFiles(FEATURE_DIR), ...sourceFiles(TEXT_AREA_FIELD_DIR)];
 
