@@ -28,6 +28,15 @@ describe("nestCollectedPoems", () => {
     ]);
   });
 
+  // implements FR-9 of drag-and-drop-ordering
+  it("keeps the author's order of the poems inside a collection, not the order of the ids", () => {
+    const collections = [{ id: SPRING_ID, title: "Весна" }];
+
+    expect(nestCollectedPoems(collections, [OLDEST_SPRING_POEM, NEWEST_SPRING_POEM])).toEqual([
+      { id: SPRING_ID, title: "Весна", poems: [OLDEST_SPRING_POEM, NEWEST_SPRING_POEM] },
+    ]);
+  });
+
   it("leaves out a poem whose collection isn't listed", () => {
     const stray = { collectionId: UNLISTED_ID, id: "50000000-0000-4000-8000-000000000004", title: "Туман" };
 

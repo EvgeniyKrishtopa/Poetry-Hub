@@ -127,7 +127,7 @@ export type CollectedPoemsResult =
   | { readonly ok: true; readonly poems: readonly CollectedPoem[] }
   | { readonly ok: false };
 
-/** One collection of the `/account/poems` section with its poems, newest first; empty when it holds none. */
+/** One collection of the `/account/poems` section with its poems in the author's order; empty when it holds none. */
 export interface CollectionWithPoems extends CollectionSummary {
   readonly poems: readonly CollectedPoem[];
 }

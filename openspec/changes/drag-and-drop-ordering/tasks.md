@@ -42,19 +42,19 @@ verification. Each group exports only what it already consumes (tests count as c
 
 ## 2. Every read orders by position; every create goes first (no visible change) <!-- isolated -->
 
-- [ ] 2.1 (FR-9, FR-8) `poems`' `listAuthorPoems`: select `position`, `order by position, id`; the public
+- [x] 2.1 (FR-9, FR-8) `poems`' `listAuthorPoems`: select `position`, `order by position, id`; the public
   collections read (`collections`): order by `position, id`; update fixtures and tests. The four model
   copies keep "the order given": comments updated, tests assert the order is preserved.
   - Verify with `poems/tests/dal/author-poems.test.ts`, `collections/tests/dal/*`, and the four model tests.
-- [ ] 2.2 (FR-9) `collection-management`: `listOwnCollections`, `listCollectedPoems` and the collection page's
+- [x] 2.2 (FR-9) `collection-management`: `listOwnCollections`, `listCollectedPoems` and the collection page's
   poems read order by position; `my_collection_poem_choices` stays newest first (the checklist).
   - Verify with `collection-management/tests/dal/*`.
-- [ ] 2.3 (FR-1) The create actions need no code change (the insert triggers set the position); assert in
+- [x] 2.3 (FR-1) The create actions need no code change (the insert triggers set the position); assert in
   their tests that the RPC result is unchanged. Gate 3 later checks that a new poem and collection appear first.
 
 ## 3. Choosing a collection's poems keeps the order sensible <!-- isolated -->
 
-- [ ] 3.1 (FR-10) `save-collection-poems` action and DAL: no change of arguments; tests assert that the
+- [x] 3.1 (FR-10) `save-collection-poems` action and DAL: no change of arguments; tests assert that the
   result and the cache expiry are unchanged; the new ordering is verified in pgTAP (1.4) and by Gate 3.
 
 ## 4. Move actions and their DAL (nothing calls them yet) <!-- judgement-heavy -->

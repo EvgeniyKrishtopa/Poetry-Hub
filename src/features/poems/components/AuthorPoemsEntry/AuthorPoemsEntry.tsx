@@ -10,7 +10,7 @@ import type { AuthorPoemsEntryProps } from "./AuthorPoemsEntry.types";
 
 /**
  * The author page's last block: the poems section heading (h2) over the author's free poem titles (those in no
- * collection) newest first, the empty text, or the unavailable text (the page still renders). Nothing when every poem
+ * collection) in the author's order, the empty text, or the unavailable text (the page still renders). Nothing when every poem
  * is in a collection (public-collections D3). An h2, because the page's h1 is the author's name. It reads no session,
  * so every visitor sees the same list.
  */

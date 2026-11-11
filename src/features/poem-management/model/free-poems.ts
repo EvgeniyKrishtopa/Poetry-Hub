@@ -3,7 +3,7 @@ interface WithId {
 }
 
 /**
- * The poems that are in no collection, in the order given (newest first from `listAuthorPoems`). A collected id with
+ * The poems that are in no collection, in the order given (the author's order from `listAuthorPoems`). A collected id with
  * no matching poem is ignored (show-only-free-poems design D3).
  */
 export function selectFreePoems<P extends WithId>(poems: readonly P[], collected: readonly WithId[]): readonly P[] {

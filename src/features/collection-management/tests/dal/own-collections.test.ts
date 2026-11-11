@@ -76,7 +76,8 @@ describe("listOwnCollections", () => {
   // implements FR-2 of add-poem-collections
   // implements NFR-1 of public-collections: the explicit author filter is what keeps another public author's
   // collections, which RLS now lets this client read, out of /account/poems.
-  it("reads the author's id and title rows, newest first with the id as the tie-break", async () => {
+  // implements FR-9 of drag-and-drop-ordering
+  it("reads the author's id and title rows in the author's order: the stored position, the id as the tie-break", async () => {
     const rows = [
       { id: COLLECTION_ID, title: TITLE },
       { id: OTHER_COLLECTION_ID, title: "Весна" },
@@ -88,7 +89,7 @@ describe("listOwnCollections", () => {
       ["from", "collections"],
       ["select", "id, title"],
       ["eq", "author_id", AUTHOR_ID],
-      ["order", "created_at", { ascending: false }],
+      ["order", "position", { ascending: true }],
       ["order", "id", { ascending: true }],
     ]);
   });

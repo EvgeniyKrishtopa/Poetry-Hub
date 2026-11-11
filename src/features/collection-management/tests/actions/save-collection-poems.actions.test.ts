@@ -46,6 +46,8 @@ describe("saveCollectionPoemsAction", () => {
   });
 
   // implements FR-6, FR-12 of add-poems-to-collections
+  // implements FR-10 of drag-and-drop-ordering: the placement of added and removed poems is the database's; the
+  // arguments, the answer, and the cache expiry stay as they were (pgTAP covers the order).
   it("counts the attempt, saves both lists, refreshes, and answers saved", async () => {
     const result = await saveCollectionPoemsAction(INPUT);
 
