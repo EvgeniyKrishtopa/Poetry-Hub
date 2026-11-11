@@ -24,16 +24,20 @@ rows say "existing".
 | FR-4 | Free poem into a collection; poem out of a collection; reorder the free poems | `arrange-drop` tests for the three shapes; `work_ordering.test.sql`: `move_my_poem` with and without a target collection; Gate 3 | unit, integration, end-to-end |
 | FR-4 | Free-poems drop area appears while dragging when no free poem exists | island test: `onDragStart` with no free poem renders the area with its text; drop on it → free | unit |
 | FR-5 | Move a collection to the top; its poems stay; guest sees the order | `arrange-drop` test (collection move keeps nested poems); `work_ordering.test.sql`: `move_my_collection`; Gate 3 guest reload | unit, integration, end-to-end |
-| FR-5 | A collection cannot nest | island test: a collection dropped over a poem list resolves to a collection place or to no destination (returns); Gate 3 | unit, end-to-end |
+| FR-5 | A collection cannot nest | island test: a collection dropped over a poem list stands at the collection place the in-drag arrangement showed, and returns only when none was shown (outside the board); Gate 3 | unit, end-to-end |
 | FR-6 | A successful drop: shown at once, no message, persists after reload | island test: optimistic order shown while the action mock pends, no alert after `ok:true`; Gate 3 reload | unit, end-to-end |
 | FR-6 | The server refuses: item returns, alert with focus | island test: `ok:false` → props order back, alert text, focus on alert | unit |
 | FR-6 | Over the limit: nothing stored, rate message | action test: `consume_write_allowance` denied → no RPC, reason `rate-limited`; island test: the over-limit text | unit |
 | FR-6 | The connection drops: same alert, never the error screen | island test: the action mock rejects → failed alert, no thrown render | unit |
 | FR-6 | Session expired → `/login` with the existing message | action test: no session → `redirect("/login")` with the expired-session marker, no RPC | unit |
 | FR-6 | Offline: the existing offline notice on the board | board test: `useConnection` offline → notice with `role="status"` | unit |
-| FR-7 | Keyboard move inside a list, announced, focus on the handle | spike (task 5.1) result recorded; island test with the library's keyboard events: lift, arrows, drop → new order, announce calls, focus on handle; Gate 3 keyboard pass | unit, end-to-end |
+| FR-6 | Offline or slow: no handle can start a drag; active again only when online and not slow; a drag already in progress is not cancelled | board test: `useConnection` offline, then slow, then online → handles disabled, disabled, enabled; a drag started before going offline can still be dropped | unit |
+| FR-7 | Keyboard move inside a list, announced, focus on the handle | spike (task 5.1, `@dnd-kit`) result recorded; island test with keyboard events: lift, arrows, drop → new order, announce calls, focus on handle; Gate 3 keyboard pass | unit, end-to-end |
 | FR-7 | Cancel returns the item and announces it | island test: Escape → old order, no action call, announcement text | unit |
-| FR-7 | Keyboard move between collections | spike result; island test or Gate 3 keyboard pass: item ends in the other collection | unit, end-to-end |
+| FR-7 | Keyboard move between collections | spike result; `board-places.test.ts`: `nextPlace` crosses from the end of one list into the next; island test or Gate 3 keyboard pass: item ends in the other collection | unit, end-to-end |
+| FR-7 | Keyboard move into an empty collection | `board-places.test.ts`: an empty collection has one place; Gate 3 keyboard pass: item ends in «Пустой», focus on its handle | unit, end-to-end |
+| FR-7 | Announcement wording: «помещено в …» only when a poem's list changes; the position phrase otherwise and for every collection; n and total from the target list | `board-announcements.test.ts` (pure `announcementFor`, one case per phrase of the proposal's table) | unit |
+| FR-7 | ArrowUp/ArrowDown step through places in reading order; a collection steps among collections only; ArrowLeft/ArrowRight do nothing; ArrowUp at the first place and ArrowDown at the last do nothing, silently, with no wrap | `board-places.test.ts` (pure functions, exhaustive: ends of the board returning no next place, free poems, one collection) | unit |
 | FR-7 | Scroll on touch does not start a drag | Gate 3 with touch emulation: swipe on a title scrolls; handle-only drag props asserted in an island test | end-to-end, unit |
 | FR-8 | A guest follows a move after reload | action test: `moved` → `updateTag(authorWorksTag(authorId))`; Gate 3: guest reload | unit, end-to-end |
 | FR-8 | A refused move changes nothing public | action tests: rate-limited, failed, invalid → no `updateTag`; stale → `refresh()` without `updateTag` | unit |
@@ -47,7 +51,7 @@ rows say "existing".
 | NFR-1 | A guest reads the order of a public author's rows | `work_ordering.test.sql`: anon `select … order by position, id`; a non-public author's rows unreadable | integration |
 | NFR-2 | The thirty-first move is refused | `work_ordering.test.sql`: the `order_move` scope counts 30 per minute; action test: the 31st answer maps to `rate-limited` | integration, unit |
 | NFR-3 | No sibling imports; only the route imports the feature | `work-ordering/tests/boundaries.test.ts`; boundary tests of `poem-management` and `collection-management` (existing, extended) | unit |
-| NFR-4 | List structure and handle names | island test: `ul > li > ul`, `button` handles with the accessible names, polite live region, `role="alert"` | unit |
+| NFR-4 | List structure and handle names | island test: `ul > li > ul`, `button` handles with the accessible names, the board's own `aria-live="polite"` region (written once per event; the library's region silent), `role="alert"` | unit |
 | NFR-5 | No colour literal or arbitrary value | style lint / token test over the feature's CSS and class names (existing style checks) | unit |
 | NFR-6 | Every copy string lives in the messages module | messages copy test: each string of the proposal table is exported; no literal in components | unit |
 | NFR-7 | A failed move or read logs operation and kind only | action and DAL tests: spy on the logger, assert no title or id in the line | unit |

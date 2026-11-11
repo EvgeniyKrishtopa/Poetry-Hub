@@ -1,0 +1,13 @@
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"free poems drop area shown only while a poem is dragged","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"empty free list counts as one keyboard place","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"placed-in phrase compared with the previous step","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"collection released over another collection's poems takes the shown collection place","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"alert stays until the next drag starts","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"handles active again only when online and not slow","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"a drag in progress is not cancelled when the connection drops","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"native disabled while sending; alert keeps focus after a failure","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"Space is the only lift/drop key","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"all drag kinds are announced","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"board ends: arrow does nothing, silent, no wrap","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"touch: about 200 ms hold, touch-action manipulation, quick swipe scrolls","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T18:08:01Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-clarify","finding":"instructions read at every handle focus","outcome":"fixed","ruleNumber":""}

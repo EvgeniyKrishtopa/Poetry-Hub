@@ -76,7 +76,7 @@ order they see them, and move a poem between collections by dragging it.
 | Drag handle of a poem | `Переместить произведение «<title>»` |
 | Empty collection's drop area | `Перетащите сюда произведение.` |
 | Empty free poems drop area | `Перетащите сюда произведение, чтобы оно не входило ни в один сборник.` |
-| Keyboard instructions (read once when a handle is focused) | `Нажмите пробел, чтобы взять. Стрелками выберите место. Пробел — положить, Escape — отменить.` |
+| Keyboard instructions (attached to every handle, read each time a handle gets focus) | `Нажмите пробел, чтобы взять. Стрелками выберите место. Пробел — положить, Escape — отменить.` |
 | Screen reader announcements | `Взято: «<title>».` · `«<title>» — позиция <n> из <total>.` (a move or a drop inside the same list, and every collection move, <n> among the collections) · `«<title>» помещено в сборник «<collection>», позиция <n> из <total>.` and `«<title>» помещено в свободные, позиция <n> из <total>.` (only when a poem's list changes) · `«<title>» возвращено на прежнее место.` |
 | Failure | `Не удалось сохранить порядок. Попробуйте ещё раз.` |
 | Over the limit | `Слишком много перестановок за минуту. Подождите немного и повторите.` |
@@ -116,7 +116,7 @@ Each requirement is specified with its scenarios in the delta specs. Summary:
 | FR-9 | The author's own pages show the same order (modifies collection-management, poem-management) | collection-management, poem-management |
 | FR-10 | Choosing a collection's poems, creating, and deleting keep the order sensible (modifies add-poems-to-collections FR-4) | collection-management, poem-management |
 | FR-11 | A move refused because the list changed elsewhere refreshes the list and says so | work-ordering |
-| NFR-1 | Database: positions are readable by every role that reads the row, written only by the new definer functions, atomically; no client role gains an update grant | work-ordering |
+| NFR-1 | Database: positions are readable by every role that reads the row, written only by definer paths (the two new move functions, the existing collection-poems save and collection delete, and the two insert triggers), atomically; no client role gains an update grant | work-ordering |
 | NFR-2 | At most 30 moves per minute per account, counted after the session check and before the move | work-ordering |
 | NFR-3 | Module boundaries: a new `work-ordering` feature; `poem-management` and `collection-management` still import neither each other nor it | work-ordering |
 | NFR-4 | Accessible drag handles, instructions, announcements, focus kept on the moved item | work-ordering |

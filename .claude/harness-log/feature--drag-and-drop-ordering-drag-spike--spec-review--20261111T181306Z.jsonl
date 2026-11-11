@@ -1,0 +1,4 @@
+{"ts":"2026-11-11T18:13:06Z","change":"drag-and-drop-ordering","group":"full","gate":"spec-review","verdict":"confirmed","skipReason":"","durationMs":92378,"tokensTotal":84149,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}
+{"ts":"2026-11-11T18:13:06Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-review","finding":"focus after a stale move: FR-7/D8 said handle, FR-11 says alert","outcome":"fixed","ruleNumber":"SR-03"}
+{"ts":"2026-11-11T18:13:06Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-review","finding":"NFR-1 listed only the two move functions, not the other order writers","outcome":"fixed","ruleNumber":"SR-03"}
+{"ts":"2026-11-11T18:13:06Z","kind":"finding","change":"drag-and-drop-ordering","group":"-","gate":"spec-review","finding":"poem move action named moveAction and movePoemAction","outcome":"fixed","ruleNumber":"SR-03"}
