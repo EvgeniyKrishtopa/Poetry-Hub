@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { arrangeOver, dropBetween, stepArrangement } from "../../model/board-drag";
+import { arrangeOver, dropBetween, enteredContainer, stepArrangement } from "../../model/board-drag";
 import { findPoem } from "../../model/board-lookup";
 import type { DraggedItem } from "../../model/work-ordering.types";
 
@@ -133,5 +133,25 @@ describe("dropBetween", () => {
   it("returns null when the item is missing from either arrangement", () => {
     expect(dropBetween(BOARD, BOARD, poem("zzz"))).toBeNull();
     expect(dropBetween(BOARD, BOARD, collection("zzz"))).toBeNull();
+  });
+});
+
+describe("enteredContainer", () => {
+  const AUTUMN = { kind: "collection", collectionId: "autumn" } as const;
+
+  // implements FR-3 of drag-and-drop-ordering
+  it("names the list a held poem has entered", () => {
+    const moved = stepArrangement(BOARD, poem("c"), "down");
+
+    expect(enteredContainer(moved, "c", AUTUMN)).toEqual({ kind: "collection", collectionId: "winter" });
+  });
+
+  // implements FR-2 of drag-and-drop-ordering
+  it("is null while the poem is still in the list it came from", () => {
+    expect(enteredContainer(BOARD, "c", AUTUMN)).toBeNull();
+  });
+
+  it("is null for a poem that is no longer on the board", () => {
+    expect(enteredContainer(BOARD, "zzz", AUTUMN)).toBeNull();
   });
 });

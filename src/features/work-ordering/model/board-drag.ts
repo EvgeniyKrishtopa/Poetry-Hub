@@ -1,7 +1,7 @@
 import { arrangeDrop, isSameContainer } from "./arrange-drop";
 import { findPoem } from "./board-lookup";
 import { nextCollectionIndex, nextPlace, type StepDirection } from "./board-places";
-import type { Arrangement, DraggedItem, Drop, OverTarget } from "./work-ordering.types";
+import type { Arrangement, DraggedItem, Drop, OverTarget, PoemContainer } from "./work-ordering.types";
 
 // The in-drag arrangement is what the board shows while an item is held (design D4): a poem visibly enters another
 // list, a collection visibly takes its place. These functions only compute it; nothing is sent before the drop.
@@ -85,4 +85,11 @@ export function dropBetween(start: Arrangement, final: Arrangement, item: Dragge
   if (from === undefined || to === undefined) return null;
   const drop: Drop = { kind: "poem", poemId: item.id, from: from.container, to: to.container, toIndex: to.index };
   return arrangeDrop(start, drop) === start ? null : drop;
+}
+
+/** The list a held poem has entered, or `null` while it is still in the list it came from: that collection is drawn as the target. */
+export function enteredContainer(arrangement: Arrangement, poemId: string, origin: PoemContainer): PoemContainer | null {
+  const current = findPoem(arrangement, poemId)?.container;
+  if (current === undefined || isSameContainer(current, origin)) return null;
+  return current;
 }

@@ -16,9 +16,8 @@ import {
 } from "@dnd-kit/core";
 import { useEffect, useRef, useState } from "react";
 
-import { isSameContainer } from "../../model/arrange-drop";
 import { announcementFor, type AnnouncementEvent } from "../../model/board-announcements";
-import { arrangeOver, dropBetween, stepArrangement } from "../../model/board-drag";
+import { arrangeOver, dropBetween, enteredContainer, stepArrangement } from "../../model/board-drag";
 import { findPoem } from "../../model/board-lookup";
 import {
   KEYBOARD_CODES,
@@ -64,14 +63,6 @@ const collisionDetection: CollisionDetection = (args) => {
   });
   return closestCenter({ ...args, droppableContainers });
 };
-
-/** The list a held poem has entered, when it is not the one it came from: that collection is drawn as the target. */
-function hoverContainerOf(drag: DragState | null): PoemContainer | null {
-  if (drag === null || drag.item.type !== "poem" || drag.origin === null) return null;
-  const current = findPoem(drag.arrangement, drag.item.id)?.container;
-  if (current === undefined || isSameContainer(current, drag.origin)) return null;
-  return current;
-}
 
 interface UseBoardDragOptions {
   /** The arrangement the board shows when nothing is held: the optimistic one while a move sends, else the stored one. */
@@ -221,7 +212,7 @@ export function useBoardDrag({ arrangement, handlesDisabled, onDrop, stored }: U
   return {
     arrangement: drag?.arrangement ?? arrangement,
     activeItem: drag?.item ?? null,
-    hoverContainer: hoverContainerOf(drag),
+    hoverContainer: drag?.item.type === "poem" && drag.origin !== null ? enteredContainer(drag.arrangement, drag.item.id, drag.origin) : null,
     announcement,
     dndProps: {
       id: BOARD_ID,
