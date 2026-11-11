@@ -119,17 +119,17 @@ group lands its own tests.
 
 ## 7. Docs and verification <!-- isolated -->
 
-- [ ] 7.1 (NFR-3) `docs/architecture.md`: the `collections` feature, its imports, the allowed-imports
+- [x] 7.1 (NFR-3) `docs/architecture.md`: the `collections` feature, its imports, the allowed-imports
   list (line 95), `shared/config/cache-tags.ts`, the new routes; `docs/state-management.md`: one
   public tag per author covering poems and collections, collection writes expire it, the owner's
   pages still read uncached.
-- [ ] 7.2 (NFR-3; Non-goals, Gate 1 P5) `docs/deferred.md`: the four copies of the free-poem and ordering
+- [x] 7.2 (NFR-3; Non-goals, Gate 1 P5) `docs/deferred.md`: the four copies of the free-poem and ordering
   rules for the drag-and-drop change; the optional switch of the owner's pages to the public reads.
-- [ ] 7.3 (FR-1 – FR-8) Gate 3 (web-qa) as a guest, a signed-in reader, and the owner: author page
+- [x] 7.3 (FR-1 – FR-8) Gate 3 (web-qa) as a guest, a signed-in reader, and the owner: author page
   sections in every state reachable in dev (collections, free only, all collected, no poems); the
   collection page, its trail, 404 for an empty and another author's collection; after the author
   saves a collection's poems, edits, and deletes a collection, the guest's reload follows. Record
   "guest sees a collection and opens its page" as a scenario under `tests/web-qa-scenarios`.
-- [ ] 7.4 (NFR-5) `npm run build` with no env: the new route listed with `/authors/[id]/poems/[poemId]`'s
+- [x] 7.4 (NFR-5) `npm run build` with no env: the new route listed with `/authors/[id]/poems/[poemId]`'s
   marker, `/authors/[id]/collections` absent, no other marker changed.
-- [ ] 7.5 (FR-1 – FR-8, NFR-1 – NFR-9) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`.
+- [x] 7.5 (FR-1 – FR-8, NFR-1 – NFR-9) Run `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`.
