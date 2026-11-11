@@ -38,7 +38,8 @@ one counter (ADR 0007).
    where `collection_id` has one; nobody gets an update grant.
 5. **One lock per author.** The two move functions, the two changed writers, and the insert triggers all take
    the per-author advisory lock the creates already take, so one author's writes queue and cannot deadlock;
-   row locks inside are taken collections first (by id), then poems (by id).
+   inside, the collections a function names are locked by id and then the moved poem. The lock is the guarantee;
+   the writers that skip it each touch one row and wait on nothing else.
 6. **A move is limited to 30 per minute per account**, the `order_move` scope of `consume_write_allowance`
    (ADR 0007's shape, checked by the app after the session and before the move). The number lives in the
    migration and in the feature's constants module; the two are kept in step.

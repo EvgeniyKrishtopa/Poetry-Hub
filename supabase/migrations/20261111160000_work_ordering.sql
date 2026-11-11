@@ -11,8 +11,10 @@
 -- my_author_profile_id(): the two new move functions, and the changed save_my_collection_poems() and
 -- delete_my_collection(). Every writer of one author takes the same per-author advisory lock
 -- (pg_advisory_xact_lock(hashtextextended(<profile>::text, 0)), the one the creates already take) first, so
--- writes of one author queue and never deadlock; row locks inside are taken in a fixed order (collections by
--- id, then poems by id).
+-- writes of one author queue and never deadlock. That lock is the guarantee: the explicit row locks inside
+-- (the collections a function names, by id, then the moved poem) are a second line, and the other poems of a
+-- renumbered list are locked by the update itself. The only writers that skip the advisory lock
+-- (update_my_poem, delete_my_poem, update_my_collection) each touch one row and wait on nothing else.
 --
 -- A before-insert trigger on each table gives a row that names no position the first one of its container, so
 -- create_my_poem(), create_my_collection(), the seed, and every fixture that inserts rows directly need no
