@@ -133,3 +133,27 @@ Archived at `openspec/changes/archive/2026-11-03-delete-poem/`.
 - **Verified instead:** nothing; the current mechanism stays, covered by `use-one-time-value.test.tsx` and `CreatedPoemNotice.test.tsx`.
 - **Decision:** user, 2026-10-30.
 - **Status:** open. Open questions for the redesign: whether it also covers the session-expired notice on `/login` and the already-merged «Произведение добавлено» notice (add-poem-creation); how long the message stays on the poem page before the redirect; and how to keep the poem page from turning into the 404 first, since the delete action's `updateTag` re-renders the current route (design D4, Gate 1 P2). Needs its own OpenSpec change (or `opsx-update-review` on delete-poem before group 4) and new Claude Design mockups, since artboards 23 and 24 show the notices on the list and sign-in pages.
+
+## public-collections
+
+Archived at `openspec/changes/archive/2026-11-11-public-collections/`.
+
+### public-collections · 7.2 — four copies of the free-poem and ordering rules
+
+- **State:** deferred (a known cost of the repeat-per-feature rule, not a gap in the delivered task)
+- **Requirement:** NFR-3 of public-collections; design Non-Goals and Gate 1 P5
+- **What is missing:** one place for the rules "a free poem is one in no collection" and "newest first". They now live in four files: `src/features/poem-management/model/free-poems.ts`, `src/features/collection-management/model/collection-poems-nesting.ts`, `src/features/poems/model/uncollected-poems.ts` and `src/features/collections/model/nest-public-collections.ts`.
+- **Why:** the project repeats a mirroring feature's logic in its own module instead of extracting it, and `shared/` takes only domain-free pieces (`docs/architecture.md`). Four copies are acceptable while the rules do not change.
+- **Verified instead:** each copy has its own unit tests.
+- **Decision:** user, 2026-11-10 (design Gate 1 P5).
+- **Status:** open. The next change, ordering by drag-and-drop, changes the order rule and must change all four in step: update every copy and its tests in one change, or decide then whether a shared owner is now worth it.
+
+### public-collections · 7.2 — the owner's pages still read their own collections uncached
+
+- **State:** deferred (a refactor with no visible change)
+- **Requirement:** none (design Non-Goals)
+- **What is missing:** switching `/account/poems` and the owner's collection pages to the public reads. They keep the uncached owner reads (`collection-management/dal/own-collections.ts`, `collection-poems.ts`) and `my_collected_poems()`.
+- **Why:** now that membership and collections are public (ADR 0013), the owner's pages could share the public cache entry under `authorWorksTag(authorId)`. That would change which client reads what, with no change for the reader, and it would couple `collection-management` to the public reads that it never imports today.
+- **Verified instead:** nothing; the owner's pages are unchanged, and `collection-management/tests/dal/own-collections.test.ts` pins that their reads still filter by the owner's own author id.
+- **Decision:** user, 2026-11-10 (design Non-Goals).
+- **Status:** open. Revisit together with the drag-and-drop change, when the four rule copies above are touched anyway.

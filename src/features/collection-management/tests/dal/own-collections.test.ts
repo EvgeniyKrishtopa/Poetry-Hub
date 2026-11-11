@@ -74,6 +74,8 @@ afterEach(() => {
 
 describe("listOwnCollections", () => {
   // implements FR-2 of add-poem-collections
+  // implements NFR-1 of public-collections: the explicit author filter is what keeps another public author's
+  // collections, which RLS now lets this client read, out of /account/poems.
   it("reads the author's id and title rows, newest first with the id as the tie-break", async () => {
     const rows = [
       { id: COLLECTION_ID, title: TITLE },
@@ -113,6 +115,8 @@ describe("listOwnCollections", () => {
 
 describe("getOwnCollection", () => {
   // implements FR-6 of add-poem-collections
+  // implements NFR-1 of public-collections: filtered by the own author id, so a public author's collection
+  // that RLS now lets this client read still answers not-found on the owner's pages.
   it("reads the row by id and the own author's id", async () => {
     answer({ data: { id: COLLECTION_ID, title: TITLE, description: DESCRIPTION }, error: null, status: HTTP_OK });
 

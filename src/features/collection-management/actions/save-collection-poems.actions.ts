@@ -16,11 +16,12 @@ import {
 } from "../model/collection-poems.schema";
 
 import { collectionManagementActionClient } from "./action-client";
+import { expireAuthorWorksTag } from "./expire-author-works-tag";
 import { checkSession } from "./session-check";
 
 // The owner is resolved from the session by the database, never from input (NFR-1). Nothing is counted before
 // the limit step, and every attempt counts from there on (FR-7). `saved` and `stale` refresh the client router,
-// so the page shows the poems as they are now (D9). No retry: every attempt counts against the limit.
+// so the page shows the poems as they are now (D9); only `saved` also expires the public tag (public-collections D4). No retry: every attempt counts against the limit.
 
 const NOT_FOUND: SaveCollectionPoemsResult = { status: SAVE_COLLECTION_POEMS_STATUS.notFound };
 
@@ -57,6 +58,8 @@ async function saveCollectionPoems(input: SaveCollectionPoemsInput): Promise<Sav
   if (!saved.ok) return failed(saved.failure);
   if (saved.status === "not-found") return NOT_FOUND;
 
+  // Only `saved` wrote anything, so only it changes what the public pages show (the author id read in step 4).
+  if (saved.status === "saved") expireAuthorWorksTag(author.authorId);
   refresh();
   return { status: saved.status === "saved" ? SAVE_COLLECTION_POEMS_STATUS.saved : SAVE_COLLECTION_POEMS_STATUS.stale };
 }

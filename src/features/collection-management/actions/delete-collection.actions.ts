@@ -8,10 +8,12 @@ import { DELETE_COLLECTION_STATUS } from "../model/collection-management.constan
 import type { DeleteCollectionResult, ServiceFailure } from "../model/collection-management.types";
 
 import { collectionManagementActionClient } from "./action-client";
+import { expireAuthorWorksTag } from "./expire-author-works-tag";
 import { checkSession } from "./session-check";
 
 // The owner is resolved from the session by the database, never from input (NFR-1). The deleted notice's title
-// is the stored one the database returns. Only a deleted collection refreshes the client router (design D10).
+// is the stored one the database returns. Only a deleted collection expires the public tag and refreshes the client
+// router (design D4, D10).
 
 const NOT_FOUND: DeleteCollectionResult = { status: DELETE_COLLECTION_STATUS.notFound };
 
@@ -33,7 +35,9 @@ async function deleteCollection(collectionId: string): Promise<DeleteCollectionR
   if (!result.ok) return failed(result.failure);
   if (result.status === "not-found") return NOT_FOUND;
 
-  // 4. Gone: the client router's copies of the author's pages must not list it.
+  // 4. Gone: the public pages (the tag, whatever the profile's status now: cached entries can outlive a non-public
+  //    spell) and the client router's copies of the author's pages must not list it.
+  expireAuthorWorksTag(result.authorId);
   refresh();
   return { status: DELETE_COLLECTION_STATUS.deleted, title: result.title };
 }

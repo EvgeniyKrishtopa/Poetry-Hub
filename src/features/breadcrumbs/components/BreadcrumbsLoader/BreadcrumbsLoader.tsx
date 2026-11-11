@@ -1,5 +1,6 @@
 import { getPublicAuthorName, type PublicAuthorNameResult } from "@/features/authors";
 import { getOwnCollectionTitle, type OwnCollectionTitleResult } from "@/features/collection-management";
+import { getPublicCollection, type PublicCollectionResult } from "@/features/collections";
 import { getOwnPoemTitle, type OwnPoemTitleResult } from "@/features/poem-management";
 import { getAuthorPoem, type AuthorPoemResult } from "@/features/poems";
 
@@ -15,13 +16,14 @@ interface TrailReads {
   readonly poem?: AuthorPoemResult;
   readonly ownPoemTitle?: OwnPoemTitleResult;
   readonly ownCollectionTitle?: OwnCollectionTitleResult;
+  readonly publicCollection?: PublicCollectionResult;
 }
 
 /**
- * The reads a match needs: the author name on the author page, and on a poem page the poem too, in
- * parallel; the owner's poem or collection title on the owner's pages. Every read is memoized per request,
- * so the page shares them (FR-12, design D10). The title reads never redirect: the proxy already turned
- * away a signed-out request.
+ * The reads a match needs: the author name on the author page, and on a poem or public collection page the
+ * poem or collection too, in parallel; the owner's poem or collection title on the owner's pages. Every read
+ * is memoized per request, so the page shares them (FR-12, design D10). The title reads never redirect: the
+ * proxy already turned away a signed-out request.
  */
 async function readForMatch(match: RouteMatch): Promise<TrailReads> {
   switch (match.kind) {
@@ -33,6 +35,13 @@ async function readForMatch(match: RouteMatch): Promise<TrailReads> {
         getAuthorPoem(match.authorId, match.poemId),
       ]);
       return { authorName, poem };
+    }
+    case "author-collection": {
+      const [authorName, publicCollection] = await Promise.all([
+        getPublicAuthorName(match.authorId),
+        getPublicCollection(match.authorId, match.collectionId),
+      ]);
+      return { authorName, publicCollection };
     }
     case "own-poem":
     case "own-poem-edit":
@@ -49,8 +58,8 @@ async function readForMatch(match: RouteMatch): Promise<TrailReads> {
 /** Awaits the segments, reads what the matched page needs, renders the view or nothing. */
 export async function BreadcrumbsLoader({ segments }: BreadcrumbsLoaderProps) {
   const match = matchRoute(await segments);
-  const { authorName, poem, ownPoemTitle, ownCollectionTitle } = await readForMatch(match);
-  const trail = buildTrail(match, authorName, poem, ownPoemTitle, ownCollectionTitle);
+  const { authorName, poem, ownPoemTitle, ownCollectionTitle, publicCollection } = await readForMatch(match);
+  const trail = buildTrail(match, authorName, poem, ownPoemTitle, ownCollectionTitle, publicCollection);
 
   if (trail.kind === "none") return null;
   return <BreadcrumbsView items={trail.items} />;

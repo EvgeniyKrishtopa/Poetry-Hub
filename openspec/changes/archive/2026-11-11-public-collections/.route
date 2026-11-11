@@ -1,0 +1,2 @@
+full
+# more than one module: yes (poems, collection-management, authors page route, breadcrumbs, new public collections module); schema change: yes (RLS policy and column grants on collections and poems.collection_id); contract change: yes (public poem read gains collectionId, author page props, collection writes expire public tags)

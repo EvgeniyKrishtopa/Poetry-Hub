@@ -11,7 +11,7 @@ export { PoemPageSkeleton } from "./components/PoemPageSkeleton/PoemPageSkeleton
 export { PoemTitleList } from "./components/PoemTitleList/PoemTitleList";
 export { getAuthorPoem, listAuthorPoems } from "./dal/author-poems";
 export { listPoemGenres } from "./dal/poem-genres";
-export { poemsTag } from "./model/poem-cache-tags";
 export { POEM_ILLUSTRATIONS_BUCKET, POEMS_SEGMENT } from "./model/poem.constants";
+export { authorPoemPath } from "./model/poem-paths";
 export { lowercaseUuidSchema } from "./model/poem-row.schema";
 export type { AuthorPoemResult, Poem, PoemGenre } from "./model/poem.types";

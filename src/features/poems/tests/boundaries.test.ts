@@ -55,6 +55,11 @@ describe("poems feature boundaries", () => {
     expect(filesMatching(sourceFiles(AUTHORS_DIR), /from ["']@\/features\/poems(\/[^"']*)?["']/)).toEqual([]);
   });
 
+  // implements NFR-3 of public-collections
+  it("imports nothing from collections, which reads membership through poems", () => {
+    expect(filesMatching(poemsFiles, /from ["']@\/features\/collections(\/[^"']*)?["']/)).toEqual([]);
+  });
+
   // implements NFR-3 of add-author-poems
   it("lets only the poems DAL read the poems table", () => {
     const readers = filesMatching(sourceFiles(SRC_DIR), /\.from\(["']poems["']\)/);

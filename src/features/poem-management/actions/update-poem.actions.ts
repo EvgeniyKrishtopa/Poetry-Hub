@@ -24,7 +24,7 @@ import type {
 } from "../model/poem-management.types";
 
 import { poemManagementActionClient } from "./action-client";
-import { expirePoemsTag } from "./expire-poems-tag";
+import { expireAuthorWorksTag } from "./expire-author-works-tag";
 import { checkGenre, checkIllustrationFile } from "./poem-field-checks";
 
 // The owner is resolved from the session, never from input (NFR-1). The limit runs before any other I/O, so a
@@ -126,7 +126,7 @@ async function updatePoem(input: UpdatePoemInput): Promise<UpdatePoemResult> {
 
   // 9. The row is saved: the author's pages must show it. Then the old file, after the row no longer points
   //    at it. Both only log a failure: the save already happened.
-  expirePoemsTag(author.authorId);
+  expireAuthorWorksTag(author.authorId);
   if (updated.replacedPath !== null) await removeIllustrationBestEffort(updated.replacedPath);
 
   // 10.

@@ -44,6 +44,14 @@ describe("@breadcrumbs slot", () => {
     expect(slotPages).not.toContain("authors/[id]/poems");
   });
 
+  // implements FR-5, FR-6, NFR-5 of public-collections
+  it("keeps the public collection page and has no collections list page, in either set", () => {
+    expect(realPages).toContain("authors/[id]/collections/[collectionId]");
+    expect(slotPages).toContain("authors/[id]/collections/[collectionId]");
+    expect(realPages).not.toContain("authors/[id]/collections");
+    expect(slotPages).not.toContain("authors/[id]/collections");
+  });
+
   // implements FR-6 of add-breadcrumbs
   it("has a default and no catch-all folder, so a URL with no page keeps its HTTP 404", () => {
     const entries = readdirSync(SLOT_DIR, { recursive: true, encoding: "utf8" });

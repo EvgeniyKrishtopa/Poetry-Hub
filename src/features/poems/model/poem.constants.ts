@@ -18,4 +18,4 @@ export const ILLUSTRATION_SIZES = "(min-width: 944px) 896px, calc(100vw - 3rem)"
 export const POEM_ILLUSTRATIONS_BUCKET = "poem-illustrations";
 
 /** The `public.poems` columns the public read selects (design D3). */
-export const POEM_COLUMNS = "id, title, text, genre_id, illustration_path, created_at";
+export const POEM_COLUMNS = "id, title, text, genre_id, illustration_path, created_at, collection_id";

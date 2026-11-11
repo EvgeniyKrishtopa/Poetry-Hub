@@ -1,15 +1,18 @@
 -- RLS, grants, checks, the three write functions, and the create limit with its creation log for collections
 -- (add-poem-collections, design D2, D13).
 -- implements NFR-1, FR-3, FR-4, FR-5, FR-9, FR-11 and FR-13 of add-poem-collections
+-- implements NFR-1 and FR-1 of public-collections: anyone reads a public author's non-empty collections, the
+-- owner also their own empty ones, and delete_my_collection() returns the author id.
 -- Run against the local stack: npx supabase test db
 begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(70);
+select plan(79);
 
 -- Fixtures, written as the superuser (bypasses RLS). A owns a non-public profile, B and D public ones, C has
--- no profile. A and B each have one collection two days old.
+-- no profile. A and B each have one collection two days old, each holding one poem; B has a second, empty
+-- collection and a free poem. D's collections are all empty.
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'a@example.test'),
   ('22222222-2222-4222-8222-222222222222', 'b@example.test'),
@@ -23,7 +26,13 @@ insert into public.author_profiles (id, user_id, first_name, last_name) values
 
 insert into public.collections (id, author_id, title, description, created_at) values
   ('a0000000-0000-4000-8000-000000000001', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Черновики', null, now() - interval '2 days'),
-  ('b0000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Осень', 'Стихи об осени', now() - interval '2 days');
+  ('b0000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Осень', 'Стихи об осени', now() - interval '2 days'),
+  ('b0000000-0000-4000-8000-000000000002', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Пустой', null, now() - interval '2 days');
+
+insert into public.poems (id, author_id, title, text, collection_id) values
+  ('a1000000-0000-4000-8000-000000000001', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Набросок', 'Текст', 'a0000000-0000-4000-8000-000000000001'),
+  ('b1000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Осенний сад', 'Текст', 'b0000000-0000-4000-8000-000000000001'),
+  ('b1000000-0000-4000-8000-000000000002', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Первый снег', 'Текст', null);
 
 -- D already created 50 collections in the last 30 days, 6 hours apart; the trigger logged each one.
 -- Known ids, d0000000-0000-4000-8000-0000000000NN, so another author can name one RLS hides from them.
@@ -36,7 +45,13 @@ from generate_series(1, 50) as s (n);
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 
-select throws_ok($$select id from public.collections$$, '42501', null, 'anon cannot read collections');
+-- implements FR-1 of public-collections: B's collection holds a poem and B is public; B's second is empty, A's
+-- holds a poem but A is not public, and D's are all empty.
+select results_eq(
+  $$select id::text from public.collections$$,
+  array['b0000000-0000-4000-8000-000000000001'],
+  'anon reads only a public author''s non-empty collection: not an empty one, not a non-public author''s'
+);
 
 select throws_ok(
   $$insert into public.collections (author_id, title) values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'T')$$,
@@ -99,9 +114,9 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}', true);
 
 select results_eq(
-  $$select id::text from public.collections$$,
-  array['b0000000-0000-4000-8000-000000000001'],
-  'B reads only their own collection, not A''s or the public D''s'
+  $$select id::text from public.collections order by id$$,
+  array['b0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000002'],
+  'B reads their own collections, empty or not, not A''s (non-public) or D''s (public, but empty)'
 );
 
 select throws_ok(
@@ -265,8 +280,8 @@ select is(
 
 select is(
   public.delete_my_collection((select id from public.collections where title = repeat('я', 80))),
-  jsonb_build_object('status', 'deleted', 'title', repeat('я', 80)),
-  'the owner deletes their collection and gets its stored title'
+  jsonb_build_object('status', 'deleted', 'title', repeat('я', 80), 'author_id', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  'the owner deletes their collection and gets its stored title and author id'
 );
 
 select is_empty(
@@ -286,6 +301,100 @@ select is_empty(
   $$select id from public.collections where title = 'Hacked'$$,
   'the not-found updates changed no collection'
 );
+
+-- ---------- a collection is visible while it holds a poem ----------
+-- implements FR-1 of public-collections: visible with its first poem, hidden again when its last poem leaves
+-- (removed or deleted). B's «Пустой» starts empty and «Осень» holds one poem.
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}', true);
+
+select is(
+  public.save_my_collection_poems('b0000000-0000-4000-8000-000000000002',
+    array['b1000000-0000-4000-8000-000000000002']::uuid[], '{}'),
+  '{"status": "saved"}'::jsonb,
+  'B adds a free poem to the empty collection'
+);
+
+reset role;
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+
+select results_eq(
+  $$select id::text from public.collections where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' order by id$$,
+  array['b0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000002'],
+  'anon reads the collection once it holds its first poem'
+);
+
+reset role;
+
+-- Another public author reads B's collections that hold a poem now (B's empty ones, such as the collections
+-- B created above, stay hidden: the filter on ids names the two that matter).
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"44444444-4444-4444-8444-444444444444","role":"authenticated"}', true);
+
+select results_eq(
+  $$select id::text from public.collections where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' order by id$$,
+  array['b0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000002'],
+  'another author reads a public author''s non-empty collections'
+);
+
+select is_empty(
+  $$select id from public.collections where author_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
+  'another author does not read a non-public author''s collection, though it holds a poem'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}', true);
+
+select is(
+  public.save_my_collection_poems('b0000000-0000-4000-8000-000000000002',
+    '{}', array['b1000000-0000-4000-8000-000000000002']::uuid[]),
+  '{"status": "saved"}'::jsonb,
+  'B removes the collection''s last poem'
+);
+
+reset role;
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+
+select results_eq(
+  $$select id::text from public.collections where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' order by id$$,
+  array['b0000000-0000-4000-8000-000000000001'],
+  'anon no longer reads a collection whose last poem was removed'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}', true);
+
+select is(
+  public.delete_my_poem('b1000000-0000-4000-8000-000000000001')->>'status',
+  'deleted',
+  'B deletes the only poem of «Осень»'
+);
+
+reset role;
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+
+select is_empty(
+  $$select id from public.collections where author_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'$$,
+  'anon no longer reads a collection whose only poem was deleted'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}', true);
+
+select results_eq(
+  $$select id::text from public.collections
+    where id in ('b0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000002') order by id$$,
+  array['b0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000002'],
+  'the owner still reads their own empty collections'
+);
+
+reset role;
 
 -- ---------- signed in as A (non-public profile) ----------
 set local role authenticated;
@@ -322,8 +431,8 @@ set local role authenticated;
 
 select is(
   public.delete_my_collection('a0000000-0000-4000-8000-000000000001'),
-  '{"status": "deleted", "title": "Черновики"}'::jsonb,
-  'an owner with a non-public profile can still delete their own collection'
+  jsonb_build_object('status', 'deleted', 'title', 'Черновики', 'author_id', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+  'an owner with a non-public profile can still delete their own collection, and gets their author id'
 );
 
 reset role;

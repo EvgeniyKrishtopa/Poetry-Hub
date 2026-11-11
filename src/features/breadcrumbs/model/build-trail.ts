@@ -4,6 +4,7 @@ import {
   collectionPath,
   type OwnCollectionTitleResult,
 } from "@/features/collection-management";
+import type { PublicCollectionResult } from "@/features/collections";
 import { ownPoemPath, POEM_MANAGEMENT_TRAIL_LABELS, type OwnPoemTitleResult } from "@/features/poem-management";
 import type { AuthorPoemResult } from "@/features/poems";
 import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH } from "@/shared/config/account-paths";
@@ -106,12 +107,47 @@ function shown(items: readonly BreadcrumbItem[]): Trail {
 }
 
 /**
+ * The public collection page's trail (public-collections D8), agreeing with the page: the page checks the author
+ * first, so an unknown author is a 404 and an unavailable one the error screen whatever the collection read says;
+ * then an unknown collection is a 404 and an unavailable read the error screen, ending at the author as current.
+ */
+function publicCollectionTrail(
+  match: Extract<RouteMatch, { kind: "author-collection" }>,
+  authorName: PublicAuthorNameResult | undefined,
+  collection: PublicCollectionResult | undefined,
+): Trail {
+  // Unreachable from the loader, which always reads both here; without them there's no last item.
+  if (authorName === undefined || collection === undefined) return NO_TRAIL;
+  if (!authorName.ok) {
+    switch (authorName.reason) {
+      case "not-found":
+        return NO_TRAIL;
+      case "unavailable":
+        return shown([{ kind: "current", label: BREADCRUMB_LABELS.authorFallback }]);
+    }
+  }
+  if (!collection.ok) {
+    switch (collection.reason) {
+      case "not-found":
+        return NO_TRAIL;
+      case "unavailable":
+        return shown([{ kind: "current", label: authorName.name }]);
+    }
+  }
+  return shown([
+    { kind: "link", label: authorName.name, href: authorPagePath(match.authorId) },
+    { kind: "current", label: collection.collection.title },
+  ]);
+}
+
+/**
  * Prepends the home item and resolves an author or poem match from its read results, so the trail
  * agrees with the page (FR-12): an unknown author or poem hides the trail, as the page shows the 404
  * page; an unavailable author shows the author fallback label, as the page shows the error screen.
  * That error screen wins over an unknown poem, so the trail then ends on the fallback label; an
  * unavailable poem read also shows the error screen, so its trail ends on the author's item. The owner's
- * poem and collection pages read only their titles.
+ * poem and collection pages read only their titles; the public collection page reads the author's name and
+ * the collection.
  */
 export function buildTrail(
   match: RouteMatch,
@@ -119,9 +155,11 @@ export function buildTrail(
   poem?: AuthorPoemResult,
   ownPoemTitle?: OwnPoemTitleResult,
   ownCollectionTitle?: OwnCollectionTitleResult,
+  publicCollection?: PublicCollectionResult,
 ): Trail {
   if (match.kind === "none") return NO_TRAIL;
   if (match.kind === "static") return { kind: "shown", items: [HOME_ITEM, ...match.items] };
+  if (match.kind === "author-collection") return publicCollectionTrail(match, authorName, publicCollection);
   if (match.kind === "own-poem" || match.kind === "own-poem-edit") return ownPoemTrail(match, ownPoemTitle);
   if (match.kind === "own-collection" || match.kind === "own-collection-edit" || match.kind === "own-collection-poems") {
     return ownCollectionTrail(match, ownCollectionTitle);

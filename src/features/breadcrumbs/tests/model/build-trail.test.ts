@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { AUTHORS_PATH } from "@/features/authors";
+import { AUTHORS_PATH, type PublicAuthorNameResult } from "@/features/authors";
+import type { PublicCollectionResult } from "@/features/collections";
 import type { AuthorPoemResult } from "@/features/poems";
 import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH } from "@/shared/config/account-paths";
 import { HOME_PATH } from "@/shared/config/constants";
@@ -95,6 +96,7 @@ describe("buildTrail on the poem routes", () => {
       illustrationUrl: null,
       publishedAt: "2026-03-12",
       genreId: null,
+      collectionId: null,
     },
   };
   const POEM_NOT_FOUND: AuthorPoemResult = { ok: false, reason: "not-found" };
@@ -317,5 +319,80 @@ describe("buildTrail on the poem management routes", () => {
       kind: "shown",
       items: [HOME, ACCOUNT_LINK, { kind: "current", label: "Управление произведениями" }],
     });
+  });
+});
+
+describe("buildTrail on the public collection route", () => {
+  const COLLECTION_ID = "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a";
+  const COLLECTION_MATCH = { kind: "author-collection", authorId: ANNA_ID, collectionId: COLLECTION_ID } as const;
+
+  const ANNA = { ok: true, name: "Анна Ахматова" } as const;
+  const AUTHOR_UNAVAILABLE = { ok: false, reason: "unavailable" } as const;
+  const AUTHOR_NOT_FOUND = { ok: false, reason: "not-found" } as const;
+  const COLLECTION_FOUND: PublicCollectionResult = {
+    ok: true,
+    collection: {
+      id: COLLECTION_ID,
+      title: "Осенний цикл",
+      description: null,
+      poems: [{ id: "30000000-0000-4000-8000-000000000051", title: "Осенний сад" }],
+    },
+  };
+  const COLLECTION_NOT_FOUND: PublicCollectionResult = { ok: false, reason: "not-found" };
+  const COLLECTION_UNAVAILABLE: PublicCollectionResult = { ok: false, reason: "unavailable" };
+
+  function trailFor(authorName?: PublicAuthorNameResult, collection?: PublicCollectionResult) {
+    return buildTrail(COLLECTION_MATCH, authorName, undefined, undefined, undefined, collection);
+  }
+
+  // implements FR-6 of public-collections
+  it("ends on the collection's title as the current item, after the author's name linking to the author page", () => {
+    expect(trailFor(ANNA, COLLECTION_FOUND)).toEqual({
+      kind: "shown",
+      items: [
+        HOME,
+        AUTHORS,
+        { kind: "link", label: "Анна Ахматова", href: `/authors/${ANNA_ID}` },
+        { kind: "current", label: "Осенний цикл" },
+      ],
+    });
+  });
+
+  // implements FR-6 of public-collections
+  it("shows no trail for an author that doesn't exist or isn't public, whatever the collection read says", () => {
+    expect(trailFor(AUTHOR_NOT_FOUND, COLLECTION_FOUND)).toEqual({ kind: "none" });
+    expect(trailFor(AUTHOR_NOT_FOUND, COLLECTION_NOT_FOUND)).toEqual({ kind: "none" });
+    expect(trailFor(AUTHOR_NOT_FOUND, COLLECTION_UNAVAILABLE)).toEqual({ kind: "none" });
+  });
+
+  // implements FR-6 of public-collections
+  it("shows no trail for a collection that isn't a visible collection of the author", () => {
+    expect(trailFor(ANNA, COLLECTION_NOT_FOUND)).toEqual({ kind: "none" });
+  });
+
+  // implements FR-6 of public-collections: the page shows the error screen, so «Автор» is current, not a link
+  it.each([
+    ["found", COLLECTION_FOUND],
+    ["not found", COLLECTION_NOT_FOUND],
+    ["unavailable", COLLECTION_UNAVAILABLE],
+  ])("ends on «Автор» as the current item when the author is unavailable and the collection is %s", (_name, collection) => {
+    expect(trailFor(AUTHOR_UNAVAILABLE, collection)).toEqual({
+      kind: "shown",
+      items: [HOME, AUTHORS, { kind: "current", label: "Автор" }],
+    });
+  });
+
+  // implements FR-6 of public-collections: the page shows the error screen, so the trail ends at the author
+  it("ends on the author's name as the current item when the collection read is unavailable", () => {
+    expect(trailFor(ANNA, COLLECTION_UNAVAILABLE)).toEqual({
+      kind: "shown",
+      items: [HOME, AUTHORS, { kind: "current", label: "Анна Ахматова" }],
+    });
+  });
+
+  // implements FR-6 of public-collections
+  it("shows no trail for a collection match that comes without its reads", () => {
+    expect(trailFor(ANNA)).toEqual({ kind: "none" });
+    expect(trailFor(undefined, COLLECTION_FOUND)).toEqual({ kind: "none" });
   });
 });

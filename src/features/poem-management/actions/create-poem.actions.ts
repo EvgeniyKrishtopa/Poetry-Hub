@@ -15,7 +15,7 @@ import { CREATE_POEM_STATUS } from "../model/poem-management.constants";
 import type { CreatePoemFailure, CreatePoemResult, PoemFieldErrors } from "../model/poem-management.types";
 
 import { poemManagementActionClient } from "./action-client";
-import { expirePoemsTag } from "./expire-poems-tag";
+import { expireAuthorWorksTag } from "./expire-author-works-tag";
 import { checkGenre, checkIllustration } from "./poem-field-checks";
 
 // The user and the author are resolved from the session, never from input (NFR-1). The limit check runs
@@ -78,7 +78,7 @@ async function createPoem(input: CreatePoemInput): Promise<CreatePoemResult> {
 
   // 8. The poem is stored: a failed expiry is only logged, never an error the author would retry into a
   //    duplicate.
-  expirePoemsTag(author.authorId);
+  expireAuthorWorksTag(author.authorId);
   return { status: CREATE_POEM_STATUS.created, poemId: created.poemId };
 }
 

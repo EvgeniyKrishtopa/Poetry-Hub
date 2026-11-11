@@ -28,5 +28,6 @@ export function toPoem(supabase: SupabaseClient, row: PoemRow): Poem {
     illustrationUrl: illustrationPublicUrl(supabase, row.illustration_path),
     publishedAt: utcDate(row.created_at),
     genreId: row.genre_id,
+    collectionId: row.collection_id,
   };
 }

@@ -1,4 +1,5 @@
 import { AuthorPage } from "@/features/authors";
+import { PublicCollectionsSection } from "@/features/collections";
 import { AuthorPoemsEntry } from "@/features/poems";
 
 export default function AuthorRoutePage({ params }: PageProps<"/authors/[id]">) {
@@ -6,7 +7,15 @@ export default function AuthorRoutePage({ params }: PageProps<"/authors/[id]">) 
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-16">
-      <AuthorPage id={id} poems={<AuthorPoemsEntry authorId={id} />} />
+      <AuthorPage
+        id={id}
+        poems={
+          <>
+            <PublicCollectionsSection authorId={id} />
+            <AuthorPoemsEntry authorId={id} />
+          </>
+        }
+      />
     </main>
   );
 }

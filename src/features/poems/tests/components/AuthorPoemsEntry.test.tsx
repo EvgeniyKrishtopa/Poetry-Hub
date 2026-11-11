@@ -54,6 +54,28 @@ describe("AuthorPoemsEntry", () => {
     expect(screen.queryByRole("link")).toBeNull();
   });
 
+  // implements FR-3 of public-collections
+  it("lists only the free poems, leaving out one that is in a collection", async () => {
+    const collected = { ...NIGHT_STATION, collectionId: "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a" };
+    vi.mocked(listAuthorPoems).mockResolvedValue({ ok: true, poems: [collected, AUTUMN_GARDEN] });
+
+    await renderEntry();
+
+    const links = within(screen.getByRole("list")).getAllByRole("link");
+    expect(links.map((link) => link.textContent)).toEqual(["Осенний сад"]);
+    expect(screen.queryByText("У автора пока ещё нет публикаций.")).toBeNull();
+  });
+
+  // implements FR-3 of public-collections
+  it("renders nothing when every poem is in a collection", async () => {
+    const collected = { ...NIGHT_STATION, collectionId: "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a" };
+    vi.mocked(listAuthorPoems).mockResolvedValue({ ok: true, poems: [collected] });
+
+    const { container } = await renderEntry();
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
   // implements FR-11 of add-poem-creation
   it("shows the unavailable text in the section, and no list, when the poems can't be read", async () => {
     vi.mocked(listAuthorPoems).mockResolvedValue({ ok: false, reason: "unavailable" });

@@ -11,6 +11,8 @@ export interface Poem {
   readonly publishedAt: string;
   /** A Contentful `tag` entry id, or `null` for no genre. */
   readonly genreId: string | null;
+  /** The lowercase UUID of the collection the poem belongs to, or `null` for a free poem. */
+  readonly collectionId: string | null;
 }
 
 /** An author's poems, newest first, or why they can't be read (add-poem-creation design D3). */

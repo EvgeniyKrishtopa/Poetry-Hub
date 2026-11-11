@@ -30,7 +30,7 @@ const USER_ID = "2b3c4d5e-6f70-4a1b-9c2d-3e4f5a6b7c8d";
 const AUTHOR_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
 
 function poem(id: string, title: string, publishedAt: string): Poem {
-  return { id, title, text: "строка", illustrationUrl: null, publishedAt, genreId: null };
+  return { id, title, text: "строка", illustrationUrl: null, publishedAt, genreId: null, collectionId: null };
 }
 
 const NIGHT_STATION = poem("30000000-0000-4000-8000-000000000032", "Ночной вокзал", "2026-10-02");
