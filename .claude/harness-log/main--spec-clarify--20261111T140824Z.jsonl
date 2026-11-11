@@ -1,0 +1,8 @@
+{"ts":"2026-11-11T14:08:24Z","change":"drag-and-drop-ordering","gate":"spec-clarify","kind":"finding","finding":"poem-management failed-read states","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T14:08:24Z","change":"drag-and-drop-ordering","gate":"spec-clarify","kind":"finding","finding":"not-public move message","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T14:08:24Z","change":"drag-and-drop-ordering","gate":"spec-clarify","kind":"finding","finding":"order of several poems in one save","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T14:08:24Z","change":"drag-and-drop-ordering","gate":"spec-clarify","kind":"finding","finding":"keys for cross-collection keyboard move","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T14:08:24Z","change":"drag-and-drop-ordering","gate":"spec-clarify","kind":"finding","finding":"announcement per drop","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T14:08:24Z","change":"drag-and-drop-ordering","gate":"spec-clarify","kind":"finding","finding":"when the board is shown","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T14:08:24Z","change":"drag-and-drop-ordering","gate":"spec-clarify","kind":"finding","finding":"collection dropped over poems","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T14:08:24Z","change":"drag-and-drop-ordering","gate":"spec-clarify","kind":"finding","finding":"out-of-range to_index","outcome":"fixed","ruleNumber":""}

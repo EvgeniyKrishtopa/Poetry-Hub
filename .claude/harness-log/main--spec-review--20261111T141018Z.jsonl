@@ -1,0 +1,4 @@
+{"ts":"2026-11-11T14:10:18Z","change":"drag-and-drop-ordering","group":"full","gate":"spec-review","verdict":"confirmed","skipReason":"","durationMs":80830,"tokensTotal":67760,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}
+{"ts":"2026-11-11T14:10:18Z","change":"drag-and-drop-ordering","gate":"spec-review","kind":"finding","finding":"proposal Impact Database disagrees with design D2","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T14:10:18Z","change":"drag-and-drop-ordering","gate":"spec-review","kind":"finding","finding":"proposal Impact Docs deferred entries","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-11T14:10:18Z","change":"drag-and-drop-ordering","gate":"spec-review","kind":"finding","finding":"design R1 wrong task group for spike","outcome":"fixed","ruleNumber":""}
