@@ -72,7 +72,7 @@ verification. Each group exports only what it already consumes (tests count as c
 
 ## 5. Spike: the drag library on a throwaway page <!-- judgement-heavy -->
 
-- [ ] 5.1 (FR-7, NFR-4) The user installs `@hello-pangea/dnd` (exact pin). In the scratchpad (never in
+- [ ] <!-- blocked: spike failed R1 (no arrow key moves a poem between stacked lists); user chose the @dnd-kit/core fallback on 2026-11-11, so design D5/R1, FR-7 wording and groups 5-6 must be re-planned first (opsx-update-review) --> <!-- deferred: docs/deferred.md --> 5.1 (FR-7, NFR-4) The user installs `@hello-pangea/dnd` (exact pin). In the scratchpad (never in
   `src/`), prove under the project's Next, React 19, and Compiler config: nested droppables by `type`;
   touch started from a handle only; keyboard lift/move/drop/cancel inside a list, between **stacked**
   lists, into an empty list; custom Russian announcements and instructions; focus returns to the handle.
