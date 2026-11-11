@@ -52,6 +52,25 @@ describe("matchRoute", () => {
     });
   });
 
+  // implements FR-6 of public-collections
+  it("matches one public collection by the author id and the collection id", () => {
+    expect(matchRoute(["authors", ANNA_ID, "collections", "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a"])).toEqual({
+      kind: "author-collection",
+      authorId: ANNA_ID,
+      collectionId: "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a",
+    });
+  });
+
+  // implements FR-6 of public-collections
+  it.each([
+    [["authors", ANNA_ID, "collections"]],
+    [["authors", ANNA_ID, "collections", ""]],
+    [["authors", ANNA_ID, "collections", "x", "y"]],
+    [["authors", ANNA_ID, "other", "x"]],
+  ])("matches nothing for %j, so the collections segment alone and other sections get no trail", (segments) => {
+    expect(matchRoute(segments)).toEqual({ kind: "none" });
+  });
+
   // implements FR-6 of add-breadcrumbs, FR-8 of add-author-poems
   it.each([
     [["no-such-page"]],

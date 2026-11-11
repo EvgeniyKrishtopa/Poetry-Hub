@@ -6,6 +6,7 @@ import {
   COLLECTIONS_SEGMENT,
   NEW_COLLECTION_PATH,
 } from "@/features/collection-management";
+import { PUBLIC_COLLECTIONS_SEGMENT } from "@/features/collections";
 import { EDIT_SEGMENT, NEW_POEM_PATH, POEM_MANAGEMENT_TRAIL_LABELS } from "@/features/poem-management";
 import { POEMS_SEGMENT } from "@/features/poems";
 import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
@@ -49,17 +50,25 @@ function isParentPath(parent: string, path: string): boolean {
 }
 
 /**
- * The dynamic rows, over the segments after the author directory: `[id]` is the author page and
- * `[id, "poems", poemId]` one poem; anything else, `[id, "poems"]` included, has no trail.
+ * The dynamic rows, over the segments after the author directory: `[id]` is the author page,
+ * `[id, "poems", poemId]` one poem, and `[id, "collections", collectionId]` one collection; anything else,
+ * `[id, "poems"]` and `[id, "collections"]` included, has no trail.
  */
 function matchAuthorRoute(path: string): RouteMatch {
   if (!path.startsWith(AUTHOR_PAGE_PREFIX)) return NO_MATCH;
 
-  const [authorId, section, poemId, ...extra] = path.slice(AUTHOR_PAGE_PREFIX.length).split("/");
+  const [authorId, section, itemId, ...extra] = path.slice(AUTHOR_PAGE_PREFIX.length).split("/");
   if (authorId === undefined || authorId === "" || extra.length > 0) return NO_MATCH;
   if (section === undefined) return { kind: "author", id: authorId };
-  if (section !== POEMS_SEGMENT || poemId === undefined || poemId === "") return NO_MATCH;
-  return { kind: "author-poem", authorId, poemId };
+  if (itemId === undefined || itemId === "") return NO_MATCH;
+  switch (section) {
+    case POEMS_SEGMENT:
+      return { kind: "author-poem", authorId, poemId: itemId };
+    case PUBLIC_COLLECTIONS_SEGMENT:
+      return { kind: "author-collection", authorId, collectionId: itemId };
+    default:
+      return NO_MATCH;
+  }
 }
 
 /**
