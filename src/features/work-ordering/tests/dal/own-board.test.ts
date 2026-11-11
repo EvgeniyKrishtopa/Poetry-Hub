@@ -157,6 +157,21 @@ describe("listOwnBoard", () => {
     answer(new TypeError("fetch failed"), POEMS_OK);
 
     await expect(listOwnBoard(AUTHOR_ID)).resolves.toEqual({ ok: false, reason: "collections-unavailable" });
+    expect(loggedText()).toContain("[work-ordering] list board collections failed: TypeError");
+  });
+
+  it("treats a throw in the poems read as a failed read", async () => {
+    answer(COLLECTIONS_OK, new TypeError("fetch failed"));
+
+    await expect(listOwnBoard(AUTHOR_ID)).resolves.toEqual({ ok: false, reason: "poems-unavailable" });
+    expect(loggedText()).toContain("[work-ordering] list board poems failed: TypeError");
+  });
+
+  it("treats a collections row of the wrong shape as a failed read", async () => {
+    answer({ data: [{ id: AUTUMN_ID }], error: null, status: HTTP_OK }, POEMS_OK);
+
+    await expect(listOwnBoard(AUTHOR_ID)).resolves.toEqual({ ok: false, reason: "collections-unavailable" });
+    expectNothingSecretLogged();
   });
 
   it("treats a missing config as a failed read without a log line of its own", async () => {
