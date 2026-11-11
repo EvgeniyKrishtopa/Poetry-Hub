@@ -318,6 +318,7 @@ is the result reason `unauthenticated`, redirected by the island, as the sibling
 | `src/features/work-ordering/actions/action-client.ts` | the log-and-mask client of both actions | `workOrderingActionClient` |
 | `src/features/work-ordering/actions/session-check.ts` | the session step over `auth`'s public API | `SessionCheck`, `checkSession` |
 | `src/features/work-ordering/actions/expire-author-works-tag.ts` | never-throwing expiry of the public tag | `expireAuthorWorksTag` |
+| `src/features/work-ordering/actions/run-move.ts` | added in group 4: the steps both actions share (ids guard, session, limit, move, then the tag and the refresh), so the two actions stay one-line bodies | `runMove` |
 | `src/features/work-ordering/actions/move-poem.actions.ts` | the poem move action | `movePoemAction` |
 | `src/features/work-ordering/actions/move-collection.actions.ts` | the collection move action | `moveCollectionAction` |
 | `src/features/work-ordering/components/WorkBoard/WorkBoard.tsx` | the board's entry: content in Suspense with the skeleton | `WorkBoard` |

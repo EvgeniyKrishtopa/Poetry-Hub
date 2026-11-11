@@ -59,7 +59,7 @@ verification. Each group exports only what it already consumes (tests count as c
 
 ## 4. Move actions and their DAL (nothing calls them yet) <!-- judgement-heavy -->
 
-- [ ] 4.1 (FR-6, FR-11, NFR-2, NFR-7) `src/features/work-ordering/`: `model` (move argument schemas, result
+- [x] 4.1 (FR-6, FR-11, NFR-2, NFR-7) `src/features/work-ordering/`: `model` (move argument schemas, result
   unions, constants incl. the 30-per-minute limit, messages with the Russian copy), `dal` (the two RPC calls,
   the write allowance, a write log that logs the operation and failure kind only), `actions`
   (`moveAction`, `moveCollectionAction`: validate → session → limit → RPC; `moved` → own
@@ -67,7 +67,7 @@ verification. Each group exports only what it already consumes (tests count as c
   - Verify with unit tests per action: refused, rate-limited, and failed paths expire nothing, `moved` expires
     the tag with the returned author and refreshes, `stale`/`not-found` refresh without expiring, invalid
     arguments and a missing session are refused, logs carry no ids.
-- [ ] 4.2 (NFR-3) `work-ordering/tests/boundaries.test.ts`: imports neither `poem-management` nor `collection-management` (it may import `auth`, `authors`, `shared`); nothing but the route
+- [x] 4.2 (NFR-3) `work-ordering/tests/boundaries.test.ts`: imports neither `poem-management` nor `collection-management` (it may import `auth`, `authors`, `shared`); nothing but the route
   file imports it; its public API exports only what the route consumes.
 
 ## 5. Spike: the drag library on a throwaway page <!-- judgement-heavy -->
