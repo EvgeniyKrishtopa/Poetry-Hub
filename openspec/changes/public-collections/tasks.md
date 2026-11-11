@@ -106,13 +106,13 @@ group lands its own tests.
 
 ## 6. Public collection page and its trail <!-- UI: mockups approved, artboards 38–39 --> <!-- judgement-heavy -->
 
-- [ ] 6.1 (FR-5, FR-8, NFR-4, NFR-6, NFR-7, NFR-8) `PublicCollectionPage`, `PublicCollectionContent`,
+- [x] 6.1 (FR-5, FR-8, NFR-4, NFR-6, NFR-7, NFR-8) `PublicCollectionPage`, `PublicCollectionContent`,
   `PublicCollectionSkeleton`; `poems` exports `authorPoemPath` (design D7).
   - Verify with component tests: author not-found → `notFound`, unavailable → throws; collection
     not-found → `notFound`, unavailable → throws; render with and without description (paragraphs,
     line breaks), poem hrefs, no buttons, skeleton, copy verbatim.
-- [ ] 6.2 (FR-5, NFR-5) Route `src/app/(public)/authors/[id]/collections/[collectionId]/page.tsx`.
-- [ ] 6.3 (FR-6) Breadcrumbs: `author-collection` match and trail; slot page
+- [x] 6.2 (FR-5, NFR-5) Route `src/app/(public)/authors/[id]/collections/[collectionId]/page.tsx`.
+- [x] 6.3 (FR-6) Breadcrumbs: `author-collection` match and trail; slot page
   `src/app/@breadcrumbs/authors/[id]/collections/[collectionId]/page.tsx` (design D8).
   - Verify with `breadcrumbs/tests/model/match-route.test.ts` and `build-trail.test.ts` (every rule
     of the breadcrumbs delta) and `app/tests/breadcrumbs-slot.test.ts`.

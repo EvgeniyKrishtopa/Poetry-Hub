@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { requireSession } from "@/features/auth";
 import { getOwnPublicAuthor, getPublicAuthorName } from "@/features/authors";
 import { getOwnCollectionTitle } from "@/features/collection-management";
+import { getPublicCollection } from "@/features/collections";
 import { getAuthorPoem } from "@/features/poems";
 
 import { Breadcrumbs } from "../../components/Breadcrumbs/Breadcrumbs";
@@ -31,6 +32,11 @@ vi.mock("@/features/poems", async (importOriginal) => ({
 vi.mock("@/features/collection-management", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/collection-management")>()),
   getOwnCollectionTitle: vi.fn(),
+}));
+
+vi.mock("@/features/collections", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/collections")>()),
+  getPublicCollection: vi.fn(),
 }));
 
 const ANNA_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
@@ -157,6 +163,46 @@ describe("BreadcrumbsLoader", () => {
     }>;
 
     expect(element.props.items.map((item) => item.label)).toEqual(["Главная", "Наши авторы", "Автор"]);
+  });
+
+  // implements FR-6 of public-collections
+  it("reads the author's name and the collection on a public collection page, sharing the page's reads", async () => {
+    const collectionId = "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a";
+    vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Анна Ахматова" });
+    vi.mocked(getPublicCollection).mockResolvedValue({
+      ok: true,
+      collection: { id: collectionId, title: "Осенний цикл", description: null, poems: [] },
+    });
+
+    const element = (await load(["authors", ANNA_ID, "collections", collectionId])) as ReactElement<{
+      items: { label: string }[];
+    }>;
+
+    expect(getPublicAuthorName).toHaveBeenCalledWith(ANNA_ID);
+    expect(getPublicCollection).toHaveBeenCalledWith(ANNA_ID, collectionId);
+    expect(getAuthorPoem).not.toHaveBeenCalled();
+    expect(element.props.items.map((item) => item.label)).toEqual([
+      "Главная",
+      "Наши авторы",
+      "Анна Ахматова",
+      "Осенний цикл",
+    ]);
+  });
+
+  // implements FR-6 of public-collections
+  it("renders nothing for a collection page whose collection isn't a visible collection of the author", async () => {
+    vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Анна Ахматова" });
+    vi.mocked(getPublicCollection).mockResolvedValue({ ok: false, reason: "not-found" });
+
+    await expect(load(["authors", ANNA_ID, "collections", "no-such-collection"])).resolves.toBeNull();
+  });
+
+  // implements FR-6 of public-collections
+  it("reads nothing for /authors/<id>/collections, which has no trail", async () => {
+    await expect(load(["authors", ANNA_ID, "collections"])).resolves.toBeNull();
+
+    expect(getPublicAuthorName).not.toHaveBeenCalled();
+    expect(getPublicCollection).not.toHaveBeenCalled();
   });
 
   // implements FR-8 of add-author-poems

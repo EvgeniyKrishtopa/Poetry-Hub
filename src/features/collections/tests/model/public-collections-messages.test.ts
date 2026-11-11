@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { PUBLIC_COLLECTIONS_COPY } from "../../model/public-collections-messages";
+import { PUBLIC_COLLECTIONS_COPY, PUBLIC_COLLECTIONS_LOADING_LABEL } from "../../model/public-collections-messages";
 
 describe("public collections messages", () => {
   // implements NFR-8 of public-collections
@@ -10,5 +10,10 @@ describe("public collections messages", () => {
       sectionUnavailable: "Сборники сейчас недоступны.",
       poemsHeading: "Произведения",
     });
+  });
+
+  // implements NFR-8 of public-collections
+  it("announces loading with the same wording as the poem page", () => {
+    expect(PUBLIC_COLLECTIONS_LOADING_LABEL).toBe("Загрузка…");
   });
 });

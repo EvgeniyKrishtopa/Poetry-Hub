@@ -5,14 +5,15 @@ export type BreadcrumbItem =
 
 /**
  * What a URL maps to: no trail, a fully known trail without the home item, an author page by id, one of
- * the author's poems, the signed-in owner's page of one poem or its edit page, or the owner's page of one
- * collection, its edit page, or its poems page.
+ * the author's poems or one of the author's public collections, the signed-in owner's page of one poem or its
+ * edit page, or the owner's page of one collection, its edit page, or its poems page.
  */
 export type RouteMatch =
   | { readonly kind: "none" }
   | { readonly kind: "static"; readonly items: readonly BreadcrumbItem[] }
   | { readonly kind: "author"; readonly id: string }
   | { readonly kind: "author-poem"; readonly authorId: string; readonly poemId: string }
+  | { readonly kind: "author-collection"; readonly authorId: string; readonly collectionId: string }
   | { readonly kind: "own-poem"; readonly poemId: string }
   | { readonly kind: "own-poem-edit"; readonly poemId: string }
   | { readonly kind: "own-collection"; readonly collectionId: string }
