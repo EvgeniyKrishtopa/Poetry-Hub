@@ -8,12 +8,11 @@ export const WORK_BOARD_COPY = {
   poemsUnavailable: "Не удалось загрузить произведения. Попробуйте позже.",
 } as const;
 
-/** The alert above the board for each refused move (FR-6, FR-11). */
+/** The alert above the board for each refused move that keeps the author here (FR-6, FR-11); `unauthenticated` redirects instead. */
 export const MOVE_FAILURE_MESSAGES = {
   failed: "Не удалось сохранить порядок. Попробуйте ещё раз.",
   "rate-limited": "Слишком много перестановок за минуту. Подождите немного и повторите.",
   stale: "Список изменился в другой вкладке. Мы обновили его — попробуйте ещё раз.",
-  unauthenticated: "Не удалось сохранить порядок. Попробуйте ещё раз.",
 } as const;
 
 /** The handles' accessible names (FR-7). */

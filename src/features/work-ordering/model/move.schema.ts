@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-// The action inputs check shapes only; the database clamps any integer place and answers `not-found` for any
-// id that is not the caller's (design D2, D6).
+// The action inputs check shapes only: the ids' lowercase-UUID rule runs inside each action through
+// `areMoveIdsValid`, before the session and the limit, so a malformed id answers `failed` and counts nothing
+// (design D6). The database clamps any integer place and answers `not-found` for any id that is not the caller's.
 
 const poemListSchema = z.union([
   z.object({ kind: z.literal("collection"), collectionId: z.string() }),
@@ -22,3 +23,9 @@ export const moveCollectionInputSchema = z.object({
 
 export type MovePoemInput = z.infer<typeof movePoemInputSchema>;
 export type MoveCollectionInput = z.infer<typeof moveCollectionInputSchema>;
+
+/** Whether every id a move names is a lowercase UUID (design D6): false means refuse without counting the limit. */
+export function areMoveIdsValid(input: MovePoemInput | MoveCollectionInput): boolean {
+  void input;
+  throw new Error("not implemented");
+}
