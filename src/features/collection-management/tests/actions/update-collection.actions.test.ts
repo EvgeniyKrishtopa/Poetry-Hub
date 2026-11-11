@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getSessionState } from "@/features/auth";
@@ -10,7 +10,7 @@ import { consumeCollectionEditAllowance } from "../../dal/collection-edit-allowa
 import { updateOwnCollection } from "../../dal/collection-writes";
 import { COLLECTION_FIELD_ERRORS } from "../../model/collection-management-messages";
 
-vi.mock("next/cache", () => ({ refresh: vi.fn() }));
+vi.mock("next/cache", () => ({ refresh: vi.fn(), updateTag: vi.fn() }));
 vi.mock("@/features/auth", () => ({ getSessionState: vi.fn() }));
 vi.mock("@/features/authors", () => ({ getOwnPublicAuthor: vi.fn() }));
 vi.mock("../../dal/collection-edit-allowance", () => ({ consumeCollectionEditAllowance: vi.fn() }));
@@ -29,6 +29,7 @@ function expectNothingCounted(): void {
   expect(getOwnPublicAuthor).not.toHaveBeenCalled();
   expect(updateOwnCollection).not.toHaveBeenCalled();
   expect(refresh).not.toHaveBeenCalled();
+  expect(updateTag).not.toHaveBeenCalled();
 }
 
 describe("updateCollectionAction", () => {
@@ -53,6 +54,29 @@ describe("updateCollectionAction", () => {
       title: TITLE,
       description: null,
     });
+    expect(refresh).toHaveBeenCalledOnce();
+  });
+
+  // implements FR-7, NFR-2 of public-collections
+  it("expires exactly the author's public tag, before the refresh, using the id the profile read returned", async () => {
+    await updateCollectionAction(INPUT);
+
+    expect(updateTag).toHaveBeenCalledExactlyOnceWith(`author-works:${AUTHOR_ID}`);
+    expect(vi.mocked(updateTag).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(refresh).mock.invocationCallOrder[0] ?? 0);
+  });
+
+  // implements FR-7, NFR-2 of public-collections
+  it("still answers saved when expiring the tag throws, and logs only the error name", async () => {
+    const logError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.mocked(updateTag).mockImplementationOnce(() => {
+      throw new TypeError(`tag author-works:${AUTHOR_ID}`);
+    });
+
+    const result = await updateCollectionAction(INPUT);
+
+    expect(result.data).toEqual({ status: "saved" });
+    expect(logError).toHaveBeenCalledExactlyOnceWith("[collection-management] expire author works tag failed: TypeError");
+    logError.mockRestore();
     expect(refresh).toHaveBeenCalledOnce();
   });
 
@@ -111,6 +135,7 @@ describe("updateCollectionAction", () => {
     expect(getOwnPublicAuthor).not.toHaveBeenCalled();
     expect(updateOwnCollection).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled();
+    expect(updateTag).not.toHaveBeenCalled();
   });
 
   // implements FR-11 of add-poem-collections
@@ -122,6 +147,7 @@ describe("updateCollectionAction", () => {
     expect(result.data).toEqual({ status: "failed", failure: "not-public" });
     expect(updateOwnCollection).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled();
+    expect(updateTag).not.toHaveBeenCalled();
   });
 
   it("passes a failed profile read through", async () => {
@@ -141,6 +167,7 @@ describe("updateCollectionAction", () => {
 
     expect(result.data).toEqual({ status: "not-found" });
     expect(refresh).not.toHaveBeenCalled();
+    expect(updateTag).not.toHaveBeenCalled();
   });
 
   // implements FR-11 of add-poem-collections
@@ -151,5 +178,6 @@ describe("updateCollectionAction", () => {
 
     expect(result.data).toEqual({ status: "failed", failure: "unavailable" });
     expect(refresh).not.toHaveBeenCalled();
+    expect(updateTag).not.toHaveBeenCalled();
   });
 });
