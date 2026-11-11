@@ -32,6 +32,7 @@ const AUTHOR_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
 const STATION_ID = "30000000-0000-4000-8000-000000000052";
 /** Has hex letters, so its uppercase spelling differs. */
 const GARDEN_ID = "c3a1b2d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
+const COLLECTION_ID = "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a";
 const OTHER_AUTHORS_POEM_ID = "30000000-0000-4000-8000-000000000031";
 const ILLUSTRATION_PATH = `${AUTHOR_ID}/0b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d.jpg`;
 
@@ -46,6 +47,7 @@ const STATION_ROW = {
   genre_id: "lyric",
   illustration_path: ILLUSTRATION_PATH,
   created_at: "2026-10-02T08:00:00.123456+00:00",
+  collection_id: COLLECTION_ID,
 };
 const GARDEN_ROW = {
   id: GARDEN_ID,
@@ -54,6 +56,7 @@ const GARDEN_ROW = {
   genre_id: null,
   illustration_path: null,
   created_at: "2026-10-01T23:30:00+00:00",
+  collection_id: null,
 };
 
 let supabase: FakePublicClient;
@@ -77,7 +80,7 @@ describe("author poems DAL", () => {
 
   describe("listAuthorPoems", () => {
     // implements FR-9 and NFR-4 of add-poem-creation
-    it("maps the author's rows newest first, tagged with the author's poems tag and kept for hours", async () => {
+    it("maps the author's rows newest first, tagged with the author's works tag and kept for hours", async () => {
       supabase.queueQuery(okResponse([STATION_ROW, GARDEN_ROW]));
 
       const result = await listAuthorPoems(AUTHOR_ID);
@@ -92,6 +95,7 @@ describe("author poems DAL", () => {
             illustrationUrl: `${ILLUSTRATIONS_URL_BASE}/${ILLUSTRATION_PATH}`,
             publishedAt: "2026-10-02",
             genreId: "lyric",
+            collectionId: COLLECTION_ID,
           },
           {
             id: GARDEN_ID,
@@ -100,6 +104,7 @@ describe("author poems DAL", () => {
             illustrationUrl: null,
             publishedAt: "2026-10-01",
             genreId: null,
+            collectionId: null,
           },
         ],
       });
@@ -111,7 +116,7 @@ describe("author poems DAL", () => {
         ["order", ["id", { ascending: true }]],
       ]);
       expect(supabase.storage.from).toHaveBeenCalledWith("poem-illustrations");
-      expect(cacheTag).toHaveBeenCalledExactlyOnceWith(`poems:${AUTHOR_ID}`);
+      expect(cacheTag).toHaveBeenCalledExactlyOnceWith(`author-works:${AUTHOR_ID}`);
       expect(cacheLife).toHaveBeenCalledExactlyOnceWith("hours");
     });
 
@@ -140,7 +145,7 @@ describe("author poems DAL", () => {
       supabase.queueQuery(errorResponse("PGRST000", 503));
 
       await expect(listAuthorPoems(AUTHOR_ID)).resolves.toEqual({ ok: false, reason: "unavailable" });
-      expect(cacheTag).toHaveBeenCalledExactlyOnceWith(`poems:${AUTHOR_ID}`);
+      expect(cacheTag).toHaveBeenCalledExactlyOnceWith(`author-works:${AUTHOR_ID}`);
       expect(cacheLife).toHaveBeenCalledExactlyOnceWith("seconds");
       expect(console.error).toHaveBeenCalledExactlyOnceWith("[poems] read author poems failed: unavailable");
     });
@@ -156,6 +161,17 @@ describe("author poems DAL", () => {
       expect(logged).not.toContain(SECRET_TITLE);
       expect(logged).not.toContain(AUTHOR_ID);
     });
+
+    // implements FR-1 of public-collections
+    it.each([["not-a-uuid"], [COLLECTION_ID.toUpperCase()], [""]])(
+      "returns unavailable on a malformed collection_id (%j)",
+      async (collectionId) => {
+        supabase.queueQuery(okResponse([{ ...GARDEN_ROW, collection_id: collectionId }]));
+
+        await expect(listAuthorPoems(AUTHOR_ID)).resolves.toEqual({ ok: false, reason: "unavailable" });
+        expect(console.error).toHaveBeenCalledExactlyOnceWith("[poems] read author poems failed: invalid row");
+      },
+    );
 
     it("returns unavailable on a thrown network failure", async () => {
       vi.mocked(createSupabasePublicClient).mockImplementation(() => {
@@ -187,7 +203,7 @@ describe("author poems DAL", () => {
       await listAuthorPoems(AUTHOR_ID.toUpperCase());
 
       expect(supabase.queries[0]).toContainEqual(["eq", ["author_id", AUTHOR_ID]]);
-      expect(cacheTag).toHaveBeenCalledExactlyOnceWith(`poems:${AUTHOR_ID}`);
+      expect(cacheTag).toHaveBeenCalledExactlyOnceWith(`author-works:${AUTHOR_ID}`);
     });
   });
 

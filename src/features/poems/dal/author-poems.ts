@@ -4,11 +4,11 @@ import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { z } from "zod";
 
+import { authorWorksTag } from "@/shared/config/cache-tags";
 import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { classifySupabaseError } from "@/shared/lib/supabase/classify-error";
 import { createSupabasePublicClient } from "@/shared/lib/supabase/public";
 
-import { poemsTag } from "../model/poem-cache-tags";
 import { lowercaseUuidSchema, poemRowSchema } from "../model/poem-row.schema";
 import { POEM_COLUMNS } from "../model/poem.constants";
 import type { AuthorPoemResult, AuthorPoemsResult } from "../model/poem.types";
@@ -62,10 +62,10 @@ async function readAuthorPoems(authorId: string): Promise<AuthorPoemsResult> {
   }
 }
 
-/** The one cache entry of an author's poems: tagged `poems:<authorId>`, hours on success, seconds on failure. */
+/** The one cache entry of an author's poems: tagged `author-works:<authorId>`, hours on success, seconds on failure. */
 async function cachedAuthorPoems(authorId: string): Promise<AuthorPoemsResult> {
   "use cache";
-  cacheTag(poemsTag(authorId));
+  cacheTag(authorWorksTag(authorId));
 
   const result = await readAuthorPoems(authorId);
   // Separate calls: cacheLife's typed overloads take each profile name as a literal.

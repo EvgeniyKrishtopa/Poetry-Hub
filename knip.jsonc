@@ -7,7 +7,6 @@
     // Temporary, public-collections scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new files, so knip still sees the rest of each feature. Task 7.5 removes these entries.
     "src/features/collections/**",
-    "src/shared/config/cache-tags.ts",
     "src/features/poems/model/uncollected-poems.ts",
     "src/features/collection-management/actions/expire-author-works-tag.ts"
   ],

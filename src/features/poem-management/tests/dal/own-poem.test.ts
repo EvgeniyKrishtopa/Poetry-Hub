@@ -35,6 +35,7 @@ const POEM: Poem = {
   illustrationUrl: null,
   publishedAt: "2026-10-01",
   genreId: null,
+  collectionId: null,
 };
 
 describe("getOwnPoem and getOwnPoemTitle", () => {
