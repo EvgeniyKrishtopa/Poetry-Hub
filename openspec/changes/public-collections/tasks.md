@@ -71,20 +71,20 @@ group lands its own tests.
     owner whose profile is no longer public; not on `not-found` or failure.
 ## 4. Public collections reads (new feature, no UI yet) <!-- judgement-heavy -->
 
-- [ ] 4.1 (NFR-3, NFR-4) Create `src/features/collections/` with `index.ts` exporting only what the
+- [x] 4.1 (NFR-3, NFR-4) Create `src/features/collections/` with `index.ts` exporting only what the
   group's tests use; types, row schema, copy constants, paths (`PUBLIC_COLLECTIONS_SEGMENT`,
   `publicCollectionPath`) (design D5, D7).
-- [ ] 4.2 (FR-1, NFR-2, NFR-9) `dal/public-collections.ts`: `listPublicCollections` (cached,
+- [x] 4.2 (FR-1, NFR-2, NFR-9) `dal/public-collections.ts`: `listPublicCollections` (cached,
   `authorWorksTag`, hours / seconds, UUID guard, lowercase), `listAuthorCollections`,
   `getPublicCollection` in React's `cache` (design D5).
   - Verify with `collections/tests/dal/public-collections.test.ts` (its own fake public client):
     order, parse failure as `unavailable`, one log line with no id or title, UUID guard opens no
     scope, nesting with both reads, either read failing, `getPublicCollection` not-found for a
     malformed, uppercase, unknown, or emptied collection.
-- [ ] 4.3 (FR-1, FR-2) `model/nest-public-collections.ts`: poems by `collectionId`, the poems list's
+- [x] 4.3 (FR-1, FR-2) `model/nest-public-collections.ts`: poems by `collectionId`, the poems list's
   order, empty collections dropped, `hasCollectedPoems` (design D5, D6).
   - Verify with `tests/model/nest-public-collections.test.ts`.
-- [ ] 4.4 (NFR-3, NFR-4) `collections/tests/boundaries.test.ts`: no `"use client"`; no `auth`,
+- [x] 4.4 (NFR-3, NFR-4) `collections/tests/boundaries.test.ts`: no `"use client"`; no `auth`,
   `collection-management`, `poem-management`, cookie or session Supabase client; `authors/` and
   `poems/` don't import `collections`.
 
