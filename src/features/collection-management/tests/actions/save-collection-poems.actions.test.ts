@@ -179,6 +179,7 @@ describe("saveCollectionPoemsAction", () => {
 
     expect(result.data).toEqual({ status: "saved" });
     expect(logError).toHaveBeenCalledExactlyOnceWith("[collection-management] expire author works tag failed: Error");
+    expect(refresh).toHaveBeenCalledOnce();
     logError.mockRestore();
   });
 
