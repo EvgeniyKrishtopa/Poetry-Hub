@@ -136,6 +136,8 @@ Archived at `openspec/changes/archive/2026-11-03-delete-poem/`.
 
 ## public-collections
 
+Archived at `openspec/changes/archive/2026-11-11-public-collections/`.
+
 ### public-collections · 7.2 — four copies of the free-poem and ordering rules
 
 - **State:** deferred (a known cost of the repeat-per-feature rule, not a gap in the delivered task)
