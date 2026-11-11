@@ -74,3 +74,15 @@ export type MoveResult =
 /** The limit step's answer. */
 export type WriteAllowance =
   { readonly ok: true } | { readonly ok: false; readonly failure: ServiceFailure | "too-many-moves" };
+
+/** What the author is dragging: a poem or a collection. */
+export interface DraggedItem {
+  readonly type: "poem" | "collection";
+  readonly id: string;
+}
+
+/** What a dragged item is over, as the island translates the library's droppable into model terms. */
+export type OverTarget =
+  | { readonly kind: "poem"; readonly poemId: string }
+  | { readonly kind: "collection"; readonly collectionId: string }
+  | { readonly kind: "list"; readonly container: PoemContainer };

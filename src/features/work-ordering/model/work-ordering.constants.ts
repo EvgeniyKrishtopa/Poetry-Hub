@@ -21,3 +21,19 @@ export const MOVE_FAILURE_REASON = {
   unauthenticated: "unauthenticated",
   failed: "failed",
 } as const;
+
+/** A mouse drag starts after the pointer moved this far, so a plain click on a handle never lifts (FR-7). */
+export const MOUSE_DRAG_DISTANCE_PX = 4;
+
+/** A touch drag starts after a hold on the handle this long, so a swipe from the handle still scrolls (FR-7, design D5). */
+export const TOUCH_HOLD_MS = 200;
+
+/** How far a finger may drift during the hold before the hold is a scroll instead (design D5). */
+export const TOUCH_HOLD_TOLERANCE_PX = 5;
+
+/** Space alone lifts and drops, Escape cancels; the library's default would also lift and drop on Enter (FR-7). */
+export const KEYBOARD_CODES: { start: string[]; end: string[]; cancel: string[] } = {
+  start: ["Space"],
+  end: ["Space"],
+  cancel: ["Escape"],
+};
