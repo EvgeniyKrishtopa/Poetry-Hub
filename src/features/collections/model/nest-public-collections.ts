@@ -10,13 +10,15 @@ export function nestPublicCollections(
   collections: readonly PublicCollectionEntry[],
   poems: readonly Poem[],
 ): readonly PublicCollection[] {
-  void collections;
-  void poems;
-  throw new Error("not implemented");
+  const poemsByCollection = Map.groupBy(poems, (poem) => poem.collectionId);
+  return collections.flatMap((collection) => {
+    const collectionPoems = poemsByCollection.get(collection.id);
+    if (collectionPoems === undefined) return [];
+    return [{ ...collection, poems: collectionPoems.map(({ id, title }) => ({ id, title })) }];
+  });
 }
 
 /** Whether any poem is in a collection: on a failed collections read, the section shows its unavailable text (D6). */
 export function hasCollectedPoems(poems: readonly Poem[]): boolean {
-  void poems;
-  throw new Error("not implemented");
+  return poems.some((poem) => poem.collectionId !== null);
 }
