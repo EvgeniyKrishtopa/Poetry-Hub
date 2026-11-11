@@ -47,6 +47,18 @@ describe("collections feature boundaries", () => {
     expect(filesMatching(collectionsFiles, /from ["']@\/shared\/lib\/supabase\/(server|session)["']/)).toEqual([]);
   });
 
+  // implements NFR-4 of public-collections
+  it("takes only SupabaseConfigError from the Supabase barrel, so a client added there later can't slip in", () => {
+    const allowedBarrelImport = /import \{ SupabaseConfigError \} from ["']@\/shared\/lib\/supabase["'];?/g;
+    const anyBarrelImport = /from ["']@\/shared\/lib\/supabase["']/;
+
+    const withoutAllowedImport = collectionsFiles.filter((file) =>
+      anyBarrelImport.test(readFileSync(file, "utf8").replace(allowedBarrelImport, "")),
+    );
+
+    expect(withoutAllowedImport).toEqual([]);
+  });
+
   // implements NFR-3 of public-collections
   it.each([
     ["authors", AUTHORS_DIR],
