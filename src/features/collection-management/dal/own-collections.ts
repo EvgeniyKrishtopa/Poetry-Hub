@@ -37,7 +37,7 @@ const collectionRowSchema = z.object({
   description: z.string().min(1).nullable(),
 });
 
-/** The author's collections for the `/account/poems` section, newest first (design D4). */
+/** The author's collections for the `/account/poems` section in the author's own order (design D4; FR-9). */
 export async function listOwnCollections(authorId: string): Promise<OwnCollectionsResult> {
   try {
     const supabase = await createSupabaseServerClient();
@@ -45,7 +45,7 @@ export async function listOwnCollections(authorId: string): Promise<OwnCollectio
       .from(COLLECTIONS_TABLE)
       .select("id, title")
       .eq("author_id", authorId)
-      .order("created_at", { ascending: false })
+      .order("position", { ascending: true })
       .order("id", { ascending: true });
     if (response.error) {
       logFailure(LIST_OPERATION, withStatus(response.error, response.status));

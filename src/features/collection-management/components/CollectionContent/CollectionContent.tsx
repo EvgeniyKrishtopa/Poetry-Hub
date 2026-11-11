@@ -5,7 +5,7 @@ import { SESSION_STATE } from "@/shared/config/constants";
 import { splitParagraphs } from "@/shared/lib/split-paragraphs";
 import { SessionUnavailableAlert } from "@/shared/ui";
 
-import { getCollectionPoemChoices } from "../../dal/collection-poems";
+import { getCollectionPoemChoices, listCollectedPoems } from "../../dal/collection-poems";
 import { getOwnCollection } from "../../dal/own-collections";
 import { CollectionActions } from "../CollectionActions/CollectionActions";
 import { CollectionPoemList } from "../CollectionPoemList/CollectionPoemList";
@@ -33,11 +33,14 @@ export async function CollectionContent({ collectionId }: CollectionContentProps
     throw new Error("Collection page unavailable");
   }
 
-  const choices = await getCollectionPoemChoices(id);
+  // The choices say whether there is anything to manage; the author's order of this collection's poems comes
+  // from the collected poems, because the checklist stays newest first (work-ordering design D2, D7).
+  const [choices, collected] = await Promise.all([getCollectionPoemChoices(id), listCollectedPoems()]);
   // Same error screen as a failed collection read; the DAL already logged the cause.
-  if (!choices.ok) throw new Error("Collection poems unavailable");
-  // Derived per render, never stored: the collection's own poems, and whether there is anything to manage.
-  const poems = choices.choices.filter((choice) => choice.selected);
+  if (!choices.ok || !collected.ok) throw new Error("Collection poems unavailable");
+  // Derived per render, never stored: the collection's own poems in the author's order, and whether there is
+  // anything to manage.
+  const poems = collected.poems.filter((poem) => poem.collectionId === id);
   const canManage = choices.choices.length > 0;
 
   const { title, description } = result.collection;

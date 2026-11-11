@@ -39,7 +39,7 @@ const FREE_ID = "30000000-0000-4000-8000-000000000054";
 
 const SECRET_TITLE = "Секрет";
 
-/** The collection rows as PostgREST returns them: already newest first. */
+/** The collection rows as PostgREST returns them: already in the author's order. */
 const SPRING_ROW = {
   id: SPRING_ID,
   title: "Весна",
@@ -61,7 +61,7 @@ function poemRow(id: string, title: string, collectionId: string | null, created
   };
 }
 
-/** The poems as PostgREST returns them: already newest first. */
+/** The poems as PostgREST returns them: already in the author's order. */
 const POEM_ROWS = [
   poemRow(FREE_ID, "Свободное", null, "2026-10-04T08:00:00+00:00"),
   poemRow(SNOW_ID, "Первый снег", SPRING_ID, "2026-10-03T08:00:00+00:00"),
@@ -99,7 +99,7 @@ describe("public collections DAL", () => {
 
   describe("listPublicCollections", () => {
     // implements FR-1 and NFR-2 of public-collections
-    it("maps the author's rows newest first, tagged with the author's works tag and kept for hours", async () => {
+    it("maps the author's rows in their order, asks for the stored position, tagged with the author's works tag and kept for hours", async () => {
       supabase.queueQuery("collections", okResponse([SPRING_ROW, AUTUMN_ROW]));
 
       const result = await listPublicCollections(AUTHOR_ID);
@@ -115,7 +115,7 @@ describe("public collections DAL", () => {
         ["from", ["collections"]],
         ["select", ["id, title, description, created_at"]],
         ["eq", ["author_id", AUTHOR_ID]],
-        ["order", ["created_at", { ascending: false }]],
+        ["order", ["position", { ascending: true }]],
         ["order", ["id", { ascending: true }]],
       ]);
       expect(cacheTag).toHaveBeenCalledExactlyOnceWith(`author-works:${AUTHOR_ID}`);
@@ -195,7 +195,7 @@ describe("public collections DAL", () => {
 
   describe("listAuthorCollections", () => {
     // implements FR-1 and FR-2 of public-collections
-    it("nests each collection's poems newest first, newest collection first, and leaves out free poems", async () => {
+    it("nests each collection's poems in the author's order, the collections in theirs, and leaves out free poems", async () => {
       queueReads(okResponse([SPRING_ROW, AUTUMN_ROW]), okResponse(POEM_ROWS));
 
       const result = await listAuthorCollections(AUTHOR_ID);

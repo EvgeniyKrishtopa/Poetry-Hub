@@ -15,7 +15,7 @@ export interface Poem {
   readonly collectionId: string | null;
 }
 
-/** An author's poems, newest first, or why they can't be read (add-poem-creation design D3). */
+/** An author's poems in the author's own order, or why they can't be read (add-poem-creation design D3). */
 export type AuthorPoemsResult =
   | { readonly ok: true; readonly poems: readonly Poem[] }
   | { readonly ok: false; readonly reason: "unavailable" };

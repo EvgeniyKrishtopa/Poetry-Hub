@@ -15,6 +15,14 @@ describe("selectFreePoems", () => {
     expect(selectFreePoems(NEWEST_FIRST, [{ id: NIGHT_STATION.id }])).toEqual([FIRST_SNOW, AUTUMN_GARDEN]);
   });
 
+  // implements FR-9 of drag-and-drop-ordering
+  it("keeps the given order whatever the ids and titles sort to", () => {
+    const authorsOrder = [NIGHT_STATION, FIRST_SNOW, AUTUMN_GARDEN];
+
+    expect(selectFreePoems(authorsOrder, [])).toEqual(authorsOrder);
+    expect(selectFreePoems(authorsOrder, [{ id: FIRST_SNOW.id }])).toEqual([NIGHT_STATION, AUTUMN_GARDEN]);
+  });
+
   // implements FR-1 of show-only-free-poems
   it("returns every poem when none is collected", () => {
     expect(selectFreePoems(NEWEST_FIRST, [])).toEqual(NEWEST_FIRST);

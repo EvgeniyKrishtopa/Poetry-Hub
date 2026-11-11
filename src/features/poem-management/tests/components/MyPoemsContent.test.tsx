@@ -75,7 +75,7 @@ afterEach(() => {
 
 describe("MyPoemsContent", () => {
   // implements FR-2 of add-poem-creation
-  it("shows the add link, then the own poems newest first, each linking to its owner page", async () => {
+  it("shows the add link, then the own poems in the order read, each linking to its owner page", async () => {
     await renderContent();
 
     expect(listAuthorPoems).toHaveBeenCalledExactlyOnceWith(AUTHOR_ID);
@@ -222,7 +222,7 @@ describe("MyPoemsContent", () => {
 
 describe("MyPoemsContent: free poems only", () => {
   // implements FR-1 of show-only-free-poems
-  it("lists only the poems in no collection, newest first, after the section", async () => {
+  it("lists only the poems in no collection, in the order read, after the section", async () => {
     vi.mocked(listAuthorPoems).mockResolvedValue({ ok: true, poems: [FIRST_SNOW, NIGHT_STATION, AUTUMN_GARDEN] });
     collectedAre(NIGHT_STATION);
 

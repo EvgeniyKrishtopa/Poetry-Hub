@@ -70,7 +70,8 @@ export async function getCollectionPoemChoices(collectionId: string): Promise<Co
 }
 
 /**
- * The author's poems that are in a collection, newest first, through `my_collected_poems` (add-poems-to-collections D3).
+ * The author's poems that are in a collection in their stored order (a collection's poems keep their relative
+ * order across collections), through `my_collected_poems` (add-poems-to-collections D3).
  * Memoized per request, so the `/account/poems` section and its poem list share one result and always agree
  * (show-only-free-poems D2); still read afresh on every request (ADR 0011).
  */

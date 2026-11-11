@@ -3,7 +3,7 @@ import type { Poem } from "@/features/poems";
 import type { PublicCollection, PublicCollectionEntry } from "./public-collections.types";
 
 /**
- * Each collection with the poems whose `collectionId` matches, in the poems list's order (newest first); a
+ * Each collection with the poems whose `collectionId` matches, in the poems list's order (the author's order); a
  * collection left with no poems is dropped (public-collections D5).
  */
 export function nestPublicCollections(
