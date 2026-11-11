@@ -12,31 +12,31 @@ verification. Each group exports only what it already consumes (tests count as c
 
 ## 1. Database: positions and the move functions <!-- judgement-heavy -->
 
-- [ ] 1.1 (NFR-1, FR-1) New migration `supabase/migrations/<timestamp>_work_ordering.sql` (design D1, D2):
+- [x] 1.1 (NFR-1, FR-1) New migration `supabase/migrations/<timestamp>_work_ordering.sql` (design D1, D2):
   `collections.position` and `poems.position` added nullable, backfilled by `row_number()` over the
   newest-first order per container, then `not null`; the two indexes replacing the created-at ones; the
   select grants on both columns for `anon` and `authenticated`; the header comment and the documented
   down migration.
-- [ ] 1.2 (NFR-1, FR-2 – FR-5, FR-11) The same migration: `move_my_poem` and `move_my_collection`
+- [x] 1.2 (NFR-1, FR-2 – FR-5, FR-11) The same migration: `move_my_poem` and `move_my_collection`
   (security definer, owner from the session, public-profile check, lock order, `stale` / `not-found`,
   clamped index, one transaction, `author_id` on `moved`), granted to `authenticated` only.
-- [ ] 1.3 (FR-1, FR-10, NFR-2) The same migration: the `before insert` triggers on `poems` and `collections`
+- [x] 1.3 (FR-1, FR-10, NFR-2) The same migration: the `before insert` triggers on `poems` and `collections`
   (first position under the per-author advisory lock); the advisory lock in the four writers (`move_my_poem`, `move_my_collection`, `save_my_collection_poems`, `delete_my_collection`);
   `save_my_collection_poems` places added poems first in the collection and removed ones first among the free
   poems; `delete_my_collection` places the freed poems first among the free poems in their order; the
   `order_move` scope (30 per minute) in `write_rate_limits` and `consume_write_allowance`;
   `my_collected_poems` orders by position.
-- [ ] 1.4 (NFR-1, FR-1) pgTAP `supabase/tests/work_ordering.test.sql`: backfill keeps newest-first; new poem
+- [x] 1.4 (NFR-1, FR-1) pgTAP `supabase/tests/work_ordering.test.sql`: backfill keeps newest-first; new poem
   and new collection first; a delete keeps the rest; the two move functions (within, across, into an empty
   collection, out to the free poems, beyond the end, same place, another author's, unknown, `stale`,
   non-public profile); direct updates of `position` fail for every role; `anon` reads the order of a public
   author's rows and nothing of a non-public one's; the scope's limit counts; deleting a collection frees its poems first, in order; a direct insert with no
   position gets the first one; `save_my_collection_poems` puts the added poems first in the collection
   (checklist order) and the removed ones first among the free poems (their collection order).
-- [ ] 1.5 (NFR-1) Update the existing pgTAP files whose expectations change (`poems`, `collections`,
+- [x] 1.5 (NFR-1) Update the existing pgTAP files whose expectations change (`poems`, `collections`,
   `collection_poems`, `write_rate_limits`); run `supabase db reset` (the seed) and the whole pgTAP suite to
   prove the direct-insert fixtures still pass with no change.
-- [ ] 1.6 (NFR-1) Docs: ADR `docs/decisions/0014-author-set-order.md` (the order model, who writes it, the
+- [x] 1.6 (NFR-1) Docs: ADR `docs/decisions/0014-author-set-order.md` (the order model, who writes it, the
   limit); `docs/environment.md`'s deploy checklist: the new migration after the public collections one,
   before the app.
 

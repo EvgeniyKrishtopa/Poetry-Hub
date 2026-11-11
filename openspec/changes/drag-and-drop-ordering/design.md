@@ -54,7 +54,7 @@ that dense integers don't solve at 1000 poems per list, and harder to read).
 and `move_my_collection(collection_id uuid, to_index integer) → jsonb`. Same shape as
 `save_my_collection_poems`: `security definer`, `search_path = ''`, owner from `auth.uid()` and
 `my_author_profile_id()`, a public-profile check, and the per-author advisory lock
-(`pg_advisory_xact_lock(hashtextextended(<profile>::text, 0))`, the one the creates already take) as the first statement of `move_my_poem`, `move_my_collection`, `save_my_collection_poems`, `delete_my_collection`, and the new insert triggers: one serialization point per author, so a poem joining the free list needs no row-lock reasoning and no two writes of one author deadlock. Row locks inside are taken in a fixed order (collections by id, then poems by id), arguments written `<function>.<name>`.
+(`pg_advisory_xact_lock(hashtextextended(<profile>::text, 0))`, the one the creates already take) as the first statement of `move_my_poem`, `move_my_collection`, `save_my_collection_poems`, `delete_my_collection`, and the new insert triggers: one serialization point per author, so a poem joining the free list needs no row-lock reasoning and no two writes of one author deadlock. The advisory lock is the guarantee against deadlock; inside, the collections a function names are locked by id and then the moved poem, and the other poems of a renumbered list are locked by the update itself (the writers that skip the advisory lock each touch one row), arguments written `<function>.<name>`.
 
 - `from_collection_id` is the browser's belief about where the poem was (null = free). A mismatch answers
   `{"status":"stale"}` with nothing written (FR-11); an id that is not the caller's or does not exist
