@@ -52,19 +52,19 @@ group lands its own tests.
 
 ## 3. Collection writes keep the public pages fresh <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-7, NFR-2) Next 16 API check: Confirm with context7 (library `next`) that `updateTag` and `refresh()`
+- [x] 3.1 (FR-7, NFR-2) Next 16 API check: Confirm with context7 (library `next`) that `updateTag` and `refresh()`
   may both run in one Server Action; record the answer in the group's PR body. If they can't, stop
   and ask before changing the design.
-- [ ] 3.2 (FR-7, NFR-2) `collection-management/actions/expire-author-works-tag.ts`: the feature's own
+- [x] 3.2 (FR-7, NFR-2) `collection-management/actions/expire-author-works-tag.ts`: the feature's own
   copy, logged `[collection-management] expire author works tag failed: <kind>`, never throwing
   (design D4).
-- [ ] 3.3 (FR-7) `updateCollectionAction` (on `updated`) and `saveCollectionPoemsAction` (on `saved`,
+- [x] 3.3 (FR-7) `updateCollectionAction` (on `updated`) and `saveCollectionPoemsAction` (on `saved`,
   not `stale`) expire with the author id from the `getOwnPublicAuthor()` they already read before the
   write; `createCollectionAction` unchanged (design D4 table).
   - Verify with their action tests: tag expired after `updated` / `saved`; not after `stale`,
     `not-found`, a refusal, or a failure; not after `created` (`createCollectionAction`'s test); a
     throwing `updateTag` still reports success.
-- [ ] 3.4 (FR-7) `deleteOwnCollection` parses `author_id`; `deleteCollectionAction` expires
+- [x] 3.4 (FR-7) `deleteOwnCollection` parses `author_id`; `deleteCollectionAction` expires
   `authorWorksTag(author_id)` on every `deleted` before `refresh()` (design D4, Gate 1 C1).
   - Verify with `tests/dal/collection-writes.test.ts` (parse; a missing `author_id` is `unknown`, never
     a guessed success) and `delete-collection.actions` test: expired on `deleted`, including for an

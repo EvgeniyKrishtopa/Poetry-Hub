@@ -156,10 +156,15 @@ describe("updateOwnCollection", () => {
 
 describe("deleteOwnCollection", () => {
   // implements FR-13 of add-poem-collections
-  it("calls delete_my_collection with the id only and returns the stored title", async () => {
-    answer(ok({ status: "deleted", title: TITLE }));
+  it("calls delete_my_collection with the id only and returns the stored title and the owner's author id", async () => {
+    answer(ok({ status: "deleted", title: TITLE, author_id: AUTHOR_ID }));
 
-    await expect(deleteOwnCollection(COLLECTION_ID)).resolves.toEqual({ ok: true, status: "deleted", title: TITLE });
+    await expect(deleteOwnCollection(COLLECTION_ID)).resolves.toEqual({
+      ok: true,
+      status: "deleted",
+      title: TITLE,
+      authorId: AUTHOR_ID,
+    });
     expect(rpc).toHaveBeenCalledExactlyOnceWith("delete_my_collection", { collection_id: COLLECTION_ID });
   });
 
@@ -171,7 +176,18 @@ describe("deleteOwnCollection", () => {
   });
 
   it("treats a deleted answer without a title as a bad shape", async () => {
-    answer(ok({ status: "deleted" }));
+    answer(ok({ status: "deleted", author_id: AUTHOR_ID }));
+
+    await expect(deleteOwnCollection(COLLECTION_ID)).resolves.toEqual({ ok: false, failure: "unknown" });
+  });
+
+  // implements FR-7 of public-collections: a missing or malformed author_id is never a guessed success
+  it.each([
+    ["no author_id", { status: "deleted", title: TITLE }],
+    ["a malformed author_id", { status: "deleted", title: TITLE, author_id: "not-a-uuid" }],
+    ["a null author_id", { status: "deleted", title: TITLE, author_id: null }],
+  ])("treats a deleted answer with %s as a bad shape", async (_case, data) => {
+    answer(ok(data));
 
     await expect(deleteOwnCollection(COLLECTION_ID)).resolves.toEqual({ ok: false, failure: "unknown" });
   });

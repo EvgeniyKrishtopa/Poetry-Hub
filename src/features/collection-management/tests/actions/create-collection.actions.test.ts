@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getSessionState } from "@/features/auth";
@@ -12,7 +12,7 @@ import {
   COLLECTION_TITLE_MAX_LENGTH,
 } from "../../model/collection-management.constants";
 
-vi.mock("next/cache", () => ({ refresh: vi.fn() }));
+vi.mock("next/cache", () => ({ refresh: vi.fn(), updateTag: vi.fn() }));
 vi.mock("@/features/auth", () => ({ getSessionState: vi.fn() }));
 vi.mock("../../dal/collection-writes", () => ({ createOwnCollection: vi.fn() }));
 
@@ -39,6 +39,13 @@ describe("createCollectionAction", () => {
     expect(refresh).toHaveBeenCalledOnce();
   });
 
+  // implements FR-7 of public-collections: a new collection is empty, so no public page can show it
+  it("expires no public tag after a create", async () => {
+    await createCollectionAction({ title: TITLE, description: "" });
+
+    expect(updateTag).not.toHaveBeenCalled();
+  });
+
   // implements FR-3 of add-poem-collections
   it("stores a blank description as none", async () => {
     await createCollectionAction({ title: TITLE, description: "   " });
@@ -54,6 +61,7 @@ describe("createCollectionAction", () => {
     expect(getSessionState).not.toHaveBeenCalled();
     expect(createOwnCollection).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled();
+    expect(updateTag).not.toHaveBeenCalled();
   });
 
   it("answers invalid for an over-long title", async () => {
@@ -92,6 +100,7 @@ describe("createCollectionAction", () => {
     expect(result.data).toEqual({ status: "failed", failure });
     expect(createOwnCollection).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled();
+    expect(updateTag).not.toHaveBeenCalled();
   });
 
   // implements FR-4, FR-5 of add-poem-collections
@@ -105,6 +114,7 @@ describe("createCollectionAction", () => {
 
     expect(result.data).toEqual({ status: "failed", failure });
     expect(refresh).not.toHaveBeenCalled();
+    expect(updateTag).not.toHaveBeenCalled();
   });
 
   // implements FR-4 of add-poem-collections
@@ -115,6 +125,7 @@ describe("createCollectionAction", () => {
 
     expect(result.data).toEqual({ status: "failed", failure });
     expect(refresh).not.toHaveBeenCalled();
+    expect(updateTag).not.toHaveBeenCalled();
   });
 
   it("never takes an author from the input", async () => {

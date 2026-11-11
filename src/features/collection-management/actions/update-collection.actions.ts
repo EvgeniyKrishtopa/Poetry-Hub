@@ -17,11 +17,12 @@ import { UPDATE_COLLECTION_STATUS } from "../model/collection-management.constan
 import type { UpdateCollectionFailure, UpdateCollectionResult } from "../model/collection-management.types";
 
 import { collectionManagementActionClient } from "./action-client";
+import { expireAuthorWorksTag } from "./expire-author-works-tag";
 import { checkSession } from "./session-check";
 
 // The owner is resolved from the session by the database, never from input (NFR-1). Nothing is counted before
-// the limit step, and every attempt counts from there on (FR-10). Only a saved edit refreshes the client
-// router (design D10). No retry: every attempt counts against the limit.
+// the limit step, and every attempt counts from there on (FR-10). Only a saved edit expires the public tag and
+// refreshes the client router (design D4, D10). No retry: every attempt counts against the limit.
 
 const NOT_FOUND: UpdateCollectionResult = { status: UPDATE_COLLECTION_STATUS.notFound };
 
@@ -61,7 +62,9 @@ async function updateCollection(input: UpdateCollectionInput): Promise<UpdateCol
   if (!updated.ok) return failed(updated.failure);
   if (updated.status === "not-found") return NOT_FOUND;
 
-  // 7. Saved: the client router's copies of the author's pages must show it.
+  // 7. Saved: the public pages (the author id read in step 5) and the client router's copies of the author's pages
+  //    must show it.
+  expireAuthorWorksTag(author.authorId);
   refresh();
   return { status: UPDATE_COLLECTION_STATUS.saved };
 }

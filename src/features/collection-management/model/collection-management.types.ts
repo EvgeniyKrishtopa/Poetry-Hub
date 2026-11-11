@@ -79,9 +79,12 @@ export type UpdateOwnCollectionResult =
   | { readonly ok: true; readonly status: "updated" | "not-found" }
   | { readonly ok: false; readonly failure: ServiceFailure };
 
-/** `delete_my_collection()`'s answer: the stored title on `deleted`, or a classified failure (design D2, D7). */
+/**
+ * `delete_my_collection()`'s answer: the stored title and the owner's author id on `deleted` (the id expires the
+ * author's public tag whatever the profile's status now), or a classified failure (design D2, D4, D7).
+ */
 export type DeleteOwnCollectionResult =
-  | { readonly ok: true; readonly status: "deleted"; readonly title: string }
+  | { readonly ok: true; readonly status: "deleted"; readonly title: string; readonly authorId: string }
   | { readonly ok: true; readonly status: "not-found" }
   | { readonly ok: false; readonly failure: ServiceFailure };
 

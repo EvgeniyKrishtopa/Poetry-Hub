@@ -31,9 +31,12 @@ const createStatusSchema = z.union([
 /** `update_my_collection()`'s answer. */
 const updateStatusSchema = z.object({ status: z.enum(["updated", "not-found"]) });
 
-/** `delete_my_collection()`'s answer: the stored title, never one from the browser (design D7). */
+/**
+ * `delete_my_collection()`'s answer: the stored title, never one from the browser (design D7), and the owner's
+ * author id for the public tag (design D4). A `deleted` answer without either fails the parse as `unknown`.
+ */
 const deleteStatusSchema = z.union([
-  z.object({ status: z.literal("deleted"), title: z.string().min(1) }),
+  z.object({ status: z.literal("deleted"), title: z.string().min(1), author_id: z.uuid() }),
   z.object({ status: z.literal("not-found") }),
 ]);
 
@@ -91,7 +94,7 @@ export async function deleteOwnCollection(collectionId: string): Promise<DeleteO
     const parsed = deleteStatusSchema.safeParse(response.data);
     if (!parsed.success) return { ok: false, failure: toServiceFailure(DELETE_OPERATION, parsed.error) };
     if (parsed.data.status === "not-found") return { ok: true, status: "not-found" };
-    return { ok: true, status: "deleted", title: parsed.data.title };
+    return { ok: true, status: "deleted", title: parsed.data.title, authorId: parsed.data.author_id };
   } catch (error) {
     return { ok: false, failure: toServiceFailure(DELETE_OPERATION, error) };
   }
