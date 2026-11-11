@@ -78,8 +78,9 @@ describe("PublicCollectionsSection", () => {
 
     await renderSection();
 
-    expect(screen.queryByText("Стихи о весне")).toBeNull();
-    expect(screen.queryByRole("time")).toBeNull();
+    // The item holds exactly the title and the poem titles: no description, date, or count beside them.
+    const [item] = Array.from(screen.getAllByRole("list")[0].children);
+    expect(item.textContent).toBe("ВеснаПервый снег");
   });
 
   // implements NFR-6 of public-collections
