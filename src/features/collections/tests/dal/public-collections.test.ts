@@ -296,6 +296,19 @@ describe("public collections DAL", () => {
     });
 
     // implements FR-5 of public-collections
+    it("returns not-found for another author's collection, since only this author's rows are read", async () => {
+      const otherAuthorsCollectionId = "2b3c4d5e-6f70-4a81-9b92-a3b4c5d6e7f8";
+      queueReads(okResponse([SPRING_ROW]), okResponse(POEM_ROWS));
+
+      await expect(getPublicCollection(AUTHOR_ID, otherAuthorsCollectionId)).resolves.toEqual({
+        ok: false,
+        reason: "not-found",
+      });
+      const collectionsQuery = supabase.queries.find((calls) => calls[0][1][0] === "collections");
+      expect(collectionsQuery).toContainEqual(["eq", ["author_id", AUTHOR_ID]]);
+    });
+
+    // implements FR-5 of public-collections
     it.each([
       ["a non-UUID id", "no-such-collection"],
       ["the uppercase spelling of a collection id", AUTUMN_ID.toUpperCase()],
