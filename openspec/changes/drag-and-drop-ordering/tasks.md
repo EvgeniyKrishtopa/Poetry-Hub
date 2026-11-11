@@ -54,7 +54,7 @@ verification. Each group exports only what it already consumes (tests count as c
 
 ## 3. Choosing a collection's poems keeps the order sensible <!-- isolated -->
 
-- [ ] 3.1 (FR-10) `save-collection-poems` action and DAL: no change of arguments; tests assert that the
+- [x] 3.1 (FR-10) `save-collection-poems` action and DAL: no change of arguments; tests assert that the
   result and the cache expiry are unchanged; the new ordering is verified in pgTAP (1.4) and by Gate 3.
 
 ## 4. Move actions and their DAL (nothing calls them yet) <!-- judgement-heavy -->
