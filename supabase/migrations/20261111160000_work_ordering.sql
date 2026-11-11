@@ -1,5 +1,5 @@
 -- Work ordering: the author's own order of their collections, of each collection's poems, and of their free
--- poems (drag-and-drop-ordering, design D1, D2; NFR-1, NFR-2, FR-1, FR-2 – FR-5, FR-10, FR-11).
+-- poems (drag-and-drop-ordering, design D1, D2).
 --
 -- The order is an integer `position` on the row, per container: collections.position (the container is the
 -- author) and poems.position (the container is the author's free poems when collection_id is null, otherwise

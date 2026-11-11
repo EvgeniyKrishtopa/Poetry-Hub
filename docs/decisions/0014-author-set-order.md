@@ -62,6 +62,11 @@ one counter (ADR 0007).
   list, 30 moves a minute); revisit if an author's writes ever contend.
 - `my_collected_poems` orders by position across collections, so the rows of different collections
   interleave; its readers group by collection and rely on the order within one.
+- A guest can read `collections.position` (the grant matches `collection_id`'s). A move renumbers all of the
+  author's collections, hidden empty ones included, so a gap in the positions of the visible collections shows
+  that a hidden empty collection exists and roughly where it stands. Never its title or content. Accepted
+  (Deep review DR-06, 2026-11-11); serving the public list through a function that renumbers the visible rows
+  would remove it, at the cost of a different public read.
 - Gaps and negative positions exist until the first move of a list heals it. They are never shown.
 
 ## Alternatives Considered

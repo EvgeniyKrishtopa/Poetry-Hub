@@ -6,7 +6,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(87);
+select plan(91);
 
 -- Readers of an author's lists, in the stored order. A null collection is the author's free poems. Plain SQL
 -- functions run as the caller, so under anon and authenticated the same grants and policies apply as to the
@@ -500,6 +500,18 @@ select throws_ok(
   'move collection: a null place is rejected'
 );
 
+select throws_ok(
+  $$select public.move_my_collection(null, 0)$$,
+  '22023', null,
+  'move collection: a null collection id is rejected'
+);
+
+select is(
+  public.t_collection_titles('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  'Зима,Осень,Весна',
+  'move collection: a not-found or rejected move wrote nothing'
+);
+
 -- A delete keeps the rest in order (FR-1). Х leaves «Зима».
 select is(
   public.delete_my_poem('b1000000-0000-4000-8000-000000000006')->>'status',
@@ -511,6 +523,24 @@ select is(
   public.t_poem_titles('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'b0000000-0000-4000-8000-000000000002'),
   'А,Д',
   'delete: the collection keeps the others in order'
+);
+
+-- A guest follows the moves (FR-3, public-collections FR-1): the last poem leaves «Осень», so it disappears,
+-- and «Весна», which got a poem earlier, is shown.
+select is(
+  public.move_my_poem('b1000000-0000-4000-8000-000000000003', 'b0000000-0000-4000-8000-000000000001', null, 0)->>'status',
+  'moved',
+  'move: the last poem leaves a collection'
+);
+
+reset role;
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+
+select is(
+  public.t_collection_titles('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  'Зима,Весна',
+  'guest: sees the collection that got a poem, and no longer the one that was emptied'
 );
 
 -- ---------- Not public (A) and no profile (C): not-found (FR-11) ----------
@@ -690,7 +720,7 @@ values ('b1000000-0000-4000-8000-0000000000a1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbb
 
 select is(
   public.t_poem_titles('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', null),
-  'Прямое,Ю,Г',
+  'Прямое,В,Ю,Г',
   'trigger: an insert with no position gets the first one of the free poems'
 );
 
@@ -708,7 +738,7 @@ values ('b1000000-0000-4000-8000-0000000000a3', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbb
 
 select is(
   public.t_poem_titles('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', null),
-  'Прямое,Ю,Г,С позицией',
+  'Прямое,В,Ю,Г,С позицией',
   'trigger: an insert that names a position keeps it'
 );
 
