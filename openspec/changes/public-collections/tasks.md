@@ -90,17 +90,17 @@ group lands its own tests.
 
 ## 5. Author page: collections section and free poems <!-- UI: mockups approved, artboards 38–39 --> <!-- judgement-heavy -->
 
-- [ ] 5.1 (FR-3, FR-4) `poems/model/uncollected-poems.ts` and `AuthorPoemsEntry` lists free poems
+- [x] 5.1 (FR-3, FR-4) `poems/model/uncollected-poems.ts` and `AuthorPoemsEntry` lists free poems
   only, renders nothing when every poem is collected (design D3 table).
   - Verify with `poems/tests/model/uncollected-poems.test.ts` and
     `poems/tests/components/AuthorPoemsEntry.test.tsx`: every row of D3's table.
-- [ ] 5.2 (FR-2, FR-4, NFR-6, NFR-7, NFR-8) `collections/components/PublicCollectionsSection`
+- [x] 5.2 (FR-2, FR-4, NFR-6, NFR-7, NFR-8) `collections/components/PublicCollectionsSection`
   (design D6), markup and classes exactly as `OwnCollectionItem` on `/account/poems` (FR-2; user
   decision 2026-11-10, spec-clarify: the mockup repeats that look, and any difference is a separate
   change).
   - Verify with `collections/tests/components/PublicCollectionsSection.test.tsx`: every row of D6's
     table, order, hrefs, nested list inside the item, `lang="ru"`, copy verbatim.
-- [ ] 5.3 (FR-2, FR-8, NFR-3) `src/app/(public)/authors/[id]/page.tsx` composes
+- [x] 5.3 (FR-2, FR-8, NFR-3) `src/app/(public)/authors/[id]/page.tsx` composes
   `PublicCollectionsSection` and `AuthorPoemsEntry` into `AuthorPage`'s `poems` slot (design D6).
   - Verify with the route test / `npm run typecheck`; `authors/` unchanged.
 

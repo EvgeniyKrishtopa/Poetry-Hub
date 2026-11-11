@@ -59,6 +59,12 @@ describe("collections feature boundaries", () => {
     expect(withoutAllowedImport).toEqual([]);
   });
 
+  // implements NFR-7 of public-collections
+  it("adds no raw colour: no hex, rgb(, or arbitrary Tailwind colour value", () => {
+    const rawColour = /#[0-9a-fA-F]{3,8}\b|rgba?\(|\b(?:bg|text|border|outline|fill|stroke)-\[#?[\w(]/;
+    expect(filesMatching(collectionsFiles, rawColour)).toEqual([]);
+  });
+
   // implements NFR-3 of public-collections
   it.each([
     ["authors", AUTHORS_DIR],
