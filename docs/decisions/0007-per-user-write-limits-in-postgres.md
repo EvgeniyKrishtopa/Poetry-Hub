@@ -19,6 +19,10 @@ Scope added by `add-poems-to-collections` (2026-11-07): `collection_poems_save`,
 attempt per save on a collection poems page (`20261107140000_collection_poems.sql`; that change's design
 D2). The save changes existing poems, so it follows this ADR, not 0009.
 
+Scope added by `drag-and-drop-ordering` (2026-11-11): `order_move`, 30 per minute, one attempt per move of
+a poem or a collection on the board (`20261111160000_work_ordering.sql`; ADR 0014). A move changes existing
+rows, so it follows this ADR, not 0009.
+
 ## Context
 
 ADR 0005 made every reader write a Server Action that, on success, expires the public pages'
