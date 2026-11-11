@@ -39,6 +39,7 @@ const POEM: Poem = {
   illustrationUrl: ILLUSTRATION_URL,
   publishedAt: "2026-10-01",
   genreId: "lyric",
+  collectionId: null,
 };
 
 type FormElement = ReactElement<EditPoemFormProps>;

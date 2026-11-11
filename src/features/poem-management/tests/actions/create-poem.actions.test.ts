@@ -16,7 +16,6 @@ vi.mock("@/features/auth", () => ({ getSessionState: vi.fn() }));
 vi.mock("@/features/authors", () => ({ getOwnPublicAuthor: vi.fn() }));
 vi.mock("@/features/poems", () => ({
   listPoemGenres: vi.fn(),
-  poemsTag: (authorId: string) => `poems:${authorId}`,
 }));
 vi.mock("../../dal/poem-writes", () => ({ checkCanCreatePoem: vi.fn(), createOwnPoem: vi.fn() }));
 
@@ -70,7 +69,7 @@ describe("createPoemAction", () => {
       genreId: GENRE_ID,
       illustration: null,
     });
-    expect(updateTag).toHaveBeenCalledExactlyOnceWith(`poems:${AUTHOR_ID}`);
+    expect(updateTag).toHaveBeenCalledExactlyOnceWith(`author-works:${AUTHOR_ID}`);
   });
 
   // implements FR-5 of add-poem-creation
@@ -252,13 +251,13 @@ describe("createPoemAction", () => {
   // implements FR-5 of add-poem-creation
   it("still reports a stored poem as created when expiring the tag throws, and logs only the error class", async () => {
     vi.mocked(updateTag).mockImplementationOnce(() => {
-      throw new TypeError(`tag poems:${AUTHOR_ID}`);
+      throw new TypeError(`tag author-works:${AUTHOR_ID}`);
     });
 
     const result = await createPoemAction(VALID);
 
     expect(result.data).toEqual({ status: "created", poemId: POEM_ID });
-    expect(console.error).toHaveBeenCalledExactlyOnceWith("[poem-management] expire poems tag failed: TypeError");
+    expect(console.error).toHaveBeenCalledExactlyOnceWith("[poem-management] expire author works tag failed: TypeError");
   });
 
   // implements NFR-10 of add-poem-creation

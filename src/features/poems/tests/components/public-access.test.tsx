@@ -40,6 +40,7 @@ const POEM_ROW = {
   genre_id: null,
   illustration_path: null,
   created_at: "2026-03-12T12:00:00+00:00",
+  collection_id: null,
 };
 
 type Render = () => Promise<ReactNode>;

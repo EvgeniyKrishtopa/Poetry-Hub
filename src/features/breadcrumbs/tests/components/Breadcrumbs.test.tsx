@@ -118,6 +118,7 @@ describe("BreadcrumbsLoader", () => {
         illustrationUrl: null,
         publishedAt: "2026-03-12",
         genreId: null,
+        collectionId: null,
       },
     });
 
@@ -181,6 +182,7 @@ describe("BreadcrumbsLoader", () => {
         illustrationUrl: null,
         publishedAt: "2026-10-29",
         genreId: null,
+        collectionId: null,
       },
     });
 

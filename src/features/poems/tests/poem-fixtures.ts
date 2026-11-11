@@ -9,6 +9,7 @@ export const NIGHT_STATION: Poem = {
   illustrationUrl: null,
   publishedAt: "2026-07-01",
   genreId: null,
+  collectionId: null,
 };
 
 export const AUTUMN_GARDEN: Poem = {
@@ -30,4 +31,5 @@ export const AUTUMN_GARDEN: Poem = {
   illustrationUrl: "http://127.0.0.1:54321/storage/v1/object/public/poem-illustrations/a.jpg",
   publishedAt: "2026-03-12",
   genreId: "lyric",
+  collectionId: null,
 };

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getSessionState } from "@/features/auth";
 import { getOwnPublicAuthor } from "@/features/authors";
-import { listPoemGenres, poemsTag } from "@/features/poems";
+import { listPoemGenres } from "@/features/poems";
 import { validateImageFile } from "@/shared/lib/image-file/validate-image-file";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
@@ -106,7 +106,7 @@ describe("updatePoemAction", () => {
       genreId: GENRE_ID,
       illustration: { kind: "keep" },
     });
-    expect(updateTag).toHaveBeenCalledExactlyOnceWith(poemsTag(AUTHOR_ID));
+    expect(updateTag).toHaveBeenCalledExactlyOnceWith(`author-works:${AUTHOR_ID}`);
     expect(bucket.remove).not.toHaveBeenCalled();
   });
 

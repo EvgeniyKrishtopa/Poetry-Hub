@@ -37,17 +37,17 @@ group lands its own tests.
 
 ## 2. One public tag per author; the poems read carries membership (no visible change) <!-- isolated -->
 
-- [ ] 2.1 (NFR-2, NFR-3) `src/shared/config/cache-tags.ts`: `authorWorksTag(authorId)` →
+- [x] 2.1 (NFR-2, NFR-3) `src/shared/config/cache-tags.ts`: `authorWorksTag(authorId)` →
   `author-works:<authorId>` (design D4); remove `poemsTag` from `poems`' model and index; `poems`'
   read tags with `authorWorksTag`; `poem-management`'s `expire-poems-tag.ts` becomes
   `expire-author-works-tag.ts` (`expireAuthorWorksTag`) importing from `shared/config`.
   - Verify with `shared/config/tests/cache-tags.test.ts`, `poems/tests/dal/author-poems.test.ts`
     (tag), and poem-management's three action tests (the new tag).
-- [ ] 2.2 (FR-1, FR-3, NFR-2) `POEM_COLUMNS` gains `collection_id`; `poemRowSchema` gains
+- [x] 2.2 (FR-1, FR-3, NFR-2) `POEM_COLUMNS` gains `collection_id`; `poemRowSchema` gains
   `collection_id: lowercaseUuidSchema.nullable()`; `Poem.collectionId`; `toPoem` maps it (design D3).
   - Verify with `poems/tests/dal/author-poems.test.ts`: a row with and without `collection_id` maps
     to `collectionId`; a malformed one fails the parse as `unavailable`; fixtures updated.
-- [ ] 2.3 (NFR-3) Boundaries: `poems/tests/boundaries.test.ts` bans `@/features/collections`;
+- [x] 2.3 (NFR-3) Boundaries: `poems/tests/boundaries.test.ts` bans `@/features/collections`;
   `collection-management/tests/boundaries.test.ts` still bans `poems` and `poem-management`.
 
 ## 3. Collection writes keep the public pages fresh <!-- judgement-heavy -->

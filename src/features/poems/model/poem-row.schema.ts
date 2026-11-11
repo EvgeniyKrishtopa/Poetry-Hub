@@ -16,6 +16,8 @@ export const poemRowSchema = z.object({
   illustration_path: z.string().min(1).nullable(),
   // PostgREST sends `timestamptz` with an offset, e.g. `2026-10-01T23:30:00+00:00`.
   created_at: z.iso.datetime({ offset: true }),
+  // The collection the poem belongs to, `null` for a free poem (public-collections D3).
+  collection_id: lowercaseUuidSchema.nullable(),
 });
 
 export type PoemRow = z.infer<typeof poemRowSchema>;

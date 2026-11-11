@@ -50,7 +50,7 @@ describe("deletePoemAction", () => {
 
     expect(result.data).toEqual({ status: "deleted" });
     expect(deleteOwnPoem).toHaveBeenCalledExactlyOnceWith(POEM_ID);
-    expect(updateTag).toHaveBeenCalledExactlyOnceWith(`poems:${AUTHOR_ID}`);
+    expect(updateTag).toHaveBeenCalledExactlyOnceWith(`author-works:${AUTHOR_ID}`);
     expect(removeIllustrationBestEffort).toHaveBeenCalledExactlyOnceWith(ILLUSTRATION_PATH);
     expect(vi.mocked(updateTag).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(removeIllustrationBestEffort).mock.invocationCallOrder[0] ?? 0,
@@ -63,7 +63,7 @@ describe("deletePoemAction", () => {
 
     await deletePoemAction({ poemId: POEM_ID, authorId: AUTHOR_ID } as { poemId: string });
 
-    expect(updateTag).toHaveBeenCalledExactlyOnceWith(`poems:${OTHER_AUTHOR_ID}`);
+    expect(updateTag).toHaveBeenCalledExactlyOnceWith(`author-works:${OTHER_AUTHOR_ID}`);
   });
 
   // implements FR-3 of delete-poem
@@ -160,13 +160,13 @@ describe("deletePoemAction", () => {
   // implements FR-3, NFR-5 of delete-poem
   it("logs a failed tag expiry by kind only and still answers deleted", async () => {
     vi.mocked(updateTag).mockImplementation(() => {
-      throw new Error(`bad tag poems:${AUTHOR_ID}`);
+      throw new Error(`bad tag author-works:${AUTHOR_ID}`);
     });
 
     const result = await deletePoemAction({ poemId: POEM_ID });
 
     expect(result.data).toEqual({ status: "deleted" });
-    expect(console.error).toHaveBeenCalledExactlyOnceWith("[poem-management] expire poems tag failed: Error");
+    expect(console.error).toHaveBeenCalledExactlyOnceWith("[poem-management] expire author works tag failed: Error");
     expect(removeIllustrationBestEffort).toHaveBeenCalledOnce();
     for (const secret of [POEM_ID, AUTHOR_ID, ILLUSTRATION_PATH, USER_ID]) expect(loggedText()).not.toContain(secret);
   });

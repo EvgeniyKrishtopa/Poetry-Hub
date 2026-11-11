@@ -11,7 +11,7 @@ import { DELETE_POEM_STATUS } from "../model/poem-management.constants";
 import type { DeletePoemResult, ServiceFailure } from "../model/poem-management.types";
 
 import { poemManagementActionClient } from "./action-client";
-import { expirePoemsTag } from "./expire-poems-tag";
+import { expireAuthorWorksTag } from "./expire-author-works-tag";
 
 // The owner is resolved from the session by the database, never from input (NFR-1). Only a deleted poem
 // expires a cache tag (FR-8). The client already has the title, so no poem data comes back.
@@ -41,7 +41,7 @@ async function deletePoem(poemId: string): Promise<DeletePoemResult> {
   if (result.status === "not-found") return NOT_FOUND;
 
   // 4. The row is gone: the author's pages must not list it. A failed expiry is only logged.
-  expirePoemsTag(result.authorId);
+  expireAuthorWorksTag(result.authorId);
 
   // 5. The file last: a row pointing at a missing file would show a broken image; a file with no row is
   //    invisible (clarify decision 2). Its failure is logged and changes nothing.

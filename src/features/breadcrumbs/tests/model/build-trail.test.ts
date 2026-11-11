@@ -95,6 +95,7 @@ describe("buildTrail on the poem routes", () => {
       illustrationUrl: null,
       publishedAt: "2026-03-12",
       genreId: null,
+      collectionId: null,
     },
   };
   const POEM_NOT_FOUND: AuthorPoemResult = { ok: false, reason: "not-found" };
