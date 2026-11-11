@@ -12,5 +12,6 @@ export { PoemTitleList } from "./components/PoemTitleList/PoemTitleList";
 export { getAuthorPoem, listAuthorPoems } from "./dal/author-poems";
 export { listPoemGenres } from "./dal/poem-genres";
 export { POEM_ILLUSTRATIONS_BUCKET, POEMS_SEGMENT } from "./model/poem.constants";
+export { authorPoemPath } from "./model/poem-paths";
 export { lowercaseUuidSchema } from "./model/poem-row.schema";
 export type { AuthorPoemResult, Poem, PoemGenre } from "./model/poem.types";
