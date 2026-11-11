@@ -326,7 +326,7 @@ After a successful create, the next server request for the author's public page,
 - **THEN** it does not pulse
 
 ### Requirement: Database integrity under direct calls (NFR-1)
-With the app bypassed and the database or Storage API called directly with the publishable key: no role SHALL insert into the poems table directly; a poem SHALL be stored only through the database's own create operation, for the caller's own public profile and within FR-6's limit; a guest SHALL NOT store a poem; nobody SHALL set a poem's id or creation time; no role SHALL update the poems table directly; a poem SHALL be updated only through the database's own update operation, only when it belongs to the caller's own public profile, and only in its title, text, genre, and illustration, whatever else the request holds; a guest SHALL NOT update a poem (edit-poem NFR-1); no role SHALL delete from the poems table directly; a poem SHALL be deleted only through the database's own delete operation, and only when it belongs to the caller's own profile, whatever else the request holds; a guest SHALL NOT delete a poem (delete-poem NFR-1); no client role SHALL read or change which collection a poem belongs to through the poems table; it SHALL change only through the database's own collection poems save operation, which changes nothing else of a poem, and the update and create operations SHALL leave it as it is, a new poem in no collection (add-poems-to-collections NFR-1); the database SHALL reject a blank or over-long title or text, a malformed genre id, and an illustration path outside the author's own folder; poems of a non-public profile SHALL NOT be readable; and illustration uploads SHALL be limited to the own folder, 5 MB, PNG and JPEG, and illustration removals to the own folder.
+With the app bypassed and the database or Storage API called directly with the publishable key: no role SHALL insert into the poems table directly; a poem SHALL be stored only through the database's own create operation, for the caller's own public profile and within FR-6's limit; a guest SHALL NOT store a poem; nobody SHALL set a poem's id or creation time; no role SHALL update the poems table directly; a poem SHALL be updated only through the database's own update operation, only when it belongs to the caller's own public profile, and only in its title, text, genre, and illustration, whatever else the request holds; a guest SHALL NOT update a poem (edit-poem NFR-1); no role SHALL delete from the poems table directly; a poem SHALL be deleted only through the database's own delete operation, and only when it belongs to the caller's own profile, whatever else the request holds; a guest SHALL NOT delete a poem (delete-poem NFR-1); which collection a poem belongs to SHALL be readable with the poem by anyone who can read the poem (public-collections FR-1, NFR-1), and no client role SHALL change it through the poems table; it SHALL change only through the database's own collection poems save operation, which changes nothing else of a poem, and the update and create operations SHALL leave it as it is, a new poem in no collection (add-poems-to-collections NFR-1); the database SHALL reject a blank or over-long title or text, a malformed genre id, and an illustration path outside the author's own folder; poems of a non-public profile SHALL NOT be readable; and illustration uploads SHALL be limited to the own folder, 5 MB, PNG and JPEG, and illustration removals to the own folder.
 
 #### Scenario: Direct table insert
 - **GIVEN** a signed-in user with a public profile
@@ -389,9 +389,19 @@ With the app bypassed and the database or Storage API called directly with the p
 - **THEN** that poem is not returned
 
 #### Scenario: Collection of a poem is not readable directly
-- **GIVEN** a poem in a collection
+- **GIVEN** a poem of a profile that isn't public, in a collection
+- **WHEN** a guest and another author select its collection from the poems table through the database API
+- **THEN** no row is returned, as for every other column of that poem
+
+#### Scenario: Collection of a poem is readable with the poem
+- **GIVEN** a poem of a public author in a collection
 - **WHEN** a guest, another author, and the poem's author select its collection from the poems table through the database API
-- **THEN** every select is rejected, and selecting the columns readable before this change still works as before
+- **THEN** every caller gets the collection's id, and selecting the other public columns still works as before
+
+#### Scenario: Collection of a poem is not changeable directly
+- **GIVEN** a poem in a collection
+- **WHEN** a guest, another author, and the poem's author update its collection in the poems table through the database API
+- **THEN** every update is rejected and the poem is still in its collection
 
 #### Scenario: Editing keeps the collection
 - **GIVEN** a poem in the collection «Осенний цикл»
