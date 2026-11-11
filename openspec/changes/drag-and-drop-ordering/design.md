@@ -110,13 +110,23 @@ list decides after the deletion; an unused function is recorded in `docs/deferre
   the collections the author cannot place anything, and a half board that cannot be dragged would mislead.
 - `WorkBoardIsland` (`"use client"`) renders the lists and the drag-and-drop context. Its arrangement is
   `useOptimistic(arrangementFromProps)`: a drop calls `startTransition(async () => { applyDrop(…); await
-  moveAction(…) })`. While the transition runs, the optimistic arrangement shows the dropped place; when it
+  movePoemAction(…) })`. While the transition runs, the optimistic arrangement shows the dropped place; when it
   ends, React drops the optimistic state and shows the props again — which, after a successful or stale
   move, the action has already refreshed (D6), and after a failure are the unchanged server data, so **the
   item returns by itself** (FR-6) with no timer, no store, no manual rollback. The board's arrangement is
   local component state; nothing is copied into Zustand (project rule). `isPending` disables every handle
   until the answer (stricter than FR-6 needs; one move in flight at a time keeps the "last drop wins" story
   trivial).
+- **The arrangement during a drag (2026-11-11 revision, `@dnd-kit`).** A poem visibly entering another list
+  while it is dragged needs a third state, the *in-drag arrangement*: `useState`, set on drag start from the
+  current arrangement, updated in `onDragOver` through `arrangeDrop`, **discarded** on cancel (Escape, a drop
+  on nothing) and **handed to the optimistic transition** on a real drop. It is never written through the
+  `useOptimistic` setter outside a transition, and never sent anywhere before the drop. Spike 5.1 confirms
+  this shape (or the user is asked again).
+- The island is split by concern, each part next to the component (`docs/code-style.md`): `useBoardDrag` (the
+  library glue: sensors, the `coordinateGetter`, the in-drag arrangement, the live region, focus repair) and
+  `useMoveSubmit` (the transition, the action call, the result for the alert, the unauthenticated redirect);
+  `WorkBoardIsland.tsx` composes them and renders the nested lists.
 - The action call is wrapped in `try/catch`, like `use-collection-poems-form` and `DeleteCollectionButton`: a
   thrown call (network drop) becomes the "failed" result and the alert, never the page's error screen. State
   set after the `await` is set inside its own `startTransition` (`docs/state-management.md`). The result of
@@ -125,9 +135,31 @@ list decides after the deletion; an unused function is recorded in `docs/deferre
   for success.
 
 
-### D5. Library: `@hello-pangea/dnd`, pinned exactly
+### D5. Library: `@dnd-kit/core` + `@dnd-kit/sortable`, pinned exactly (revised 2026-11-11)
 
-The laziness ladder (accessibility is exempt from the ladder, so a hand-rolled or HTML5-native drag is
+**Revision.** This decision first chose `@hello-pangea/dnd`. The group 5 spike (real browser, project's Next,
+React 19, Compiler and Strict Mode) passed nested droppables by type, in-list and collection keyboard moves,
+focus return, Russian announcements and handle-only touch, but failed Risk R1: for lists stacked at full
+width none of the four arrow keys moves a poem into the neighbouring list, and an empty collection cannot be
+reached by keyboard. It also needs `disableInteractiveElementBlocking` on every `Draggable` for a `<button>`
+handle to lift at all, and its live region is fixed to `aria-live="assertive"` (FR-7 and NFR-4 say polite).
+The user took the R1 fallback below on 2026-11-11 (spike results: `PROGRESS.md`, `docs/deferred.md`
+entry "drag-and-drop-ordering · 5.1"). The original reasoning stays below as the record of what was weighed.
+
+Chosen now: `@dnd-kit/core` with `@dnd-kit/sortable` (the stable legacy packages; not `@dnd-kit/react`,
+pre-1.0). Why: its `KeyboardSensor` takes a `coordinateGetter`, so the keyboard mapping is ours (spec FR-7:
+Up/Down step through the places of the board in reading order, crossing list boundaries, empty collections
+included), the activator is any element (a `<button>` works with `listeners`/`attributes`), and its
+`accessibility` option takes our instructions text (D8). Costs: the multi-container arrangement, the
+places model and the announcement wording are our code and our tests, kept pure in the feature's model
+(D8); the keyboard getter is thin glue in the island's hook (D8); touch needs the `TouchSensor` with a
+press delay and `touch-action` on the handle only, to keep FR-7's "a scroll never starts a drag":
+the drag starts after a hold of a named constant (about 200 ms, with a small named movement tolerance)
+on the handle, `touch-action: manipulation` on the handle only, so a quick swipe that starts on the
+handle still scrolls the page (user decision, 2026-11-11, spec-clarify); nothing else on the board starts
+a touch drag. The spike (task 5.1) picks and records the two values.
+
+Original reasoning (superseded). The laziness ladder (accessibility is exempt from the ladder, so a hand-rolled or HTML5-native drag is
 out: HTML5 drag has no touch and no keyboard). Candidates: `@hello-pangea/dnd` (keyboard, screen reader
 announcements with overridable text, touch, nested droppables by `type`, one `onDragEnd` giving source and
 destination lists and indexes); `@dnd-kit/core` + `sortable` (flexible, but multi-container keyboard
@@ -144,7 +176,7 @@ it leaks into other routes; otherwise a plain import in a client module used onl
 
 ### D6. Freshness: the action expires the per-author tag
 
-`moveAction`/`moveCollectionAction` (`"use server"`): validate → session → limit → RPC. On `moved`:
+`movePoemAction`/`moveCollectionAction` (`"use server"`): validate → session → limit → RPC. On `moved`:
 `updateTag(authorWorksTag(author_id))` through the feature's own never-throwing `expireAuthorWorksTag` copy
 (the tag lives in `shared/config`, `public-collections` D4), then `refresh()` — ADR 0011 §4 as amended by
 ADR 0013 §5 still holds: the router's kept copies of `/account/poems` and of the collection pages must be
@@ -168,10 +200,31 @@ this change; the "owner's pages still read their own collections uncached" entry
 
 ### D8. Keyboard cross-list movement and announcements
 
-All announcement text and the handle instructions come from the library's `announce` and
-`dragHandleUsageInstructions` hooks with the Russian copy of the proposal, in the feature's messages
-module. Focus after a drop: the library restores it to the handle; the island verifies and sets it
-explicitly if it does not (FR-7).
+Four pure functions in the feature's model carry the rules, so they are tested without a browser: the
+board's **places** in reading order (each collection's poem slots, an empty collection having one, then the
+free poems' slots, an empty free list having one), the **next place** for an ArrowUp/ArrowDown from the current one (a collection steps
+among the collections only), the **arrangement** after a drop, and the **announcement** for an event
+(`announcementFor(event, before, after)` in `model/board-announcements.ts`: picked up, moved, dropped,
+cancelled; «помещено в …» only when a poem's list changes, the «— позиция n из total» phrase otherwise and
+for every collection, n and total taken from the target list; the strings come from the messages module).
+A **place** is `{ container, index }` in model types (container: a collection id or the free poems), with
+no `@dnd-kit` types in the model. In the island each list container is registered as a droppable whose
+id/`data` encodes `{ kind: "list", container }`, each item as `{ kind: "poem" | "collection", id }`; the
+island's hook alone translates between a place and `over.id` and rectangles, so the two id schemes cannot
+drift. The `KeyboardSensor`'s
+`coordinateGetter` (a thin function in the island) moves the lifted item's coordinates to the rectangle of
+the next place; `onDragOver` and `onDragEnd` read the destination from the places, not from geometry
+guesses, so keyboard and pointer end in the same arrangement function. ArrowLeft/ArrowRight are ignored.
+
+Texts: the handle instructions go in the `accessibility.screenReaderInstructions` option, with the Russian
+copy of the proposal in the feature's messages module. Announcements: the island owns one visually hidden
+`aria-live="polite"` region and writes into it the string `announcementFor` returns (it holds no wording
+rule itself); the library's own `accessibility.announcements` return nothing, so its assertive region stays
+silent and nothing is read twice (spike checks this, task 5.1). Focus after a drop or a cancel: the library
+restores it to the activator; the island verifies it and sets it on the moved item's handle explicitly if it
+does not (FR-7), also after React re-orders the list. The repair runs only after a cancel or a stored
+drop; after a refused or failed move the alert keeps focus (FR-6), after a stale move FR-11's alert does,
+and handles use the native `disabled` attribute while a move is sending.
 
 ## Sequence — a drop
 
@@ -179,7 +232,7 @@ explicitly if it does not (FR-7).
 sequenceDiagram
   participant A as Author (browser)
   participant B as WorkBoardIsland
-  participant S as moveAction (server)
+  participant S as movePoemAction (server)
   participant D as Supabase (move_my_poem)
   participant C as Next cache / router
   A->>B: drop poem P on list L at index i
@@ -219,7 +272,7 @@ sequenceDiagram
     end
   end
   B->>B: transition ends: optimistic state replaced by props
-  Note over B,A: ok:true — props already fresh, item stays. stale — props fresh, item shows where the server has it. failed / rate-limited — props unchanged, item is back; alert shown and focused
+  Note over B,A: ok:true — props already fresh, item stays. stale — props fresh, item shows where the server has it; the stale alert is shown and focused (FR-11). failed / rate-limited — props unchanged, item is back; alert shown and focused
 ```
 
 ## Sequence — reading the board
@@ -247,20 +300,25 @@ sequenceDiagram
 
 ## Risks / Trade-offs
 
-- **R1 — keyboard between stacked lists.** In `@hello-pangea/dnd` a vertical list moves to a neighbouring
-  list with the left/right arrows; whether stacked lists (collections one under another) are reachable
-  with the arrows the spec promises must be proven first. Mitigation: group 5's first task is a spike on
-  a throwaway page in the scratchpad that proves the five keyboard scenarios of FR-7; if it fails, the
-  fallback is `@dnd-kit/core` with a custom keyboard coordinates getter, decided with the user before
-  more UI is built (spec FR-7 is written for either).
-- **R2 — nested droppables.** Collections are draggable items and also contain droppable poem lists.
-  The library supports nesting by `type` ("COLLECTION" vs "POEM"); the spike checks this, including
-  dragging a collection that holds poems and dropping a poem onto an empty collection.
+- **R1 — keyboard between stacked lists. Happened; the fallback is taken (2026-11-11).** The spike of
+  `@hello-pangea/dnd` proved that no arrow key reaches a neighbouring list from stacked lists (D5). The
+  remaining risk moved to the fallback: `@dnd-kit/core`'s keyboard getter must carry a poem across list
+  boundaries, into an empty collection, and back to the handle with focus. Mitigation: group 5 is
+  redone as a spike of `@dnd-kit` on a throwaway page in the scratchpad that proves the FR-7 scenarios
+  (task 5.1); a second failure is a stop with the user again.
+- **R2 — nested droppables.** Collections are sortable items and also contain sortable poem lists. In
+  `@dnd-kit` containers and items are told apart by the `data` each registers (kind `collection`,
+  `poem`, or a list); the spike checks nesting, including dragging a collection that holds poems and
+  dropping a poem onto an empty collection, and that a collection never lands inside another.
 - **R3 — two writes of a rate-limited path.** A fast author can reach 30 drops a minute; the board shows
   the limit message and the item returns. Accepted.
-- **R4 — React Compiler and Strict Mode.** The library is known to need stable `provided.innerRef`
-  usage; the island is the only client module that touches it and the spike runs under the project's
-  config (Compiler on).
+- **R4 — React Compiler and Strict Mode.** The sensors and refs of the library must survive the
+  Compiler's memoization and Strict Mode's double effects; the island is the only client module that
+  touches the library and the spike runs under the project's config (Compiler on, Strict Mode on).
+- **R8 — more of our own code in the accessibility path.** The places model, the keyboard getter and the
+  announcements are ours, so a wrong phrase or a missed place is our bug. Mitigation: the four model
+  functions are pure and unit tested exhaustively (every move kind, empty lists, the board's ends), and
+  Gate 3 repeats the keyboard scenarios in a real browser.
 - **R5 — the migration touches existing functions and tables.** It changes `save_my_collection_poems`,
   `delete_my_collection`, `my_collected_poems`, and the insert path (two triggers), each keeping its
   signature, so the rollout order is database first, then app, and the down migration restores them
@@ -288,9 +346,9 @@ sequenceDiagram
 
 ## Open Questions
 
-None blocking; the three defaults in `proposal.md` are confirmed in `spec-clarify`. One for the
-user at Claude Design time: how the free poems' drop area looks while nothing is dragged (the spec
-says: not shown unless the author has no free poems and an item is being dragged).
+None blocking; the three defaults in `proposal.md` are confirmed in `spec-clarify`. The mockups were
+approved on 2026-11-11; the free poems' drop area follows FR-4 (shown while a poem is dragged, even with
+no free poem; never while a collection is dragged).
 
 ## Scaffold map
 
@@ -309,6 +367,10 @@ is the result reason `unauthenticated`, redirected by the island, as the sibling
 | `src/features/work-ordering/model/work-ordering-messages.ts` | the Russian copy of the proposal's UI table | `WORK_BOARD_COPY`, `MOVE_FAILURE_MESSAGES`, `collectionHandleLabel`, `poemHandleLabel`, `ANNOUNCEMENTS` |
 | `src/features/work-ordering/model/move.schema.ts` | the two actions' input schemas and the ids guard | `movePoemInputSchema`, `moveCollectionInputSchema`, `MovePoemInput`, `MoveCollectionInput`, `areMoveIdsValid` |
 | `src/features/work-ordering/model/arrange-drop.ts` | the arrangement after one drop | `arrangeDrop` |
+| `src/features/work-ordering/model/board-places.ts` | added by the 2026-11-11 revision (D8): the board's places in reading order and the next place for an ArrowUp/ArrowDown; pure | `boardPlaces`, `nextPlace` |
+| `src/features/work-ordering/model/board-announcements.ts` | added by the 2026-11-11 revision (D8): the screen reader string for a pick-up, move, drop, or cancel; pure | `announcementFor` |
+| `src/features/work-ordering/components/WorkBoardIsland/use-board-drag.ts` | added by the 2026-11-11 revision (D4, D8): the `@dnd-kit` glue, the in-drag arrangement, live region, focus repair | `useBoardDrag` |
+| `src/features/work-ordering/components/WorkBoardIsland/use-move-submit.ts` | added by the 2026-11-11 revision (D4): the transition, the action call, the result | `useMoveSubmit` |
 | `src/features/work-ordering/model/board-nesting.ts` | the feature's own nesting of poems under collections | `nestBoard`, `BoardCollectionRow`, `BoardPoemRow` |
 | `src/features/work-ordering/dal/own-board.ts` | the two ordered reads of the author's board | `listOwnBoard` |
 | `src/features/work-ordering/dal/move-writes.ts` | the two move function calls | `moveOwnPoem`, `moveOwnCollection` |

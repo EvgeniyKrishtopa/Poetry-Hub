@@ -4,7 +4,8 @@ Order: group 1 opens the database (nothing in the app reads it yet). Group 2 mak
 position and every create put its item first, with no visible change (every existing item starts in
 today's order). Group 3 changes the collection poems save. Group 4 adds the move actions and their DAL
 (no screen calls them yet). Group 5 proves the drag library on a throwaway page before any screen is
-built (Risk R1, R2, R4). Group 6 is the board, built from the approved Claude Design artboards
+built (Risk R1, R2, R4); `@hello-pangea/dnd` failed it on 2026-11-11, so the group is redone for `@dnd-kit`
+(design D5). Group 6 is the board, built from the approved Claude Design artboards
 (`proposal.md` Mockups; no UI group starts before the approved link arrives, `docs/claude-design.md`).
 Group 7 puts the board on `/account/poems` and deletes the pieces it replaces. Group 8 is docs and
 verification. Each group exports only what it already consumes (tests count as consumers for knip), so
@@ -62,7 +63,7 @@ verification. Each group exports only what it already consumes (tests count as c
 - [x] 4.1 (FR-6, FR-11, NFR-2, NFR-7) `src/features/work-ordering/`: `model` (move argument schemas, result
   unions, constants incl. the 30-per-minute limit, messages with the Russian copy), `dal` (the two RPC calls,
   the write allowance, a write log that logs the operation and failure kind only), `actions`
-  (`moveAction`, `moveCollectionAction`: validate → session → limit → RPC; `moved` → own
+  (`movePoemAction`, `moveCollectionAction`: validate → session → limit → RPC; `moved` → own
   `expireAuthorWorksTag` + `refresh()`; `stale`/`not-found`/not-public → `refresh()` only).
   - Verify with unit tests per action: refused, rate-limited, and failed paths expire nothing, `moved` expires
     the tag with the returned author and refreshes, `stale`/`not-found` refresh without expiring, invalid
@@ -70,21 +71,30 @@ verification. Each group exports only what it already consumes (tests count as c
 - [x] 4.2 (NFR-3) `work-ordering/tests/boundaries.test.ts`: imports neither `poem-management` nor `collection-management` (it may import `auth`, `authors`, `shared`); nothing but the route
   file imports it; its public API exports only what the route consumes.
 
-## 5. Spike: the drag library on a throwaway page <!-- judgement-heavy -->
+## 5. Spike: the drag library (`@dnd-kit`) on a throwaway page <!-- judgement-heavy -->
 
-- [ ] <!-- blocked: spike failed R1 (no arrow key moves a poem between stacked lists); user chose the @dnd-kit/core fallback on 2026-11-11, so design D5/R1, FR-7 wording and groups 5-6 must be re-planned first (opsx-update-review) --> <!-- deferred: docs/deferred.md --> 5.1 (FR-7, NFR-4) The user installs `@hello-pangea/dnd` (exact pin). In the scratchpad (never in
-  `src/`), prove under the project's Next, React 19, and Compiler config: nested droppables by `type`;
-  touch started from a handle only; keyboard lift/move/drop/cancel inside a list, between **stacked**
-  lists, into an empty list; custom Russian announcements and instructions; focus returns to the handle.
-  Record the result in `PROGRESS.md`. A failure is a stop: decide the fallback with the user (design R1).
+- [ ] <!-- deferred: docs/deferred.md --> 5.1 (FR-7, NFR-4) The user replaces `@hello-pangea/dnd` (its first spike failed R1, see
+  `docs/deferred.md`) with `@dnd-kit/core` and `@dnd-kit/sortable` (exact pins). In the scratchpad (never in
+  `src/`), prove under the project's Next, React 19, Compiler and Strict Mode config, in a real browser:
+  collections as sortable items holding nested sortable poem lists; a `<button>` handle; touch started from
+  the handle only (a scroll or a press on the title never drags); disabling the handle that started a drag
+  leaves that drag running (FR-6, offline mid-drag); keyboard lift/move/drop/cancel inside a
+  list, **between stacked lists** with ArrowUp/ArrowDown through the places of design D8, into an empty
+  list, and for collections; the instructions through `accessibility`; our own polite live region with the
+  library's announcements silent (nothing read twice); focus on the handle after a drop and a cancel.
+  Record the result in `PROGRESS.md`. A failure is a stop: decide with the user again (design R1).
 
 ## 6. The board (needs the approved Claude Design link) <!-- judgement-heavy -->
 
 - [ ] 6.1 (FR-2 – FR-5, FR-7, NFR-4, NFR-5) `WorkBoardIsland` (`"use client"`), the collection and poem items,
-  the handles, the drop areas, the alert and the live region; tokens and shared primitives only; reduced
-  motion respected.
-  - Verify with component tests: the arrangement function for each move kind (pure model function, unit
-    tested exhaustively), the handle names, the structure (`ul > li > ul`), no literals.
+  the handles, the drop areas, the alert and the polite live region; `useBoardDrag` (the `KeyboardSensor`
+  coordinate getter, the in-drag arrangement) and `useMoveSubmit` of design D4/D8; tokens and shared primitives only; reduced motion respected. A
+  `<button>` handle, `TouchSensor` with a press delay, `touch-action` on the handle only.
+  - Verify with component tests: the arrangement function for each move kind and the new pure functions
+    (`boardPlaces`, `nextPlace`, `announcementFor`; unit tested exhaustively: empty lists, the ends of the
+    board, a collection stepping among collections only, «помещено в …» only when a poem's list changes),
+    the handle names, the structure
+    (`ul > li > ul`), the live region is `aria-live="polite"` and written once per event, no literals.
 - [ ] 6.2 (FR-6, FR-11, NFR-6) The island's `useOptimistic` + transition flow: the dropped place shows at
   once, a refusal returns the item and shows its alert with focus, stale refreshes, a drop that changes
   nothing sends nothing, the session-expired redirect, the offline and slow notice.
