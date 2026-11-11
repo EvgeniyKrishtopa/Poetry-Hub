@@ -15,6 +15,10 @@
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
     "@fission-ai/openspec",
     // Supabase CLI for the local stack (`npx supabase start`, reads supabase/config.toml), never imported or referenced in a script.
-    "supabase"
+    "supabase",
+    // Temporary, drag-and-drop-ordering: installed by group 5, first imported by the board in group 6.
+    // Group 6 removes these two entries.
+    "@dnd-kit/core",
+    "@dnd-kit/sortable"
   ]
 }

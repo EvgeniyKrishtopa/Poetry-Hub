@@ -162,10 +162,10 @@ Archived at `openspec/changes/archive/2026-11-11-public-collections/`.
 
 ### drag-and-drop-ordering · 5.1 — drag library spike failed on stacked lists
 
-- **State:** blocked
+- **State:** resolved
 - **Requirement:** FR-7, NFR-4
 - **What is missing:** a drag library that moves a poem between stacked lists (and into an empty collection) with the keyboard. The spike of `@hello-pangea/dnd` 18.0.1 (Next 16.4.6, React 19.3, Compiler, Strict Mode, real Chromium) passed nested droppables by type, in-list and collection keyboard moves, focus return, Russian announcements and handle-only touch. It failed design R1: none of the four arrow keys leaves a vertical list for the list below or above, and an empty collection is unreachable.
 - **Why:** the library maps only the left and right arrows to a neighbouring list and finds none when lists are stacked at full width. Also found: a `<button>` handle lifts only with `disableInteractiveElementBlocking` on every `Draggable`, and the library's live region is fixed to `aria-live="assertive"` while FR-7 and NFR-4 say polite.
 - **Verified instead:** the spike results are in `PROGRESS.md`; the throwaway page lived only in the scratchpad.
 - **Decision:** user, 2026-11-11: take the design R1 fallback, `@dnd-kit/core` with a custom keyboard coordinates getter. Design D5/R1, FR-7 wording and groups 5-6 need a re-plan (`opsx-update-review`), and the user swaps the dependency (uninstall `@hello-pangea/dnd`, install `@dnd-kit/core` and its sortable package with exact pins).
-- **Status:** open.
+- **Status:** resolved (drag-and-drop-ordering, group 5: the `@dnd-kit` spike passed every item, including keyboard moves between stacked lists and into an empty collection; facts for group 6 are under task 5.1 in `tasks.md`).

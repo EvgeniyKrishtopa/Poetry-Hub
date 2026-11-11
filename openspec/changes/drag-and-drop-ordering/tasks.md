@@ -73,7 +73,7 @@ verification. Each group exports only what it already consumes (tests count as c
 
 ## 5. Spike: the drag library (`@dnd-kit`) on a throwaway page <!-- judgement-heavy -->
 
-- [ ] <!-- deferred: docs/deferred.md --> 5.1 (FR-7, NFR-4) The user replaces `@hello-pangea/dnd` (its first spike failed R1, see
+- [x] <!-- deferred: docs/deferred.md --> 5.1 (FR-7, NFR-4) The user replaces `@hello-pangea/dnd` (its first spike failed R1, see
   `docs/deferred.md`) with `@dnd-kit/core` and `@dnd-kit/sortable` (exact pins). In the scratchpad (never in
   `src/`), prove under the project's Next, React 19, Compiler and Strict Mode config, in a real browser:
   collections as sortable items holding nested sortable poem lists; a `<button>` handle; touch started from
@@ -83,12 +83,23 @@ verification. Each group exports only what it already consumes (tests count as c
   list, and for collections; the instructions through `accessibility`; our own polite live region with the
   library's announcements silent (nothing read twice); focus on the handle after a drop and a cancel.
   Record the result in `PROGRESS.md`. A failure is a stop: decide with the user again (design R1).
+  Result (2026-11-11, `@dnd-kit/core` 6.3.1 + `sortable` 10.0.0, Next 16.4.6, React 19.3, Compiler, Strict
+  Mode, real Chromium): every item passed. Facts for group 6: pass an explicit `id` to `DndContext` (the
+  generated description id differs between server and client and causes a hydration mismatch); the
+  coordinate getter receives the active id as `active` (the context's `active` is still empty on the first
+  key); `keyboardCodes` must be `start: Space`, `end: Space`, `cancel: Escape` (the default also starts and
+  ends on Enter); a handle that moves between lists remounts, so focus is repaired by hand after a drop or a
+  cancel (`restoreFocus: false`), and a natively disabled handle cannot take focus, so repair runs once it is
+  enabled again; the first arrow pressed within a few milliseconds of lifting is ignored by the library;
+  the keyboard path applies each place itself and `onDragOver` ignores keyboard drags; no `@dnd-kit/utilities`
+  import is needed (write the translate string by hand).
 
 ## 6. The board (needs the approved Claude Design link) <!-- judgement-heavy -->
 
 - [ ] 6.1 (FR-2 – FR-5, FR-7, NFR-4, NFR-5) `WorkBoardIsland` (`"use client"`), the collection and poem items,
   the handles, the drop areas, the alert and the polite live region; `useBoardDrag` (the `KeyboardSensor`
-  coordinate getter, the in-drag arrangement) and `useMoveSubmit` of design D4/D8; tokens and shared primitives only; reduced motion respected. A
+  coordinate getter, the in-drag arrangement) and `useMoveSubmit` of design D4/D8; remove the two `@dnd-kit`
+  entries from `knip.jsonc`'s `ignoreDependencies` once the board imports them; tokens and shared primitives only; reduced motion respected. A
   `<button>` handle, `TouchSensor` with a press delay, `touch-action` on the handle only.
   - Verify with component tests: the arrangement function for each move kind and the new pure functions
     (`boardPlaces`, `nextPlace`, `announcementFor`; unit tested exhaustively: empty lists, the ends of the
