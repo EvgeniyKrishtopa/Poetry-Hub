@@ -43,6 +43,7 @@ describe("deleteCollectionAction", () => {
     await deleteCollectionAction({ collectionId: COLLECTION_ID });
 
     expect(updateTag).toHaveBeenCalledExactlyOnceWith(`author-works:${AUTHOR_ID}`);
+    expect(refresh).toHaveBeenCalledOnce();
     expect(vi.mocked(updateTag).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(refresh).mock.invocationCallOrder[0] ?? 0);
   });
 
