@@ -21,9 +21,9 @@ interface TrailReads {
 
 /**
  * The reads a match needs: the author name on the author page, and on a poem or public collection page the
- * poem or collection too, in parallel; the owner's poem or collection title on the owner's pages. Every read is memoized per request,
- * so the page shares them (FR-12, design D10). The title reads never redirect: the proxy already turned
- * away a signed-out request.
+ * poem or collection too, in parallel; the owner's poem or collection title on the owner's pages. Every read
+ * is memoized per request, so the page shares them (FR-12, design D10). The title reads never redirect: the
+ * proxy already turned away a signed-out request.
  */
 async function readForMatch(match: RouteMatch): Promise<TrailReads> {
   switch (match.kind) {
