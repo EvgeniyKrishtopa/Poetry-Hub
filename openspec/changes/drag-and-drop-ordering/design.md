@@ -58,7 +58,8 @@ and `move_my_collection(collection_id uuid, to_index integer) → jsonb`. Same s
 
 - `from_collection_id` is the browser's belief about where the poem was (null = free). A mismatch answers
   `{"status":"stale"}` with nothing written (FR-11); an id that is not the caller's or does not exist
-  answers `{"status":"not-found"}`, the same for both (FR-11, as `save_my_collection_poems`).
+  answers `{"status":"not-found"}`, the same for both (FR-11, as `save_my_collection_poems`); a profile that is
+  no longer public also answers `not-found` (the action then refreshes and shows the «list changed» text).
 - `to_index` is clamped into `0..count` of the target list after removing the poem (NFR-1).
 - Success answers `{"status":"moved","author_id":"<uuid>"}`: the app needs the author to expire the
   public tag, as `delete_my_collection` does (ADR 0013 §4).
@@ -192,7 +193,7 @@ sequenceDiagram
     alt invalid arguments
       S-->>B: { ok:false, reason:"failed" }
     else no session
-      S-->>B: redirect("/login") with the session-expired message
+      S-->>B: { ok:false, reason:"unauthenticated" } (the island redirects to /login with the session-expired message, as the sibling forms do)
     else session ok
       S->>D: consume_write_allowance(order_move)
       alt over the limit
@@ -206,7 +207,7 @@ sequenceDiagram
           S->>C: updateTag(authorWorksTag(author_id)) (own never-throwing copy)
           S->>C: refresh()
           S-->>B: { ok:true } + fresh tree
-        else stale, not-found, or profile not public
+        else stale or not-found (a non-public profile answers not-found)
           D-->>S: { status } (nothing written)
           S->>C: refresh()
           S-->>B: { ok:false, reason:"stale" } + fresh tree
@@ -290,3 +291,37 @@ sequenceDiagram
 None blocking; the three defaults in `proposal.md` are confirmed in `spec-clarify`. One for the
 user at Claude Design time: how the free poems' drop area looks while nothing is dragged (the spec
 says: not shown unless the author has no free poems and an item is being dragged).
+
+## Scaffold map
+
+Stub files at their final paths, written after the file map was approved (2026-11-11). Every body is
+`throw new Error("not implemented")` or `return null`; the only declarative content is constants, types, Zod
+shapes, and the copy strings. `knip.jsonc` ignores `src/features/work-ordering/**` until the route wires the
+board (group 7). The scaffold review (Gate 2b) added the lowercase-UUID guard (`areMoveIdsValid`), the
+safe-action shape of the two actions, and the `not-found` answer for a non-public profile (D2); an expired session
+is the result reason `unauthenticated`, redirected by the island, as the sibling forms do.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/features/work-ordering/index.ts` | public API, read only by the `/account/poems` route file | `WorkBoard` |
+| `src/features/work-ordering/model/work-ordering.constants.ts` | the move limit and its scope, the database statuses, the failure reasons, the lowercase-UUID pattern | `MOVE_LIMIT_PER_MINUTE`, `MOVE_LIMIT_SCOPE`, `MOVE_DB_STATUS`, `LOWERCASE_UUID`, `MOVE_FAILURE_REASON` |
+| `src/features/work-ordering/model/work-ordering.types.ts` | board, drop, read, write, and result types | `ServiceFailure`, `BoardPoem`, `BoardCollection`, `Arrangement`, `PoemContainer`, `Drop`, `OwnBoardResult`, `MoveWriteResult`, `MoveResult`, `WriteAllowance` |
+| `src/features/work-ordering/model/work-ordering-messages.ts` | the Russian copy of the proposal's UI table | `WORK_BOARD_COPY`, `MOVE_FAILURE_MESSAGES`, `collectionHandleLabel`, `poemHandleLabel`, `ANNOUNCEMENTS` |
+| `src/features/work-ordering/model/move.schema.ts` | the two actions' input schemas and the ids guard | `movePoemInputSchema`, `moveCollectionInputSchema`, `MovePoemInput`, `MoveCollectionInput`, `areMoveIdsValid` |
+| `src/features/work-ordering/model/arrange-drop.ts` | the arrangement after one drop | `arrangeDrop` |
+| `src/features/work-ordering/model/board-nesting.ts` | the feature's own nesting of poems under collections | `nestBoard`, `BoardCollectionRow`, `BoardPoemRow` |
+| `src/features/work-ordering/dal/own-board.ts` | the two ordered reads of the author's board | `listOwnBoard` |
+| `src/features/work-ordering/dal/move-writes.ts` | the two move function calls | `moveOwnPoem`, `moveOwnCollection` |
+| `src/features/work-ordering/dal/write-allowance.ts` | the shared write-limit call (own copy) | `WriteLimit`, `consumeWriteAllowance` |
+| `src/features/work-ordering/dal/move-allowance.ts` | the `order_move` limit, 30 per minute | `consumeMoveAllowance` |
+| `src/features/work-ordering/dal/write-log.ts` | failure logging without titles or ids (own copy) | `logFailure`, `toServiceFailure`, `withStatus` |
+| `src/features/work-ordering/actions/action-client.ts` | the log-and-mask client of both actions | `workOrderingActionClient` |
+| `src/features/work-ordering/actions/session-check.ts` | the session step over `auth`'s public API | `SessionCheck`, `checkSession` |
+| `src/features/work-ordering/actions/expire-author-works-tag.ts` | never-throwing expiry of the public tag | `expireAuthorWorksTag` |
+| `src/features/work-ordering/actions/move-poem.actions.ts` | the poem move action | `movePoemAction` |
+| `src/features/work-ordering/actions/move-collection.actions.ts` | the collection move action | `moveCollectionAction` |
+| `src/features/work-ordering/components/WorkBoard/WorkBoard.tsx` | the board's entry: content in Suspense with the skeleton | `WorkBoard` |
+| `src/features/work-ordering/components/WorkBoardContent/WorkBoardContent.tsx` | the reads, the failure matrix, and the island | `WorkBoardContent` |
+| `src/features/work-ordering/components/WorkBoardIsland/WorkBoardIsland.tsx` | the interactive board (client) | `WorkBoardIsland` |
+| `src/features/work-ordering/components/WorkBoardIsland/WorkBoardIsland.types.ts` | the island's props | `WorkBoardIslandProps` |
+| `src/features/work-ordering/components/WorkBoardSkeleton/WorkBoardSkeleton.tsx` | the loading state | `WorkBoardSkeleton` |
