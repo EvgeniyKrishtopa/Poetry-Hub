@@ -36,7 +36,8 @@ export function SortableWorkBoard({ collections: storedCollections, freePoems: s
   const targetCollectionId = board.hoverContainer?.kind === "collection" ? board.hoverContainer.collectionId : null;
 
   return (
-    <div className="flex flex-col gap-4 self-stretch" aria-busy={isPending}>
+    // Clipped sideways so a lifted item dragged toward the edge never gives the page a horizontal scrollbar.
+    <div className="flex flex-col gap-4 self-stretch overflow-x-clip" aria-busy={isPending}>
       <ConnectionNotice status={connectionStatus} />
       {alert !== null && (
         // Focusable by script only: focus lands here after a refused or failed move (FR-6, FR-11).

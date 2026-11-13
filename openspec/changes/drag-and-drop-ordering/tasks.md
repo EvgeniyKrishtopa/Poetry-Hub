@@ -129,10 +129,10 @@ verification. Each group exports only what it already consumes (tests count as c
 
 ## 8. Docs and verification <!-- judgement-heavy -->
 
-- [ ] 8.1 (FR-1) `CONTEXT.md`: Collection and Free poem keep their meaning; no mention of "newest first".
-- [ ] 8.2 (FR-8, FR-9) `docs/deferred.md`: close the "four copies" public-collections 7.2 entry and note the board's read on the "owner's pages read uncached" one; record every task of
+- [x] 8.1 (FR-1) `CONTEXT.md`: Collection and Free poem keep their meaning; no mention of "newest first".
+- [x] 8.2 (FR-8, FR-9) `docs/deferred.md`: close the "four copies" public-collections 7.2 entry and note the board's read on the "owner's pages read uncached" one; record every task of
   this change that ends blocked, skipped, or obsolete.
-- [ ] 8.3 (FR-2 – FR-8, FR-11) Gate 3 (web-qa) as the author and as a guest: reorder inside a collection,
+- [x] 8.3 (FR-2 – FR-8, FR-11) Gate 3 (web-qa) as the author and as a guest: reorder inside a collection,
   move across collections, free ↔ collection, reorder collections, keyboard and touch (emulated), a refused
   drop, a stale drop from two tabs, the public pages' order after each move. Record "author reorders a
   collection and a guest sees it" as a scenario under `tests/web-qa-scenarios`.
