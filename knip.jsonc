@@ -9,7 +9,10 @@
     "src/features/collections/**",
     // Temporary, drag-and-drop-ordering scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new feature's files. The last group that wires the board into the route removes this entry.
-    "src/features/work-ordering/**"
+    "src/features/work-ordering/**",
+    // Temporary, admin-moderation scaffold: the new stubs have no importer until the route, the header slot and the
+    // public pages wire them (groups 5 and 6). Only the new feature. Task 7.5 removes this entry.
+    "src/features/admin/**"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.

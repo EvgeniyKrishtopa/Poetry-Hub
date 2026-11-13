@@ -442,3 +442,35 @@ sequenceDiagram
 - Should a ban also hide the banned author's public poems, or leave them visible until an admin deletes each one?
   (Assumed: a ban does not change visibility; the admin deletes content explicitly.)
 - Shorten the JWT expiry in the dashboard to narrow the access-token window, or accept 1 hour?
+
+## Scaffold map
+
+Written by `opsx-scaffold` after the files existed (map approved 2026-11-13). Stub bodies only (`throw new Error("not implemented")`,
+`return null`); the constants, types, schema shapes and the mockups' copy are complete. Not scaffolded, left to their groups:
+the migration (1, 2), the `/admin` route file and its breadcrumb slot (5.1), the `adminLink` slot on `HeaderAuthLinks` (5.3a),
+the `moderation` prop on `PoemPage` and `PublicCollectionPage` (6.2), the `restricted` member in `classify-error.ts` and the `auth`
+changes (4), ESLint boundary entries (3.1), docs and tests. `knip.jsonc` ignores `src/features/admin/**` until task 7.5.
+Gate 2b: no CONFIRMED finding. Fixed in the scaffold: `AdminPage` takes the raw search params (parsed inside), and
+`may_moderate_author` has its own `ModerateCheckResult`. `AdminDeleteControl` also takes `authorId` (the control needs it for
+`may_moderate_author`); the examples in D8 and tasks 3.1 and 6.2 still list four props. Copy not in the mockups is marked
+"to confirm" in `admin-messages.ts`.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/features/admin/model/admin.constants.ts` | named values: page size, path, URL params, states, DB statuses | `ADMIN_USERS_PAGE_SIZE`, `ADMIN_PATH`, `ADMIN_LIST_PARAM`, `USER_STATE`, `RESTRICTION_KIND`, `MODERATION_DB_STATUS`, `DELETE_DB_STATUS` |
+| `src/features/admin/model/admin.types.ts` | types between layers | `AdminUser`, `AdminFailure`, `AdminCheckResult`, `ModerateCheckResult`, `UserListResult`, `ModerationWriteResult`, `PoemDeleteWriteResult`, `CollectionDeleteWriteResult`, `SessionCheck`, `ModerationActionResult`, `DeleteActionResult` and the unions they use |
+| `src/features/admin/model/admin.schema.ts` | action and list input shapes | `targetUserSchema`, `deleteTargetSchema`, `listQuerySchema` and their types |
+| `src/features/admin/model/admin-messages.ts` | Russian copy from the mockups | `ADMIN_NAV_LABEL`, `ADMIN_LIST_COPY`, `USER_STATE_LABELS`, `ADMIN_ACTION_LABELS`, `MODERATION_RESULT_MESSAGES`, `MODERATION_FAILURE_MESSAGES`, `BAN_DIALOG_COPY`, `ADMIN_DELETE_COPY` |
+| `src/features/admin/dal/admin-check.ts` | `is_admin()` and `may_moderate_author()` | `checkIsAdmin`, `checkMayModerateAuthor` |
+| `src/features/admin/dal/user-list.ts` | `admin_list_users` | `listUsers` |
+| `src/features/admin/dal/moderation-rpc.ts` | block, unblock, ban, revoke | `blockUser`, `unblockUser`, `banUser`, `revokeSessions` |
+| `src/features/admin/dal/delete-rpc.ts` | delete another's poem or collection | `deletePoemAsAdmin`, `deleteCollectionAsAdmin` |
+| `src/features/admin/dal/illustration-cleanup.ts` | best-effort illustration removal | `removeIllustration` |
+| `src/features/admin/actions/action-client.ts`, `session-check.ts`, `expire-author-works-tag.ts` | shared log policy, session step, tag expiry (own copies) | `adminActionClient`, `checkSession`, `expireAuthorWorksTag` |
+| `src/features/admin/actions/{block-user,unblock-user,ban-user,revoke-sessions}.actions.ts` | `"use server"` moderation | `blockUserAction`, `unblockUserAction`, `banUserAction`, `revokeSessionsAction` |
+| `src/features/admin/actions/{delete-poem,delete-collection}.actions.ts` | `"use server"` content delete | `deletePoemAction`, `deleteCollectionAction` |
+| `src/features/admin/components/AdminPage/` | `/admin` gate and list | `AdminPage`, `AdminPageProps` |
+| `src/features/admin/components/AdminUserList/`, `AdminUserRow/`, `UserStateBadge/` | list, row, state pill | `AdminUserList`, `AdminUserRow`, `UserStateBadge` + props types |
+| `src/features/admin/components/AdminNavLink/` | header link | `AdminNavLink` |
+| `src/features/admin/components/AdminDeleteControl/` | admin delete button on public pages | `AdminDeleteControl`, `AdminDeleteControlProps` |
+| `src/features/admin/index.ts` | public API | `AdminPage`, `AdminNavLink`, `AdminDeleteControl` |
