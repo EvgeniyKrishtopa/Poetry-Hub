@@ -24,8 +24,6 @@ describe("collection-management messages", () => {
   // implements NFR-7 of add-poem-collections
   it("match the /account/poems rows", () => {
     expect(COLLECTION_LIST_COPY.createLink).toBe("Создать сборник произведений");
-    expect(COLLECTION_LIST_COPY.sectionHeading).toBe("Сборники произведений");
-    expect(COLLECTION_LIST_COPY.sectionUnavailable).toBe("Не удалось загрузить сборники. Попробуйте позже.");
     expect(COLLECTION_LIST_COPY.created(TITLE)).toBe("Сборник «Осень» создан.");
     expect(COLLECTION_LIST_COPY.deleted(TITLE)).toBe("Сборник «Осень» удалён.");
     expect(COLLECTION_LIST_COPY.alreadyDeleted).toBe("Сборник уже удалён.");

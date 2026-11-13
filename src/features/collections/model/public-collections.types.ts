@@ -12,12 +12,12 @@ export interface PublicCollectionEntry {
   readonly description: string | null;
 }
 
-/** One visible collection with its poems, newest first; never empty (public-collections FR-1). */
+/** One visible collection with its poems in the author's order; never empty (public-collections FR-1). */
 export interface PublicCollection extends PublicCollectionEntry {
   readonly poems: readonly PublicCollectionPoem[];
 }
 
-/** The author's visible collections, newest first, or why they can't be read (public-collections D5). */
+/** The author's visible collections in the author's order, or why they can't be read (public-collections D5). */
 export type PublicCollectionsResult =
   | { readonly ok: true; readonly collections: readonly PublicCollectionEntry[] }
   | { readonly ok: false; readonly reason: "unavailable" };

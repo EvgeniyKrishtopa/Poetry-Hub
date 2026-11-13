@@ -30,15 +30,17 @@ insert into public.collections (id, author_id, title, created_at) values
 
 -- B's poems, one a day apart, newest first: p1 and p2 in «Осенний цикл», p3 free, p4 in «Зима», p5 free.
 -- D has a free poem and a collected one; A has a collected one.
-insert into public.poems (id, author_id, title, text, collection_id, created_at) values
-  ('b1000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Ночной вокзал', 'Текст', 'b0000000-0000-4000-8000-000000000001', now() - interval '1 day'),
-  ('b1000000-0000-4000-8000-000000000002', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Осенний сад', 'Текст', 'b0000000-0000-4000-8000-000000000001', now() - interval '2 days'),
-  ('b1000000-0000-4000-8000-000000000003', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Первый снег', 'Текст', null, now() - interval '3 days'),
-  ('b1000000-0000-4000-8000-000000000004', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Метель', 'Текст', 'b0000000-0000-4000-8000-000000000002', now() - interval '4 days'),
-  ('b1000000-0000-4000-8000-000000000005', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Ливень', 'Текст', null, now() - interval '5 days'),
-  ('d1000000-0000-4000-8000-000000000001', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Сонет', 'Текст', null, now() - interval '1 day'),
-  ('d1000000-0000-4000-8000-000000000002', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Старуха', 'Текст', 'd0000000-0000-4000-8000-000000000001', now() - interval '2 days'),
-  ('a1000000-0000-4000-8000-000000000001', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Набросок', 'Текст', 'a0000000-0000-4000-8000-000000000001', now() - interval '1 day');
+-- Positions are given explicitly, in the newest-first order of created_at: without one, the insert trigger of
+-- work_ordering would put each row before the earlier ones, and the reads below assert the stored order.
+insert into public.poems (id, author_id, title, text, collection_id, created_at, position) values
+  ('b1000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Ночной вокзал', 'Текст', 'b0000000-0000-4000-8000-000000000001', now() - interval '1 day', 0),
+  ('b1000000-0000-4000-8000-000000000002', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Осенний сад', 'Текст', 'b0000000-0000-4000-8000-000000000001', now() - interval '2 days', 1),
+  ('b1000000-0000-4000-8000-000000000003', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Первый снег', 'Текст', null, now() - interval '3 days', 0),
+  ('b1000000-0000-4000-8000-000000000004', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Метель', 'Текст', 'b0000000-0000-4000-8000-000000000002', now() - interval '4 days', 0),
+  ('b1000000-0000-4000-8000-000000000005', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Ливень', 'Текст', null, now() - interval '5 days', 1),
+  ('d1000000-0000-4000-8000-000000000001', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Сонет', 'Текст', null, now() - interval '1 day', 0),
+  ('d1000000-0000-4000-8000-000000000002', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Старуха', 'Текст', 'd0000000-0000-4000-8000-000000000001', now() - interval '2 days', 0),
+  ('a1000000-0000-4000-8000-000000000001', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Набросок', 'Текст', 'a0000000-0000-4000-8000-000000000001', now() - interval '1 day', 0);
 
 -- ---------- anon ----------
 set local role anon;
@@ -159,12 +161,14 @@ select is_empty(
 );
 
 select results_eq(
-  $$select collection_id::text, id::text, title from public.my_collected_poems()$$,
+  $$select collection_id::text, id::text, title
+    from public.my_collected_poems() with ordinality as c(collection_id, id, title, n)
+    order by collection_id, n$$,
   $$values
     ('b0000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000001', 'Ночной вокзал'),
     ('b0000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000002', 'Осенний сад'),
     ('b0000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000004', 'Метель')$$,
-  'collected: only the caller''s own poems in a collection, newest first'
+  'collected: only the caller''s own poems in a collection, in each collection''s stored order'
 );
 
 -- The input guard (22023): the app validates first, so these are direct calls.
@@ -311,7 +315,9 @@ select is(
 );
 
 select results_eq(
-  $$select collection_id::text, id::text from public.my_collected_poems()$$,
+  $$select collection_id::text, id::text
+    from public.my_collected_poems() with ordinality as c(collection_id, id, title, n)
+    order by collection_id, n$$,
   $$values
     ('b0000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000001'),
     ('b0000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000002'),
@@ -329,13 +335,15 @@ select is(
 );
 
 select results_eq(
-  $$select collection_id::text, id::text from public.my_collected_poems()$$,
+  $$select collection_id::text, id::text
+    from public.my_collected_poems() with ordinality as c(collection_id, id, title, n)
+    order by collection_id, n$$,
   $$values
-    ('b0000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000001'),
     ('b0000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000003'),
-    ('b0000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000004'),
-    ('b0000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000005')$$,
-  'the saved selection is stored'
+    ('b0000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000005'),
+    ('b0000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000001'),
+    ('b0000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000004')$$,
+  'the saved selection is stored; the added poems are first in the collection, in the checklist order (FR-10)'
 );
 
 -- Two saves wanting one free poem: the first takes it, the second sees it taken. Real concurrency can't run

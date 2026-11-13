@@ -50,7 +50,7 @@ function toEntry(row: PublicCollectionRow): PublicCollectionEntry {
   return { id: row.id, title: row.title, description: row.description };
 }
 
-/** Reads and parses the author's visible collections, newest created first. */
+/** Reads and parses the author's visible collections in the author's own order: the stored position, then the id (FR-9). */
 async function readPublicCollections(authorId: string): Promise<PublicCollectionsResult> {
   try {
     const supabase = createSupabasePublicClient();
@@ -58,7 +58,7 @@ async function readPublicCollections(authorId: string): Promise<PublicCollection
       .from("collections")
       .select("id, title, description, created_at")
       .eq("author_id", authorId)
-      .order("created_at", { ascending: false })
+      .order("position", { ascending: true })
       .order("id", { ascending: true });
     // postgrest-js keeps the status on the response; only the code and status are passed on.
     if (error) return fail({ code: error.code, status });
@@ -85,7 +85,7 @@ async function cachedPublicCollections(authorId: string): Promise<PublicCollecti
 }
 
 /**
- * The author's visible collections, newest first. An id that isn't a UUID has none and opens no cache scope. The id
+ * The author's visible collections in the author's own order. An id that isn't a UUID has none and opens no cache scope. The id
  * is lowercased, because the author page also opens for an uppercase spelling and writes expire the lowercase tag.
  * Memoized per request (public-collections D5).
  */

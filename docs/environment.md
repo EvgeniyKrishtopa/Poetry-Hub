@@ -69,6 +69,14 @@ git-ignored `PROGRESS.md`, so every clone sees them.
   and before the app: without it the public collections reads return no rows and `collection_id` can't be
   selected, so the author page fails its poems read. Rollback: revert the app first, then the down
   migration in the file's header.
+- **Work ordering migration** (`drag-and-drop-ordering`): `npx supabase db push` applies
+  `20261111160000_work_ordering.sql` (`position` on `collections` and `poems` with a newest-first backfill and
+  an insert trigger on each, the `move_my_poem` / `move_my_collection` functions, the changed
+  `save_my_collection_poems` / `delete_my_collection` / `my_collected_poems`, and the `order_move` scope in
+  `write_rate_limits` and `consume_write_allowance`, 30 moves per minute; ADR 0014). Apply it after the public
+  collections migration and before the app: an older app keeps working against it (it reads the same rows, only
+  without the order), but the board and every read that orders by `position` fail without it. Rollback: revert
+  the app first, then the down migration in the file's header (every stored order is lost).
 - **`poem-illustrations` bucket** (`add-poem-creation`): on the hosted project, confirm it exists,
   public, 5 MiB file size limit, MIME types `image/png` and `image/jpeg` — the same as
   `supabase/config.toml`, which configures the local stack only.

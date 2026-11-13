@@ -12,6 +12,13 @@ describe("uncollectedPoems", () => {
     expect(uncollectedPoems([COLLECTED_STATION, AUTUMN_GARDEN, NIGHT_STATION])).toEqual([AUTUMN_GARDEN, NIGHT_STATION]);
   });
 
+  // implements FR-9 of drag-and-drop-ordering
+  it("keeps the given order, even when it is not the order of creation", () => {
+    const authorsOrder = [NIGHT_STATION, AUTUMN_GARDEN, { ...NIGHT_STATION, id: "30000000-0000-4000-8000-000000000099" }];
+
+    expect(uncollectedPoems(authorsOrder)).toEqual(authorsOrder);
+  });
+
   // implements FR-3 of public-collections
   it("returns nothing when every poem is in a collection, or when there are no poems", () => {
     expect(uncollectedPoems([COLLECTED_STATION])).toEqual([]);

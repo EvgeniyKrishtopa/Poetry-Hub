@@ -7,11 +7,7 @@ import { getOwnPublicAuthor } from "@/features/authors";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
 import { isCollectionId } from "../model/collection-form.schema";
-import type {
-  OwnCollectionResult,
-  OwnCollectionsResult,
-  OwnCollectionTitleResult,
-} from "../model/collection-management.types";
+import type { OwnCollectionResult, OwnCollectionTitleResult } from "../model/collection-management.types";
 
 import { logFailure, withStatus } from "./write-log";
 
@@ -20,15 +16,10 @@ import { logFailure, withStatus } from "./write-log";
 // so every read here filters by the own author id itself. Log lines carry the failure kind only (NFR-5).
 
 const COLLECTIONS_TABLE = "collections";
-const LIST_OPERATION = "list collections";
 const READ_OPERATION = "read collection";
 
-const LIST_FAILED = { ok: false } as const;
 const NOT_FOUND = { ok: false, reason: "not-found" } as const;
 const UNAVAILABLE = { ok: false, reason: "unavailable" } as const;
-
-/** The list's rows; any other shape fails the parse and is a failed read, never a guessed list. */
-const summaryRowsSchema = z.array(z.object({ id: z.uuid(), title: z.string().min(1) }));
 
 /** One row as the collection page and the edit page show it; `description` is never `''` (design D2). */
 const collectionRowSchema = z.object({
@@ -36,34 +27,6 @@ const collectionRowSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1).nullable(),
 });
-
-/** The author's collections for the `/account/poems` section, newest first (design D4). */
-export async function listOwnCollections(authorId: string): Promise<OwnCollectionsResult> {
-  try {
-    const supabase = await createSupabaseServerClient();
-    const response = await supabase
-      .from(COLLECTIONS_TABLE)
-      .select("id, title")
-      .eq("author_id", authorId)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: true });
-    if (response.error) {
-      logFailure(LIST_OPERATION, withStatus(response.error, response.status));
-      return LIST_FAILED;
-    }
-
-    const rows = summaryRowsSchema.safeParse(response.data);
-    if (!rows.success) {
-      logFailure(LIST_OPERATION, rows.error);
-      return LIST_FAILED;
-    }
-    return { ok: true, collections: rows.data };
-  } catch (error) {
-    // A config error, or an unexpected throw (a network failure): still a value.
-    logFailure(LIST_OPERATION, error);
-    return LIST_FAILED;
-  }
-}
 
 /** The row by id and owner; another author's row doesn't match the owner filter, so it reads as none (design D4). */
 async function readOwnCollection(authorId: string, collectionId: string): Promise<OwnCollectionResult> {

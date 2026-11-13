@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getOwnPublicAuthor } from "@/features/authors";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
-import { getOwnCollection, getOwnCollectionTitle, listOwnCollections } from "../../dal/own-collections";
+import { getOwnCollection, getOwnCollectionTitle } from "../../dal/own-collections";
 
 vi.mock("@/shared/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
 vi.mock("@/features/authors", () => ({ getOwnPublicAuthor: vi.fn() }));
@@ -15,7 +15,6 @@ const HTTP_UNAVAILABLE = 503;
 
 const AUTHOR_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
 const COLLECTION_ID = "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d";
-const OTHER_COLLECTION_ID = "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f";
 const TITLE = "Осенний цикл";
 const DESCRIPTION = "Стихи октября";
 
@@ -70,47 +69,6 @@ beforeEach(() => {
 afterEach(() => {
   vi.clearAllMocks();
   vi.restoreAllMocks();
-});
-
-describe("listOwnCollections", () => {
-  // implements FR-2 of add-poem-collections
-  // implements NFR-1 of public-collections: the explicit author filter is what keeps another public author's
-  // collections, which RLS now lets this client read, out of /account/poems.
-  it("reads the author's id and title rows, newest first with the id as the tie-break", async () => {
-    const rows = [
-      { id: COLLECTION_ID, title: TITLE },
-      { id: OTHER_COLLECTION_ID, title: "Весна" },
-    ];
-    answer({ data: rows, error: null, status: HTTP_OK });
-
-    await expect(listOwnCollections(AUTHOR_ID)).resolves.toEqual({ ok: true, collections: rows });
-    expect(query.calls).toEqual([
-      ["from", "collections"],
-      ["select", "id, title"],
-      ["eq", "author_id", AUTHOR_ID],
-      ["order", "created_at", { ascending: false }],
-      ["order", "id", { ascending: true }],
-    ]);
-  });
-
-  it("answers an empty list for an author without collections", async () => {
-    answer({ data: [], error: null, status: HTTP_OK });
-
-    await expect(listOwnCollections(AUTHOR_ID)).resolves.toEqual({ ok: true, collections: [] });
-  });
-
-  // implements FR-2, NFR-5 of add-poem-collections
-  it.each([
-    ["a query error", queryError(HTTP_UNAVAILABLE)],
-    ["a bad shape", { data: [{ id: "x", title: TITLE }], error: null, status: HTTP_OK }],
-    ["a throw", new TypeError("fetch failed")],
-  ])("answers a failure for %s and logs its kind only", async (_case, response) => {
-    answer(response);
-
-    await expect(listOwnCollections(AUTHOR_ID)).resolves.toEqual({ ok: false });
-    expect(loggedText()).toMatch(/^\[collection-management\] list collections failed: \S+/);
-    expectNothingSecretLogged();
-  });
 });
 
 describe("getOwnCollection", () => {

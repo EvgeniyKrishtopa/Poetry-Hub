@@ -70,8 +70,9 @@ async function deleteOpenCollection(page: Page, title: string) {
 // Each run adds its own three poems and two collections and deletes all five, so parallel repeats never touch each
 // other's rows and author4 ends as seeded. Every run counts three poem creates (100 per 30 days), two collection
 // creates (50 per 30 days), and two saves (10 per minute); `npx supabase db reset` starts the counts over.
-// implements FR-1, FR-3 of show-only-free-poems: deleting a collection moves its poems into the free-poem list, newest
-// first, also after Back and Forward, while another collection's poem stays out of it.
+// implements FR-1, FR-3 of show-only-free-poems: deleting a collection moves its poems into the free-poem list, also
+// after Back and Forward, while another collection's poem stays out of it.
+// implements FR-10 of drag-and-drop-ordering: the freed poems go first among the free poems, ahead of `free`.
 test(
   "deleting a collection moves its poems into the free-poem list",
   { tag: ["@show-only-free-poems"] },
@@ -89,7 +90,6 @@ test(
     // The free-poem list follows the section, so it is the last list on the page.
     const freeList = main.getByRole("list").last();
 
-    // Oldest first, so the free list's newest-first order puts `free` before `freed`.
     await createPoem(page, freed);
     await createPoem(page, free);
     await createPoem(page, kept);
@@ -108,7 +108,7 @@ test(
     const deletedUrl = page.url();
     await deleteOpenCollection(page, deletedTitle);
 
-    /** The page after the delete: the freed poem in the free list after `free`, `kept` only under its collection. */
+    /** The page after the delete: the freed poem first in the free list, before `free`; `kept` only under its collection. */
     async function expectFreedInList() {
       await expect(page).toHaveURL(/\/account\/poems$/);
       await expect(main.getByRole("link", { name: deletedTitle })).toHaveCount(0);
@@ -117,7 +117,7 @@ test(
       await expect(main.getByRole("link", { name: kept })).toHaveCount(1);
       await expect(main.getByRole("link", { name: freed })).toHaveCount(1);
       const ours = freeList.getByRole("link").filter({ hasText: runId });
-      await expect(ours).toHaveText([free, freed]);
+      await expect(ours).toHaveText([freed, free]);
     }
     await expectFreedInList();
 

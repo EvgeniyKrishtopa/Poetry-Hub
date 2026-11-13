@@ -69,14 +69,6 @@ export type OwnPoemResult =
   | { readonly ok: false; readonly reason: "not-found" }
   | { readonly ok: false; readonly reason: "unavailable" };
 
-/**
- * Which own poems are in a collection, as the route hands it to `/account/poems` (show-only-free-poems design D1).
- * Declared here so this feature never imports `collection-management`; its read's result fits this shape.
- */
-export type CollectedPoemsRead =
-  | { readonly ok: true; readonly poems: readonly { readonly id: string }[] }
-  | { readonly ok: false };
-
 /** The trail's last item for `/account/poems/<id>` (design D10). */
 export type OwnPoemTitleResult =
   | { readonly ok: true; readonly title: string }

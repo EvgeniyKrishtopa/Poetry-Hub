@@ -20,8 +20,8 @@ afterEach(() => {
 describe("AuthorPoemsEntry", () => {
   // implements FR-5, NFR-4 of refine-author-page-and-contact
   // implements FR-9 of add-poem-creation
-  it("shows the h2 «Произведения» over the author's poem links, newest first, with no list-page link", async () => {
-    // The DAL returns the poems newest first; the section keeps that order.
+  it("shows the h2 «Произведения» over the author's poem links in the DAL's order, with no list-page link", async () => {
+    // The DAL returns the poems in the author's order; the section keeps that order.
     vi.mocked(listAuthorPoems).mockResolvedValue({ ok: true, poems: [NIGHT_STATION, AUTUMN_GARDEN] });
 
     const { container } = await renderEntry();

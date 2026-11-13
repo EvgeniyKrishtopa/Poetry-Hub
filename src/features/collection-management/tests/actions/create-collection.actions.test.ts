@@ -31,6 +31,8 @@ describe("createCollectionAction", () => {
   });
 
   // implements FR-4, FR-15 of add-poem-collections
+  // implements FR-1 of drag-and-drop-ordering: the database puts a new collection first; the RPC call and its
+  // answer are unchanged.
   it("stores the normalized values, refreshes the client router, and answers the stored title", async () => {
     const result = await createCollectionAction({ title: `  ${TITLE} `, description: " Стихи\r\nоктября " });
 

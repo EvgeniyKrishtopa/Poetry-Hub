@@ -12,12 +12,6 @@ import type {
 /** Why a read or a write failed, in the terms the UI shows (design D12: the shared classifier's union). */
 export type ServiceFailure = SupabaseFailure;
 
-/** One row of the `/account/poems` section: only what the list shows (design D3, D4). */
-export interface CollectionSummary {
-  readonly id: string;
-  readonly title: string;
-}
-
 /** One of the author's own collections, as its page and edit page show it (design D4). */
 export interface OwnCollection {
   readonly id: string;
@@ -25,10 +19,6 @@ export interface OwnCollection {
   /** `null` when the collection has no description; never an empty string (design D2). */
   readonly description: string | null;
 }
-
-export type OwnCollectionsResult =
-  | { readonly ok: true; readonly collections: readonly CollectionSummary[] }
-  | { readonly ok: false };
 
 export type OwnCollectionResult =
   | { readonly ok: true; readonly collection: OwnCollection }
@@ -125,15 +115,6 @@ export type CollectionPoemChoicesResult =
 
 export type CollectedPoemsResult =
   | { readonly ok: true; readonly poems: readonly CollectedPoem[] }
-  | { readonly ok: false };
-
-/** One collection of the `/account/poems` section with its poems, newest first; empty when it holds none. */
-export interface CollectionWithPoems extends CollectionSummary {
-  readonly poems: readonly CollectedPoem[];
-}
-
-export type OwnCollectionsWithPoemsResult =
-  | { readonly ok: true; readonly collections: readonly CollectionWithPoems[] }
   | { readonly ok: false };
 
 export type CheckCollectionPoemsResult =

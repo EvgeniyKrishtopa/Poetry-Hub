@@ -146,7 +146,7 @@ Archived at `openspec/changes/archive/2026-11-11-public-collections/`.
 - **Why:** the project repeats a mirroring feature's logic in its own module instead of extracting it, and `shared/` takes only domain-free pieces (`docs/architecture.md`). Four copies are acceptable while the rules do not change.
 - **Verified instead:** each copy has its own unit tests.
 - **Decision:** user, 2026-11-10 (design Gate 1 P5).
-- **Status:** open. The next change, ordering by drag-and-drop, changes the order rule and must change all four in step: update every copy and its tests in one change, or decide then whether a shared owner is now worth it.
+- **Status:** resolved (drag-and-drop-ordering, groups 2 and 7). The order rule is now the stored `position`, applied by each read's `order by position, id`, so the models only keep the order given and none of them needed a change in step (group 2 updated their comments and tests). The two owner copies, `free-poems.ts` and `collection-poems-nesting.ts`, were deleted in group 7; `/account/poems` is arranged by `work-ordering/model/board-nesting.ts`, which keeps its own copy under the repeat-per-feature rule. Two copies of the public rules stay (`uncollected-poems.ts`, `nest-public-collections.ts`).
 
 ### public-collections · 7.2 — the owner's pages still read their own collections uncached
 
@@ -156,4 +156,18 @@ Archived at `openspec/changes/archive/2026-11-11-public-collections/`.
 - **Why:** now that membership and collections are public (ADR 0013), the owner's pages could share the public cache entry under `authorWorksTag(authorId)`. That would change which client reads what, with no change for the reader, and it would couple `collection-management` to the public reads that it never imports today.
 - **Verified instead:** nothing; the owner's pages are unchanged, and `collection-management/tests/dal/own-collections.test.ts` pins that their reads still filter by the owner's own author id.
 - **Decision:** user, 2026-11-10 (design Non-Goals).
-- **Status:** open. Revisit together with the drag-and-drop change, when the four rule copies above are touched anyway.
+- **Status:** open. drag-and-drop-ordering did not switch them: the board on `/account/poems` reads uncached with the cookie client (`work-ordering/dal/own-board.ts`, an explicit author filter), the same way the owner reads do, so the decision above is unchanged. `/account/poems` no longer calls `listOwnCollections` (deleted) or `listCollectedPoems`; the owner's collection page still reads `my_collected_poems()` through `listCollectedPoems`, so that function stays in the database.
+
+## drag-and-drop-ordering
+
+Archived at `openspec/changes/archive/2026-11-13-drag-and-drop-ordering/`.
+
+### drag-and-drop-ordering · 5.1 — drag library spike failed on stacked lists
+
+- **State:** resolved
+- **Requirement:** FR-7, NFR-4
+- **What is missing:** a drag library that moves a poem between stacked lists (and into an empty collection) with the keyboard. The spike of `@hello-pangea/dnd` 18.0.1 (Next 16.4.6, React 19.3, Compiler, Strict Mode, real Chromium) passed nested droppables by type, in-list and collection keyboard moves, focus return, Russian announcements and handle-only touch. It failed design R1: none of the four arrow keys leaves a vertical list for the list below or above, and an empty collection is unreachable.
+- **Why:** the library maps only the left and right arrows to a neighbouring list and finds none when lists are stacked at full width. Also found: a `<button>` handle lifts only with `disableInteractiveElementBlocking` on every `Draggable`, and the library's live region is fixed to `aria-live="assertive"` while FR-7 and NFR-4 say polite.
+- **Verified instead:** the spike results are in `PROGRESS.md`; the throwaway page lived only in the scratchpad.
+- **Decision:** user, 2026-11-11: take the design R1 fallback, `@dnd-kit/core` with a custom keyboard coordinates getter. Design D5/R1, FR-7 wording and groups 5-6 need a re-plan (`opsx-update-review`), and the user swaps the dependency (uninstall `@hello-pangea/dnd`, install `@dnd-kit/core` and its sortable package with exact pins).
+- **Status:** resolved (drag-and-drop-ordering, group 5: the `@dnd-kit` spike passed every item, including keyboard moves between stacked lists and into an empty collection; facts for group 6 are under task 5.1 in `tasks.md`).

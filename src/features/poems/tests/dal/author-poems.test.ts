@@ -39,7 +39,7 @@ const ILLUSTRATION_PATH = `${AUTHOR_ID}/0b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d.jpg
 const SECRET_TITLE = "Секрет";
 const SECRET_TEXT = "тайна";
 
-/** The rows as PostgREST returns them: already newest first. */
+/** The rows as PostgREST returns them: already in the author's order. */
 const STATION_ROW = {
   id: STATION_ID,
   title: "Ночной вокзал",
@@ -79,8 +79,8 @@ describe("author poems DAL", () => {
   });
 
   describe("listAuthorPoems", () => {
-    // implements FR-9 and NFR-4 of add-poem-creation
-    it("maps the author's rows newest first, tagged with the author's works tag and kept for hours", async () => {
+    // implements FR-9 and NFR-4 of add-poem-creation; implements FR-9 of drag-and-drop-ordering
+    it("maps the author's rows in their order, asks for the stored position, tagged with the author's works tag and kept for hours", async () => {
       supabase.queueQuery(okResponse([STATION_ROW, GARDEN_ROW]));
 
       const result = await listAuthorPoems(AUTHOR_ID);
@@ -112,7 +112,7 @@ describe("author poems DAL", () => {
         ["from", ["poems"]],
         ["select", [POEM_COLUMNS]],
         ["eq", ["author_id", AUTHOR_ID]],
-        ["order", ["created_at", { ascending: false }]],
+        ["order", ["position", { ascending: true }]],
         ["order", ["id", { ascending: true }]],
       ]);
       expect(supabase.storage.from).toHaveBeenCalledWith("poem-illustrations");

@@ -58,6 +58,8 @@ describe("createPoemAction", () => {
   });
 
   // implements FR-5, FR-12 of add-poem-creation
+  // implements FR-1 of drag-and-drop-ordering: the database puts a new poem first; the RPC call and its answer are
+  // unchanged.
   it("creates the trimmed poem, expires the author's poems tag once, and returns the id", async () => {
     const result = await createPoemAction(VALID);
 

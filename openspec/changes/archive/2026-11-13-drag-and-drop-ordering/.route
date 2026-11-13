@@ -1,0 +1,2 @@
+full
+# changes the data schema (position columns, new write functions); changes contracts (the poems and collections reads, new server actions); touches more than one module

@@ -43,6 +43,20 @@ describe("nestPublicCollections", () => {
     ]);
   });
 
+  // implements FR-9 of drag-and-drop-ordering
+  it("keeps the author's order of the collections and of each one's poems, whatever the ids sort to", () => {
+    expect(nestPublicCollections([AUTUMN, SPRING], [GARDEN, SNOW, STATION])).toEqual([
+      {
+        ...AUTUMN,
+        poems: [
+          { id: GARDEN.id, title: "Осенний сад" },
+          { id: STATION.id, title: "Ночной вокзал" },
+        ],
+      },
+      { ...SPRING, poems: [{ id: SNOW.id, title: "Первый снег" }] },
+    ]);
+  });
+
   // implements FR-1 of public-collections
   it("drops a collection left with no poems", () => {
     expect(nestPublicCollections([SPRING, AUTUMN], [STATION])).toEqual([

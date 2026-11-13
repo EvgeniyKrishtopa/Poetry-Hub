@@ -40,7 +40,7 @@ function fail(error: unknown): AuthorPoemsResult {
   return UNAVAILABLE;
 }
 
-/** Reads, parses, and maps the author's rows, newest created first. */
+/** Reads, parses, and maps the author's rows in the author's own order: the stored position, then the id (FR-9). */
 async function readAuthorPoems(authorId: string): Promise<AuthorPoemsResult> {
   try {
     const supabase = createSupabasePublicClient();
@@ -48,7 +48,7 @@ async function readAuthorPoems(authorId: string): Promise<AuthorPoemsResult> {
       .from("poems")
       .select(POEM_COLUMNS)
       .eq("author_id", authorId)
-      .order("created_at", { ascending: false })
+      .order("position", { ascending: true })
       .order("id", { ascending: true });
     // postgrest-js keeps the status on the response; only the code and status are passed on.
     if (error) return fail({ code: error.code, status });
@@ -75,7 +75,7 @@ async function cachedAuthorPoems(authorId: string): Promise<AuthorPoemsResult> {
 }
 
 /**
- * The author's poems, newest first. An id that isn't a UUID has no poems and opens no cache scope.
+ * The author's poems in the author's own order. An id that isn't a UUID has no poems and opens no cache scope.
  * The id is lowercased, because the author page also opens for an uppercase spelling and a create
  * expires the lowercase tag. Memoized per request. Callers check the author first (design D3).
  */
