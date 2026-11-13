@@ -369,7 +369,18 @@ is the result reason `unauthenticated`, redirected by the island, as the sibling
 | `src/features/work-ordering/model/arrange-drop.ts` | the arrangement after one drop | `arrangeDrop` |
 | `src/features/work-ordering/model/board-places.ts` | added by the 2026-11-11 revision (D8): the board's places in reading order and the next place for an ArrowUp/ArrowDown; pure | `boardPlaces`, `nextKeyboardPlace` |
 | `src/features/work-ordering/model/screen-reader-announcements.ts` | added by the 2026-11-11 revision (D8): the screen reader string for a pick-up, move, drop, or cancel; pure | `screenReaderAnnouncementFor` |
-| `src/features/work-ordering/components/SortableWorkBoard/use-board-drag.ts` | added by the 2026-11-11 revision (D4, D8): the `@dnd-kit` glue, the in-drag arrangement, live region, focus repair | `useBoardDrag` |
+| `src/features/work-ordering/model/board-drag.ts` | the arrangement rules of a drag; pure: where a pointer pass, a keyboard step and a drop leave the board | `arrangeOverByPointer`, `stepArrangementByKeyboard`, `dropBetween`, `enteredContainer` |
+| `src/features/work-ordering/model/board-lookup.ts` | where a poem is on the board; pure | `findPoem` |
+| `src/features/work-ordering/model/keyboard-drag-step.ts` | the arrow-key rules of a lifted item: which keys are the board's, and the step one key press takes; pure | `resolveKeyboardDrag`, `KeyboardDragOutcome`, `HeldItem` |
+| `src/features/work-ordering/model/board-drag-session.ts` | the life of one drag as pure steps: each answers with the next state and the effects to apply (announce, store, give focus back) | `beginDrag`, `moveDrag`, `dragOver`, `cancelDrag`, `endDrag` |
+| `src/features/work-ordering/model/board-drag-session.types.ts` | the drag session's types | `DragState`, `DragTransition`, `DragActivator`, `DragEndInput`, `ScreenReaderAnnouncementRequest` |
+| `src/features/work-ordering/components/SortableWorkBoard/use-board-drag.ts` | added by the 2026-11-11 revision (D4, D8), split by responsibility after the PR #215 review: the `@dnd-kit` glue only reads the library's event, asks the drag session and applies its answer | `useBoardDrag` |
+| `src/features/work-ordering/components/SortableWorkBoard/use-board-sensors.ts` | the mouse, touch and keyboard sensors | `useBoardSensors` |
+| `src/features/work-ordering/components/SortableWorkBoard/use-screen-reader-announcement.ts` | the board's live region text | `useScreenReaderAnnouncement` |
+| `src/features/work-ordering/components/SortableWorkBoard/use-handle-focus-repair.ts` | focus back on the moved item's handle once it exists and is enabled (the library's `restoreFocus` is off) | `useHandleFocusRepair` |
+| `src/features/work-ordering/components/SortableWorkBoard/use-board-connection.ts` | the connection status and whether a move may be sent | `useBoardConnection` |
+| `src/features/work-ordering/components/SortableWorkBoard/board-dnd-config.ts` | the fixed `DndContext` settings: id, silent library announcements, collision rule | `BOARD_ID`, `BOARD_ACCESSIBILITY`, `boardCollisionDetection` |
+| `src/features/work-ordering/components/SortableWorkBoard/board-drag-ids.ts` | the one place that translates the library's ids, data and events into model terms | `draggedItemOf`, `overTargetOf`, `activatorOf`, `listDroppableId` |
 | `src/features/work-ordering/components/SortableWorkBoard/use-move-submit.ts` | added by the 2026-11-11 revision (D4): the transition, the action call, the result | `useMoveSubmit` |
 | `src/features/work-ordering/model/board-nesting.ts` | the feature's own nesting of poems under collections | `nestBoard`, `BoardCollectionRow`, `BoardPoemRow` |
 | `src/features/work-ordering/dal/own-board.ts` | the two ordered reads of the author's board | `listOwnBoard` |
@@ -384,7 +395,7 @@ is the result reason `unauthenticated`, redirected by the island, as the sibling
 | `src/features/work-ordering/actions/move-poem.actions.ts` | the poem move action | `movePoemAction` |
 | `src/features/work-ordering/actions/move-collection.actions.ts` | the collection move action | `moveCollectionAction` |
 | `src/features/work-ordering/components/WorkBoard/WorkBoard.tsx` | the board's entry: content in Suspense with the skeleton | `WorkBoard` |
-| `src/features/work-ordering/components/WorkBoardContent/WorkBoardContent.tsx` | the reads, the failure matrix, and the island | `WorkBoardContent` |
+| `src/features/work-ordering/components/WorkBoardContent/WorkBoardContent.tsx` | the reads, the failure matrix, and the board | `WorkBoardContent` |
 | `src/features/work-ordering/components/SortableWorkBoard/SortableWorkBoard.tsx` | the interactive board (client) | `SortableWorkBoard` |
-| `src/features/work-ordering/components/SortableWorkBoard/SortableWorkBoard.types.ts` | the island's props | `SortableWorkBoardProps` |
+| `src/features/work-ordering/components/SortableWorkBoard/SortableWorkBoard.types.ts` | the board's props: the stored collections and free poems | `SortableWorkBoardProps` |
 | `src/features/work-ordering/components/WorkBoardSkeleton/WorkBoardSkeleton.tsx` | the loading state | `WorkBoardSkeleton` |
