@@ -459,6 +459,12 @@ begin
 
   select ap.user_id into author_user from public.author_profiles ap where ap.id = profile;
 
+  -- The foreign key makes this unreachable; stated so that a null can never reach the log's not-null column and
+  -- roll the delete back with an unreadable error.
+  if author_user is null then
+    raise exception 'the poem''s author profile has no account' using errcode = 'P0002';
+  end if;
+
   result := public.delete_poem_of(profile, admin_delete_poem.poem_id);
 
   if result ->> 'status' = 'deleted' then
@@ -491,6 +497,11 @@ begin
   end if;
 
   select ap.user_id into author_user from public.author_profiles ap where ap.id = profile;
+
+  -- Same guard as admin_delete_poem: unreachable through the foreign key, stated for a clear error.
+  if author_user is null then
+    raise exception 'the collection''s author profile has no account' using errcode = 'P0002';
+  end if;
 
   result := public.delete_collection_of(profile, admin_delete_collection.collection_id);
 
