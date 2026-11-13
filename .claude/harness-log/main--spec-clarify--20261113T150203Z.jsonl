@@ -1,0 +1,8 @@
+{"ts":"2026-11-13T15:02:03Z","kind":"finding","change":"admin-moderation","gate":"spec-clarify","finding":"Admin rows: controls or not (FR-3, FR-7)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-13T15:02:03Z","kind":"finding","change":"admin-moderation","gate":"spec-clarify","finding":"Confirmation dialog and reason for unblock/revoke (FR-12, tasks 5.3)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-13T15:02:03Z","kind":"finding","change":"admin-moderation","gate":"spec-clarify","finding":"Admin delete control on the admin's own work (FR-10)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-13T15:02:03Z","kind":"finding","change":"admin-moderation","gate":"spec-clarify","finding":"Restriction and log rows when an auth user is deleted (design D3, D10)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-13T15:02:03Z","kind":"finding","change":"admin-moderation","gate":"spec-clarify","finding":"moderation_log.target_user_id for content deletes (FR-11)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-13T15:02:03Z","kind":"finding","change":"admin-moderation","gate":"spec-clarify","finding":"Revoking sessions when the user has none (FR-6, FR-11)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-13T15:02:03Z","kind":"finding","change":"admin-moderation","gate":"spec-clarify","finding":"Hash used for banned_emails (FR-5)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-13T15:02:03Z","kind":"finding","change":"admin-moderation","gate":"spec-clarify","finding":"Case sensitivity of the exact-email filter (FR-3)","outcome":"fixed","ruleNumber":""}
