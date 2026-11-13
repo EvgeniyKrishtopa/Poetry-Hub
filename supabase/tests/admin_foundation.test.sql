@@ -7,7 +7,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(77);
+select plan(79);
 
 -- Start from empty tables, so the checks below see only these fixtures and not the local seed. The whole file
 -- runs in one transaction that is rolled back, so the seed survives.
@@ -360,6 +360,22 @@ select is(
   2,
   'the blocked user''s files were neither added nor removed'
 );
+
+-- ---------- BLK is unblocked: writes work again at once (FR-13) ----------
+
+delete from public.account_restrictions where user_id = '33333333-3333-4333-8333-333333333333';
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"33333333-3333-4333-8333-333333333333","role":"authenticated"}', true);
+
+select is(public.is_restricted(), false, 'a user just unblocked is no longer restricted');
+select is(
+  (select public.create_my_poem('Back again', 'Text', null, null) ->> 'status'),
+  'created',
+  'a user just unblocked stores a poem'
+);
+
+reset role;
 
 -- ---------- Function grants (NFR-1) ----------
 
