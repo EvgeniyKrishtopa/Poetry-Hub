@@ -261,6 +261,11 @@ as $$
 begin
   perform public.assert_admin();
 
+  -- The cursor is the pair: one half alone would compare to null and silently return an empty page.
+  if (admin_list_users.after_created_at is null) <> (admin_list_users.after_id is null) then
+    raise exception 'the cursor needs both after_created_at and after_id' using errcode = '22023';
+  end if;
+
   return query
   select
     u.id,

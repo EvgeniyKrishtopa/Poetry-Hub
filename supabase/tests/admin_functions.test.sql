@@ -7,7 +7,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(134);
+select plan(136);
 
 -- Start from empty content tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -249,6 +249,12 @@ select is(
     1, '2099-01-02 00:00:00+00', '66666666-6666-4666-8666-666666666666')),
   array['adm@example.test'],
   'the last page holds the rest and nothing newer');
+select throws_ok(
+  $$select * from public.admin_list_users(3, '2099-01-05 00:00:00+00', null)$$, '22023', null,
+  'a cursor with only its date is refused, not answered with an empty page');
+select throws_ok(
+  $$select * from public.admin_list_users(3, null, '44444444-4444-4444-8444-444444444444')$$, '22023', null,
+  'a cursor with only its id is refused');
 select is(
   (select user_email from public.admin_list_users(1, null, null, 'act@example.test')),
   'act@example.test',
