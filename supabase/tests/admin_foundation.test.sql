@@ -7,7 +7,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(74);
+select plan(77);
 
 -- Start from empty tables, so the checks below see only these fixtures and not the local seed. The whole file
 -- runs in one transaction that is rolled back, so the seed survives.
@@ -125,6 +125,15 @@ select throws_ok(
   $$insert into public.admins (user_id) values ('22222222-2222-4222-8222-222222222222')$$, '42501', null,
   'a user cannot make themselves an admin through the API'
 );
+select throws_ok(
+  $$update public.admins set user_id = '22222222-2222-4222-8222-222222222222'$$, '42501', null,
+  'a user cannot update admins through the API'
+);
+select throws_ok(
+  $$delete from public.admins$$, '42501', null,
+  'a user cannot delete from admins through the API'
+);
+select is(public.is_admin(), false, 'the user is still not an admin after those attempts');
 select throws_ok(
   $$insert into public.account_restrictions (user_id, kind, created_by)
     values ('22222222-2222-4222-8222-222222222222', 'blocked', '22222222-2222-4222-8222-222222222222')$$,
