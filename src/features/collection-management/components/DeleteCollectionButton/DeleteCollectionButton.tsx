@@ -6,7 +6,7 @@ import { flushSync } from "react-dom";
 
 import { POEM_MANAGEMENT_PATH, SIGN_IN_PATH } from "@/shared/config/account-paths";
 import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
-import { useConnectionStatus } from "@/shared/lib/network/use-connection-status";
+import { useConnection } from "@/shared/lib/network/use-connection";
 import { useSessionExpiredNotice } from "@/shared/lib/one-time-notice/session-expired-notice.store";
 import { Alert, Button, ConnectionNotice, Dialog } from "@/shared/ui";
 
@@ -31,13 +31,12 @@ export function DeleteCollectionButton({ collectionId, title }: DeleteCollection
   const openerRef = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
-  const connection = useConnectionStatus();
+  const { status: connection, isOnline } = useConnection();
   // The transition's closure holds the status of the render that started it; the rejection reads the latest.
   const connectionRef = useRef(connection);
   useEffect(() => {
     connectionRef.current = connection;
   });
-  const isOnline = connection === CONNECTION_STATUS.online;
 
   // A disabled button can't take focus, so focus waits for the request to end (NFR-4).
   useEffect(() => {

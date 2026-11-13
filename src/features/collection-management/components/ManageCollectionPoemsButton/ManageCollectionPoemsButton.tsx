@@ -5,7 +5,7 @@ import { useEffect, useRef, useTransition } from "react";
 
 import { SIGN_IN_PATH } from "@/shared/config/account-paths";
 import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
-import { useConnectionStatus } from "@/shared/lib/network/use-connection-status";
+import { useConnection } from "@/shared/lib/network/use-connection";
 import { useSessionExpiredNotice } from "@/shared/lib/one-time-notice/session-expired-notice.store";
 import { Button } from "@/shared/ui";
 
@@ -23,13 +23,12 @@ export function ManageCollectionPoemsButton({ collectionId, onError }: ManageCol
   const [isPending, startTransition] = useTransition();
   // Set synchronously on press: a second press can arrive before the pending state reaches the button.
   const sendingRef = useRef(false);
-  const connection = useConnectionStatus();
+  const { status: connection, isOnline } = useConnection();
   // The transition's closure holds the status of the render that started it; the rejection reads the latest.
   const connectionRef = useRef(connection);
   useEffect(() => {
     connectionRef.current = connection;
   });
-  const isOnline = connection === CONNECTION_STATUS.online;
   const isDisabled = !isOnline || isPending;
 
   function handleResult(result: CheckCollectionPoemsResult | undefined) {

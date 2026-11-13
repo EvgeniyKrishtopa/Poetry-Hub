@@ -1,5 +1,4 @@
-import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
-import { useConnectionStatus } from "@/shared/lib/network/use-connection-status";
+import { useConnection } from "@/shared/lib/network/use-connection";
 import { Button } from "@/shared/ui";
 
 import { FIELD_ACTION_LABELS } from "../../model/author-messages";
@@ -11,7 +10,7 @@ import type { FieldEditActionsProps } from "./FieldEditActions.types";
  * disabled while offline or slow; Cancel sends nothing, so it stays (edit-poem design D8).
  */
 export function FieldEditActions({ onCancel, canSave = true }: FieldEditActionsProps) {
-  const isOnline = useConnectionStatus() === CONNECTION_STATUS.online;
+  const { isOnline } = useConnection();
 
   return (
     <div className="flex flex-wrap gap-2">

@@ -1,5 +1,4 @@
-import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
-import { useConnectionStatus } from "@/shared/lib/network/use-connection-status";
+import { useConnection } from "@/shared/lib/network/use-connection";
 import { Button } from "@/shared/ui";
 
 import { FIELD_ACTION } from "../../model/author.constants";
@@ -30,7 +29,7 @@ export function FieldActions({
   onEdit,
   onDelete,
 }: FieldActionsProps) {
-  const isOnline = useConnectionStatus() === CONNECTION_STATUS.online;
+  const { isOnline } = useConnection();
 
   if (pendingKind === FIELD_ACTION.save) {
     return (
