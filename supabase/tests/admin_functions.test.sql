@@ -7,7 +7,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(136);
+select plan(137);
 
 -- Start from empty content tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -135,6 +135,8 @@ select is(
 
 select is(has_function_privilege('supabase_auth_admin', 'public.reject_banned_signup(jsonb)', 'execute'), true,
   'the auth service can execute the sign-up hook');
+select is(has_schema_privilege('supabase_auth_admin', 'public', 'usage'), true,
+  'the auth service can reach the public schema the hook lives in');
 select is(has_function_privilege('authenticated', 'public.reject_banned_signup(jsonb)', 'execute'), false,
   'authenticated cannot execute the sign-up hook');
 select is(has_function_privilege('anon', 'public.reject_banned_signup(jsonb)', 'execute'), false,
