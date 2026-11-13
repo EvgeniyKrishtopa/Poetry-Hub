@@ -1,6 +1,6 @@
 import type { DraggedItem, OverTarget, PoemContainer } from "../../model/work-ordering.types";
 
-// The island's hook is the only place that translates between the library's ids and data and the model's places,
+// The board's drag hook is the only place that translates between the library's ids and data and the model's places,
 // so the two id schemes cannot drift (design D8).
 
 const LIST_ID_PREFIX = "list:";

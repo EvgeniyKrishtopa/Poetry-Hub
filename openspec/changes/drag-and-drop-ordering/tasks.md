@@ -96,13 +96,13 @@ verification. Each group exports only what it already consumes (tests count as c
 
 ## 6. The board (needs the approved Claude Design link) <!-- judgement-heavy -->
 
-- [x] 6.1 (FR-2 – FR-5, FR-7, NFR-4, NFR-5) `WorkBoardIsland` (`"use client"`), the collection and poem items,
+- [x] 6.1 (FR-2 – FR-5, FR-7, NFR-4, NFR-5) `SortableWorkBoard` (`"use client"`), the collection and poem items,
   the handles, the drop areas, the alert and the polite live region; `useBoardDrag` (the `KeyboardSensor`
   coordinate getter, the in-drag arrangement) and `useMoveSubmit` of design D4/D8; remove the two `@dnd-kit`
   entries from `knip.jsonc`'s `ignoreDependencies` once the board imports them; tokens and shared primitives only; reduced motion respected. A
   `<button>` handle, `TouchSensor` with a press delay, `touch-action` on the handle only.
   - Verify with component tests: the arrangement function for each move kind and the new pure functions
-    (`boardPlaces`, `nextPlace`, `announcementFor`; unit tested exhaustively: empty lists, the ends of the
+    (`boardPlaces`, `nextPlace`, `screenReaderAnnouncementFor`; unit tested exhaustively: empty lists, the ends of the
     board, a collection stepping among collections only, «помещено в …» only when a poem's list changes),
     the handle names, the structure
     (`ul > li > ul`), the live region is `aria-live="polite"` and written once per event, no literals.

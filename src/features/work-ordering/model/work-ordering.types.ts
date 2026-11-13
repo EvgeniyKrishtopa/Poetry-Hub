@@ -81,7 +81,7 @@ export interface DraggedItem {
   readonly id: string;
 }
 
-/** What a dragged item is over, as the island translates the library's droppable into model terms. */
+/** What a dragged item is over, as the board translates the library's droppable into model terms. */
 export type OverTarget =
   | { readonly kind: "poem"; readonly poemId: string }
   | { readonly kind: "collection"; readonly collectionId: string }

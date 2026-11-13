@@ -2,7 +2,7 @@ import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core"
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { useBoardDrag } from "../../components/WorkBoardIsland/use-board-drag";
+import { useBoardDrag } from "../../components/SortableWorkBoard/use-board-drag";
 import { findPoem } from "../../model/board-lookup";
 import { BOARD, poemIds } from "../model/board-fixtures";
 
@@ -43,7 +43,7 @@ describe("useBoardDrag pointer handlers", () => {
     act(() => result.current.dndProps.onDragOver?.(overEvent("a", "d")));
     expect(poemIds(result.current.arrangement, "winter")).toEqual(["a", "d"]);
     expect(result.current.hoverContainer).toEqual({ kind: "collection", collectionId: "winter" });
-    expect(result.current.announcement).toBe("«А» помещено в сборник «Зима», позиция 1 из 2.");
+    expect(result.current.screenReaderAnnouncement).toBe("«А» помещено в сборник «Зима», позиция 1 из 2.");
 
     act(() => result.current.dndProps.onDragEnd?.(endEvent("a", "d")));
     expect(onDrop).toHaveBeenCalledExactlyOnceWith({
@@ -66,7 +66,7 @@ describe("useBoardDrag pointer handlers", () => {
 
     expect(onDrop).not.toHaveBeenCalled();
     expect(poemIds(result.current.arrangement, "autumn")).toEqual(["a", "b", "c"]);
-    expect(result.current.announcement).toBe("«А» возвращено на прежнее место.");
+    expect(result.current.screenReaderAnnouncement).toBe("«А» возвращено на прежнее место.");
   });
 
   // implements FR-7 of drag-and-drop-ordering: the keyboard path applies each place itself
@@ -90,7 +90,7 @@ describe("useBoardDrag pointer handlers", () => {
 
     // Nothing moved, so there is nothing to store, and it is a drop, not a cancel.
     expect(onDrop).not.toHaveBeenCalled();
-    expect(result.current.announcement).toBe("«А» — позиция 1 из 3.");
+    expect(result.current.screenReaderAnnouncement).toBe("«А» — позиция 1 из 3.");
   });
 
   it("ignores events for an item the board does not know", () => {

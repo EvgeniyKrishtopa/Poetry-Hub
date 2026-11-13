@@ -25,7 +25,7 @@ interface UseMoveSubmit {
   readonly stored: Drop | null;
   readonly alert: MoveAlert | null;
   readonly alertRef: RefObject<HTMLDivElement | null>;
-  readonly submit: (drop: Drop) => void;
+  readonly submitMove: (drop: Drop) => void;
 }
 
 const FAILED: MoveResult = { ok: false, reason: MOVE_FAILURE_REASON.failed };
@@ -65,7 +65,7 @@ export function useMoveSubmit(arrangement: Arrangement): UseMoveSubmit {
   }, [alert]);
 
   // State set after an `await` leaves the transition, so each outcome sets its own in a transition (state-management).
-  function settle(drop: Drop, result: MoveResult) {
+  function handleMoveResult(drop: Drop, result: MoveResult) {
     if (result.ok) {
       setStored(drop);
       return;
@@ -80,17 +80,17 @@ export function useMoveSubmit(arrangement: Arrangement): UseMoveSubmit {
     setAlert({ reason: result.reason });
   }
 
-  function submit(drop: Drop) {
+  function submitMove(drop: Drop) {
     if (sendingRef.current) return;
     sendingRef.current = true;
     setAlert(null);
     startTransition(async () => {
       applyOptimistic(drop);
       const result = await send(drop);
-      startTransition(() => settle(drop, result));
+      startTransition(() => handleMoveResult(drop, result));
       sendingRef.current = false;
     });
   }
 
-  return { arrangement: optimistic, isPending, stored, alert, alertRef, submit };
+  return { arrangement: optimistic, isPending, stored, alert, alertRef, submitMove };
 }

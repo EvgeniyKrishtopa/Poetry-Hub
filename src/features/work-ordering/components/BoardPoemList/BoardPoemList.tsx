@@ -4,7 +4,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 import { WORK_BOARD_COPY } from "../../model/work-ordering-messages";
-import { listDroppableId } from "../WorkBoardIsland/board-drag-ids";
+import { listDroppableId } from "../SortableWorkBoard/board-drag-ids";
 import { BoardPoemItem } from "../BoardPoemItem/BoardPoemItem";
 
 import styles from "./BoardPoemList.module.css";

@@ -8,7 +8,7 @@ export const WORK_BOARD_COPY = {
   draggableRole: "перетаскиваемый элемент",
   emptyCollectionArea: "Перетащите сюда произведение.",
   emptyFreeArea: "Перетащите сюда произведение, чтобы оно не входило ни в один сборник.",
-  keyboardInstructions: "Нажмите пробел, чтобы взять. Стрелками выберите место. Пробел — положить, Escape — отменить.",
+  screenReaderInstructions: "Нажмите пробел, чтобы взять. Стрелками выберите место. Пробел — положить, Escape — отменить.",
   loading: "Загрузка…",
   collectionsUnavailable: "Не удалось загрузить сборники. Попробуйте позже.",
   poemsUnavailable: "Не удалось загрузить произведения. Попробуйте позже.",
@@ -32,7 +32,7 @@ export function poemHandleLabel(title: string): string {
 }
 
 /** The live-region announcements of FR-7, one function per phrase. */
-export const ANNOUNCEMENTS = {
+export const SCREEN_READER_ANNOUNCEMENTS = {
   picked: (title: string): string => `Взято: «${title}».`,
   position: (title: string, position: number, total: number): string => `«${title}» — позиция ${position} из ${total}.`,
   movedToCollection: (title: string, collectionTitle: string, position: number, total: number): string =>

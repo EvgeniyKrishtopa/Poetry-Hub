@@ -3,10 +3,10 @@ import { Alert } from "@/shared/ui";
 
 import { listOwnBoard } from "../../dal/own-board";
 import { WORK_BOARD_COPY } from "../../model/work-ordering-messages";
-import { WorkBoardIsland } from "../WorkBoardIsland/WorkBoardIsland";
+import { SortableWorkBoard } from "../SortableWorkBoard/SortableWorkBoard";
 
 /**
- * Reads the author's board and renders it: the island when both reads succeed, one alert in the board's place
+ * Reads the author's board and renders it: the board when both reads succeed, one alert in the board's place
  * otherwise (design D4's failure matrix).
  */
 export async function WorkBoardContent() {
@@ -30,5 +30,5 @@ export async function WorkBoardContent() {
   // Nothing to move: the page keeps its own buttons and shows no board.
   if (collections.length === 0 && freePoems.length === 0) return null;
 
-  return <WorkBoardIsland arrangement={board.arrangement} />;
+  return <SortableWorkBoard collections={collections} freePoems={freePoems} />;
 }

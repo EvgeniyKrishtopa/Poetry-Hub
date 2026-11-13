@@ -7,7 +7,7 @@ import { useSessionExpiredNotice } from "@/shared/lib/one-time-notice/session-ex
 
 import { moveCollectionAction } from "../../actions/move-collection.actions";
 import { movePoemAction } from "../../actions/move-poem.actions";
-import { WorkBoardIsland } from "../../components/WorkBoardIsland/WorkBoardIsland";
+import { SortableWorkBoard } from "../../components/SortableWorkBoard/SortableWorkBoard";
 import type { Arrangement, MoveResult } from "../../model/work-ordering.types";
 import { BOARD } from "../model/board-fixtures";
 
@@ -98,10 +98,10 @@ async function press(user: UserEvent, key: string, times = 1) {
 }
 
 function renderBoard(arrangement: Arrangement = BOARD) {
-  return render(<WorkBoardIsland arrangement={arrangement} />);
+  return render(<SortableWorkBoard collections={arrangement.collections} freePoems={arrangement.freePoems} />);
 }
 
-describe("WorkBoardIsland structure", () => {
+describe("SortableWorkBoard structure", () => {
   // implements NFR-4 of drag-and-drop-ordering
   it("renders collections as items of one list with their poems in a nested list", () => {
     renderBoard();
@@ -147,7 +147,7 @@ describe("WorkBoardIsland structure", () => {
   });
 });
 
-describe("WorkBoardIsland keyboard", () => {
+describe("SortableWorkBoard keyboard", () => {
   // implements FR-7, FR-2 of drag-and-drop-ordering
   it("moves a poem up inside its list, announces each step, and stores the drop", async () => {
     const user = userEvent.setup();
@@ -300,7 +300,7 @@ describe("WorkBoardIsland keyboard", () => {
   });
 });
 
-describe("WorkBoardIsland drop areas", () => {
+describe("SortableWorkBoard drop areas", () => {
   // implements FR-3, FR-4 of drag-and-drop-ordering
   it("shows an empty collection's drop area only while a poem is held", async () => {
     const user = userEvent.setup();
@@ -330,7 +330,7 @@ describe("WorkBoardIsland drop areas", () => {
   });
 });
 
-describe("WorkBoardIsland answers", () => {
+describe("SortableWorkBoard answers", () => {
   async function dropOnce(user: UserEvent) {
     await lift(user, poemHandle("В"));
     await press(user, "ArrowUp");
@@ -413,7 +413,7 @@ describe("WorkBoardIsland answers", () => {
   });
 });
 
-describe("WorkBoardIsland connection", () => {
+describe("SortableWorkBoard connection", () => {
   // implements FR-6 of drag-and-drop-ordering
   it.each([
     ["offline", true],
@@ -444,7 +444,7 @@ describe("WorkBoardIsland connection", () => {
     await lift(user, poemHandle("В"));
     await press(user, "ArrowUp");
     setConnection("offline");
-    view.rerender(<WorkBoardIsland arrangement={BOARD} />);
+    view.rerender(<SortableWorkBoard collections={BOARD.collections} freePoems={BOARD.freePoems} />);
     expect(poemHandle("В")).toBeDisabled();
 
     await press(user, " ");

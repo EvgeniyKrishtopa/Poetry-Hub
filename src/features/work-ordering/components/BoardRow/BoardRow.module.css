@@ -50,12 +50,6 @@
   pointer-events: none;
 }
 
-.dots {
-  display: block;
-  width: 1rem;
-  height: 1rem;
-}
-
 .title {
   min-width: 0;
   overflow-wrap: anywhere;

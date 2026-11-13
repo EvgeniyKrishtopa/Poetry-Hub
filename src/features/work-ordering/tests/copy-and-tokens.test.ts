@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
-  ANNOUNCEMENTS,
+  SCREEN_READER_ANNOUNCEMENTS,
   collectionHandleLabel,
   MOVE_FAILURE_MESSAGES,
   poemHandleLabel,
@@ -38,14 +38,14 @@ describe("work-ordering copy", () => {
     expect(poemHandleLabel("Т")).toBe("Переместить произведение «Т»");
     expect(WORK_BOARD_COPY.emptyCollectionArea).toBe("Перетащите сюда произведение.");
     expect(WORK_BOARD_COPY.emptyFreeArea).toBe("Перетащите сюда произведение, чтобы оно не входило ни в один сборник.");
-    expect(WORK_BOARD_COPY.keyboardInstructions).toBe(
+    expect(WORK_BOARD_COPY.screenReaderInstructions).toBe(
       "Нажмите пробел, чтобы взять. Стрелками выберите место. Пробел — положить, Escape — отменить.",
     );
-    expect(ANNOUNCEMENTS.picked("Т")).toBe("Взято: «Т».");
-    expect(ANNOUNCEMENTS.position("Т", 2, 5)).toBe("«Т» — позиция 2 из 5.");
-    expect(ANNOUNCEMENTS.movedToCollection("Т", "С", 1, 3)).toBe("«Т» помещено в сборник «С», позиция 1 из 3.");
-    expect(ANNOUNCEMENTS.movedToFree("Т", 1, 3)).toBe("«Т» помещено в свободные, позиция 1 из 3.");
-    expect(ANNOUNCEMENTS.cancelled("Т")).toBe("«Т» возвращено на прежнее место.");
+    expect(SCREEN_READER_ANNOUNCEMENTS.picked("Т")).toBe("Взято: «Т».");
+    expect(SCREEN_READER_ANNOUNCEMENTS.position("Т", 2, 5)).toBe("«Т» — позиция 2 из 5.");
+    expect(SCREEN_READER_ANNOUNCEMENTS.movedToCollection("Т", "С", 1, 3)).toBe("«Т» помещено в сборник «С», позиция 1 из 3.");
+    expect(SCREEN_READER_ANNOUNCEMENTS.movedToFree("Т", 1, 3)).toBe("«Т» помещено в свободные, позиция 1 из 3.");
+    expect(SCREEN_READER_ANNOUNCEMENTS.cancelled("Т")).toBe("«Т» возвращено на прежнее место.");
     expect(MOVE_FAILURE_MESSAGES.failed).toBe("Не удалось сохранить порядок. Попробуйте ещё раз.");
     expect(MOVE_FAILURE_MESSAGES["rate-limited"]).toBe("Слишком много перестановок за минуту. Подождите немного и повторите.");
     expect(MOVE_FAILURE_MESSAGES.stale).toBe("Список изменился в другой вкладке. Мы обновили его — попробуйте ещё раз.");
