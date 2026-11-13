@@ -542,6 +542,9 @@ begin
   return '{}'::jsonb;
 exception
   when others then
+    -- Fail open on purpose, but not silently: a broken hook (a lost grant, a renamed table) would otherwise
+    -- stop every ban from matching without a trace. The message names the error, never the address.
+    raise warning 'reject_banned_signup failed: % (%)', sqlerrm, sqlstate;
     return '{}'::jsonb;
 end;
 $$;
