@@ -860,25 +860,26 @@ $$;
 
 -- ---------- The direct-write policies ----------
 -- The backstop against direct API calls (design D5). A refusal from Storage carries no "restricted" signal, so
--- the app never tries to detect it: the guarded pre-check above refuses first.
+-- the app never tries to detect it: the guarded pre-check above refuses first. The call is wrapped as
+-- `(select public.is_restricted())` so the planner evaluates it once per statement, not once per row.
 
 alter policy "owners update their own profile" on public.author_profiles
-  using ((select auth.uid()) = user_id and not public.is_restricted())
-  with check ((select auth.uid()) = user_id and not public.is_restricted());
+  using ((select auth.uid()) = user_id and not (select public.is_restricted()))
+  with check ((select auth.uid()) = user_id and not (select public.is_restricted()));
 
 alter policy "owners upload author photos" on storage.objects
   with check (
     bucket_id = 'author-photos'
     and name ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$'
     and public.owns_author_profile((storage.foldername(name))[1])
-    and not public.is_restricted()
+    and not (select public.is_restricted())
   );
 
 alter policy "owners delete author photos" on storage.objects
   using (
     bucket_id = 'author-photos'
     and public.owns_author_profile((storage.foldername(name))[1])
-    and not public.is_restricted()
+    and not (select public.is_restricted())
   );
 
 alter policy "authors upload poem illustrations" on storage.objects
@@ -886,12 +887,12 @@ alter policy "authors upload poem illustrations" on storage.objects
     bucket_id = 'poem-illustrations'
     and name ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$'
     and public.owns_public_author_folder((storage.foldername(name))[1])
-    and not public.is_restricted()
+    and not (select public.is_restricted())
   );
 
 alter policy "owners delete poem illustrations" on storage.objects
   using (
     bucket_id = 'poem-illustrations'
     and public.owns_author_profile((storage.foldername(name))[1])
-    and not public.is_restricted()
+    and not (select public.is_restricted())
   );
