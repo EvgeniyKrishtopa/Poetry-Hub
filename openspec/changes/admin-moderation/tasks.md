@@ -11,30 +11,30 @@ each group lands its own tests.
 
 ## 1. Database: admin role and the restriction check <!-- judgement-heavy -->
 
-- [ ] 1.1 (FR-13) List, by grep over `supabase/migrations/`, every `security definer` writer of user content and
+- [x] 1.1 (FR-13) List, by grep over `supabase/migrations/`, every `security definer` writer of user content and
   every direct-write path (the `author_profiles` update policy, the owner insert/delete policies on the
   `author-photos` and `poem-illustrations` buckets). Record the list in the migration header; it is the checklist
   for tasks 1.3 and 1.4.
-- [ ] 1.2 (FR-1, NFR-1) New migration `supabase/migrations/<timestamp>_admin_moderation.sql`: `public.admins`,
+- [x] 1.2 (FR-1, NFR-1) New migration `supabase/migrations/<timestamp>_admin_moderation.sql`: `public.admins`,
   `public.account_restrictions` (cascade on the account), `public.banned_emails`, `public.moderation_log` (user ids
   without foreign keys) (RLS on, no policies, grants
   revoked from `anon` and `authenticated`); `is_admin()` (executable by `authenticated` only), `assert_admin()`, `is_restricted()`,
   `assert_not_restricted()` (raises SQLSTATE `AM001`; `is_restricted()` executable by `authenticated`, since the profile and
   Storage policies evaluate it as that role); header comment with the documented down migration. Check
   on the local stack how PostgREST reports `AM001` (HTTP status and `code`) and record it in the header.
-- [ ] 1.3 (FR-13) The same migration: `perform public.assert_not_restricted()` as the first statement of every
+- [x] 1.3 (FR-13) The same migration: `perform public.assert_not_restricted()` as the first statement of every
   writer from task 1.1, and `can_create_poem()` (each re-created from its latest definition with its signature, result and limits
   unchanged; `consume_write_allowance` becomes `plpgsql` for this; `can_create_poem` stays `stable`).
-- [ ] 1.4 (FR-13) The same migration: `and not public.is_restricted()` added to the `owners update their own
+- [x] 1.4 (FR-13) The same migration: `and not public.is_restricted()` added to the `owners update their own
   profile` policy (`using` and `with check`) and to the owner insert and delete policies on the two buckets.
-- [ ] 1.5 (FR-1, FR-13, NFR-1) pgTAP `supabase/tests/admin_foundation.test.sql`: `is_admin()` for a listed user and a
+- [x] 1.5 (FR-1, FR-13, NFR-1) pgTAP `supabase/tests/admin_foundation.test.sql`: `is_admin()` for a listed user and a
   non-admin, and refused for a signed-out caller; a client insert into `admins` is refused; the four tables are closed to `anon`
   and `authenticated`; a blocked user fails every writer in task 1.1's list, a direct profile update and a direct
   upload to each bucket; an unblocked user writes; public reads still work; and the `pg_proc` check: every volatile
   `security definer` function in `public` that `authenticated` can execute calls `assert_not_restricted` or is on an
   explicit allowlist; a blocked user creating a poem with an illustration is refused by `can_create_poem` before
   any upload.
-- [ ] 1.6 (NFR-1) Run `supabase db reset` and the whole pgTAP suite: the existing files must pass unchanged.
+- [x] 1.6 (NFR-1) Run `supabase db reset` and the whole pgTAP suite: the existing files must pass unchanged.
 
 ## 2. Database: admin functions, storage policies, auth hook <!-- judgement-heavy -->
 
