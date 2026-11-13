@@ -10,7 +10,7 @@ export interface Place {
   readonly index: number;
 }
 
-export type StepDirection = "up" | "down";
+export type KeyboardStepDirection = "up" | "down";
 
 /** The lists in reading order: each collection's poems, then the free poems. */
 function listsInReadingOrder(arrangement: Arrangement): { container: PoemContainer; poemIds: readonly string[] }[] {
@@ -35,11 +35,11 @@ export function boardPlaces(arrangement: Arrangement, poemId: string): readonly 
  * The place one ArrowUp or ArrowDown away from the current one, crossing from the end of a list into the start of
  * the next; `null` at the first and the last place of the board, with no wrap (FR-7).
  */
-export function nextPlace(
+export function nextKeyboardPlace(
   arrangement: Arrangement,
   poemId: string,
   current: Place,
-  direction: StepDirection,
+  direction: KeyboardStepDirection,
 ): Place | null {
   const places = boardPlaces(arrangement, poemId);
   const position = places.findIndex(
@@ -54,7 +54,7 @@ export function nextPlace(
  * The place one ArrowUp or ArrowDown away for a collection, among the collections only (FR-7). `index` is a place
  * with the lifted collection taken out, as in a drop; `null` at the first and the last place.
  */
-export function nextCollectionIndex(otherCollections: number, current: number, direction: StepDirection): number | null {
+export function nextKeyboardCollectionIndex(otherCollections: number, current: number, direction: KeyboardStepDirection): number | null {
   const next = direction === "down" ? current + 1 : current - 1;
   return next < 0 || next > otherCollections ? null : next;
 }

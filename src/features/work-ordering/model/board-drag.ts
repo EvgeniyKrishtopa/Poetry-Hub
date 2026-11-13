@@ -1,13 +1,13 @@
 import { arrangeDrop, isSameContainer } from "./arrange-drop";
 import { findPoem } from "./board-lookup";
-import { nextCollectionIndex, nextPlace, type StepDirection } from "./board-places";
+import { nextKeyboardCollectionIndex, nextKeyboardPlace, type KeyboardStepDirection } from "./board-places";
 import type { Arrangement, DraggedItem, Drop, OverTarget, PoemContainer } from "./work-ordering.types";
 
 // The in-drag arrangement is what the board shows while an item is held (design D4): a poem visibly enters another
 // list, a collection visibly takes its place. These functions only compute it; nothing is sent before the drop.
 
 /** The arrangement after a pointer drag moved `item` over `over`; the arrangement itself when nothing changes. */
-export function arrangeOver(arrangement: Arrangement, item: DraggedItem, over: OverTarget): Arrangement {
+export function arrangeOverByPointer(arrangement: Arrangement, item: DraggedItem, over: OverTarget): Arrangement {
   if (item.type === "collection") {
     // A collection never nests: it only follows the collections it passes over (FR-5).
     if (over.kind !== "collection") return arrangement;
@@ -46,18 +46,18 @@ export function arrangeOver(arrangement: Arrangement, item: DraggedItem, over: O
 }
 
 /** The arrangement after one ArrowUp or ArrowDown on a lifted item; the arrangement itself at the board's ends. */
-export function stepArrangement(arrangement: Arrangement, item: DraggedItem, direction: StepDirection): Arrangement {
+export function stepArrangementByKeyboard(arrangement: Arrangement, item: DraggedItem, direction: KeyboardStepDirection): Arrangement {
   if (item.type === "collection") {
     const current = arrangement.collections.findIndex((collection) => collection.id === item.id);
     if (current === -1) return arrangement;
-    const toIndex = nextCollectionIndex(arrangement.collections.length - 1, current, direction);
+    const toIndex = nextKeyboardCollectionIndex(arrangement.collections.length - 1, current, direction);
     if (toIndex === null) return arrangement;
     return arrangeDrop(arrangement, { kind: "collection", collectionId: item.id, toIndex });
   }
 
   const from = findPoem(arrangement, item.id);
   if (from === undefined) return arrangement;
-  const next = nextPlace(arrangement, item.id, { container: from.container, index: from.index }, direction);
+  const next = nextKeyboardPlace(arrangement, item.id, { container: from.container, index: from.index }, direction);
   if (next === null) return arrangement;
   return arrangeDrop(arrangement, {
     kind: "poem",

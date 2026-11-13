@@ -102,7 +102,7 @@ verification. Each group exports only what it already consumes (tests count as c
   entries from `knip.jsonc`'s `ignoreDependencies` once the board imports them; tokens and shared primitives only; reduced motion respected. A
   `<button>` handle, `TouchSensor` with a press delay, `touch-action` on the handle only.
   - Verify with component tests: the arrangement function for each move kind and the new pure functions
-    (`boardPlaces`, `nextPlace`, `screenReaderAnnouncementFor`; unit tested exhaustively: empty lists, the ends of the
+    (`boardPlaces`, `nextKeyboardPlace`, `screenReaderAnnouncementFor`; unit tested exhaustively: empty lists, the ends of the
     board, a collection stepping among collections only, «помещено в …» only when a poem's list changes),
     the handle names, the structure
     (`ul > li > ul`), the live region is `aria-live="polite"` and written once per event, no literals.

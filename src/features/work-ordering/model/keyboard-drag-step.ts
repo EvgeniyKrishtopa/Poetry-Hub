@@ -1,12 +1,12 @@
-import { stepArrangement } from "./board-drag";
-import type { StepDirection } from "./board-places";
+import { stepArrangementByKeyboard } from "./board-drag";
+import type { KeyboardStepDirection } from "./board-places";
 import type { Arrangement, DraggedItem } from "./work-ordering.types";
 
 // The keyboard rules of a lifted item (FR-7, design D8). Space lifts and drops and Escape cancels: those two are the
 // library's (KEYBOARD_CODES). This module owns the arrows: ArrowUp and ArrowDown step the item one place through the
 // same arrangement functions the pointer ends in, ArrowLeft and ArrowRight do nothing, any other key is not ours.
 
-const DIRECTION_BY_CODE: Readonly<Record<string, StepDirection>> = { ArrowUp: "up", ArrowDown: "down" };
+const KEYBOARD_DIRECTION_BY_CODE: Readonly<Record<string, KeyboardStepDirection>> = { ArrowUp: "up", ArrowDown: "down" };
 const SWALLOWED_ARROW_CODES: readonly string[] = ["ArrowLeft", "ArrowRight"];
 
 /** The item held and the board as it looks at this step. */
@@ -28,11 +28,11 @@ export type KeyboardDragOutcome =
 export function resolveKeyboardDrag(code: string, held: HeldItem | null): KeyboardDragOutcome {
   if (SWALLOWED_ARROW_CODES.includes(code)) return { kind: "consumed" };
 
-  const direction = DIRECTION_BY_CODE[code];
+  const direction = KEYBOARD_DIRECTION_BY_CODE[code];
   if (direction === undefined) return { kind: "ignored" };
   if (held === null) return { kind: "consumed" };
 
-  const next = stepArrangement(held.arrangement, held.item, direction);
+  const next = stepArrangementByKeyboard(held.arrangement, held.item, direction);
   // The board's ends: nothing moves, nothing wraps around.
   if (next === held.arrangement) return { kind: "consumed" };
   return { kind: "moved", arrangement: next };

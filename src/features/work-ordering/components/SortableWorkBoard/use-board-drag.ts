@@ -9,7 +9,7 @@ import type {
 } from "@dnd-kit/core";
 import { useRef, useState } from "react";
 
-import { arrangeOver, dropBetween, enteredContainer } from "../../model/board-drag";
+import { arrangeOverByPointer, dropBetween, enteredContainer } from "../../model/board-drag";
 import { findPoem } from "../../model/board-lookup";
 import { resolveKeyboardDrag } from "../../model/keyboard-drag-step";
 import type { Arrangement, DraggedItem, Drop, PoemContainer } from "../../model/work-ordering.types";
@@ -104,7 +104,7 @@ export function useBoardDrag({ arrangement, handlesDisabled, onDrop, stored }: U
     const over = overTargetOf(event.over?.data.current);
     if (over === null) return;
 
-    const next = arrangeOver(state.arrangement, state.item, over);
+    const next = arrangeOverByPointer(state.arrangement, state.item, over);
     if (next === state.arrangement) return;
     announceToScreenReader({ kind: "moved", item: state.item }, state.arrangement, next);
     updateDragState({ ...state, arrangement: next });

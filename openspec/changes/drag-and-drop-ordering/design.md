@@ -367,7 +367,7 @@ is the result reason `unauthenticated`, redirected by the island, as the sibling
 | `src/features/work-ordering/model/work-ordering-messages.ts` | the Russian copy of the proposal's UI table | `WORK_BOARD_COPY`, `MOVE_FAILURE_MESSAGES`, `collectionHandleLabel`, `poemHandleLabel`, `SCREEN_READER_ANNOUNCEMENTS` |
 | `src/features/work-ordering/model/move.schema.ts` | the two actions' input schemas and the ids guard | `movePoemInputSchema`, `moveCollectionInputSchema`, `MovePoemInput`, `MoveCollectionInput`, `areMoveIdsValid` |
 | `src/features/work-ordering/model/arrange-drop.ts` | the arrangement after one drop | `arrangeDrop` |
-| `src/features/work-ordering/model/board-places.ts` | added by the 2026-11-11 revision (D8): the board's places in reading order and the next place for an ArrowUp/ArrowDown; pure | `boardPlaces`, `nextPlace` |
+| `src/features/work-ordering/model/board-places.ts` | added by the 2026-11-11 revision (D8): the board's places in reading order and the next place for an ArrowUp/ArrowDown; pure | `boardPlaces`, `nextKeyboardPlace` |
 | `src/features/work-ordering/model/screen-reader-announcements.ts` | added by the 2026-11-11 revision (D8): the screen reader string for a pick-up, move, drop, or cancel; pure | `screenReaderAnnouncementFor` |
 | `src/features/work-ordering/components/SortableWorkBoard/use-board-drag.ts` | added by the 2026-11-11 revision (D4, D8): the `@dnd-kit` glue, the in-drag arrangement, live region, focus repair | `useBoardDrag` |
 | `src/features/work-ordering/components/SortableWorkBoard/use-move-submit.ts` | added by the 2026-11-11 revision (D4): the transition, the action call, the result | `useMoveSubmit` |
