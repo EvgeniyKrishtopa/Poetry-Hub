@@ -160,6 +160,8 @@ Archived at `openspec/changes/archive/2026-11-11-public-collections/`.
 
 ## drag-and-drop-ordering
 
+Archived at `openspec/changes/archive/2026-11-13-drag-and-drop-ordering/`.
+
 ### drag-and-drop-ordering · 5.1 — drag library spike failed on stacked lists
 
 - **State:** resolved
