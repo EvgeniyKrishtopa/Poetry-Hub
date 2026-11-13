@@ -3,7 +3,8 @@ import { type RefObject, useEffect, useRef, useState, useTransition } from "reac
 
 import { POEM_MANAGEMENT_PATH, SIGN_IN_PATH } from "@/shared/config/account-paths";
 import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
-import { type ConnectionStatus, useConnectionStatus } from "@/shared/lib/network/use-connection-status";
+import { useConnection } from "@/shared/lib/network/use-connection";
+import type { ConnectionStatus } from "@/shared/lib/network/use-connection-status";
 import { useSessionExpiredNotice } from "@/shared/lib/one-time-notice/session-expired-notice.store";
 
 import { saveCollectionPoemsAction } from "../../actions/save-collection-poems.actions";
@@ -104,7 +105,7 @@ async function sendSave(collectionId: string, diff: SelectionDiff): Promise<Save
 export function useCollectionPoemsForm({ collectionId, choices }: CollectionPoemsFormOptions): CollectionPoemsFormModel {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const connection = useConnectionStatus();
+  const { status: connection, isOnline } = useConnection();
   const [draft, setDraft] = useState<ReadonlySet<string> | null>(null);
   const [hasSaved, setHasSaved] = useState(false);
   const [showSavedNotice, setShowSavedNotice] = useState(false);
@@ -126,7 +127,6 @@ export function useCollectionPoemsForm({ collectionId, choices }: CollectionPoem
   const stored = storedSelection(choices);
   const checked = draft ?? stored;
   const isChanged = draft !== null && isSelectionChanged(stored, visibleDraft(choices, draft));
-  const isOnline = connection === CONNECTION_STATUS.online;
   const canSave = isChanged && isOnline && !isPending;
 
   // The checkboxes are disabled while sending: focus moves once they are enabled again (NFR-4).

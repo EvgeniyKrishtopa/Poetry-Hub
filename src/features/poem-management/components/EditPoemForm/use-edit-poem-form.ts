@@ -3,7 +3,8 @@ import { type FormEvent, type RefObject, useEffect, useRef, useState, useTransit
 
 import { POEM_MANAGEMENT_PATH, SIGN_IN_PATH } from "@/shared/config/account-paths";
 import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
-import { type ConnectionStatus, useConnectionStatus } from "@/shared/lib/network/use-connection-status";
+import { useConnection } from "@/shared/lib/network/use-connection";
+import type { ConnectionStatus } from "@/shared/lib/network/use-connection-status";
 import { useSessionExpiredNotice } from "@/shared/lib/one-time-notice/session-expired-notice.store";
 
 import { updatePoemAction } from "../../actions/update-poem.actions";
@@ -55,7 +56,7 @@ type SaveOutcome = UpdatePoemResult | undefined | typeof REJECTED;
 export function useEditPoemForm({ poemId, stored, genres }: EditPoemFormProps): EditPoemFormModel {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const connection = useConnectionStatus();
+  const { status: connection, isOnline } = useConnection();
   const formRef = useRef<HTMLFormElement>(null);
   const alertRef = useRef<HTMLDivElement>(null);
   const fields = usePoemForm<SaveAlertFailure>(stored, genres, { isPending, formRef, alertRef });
@@ -71,8 +72,6 @@ export function useEditPoemForm({ poemId, stored, genres }: EditPoemFormProps): 
   useEffect(() => {
     connectionRef.current = connection;
   });
-
-  const isOnline = connection === CONNECTION_STATUS.online;
 
   const { dialog: leaveDialog, openForLink, askToLeave, closePrompt } = useLeavePrompt({
     hasFailure: failure !== null,

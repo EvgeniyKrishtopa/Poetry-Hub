@@ -3,7 +3,8 @@ import { type FormEvent, type RefObject, useEffect, useRef, useState, useTransit
 
 import { POEM_MANAGEMENT_PATH, SIGN_IN_PATH } from "@/shared/config/account-paths";
 import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
-import { type ConnectionStatus, useConnectionStatus } from "@/shared/lib/network/use-connection-status";
+import { useConnection } from "@/shared/lib/network/use-connection";
+import type { ConnectionStatus } from "@/shared/lib/network/use-connection-status";
 import { useSessionExpiredNotice } from "@/shared/lib/one-time-notice/session-expired-notice.store";
 
 import { updateCollectionAction } from "../../actions/update-collection.actions";
@@ -58,7 +59,7 @@ type SaveOutcome = UpdateCollectionResult | undefined | typeof REJECTED;
 export function useEditCollectionForm({ collectionId, stored }: EditCollectionFormProps): EditCollectionFormModel {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const connection = useConnectionStatus();
+  const { status: connection, isOnline } = useConnection();
   const formRef = useRef<HTMLFormElement>(null);
   const alertRef = useRef<HTMLDivElement>(null);
   const form = useCollectionForm(stored, { isPending, formRef });
@@ -76,7 +77,6 @@ export function useEditCollectionForm({ collectionId, stored }: EditCollectionFo
     connectionRef.current = connection;
   });
 
-  const isOnline = connection === CONNECTION_STATUS.online;
   const failure = failureAlert?.failure ?? null;
 
   // The fieldset is disabled while sending: focus moves once the form is enabled again (NFR-4).

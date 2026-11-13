@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useTransition } from "react";
 
 import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
-import { useConnectionStatus } from "@/shared/lib/network/use-connection-status";
+import { useConnection } from "@/shared/lib/network/use-connection";
 import { Alert, Button, ConnectionNotice } from "@/shared/ui";
 
 import { createPoemAction } from "../../actions/create-poem.actions";
@@ -36,13 +36,12 @@ export function NewPoemForm({ genres }: NewPoemFormProps) {
   const { values, failure, validate, recheckIllustration, showFieldErrors, showFailure, reset } = fields;
   // Set synchronously on submit: a second click can arrive before the pending state disables the form.
   const submittingRef = useRef(false);
-  const connection = useConnectionStatus();
+  const { status: connection, isOnline } = useConnection();
   // The transition's closure holds the status of the render that started it; the rejection reads the latest.
   const connectionRef = useRef(connection);
   useEffect(() => {
     connectionRef.current = connection;
   });
-  const isOnline = connection === CONNECTION_STATUS.online;
 
   function handleResult(result: CreatePoemResult | undefined) {
     // No data: a malformed request or a rejected body, which the form never sends on purpose (design D7).
