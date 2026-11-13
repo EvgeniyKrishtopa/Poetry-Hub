@@ -9,24 +9,17 @@ import type {
 } from "@dnd-kit/core";
 import { useRef, useState } from "react";
 
-import { arrangeOverByPointer, dropBetween, enteredContainer } from "../../model/board-drag";
-import { findPoem } from "../../model/board-lookup";
+import { enteredContainer } from "../../model/board-drag";
+import { beginDrag, cancelDrag, dragOver, endDrag, moveDrag } from "../../model/board-drag-session";
+import type { DragState, DragTransition } from "../../model/board-drag-session.types";
 import { resolveKeyboardDrag } from "../../model/keyboard-drag-step";
 import type { Arrangement, DraggedItem, Drop, PoemContainer } from "../../model/work-ordering.types";
 
 import { BOARD_ACCESSIBILITY, BOARD_ID, boardCollisionDetection } from "./board-dnd-config";
-import { draggedItemOf, overTargetOf } from "./board-drag-ids";
-import { useScreenReaderAnnouncement } from "./use-screen-reader-announcement";
+import { activatorOf, draggedItemOf, overTargetOf } from "./board-drag-ids";
 import { useBoardSensors } from "./use-board-sensors";
 import { useHandleFocusRepair } from "./use-handle-focus-repair";
-
-/** The in-drag arrangement (design D4): the item held, and the board as it looks at this step. */
-interface DragState {
-  readonly item: DraggedItem;
-  readonly arrangement: Arrangement;
-  /** The list a held poem was taken from, `null` for a collection. */
-  readonly origin: PoemContainer | null;
-}
+import { useScreenReaderAnnouncement } from "./use-screen-reader-announcement";
 
 interface UseBoardDragOptions {
   /** The arrangement the board shows when nothing is held: the optimistic one while a move sends, else the stored one. */
@@ -54,21 +47,27 @@ interface UseBoardDrag {
 }
 
 /**
- * The `@dnd-kit` glue (design D4, D8): the in-drag arrangement and the four drag handlers. Sensors, the keyboard rules,
- * the live region text and focus repair each live in their own module; every arrangement rule is a pure model function.
+ * The `@dnd-kit` glue (design D4, D8). Each handler reads the library's event, asks the pure drag session
+ * (`model/board-drag-session.ts`) what it leads to, and applies the answer; sensors, the keyboard rules, the live
+ * region text and focus repair each live in their own module.
  */
 export function useBoardDrag({ arrangement, handlesDisabled, onDrop, stored }: UseBoardDragOptions): UseBoardDrag {
   const [drag, setDrag] = useState<DragState | null>(null);
   // The keyboard getter and the handlers read the latest step synchronously, before React re-renders.
   const latestDragRef = useRef<DragState | null>(null);
-  const dragStartArrangementRef = useRef<Arrangement>(arrangement);
 
   const { screenReaderAnnouncement, announceToScreenReader } = useScreenReaderAnnouncement();
   const { queueHandleFocus } = useHandleFocusRepair({ handlesDisabled, stored });
 
-  function updateDragState(next: DragState | null) {
-    latestDragRef.current = next;
-    setDrag(next);
+  function applyTransition(transition: DragTransition) {
+    latestDragRef.current = transition.state;
+    setDrag(transition.state);
+    if (transition.announcement !== null) {
+      announceToScreenReader(transition.announcement.event, transition.announcement.before, transition.announcement.after);
+    }
+    if (transition.focusItemId !== null) queueHandleFocus(transition.focusItemId);
+    // After a stored drop focus is repaired once the answer is in; a refusal keeps focus on its alert.
+    if (transition.drop !== null) onDrop(transition.drop);
   }
 
   // The coordinates never move: each step is applied to the arrangement itself, so the keyboard and the pointer end in
@@ -79,10 +78,7 @@ export function useBoardDrag({ arrangement, handlesDisabled, onDrop, stored }: U
     if (outcome.kind === "ignored") return undefined;
 
     event.preventDefault();
-    if (outcome.kind === "moved" && state !== null) {
-      announceToScreenReader({ kind: "moved", item: state.item }, state.arrangement, outcome.arrangement);
-      updateDragState({ ...state, arrangement: outcome.arrangement });
-    }
+    if (outcome.kind === "moved" && state !== null) applyTransition(moveDrag(state, outcome.arrangement));
     return currentCoordinates;
   };
 
@@ -91,52 +87,27 @@ export function useBoardDrag({ arrangement, handlesDisabled, onDrop, stored }: U
   function onDragStart(event: DragStartEvent) {
     const item = draggedItemOf(event.active.data.current);
     if (item === null) return;
-    dragStartArrangementRef.current = arrangement;
-    const origin = item.type === "poem" ? (findPoem(arrangement, item.id)?.container ?? null) : null;
-    updateDragState({ item, arrangement, origin });
-    announceToScreenReader({ kind: "picked", item }, arrangement, arrangement);
+    applyTransition(beginDrag(arrangement, item));
   }
 
   function onDragOver(event: DragOverEvent) {
     const state = latestDragRef.current;
-    // A keyboard drag applies each place itself; the pointer geometry would only fight it.
-    if (state === null || event.activatorEvent instanceof KeyboardEvent) return;
+    if (state === null) return;
     const over = overTargetOf(event.over?.data.current);
     if (over === null) return;
-
-    const next = arrangeOverByPointer(state.arrangement, state.item, over);
-    if (next === state.arrangement) return;
-    announceToScreenReader({ kind: "moved", item: state.item }, state.arrangement, next);
-    updateDragState({ ...state, arrangement: next });
+    applyTransition(dragOver(state, over, activatorOf(event.activatorEvent)));
   }
 
   function onDragEnd(event: DragEndEvent) {
     const state = latestDragRef.current;
     if (state === null) return;
-    // A pointer drop on nothing cancels; a keyboard drop never has a geometric target, so it never does.
-    if (event.over === null && !(event.activatorEvent instanceof KeyboardEvent)) {
-      onDragCancel();
-      return;
-    }
-
-    updateDragState(null);
-    announceToScreenReader({ kind: "dropped", item: state.item }, state.arrangement, state.arrangement);
-    const drop = dropBetween(dragStartArrangementRef.current, state.arrangement, state.item);
-    if (drop === null) {
-      // Dropped where it started: nothing is sent, and the handle takes focus back at once (FR-2).
-      queueHandleFocus(state.item.id);
-      return;
-    }
-    // After a stored drop focus is repaired once the answer is in; a refusal keeps focus on its alert.
-    onDrop(drop);
+    applyTransition(endDrag(state, { activator: activatorOf(event.activatorEvent), isOverTarget: event.over !== null }));
   }
 
   function onDragCancel() {
     const state = latestDragRef.current;
-    updateDragState(null);
     if (state === null) return;
-    announceToScreenReader({ kind: "cancelled", item: state.item }, dragStartArrangementRef.current, dragStartArrangementRef.current);
-    queueHandleFocus(state.item.id);
+    applyTransition(cancelDrag(state));
   }
 
   return {

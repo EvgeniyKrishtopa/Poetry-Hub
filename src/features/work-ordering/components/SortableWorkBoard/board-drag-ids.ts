@@ -1,3 +1,4 @@
+import type { DragActivator } from "../../model/board-drag-session.types";
 import type { DraggedItem, OverTarget, PoemContainer } from "../../model/work-ordering.types";
 
 // The board's drag hook is the only place that translates between the library's ids and data and the model's places,
@@ -25,6 +26,11 @@ function isBoardData(value: unknown): value is BoardData {
 export function draggedItemOf(data: unknown): DraggedItem | null {
   if (!isBoardData(data) || data.kind === "list") return null;
   return { type: data.kind, id: data.id };
+}
+
+/** Whether the key or the pointer lifted the item, read from the library's event. */
+export function activatorOf(activatorEvent: Event): DragActivator {
+  return activatorEvent instanceof KeyboardEvent ? "keyboard" : "pointer";
 }
 
 /** What a droppable's `data` says the item is over, in model terms, or `null` for anything else. */
