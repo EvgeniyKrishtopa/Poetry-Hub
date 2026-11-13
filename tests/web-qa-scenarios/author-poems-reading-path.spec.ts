@@ -9,7 +9,11 @@ const POEM_TITLE = "Осенний сад";
 /** The seed's fixed id for author5's first poem (`30000000-0000-4000-8000-0000000000NM`, N = 5, M = 1). */
 const POEM_ID = "30000000-0000-4000-8000-000000000051";
 const POEM_PATH = `${AUTHOR_PATH}/poems/${POEM_ID}`;
-const POEM_TITLES_NEWEST_FIRST = ["Утренний двор", "Ночной вокзал", "Осенний сад", "Зимний мост"];
+/**
+ * The author's order of the four seeded poems: the seed inserts them after the ordering migration, so each insert goes
+ * first and the last one inserted (`Утренний двор`) leads (drag-and-drop-ordering FR-1, FR-9).
+ */
+const POEM_TITLES_IN_AUTHORS_ORDER = ["Утренний двор", "Зимний мост", "Ночной вокзал", "Осенний сад"];
 /** The poem page's trail, with no poem list item between the author and the poem. */
 const POEM_TRAIL = ["Главная", "Наши авторы", AUTHOR_NAME, POEM_TITLE];
 
@@ -26,7 +30,7 @@ test("an author's poems are listed on the author page and the trail leads back",
 
   await expect(main.getByRole("heading", { level: 1, name: AUTHOR_NAME })).toBeVisible();
   await expect(main.getByRole("heading", { level: 2, name: "Произведения" })).toBeVisible();
-  await expect(main.getByRole("list").getByRole("link")).toHaveText(POEM_TITLES_NEWEST_FIRST);
+  await expect(main.getByRole("list").getByRole("link")).toHaveText(POEM_TITLES_IN_AUTHORS_ORDER);
   await expect(main.getByRole("link", { name: "Произведения автора" })).toHaveCount(0);
 
   await main.getByRole("link", { name: POEM_TITLE }).click();

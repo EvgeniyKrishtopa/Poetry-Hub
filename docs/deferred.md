@@ -146,7 +146,7 @@ Archived at `openspec/changes/archive/2026-11-11-public-collections/`.
 - **Why:** the project repeats a mirroring feature's logic in its own module instead of extracting it, and `shared/` takes only domain-free pieces (`docs/architecture.md`). Four copies are acceptable while the rules do not change.
 - **Verified instead:** each copy has its own unit tests.
 - **Decision:** user, 2026-11-10 (design Gate 1 P5).
-- **Status:** open. The next change, ordering by drag-and-drop, changes the order rule and must change all four in step: update every copy and its tests in one change, or decide then whether a shared owner is now worth it.
+- **Status:** resolved (drag-and-drop-ordering, groups 2 and 7). The order rule is now the stored `position`, applied by each read's `order by position, id`, so the models only keep the order given and none of them needed a change in step (group 2 updated their comments and tests). The two owner copies, `free-poems.ts` and `collection-poems-nesting.ts`, were deleted in group 7; `/account/poems` is arranged by `work-ordering/model/board-nesting.ts`, which keeps its own copy under the repeat-per-feature rule. Two copies of the public rules stay (`uncollected-poems.ts`, `nest-public-collections.ts`).
 
 ### public-collections · 7.2 — the owner's pages still read their own collections uncached
 
@@ -156,7 +156,7 @@ Archived at `openspec/changes/archive/2026-11-11-public-collections/`.
 - **Why:** now that membership and collections are public (ADR 0013), the owner's pages could share the public cache entry under `authorWorksTag(authorId)`. That would change which client reads what, with no change for the reader, and it would couple `collection-management` to the public reads that it never imports today.
 - **Verified instead:** nothing; the owner's pages are unchanged, and `collection-management/tests/dal/own-collections.test.ts` pins that their reads still filter by the owner's own author id.
 - **Decision:** user, 2026-11-10 (design Non-Goals).
-- **Status:** open. Revisit together with the drag-and-drop change, when the four rule copies above are touched anyway.
+- **Status:** open. drag-and-drop-ordering did not switch them: the board on `/account/poems` reads uncached with the cookie client (`work-ordering/dal/own-board.ts`, an explicit author filter), the same way the owner reads do, so the decision above is unchanged. `/account/poems` no longer calls `listOwnCollections` (deleted) or `listCollectedPoems`; the owner's collection page still reads `my_collected_poems()` through `listCollectedPoems`, so that function stays in the database.
 
 ## drag-and-drop-ordering
 
