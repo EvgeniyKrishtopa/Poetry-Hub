@@ -387,7 +387,7 @@ select is(has_function_privilege('authenticated', 'public.is_restricted()', 'exe
 -- ---------- No writer is left unguarded (FR-13) ----------
 
 -- Every volatile security definer function in public that authenticated can execute must call
--- assert_not_restricted(), unless it is an admin function (those check admin instead, next migration). The
+-- assert_not_restricted() (a `perform` call, so a comment naming it does not count), unless it is an admin function (those check admin instead, next migration). The
 -- stable pre-check can_create_poem() is held to the same rule by its own check below.
 create temp view unguarded_writers as
   select p.proname
@@ -397,14 +397,14 @@ create temp view unguarded_writers as
     and p.prosecdef
     and p.provolatile = 'v'
     and has_function_privilege('authenticated', p.oid, 'execute')
-    and p.prosrc !~ 'assert_not_restricted'
+    and p.prosrc !~ 'perform\s+public\.assert_not_restricted\s*\('
     and p.proname not like 'admin\_%';
 
 select is_empty('select * from unguarded_writers', 'every writer an authenticated user can execute calls assert_not_restricted()');
 
 select matches(
   (select prosrc from pg_proc where oid = 'public.can_create_poem()'::regprocedure),
-  'assert_not_restricted',
+  'perform\s+public\.assert_not_restricted\s*\(',
   'can_create_poem() calls assert_not_restricted()'
 );
 
