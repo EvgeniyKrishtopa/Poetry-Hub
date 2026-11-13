@@ -1,4 +1,4 @@
-import type { Arrangement } from "./work-ordering.types";
+import type { Arrangement, BoardPoem } from "./work-ordering.types";
 
 /** One collection row as the board reads it, in the stored order. */
 export interface BoardCollectionRow {
@@ -19,7 +19,19 @@ export interface BoardPoemRow {
  * own copy of the nesting its siblings do: the features do not import each other.
  */
 export function nestBoard(collections: readonly BoardCollectionRow[], poems: readonly BoardPoemRow[]): Arrangement {
-  void collections;
-  void poems;
-  throw new Error("not implemented");
+  const poemsByCollection = new Map<string, BoardPoem[]>(collections.map((collection) => [collection.id, []]));
+  const freePoems: BoardPoem[] = [];
+
+  for (const { id, title, collectionId } of poems) {
+    if (collectionId === null) {
+      freePoems.push({ id, title });
+      continue;
+    }
+    poemsByCollection.get(collectionId)?.push({ id, title });
+  }
+
+  return {
+    collections: collections.map(({ id, title }) => ({ id, title, poems: poemsByCollection.get(id) ?? [] })),
+    freePoems,
+  };
 }

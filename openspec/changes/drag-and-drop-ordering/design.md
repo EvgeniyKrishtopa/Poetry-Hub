@@ -108,7 +108,7 @@ list decides after the deletion; an unused function is recorded in `docs/deferre
   позже.»; in either failure no poem link and nothing draggable is shown, and the buttons stay (poem-management
   FR-2). This drops the old "free list still shown when only the collections fail" state on purpose: without
   the collections the author cannot place anything, and a half board that cannot be dragged would mislead.
-- `WorkBoardIsland` (`"use client"`) renders the lists and the drag-and-drop context. Its arrangement is
+- `SortableWorkBoard` (`"use client"`) renders the lists and the drag-and-drop context. Its arrangement is
   `useOptimistic(arrangementFromProps)`: a drop calls `startTransition(async () => { applyDrop(…); await
   movePoemAction(…) })`. While the transition runs, the optimistic arrangement shows the dropped place; when it
   ends, React drops the optimistic state and shows the props again — which, after a successful or stale
@@ -126,7 +126,7 @@ list decides after the deletion; an unused function is recorded in `docs/deferre
 - The island is split by concern, each part next to the component (`docs/code-style.md`): `useBoardDrag` (the
   library glue: sensors, the `coordinateGetter`, the in-drag arrangement, the live region, focus repair) and
   `useMoveSubmit` (the transition, the action call, the result for the alert, the unauthenticated redirect);
-  `WorkBoardIsland.tsx` composes them and renders the nested lists.
+  `SortableWorkBoard.tsx` composes them and renders the nested lists.
 - The action call is wrapped in `try/catch`, like `use-collection-poems-form` and `DeleteCollectionButton`: a
   thrown call (network drop) becomes the "failed" result and the alert, never the page's error screen. State
   set after the `await` is set inside its own `startTransition` (`docs/state-management.md`). The result of
@@ -204,7 +204,7 @@ Four pure functions in the feature's model carry the rules, so they are tested w
 board's **places** in reading order (each collection's poem slots, an empty collection having one, then the
 free poems' slots, an empty free list having one), the **next place** for an ArrowUp/ArrowDown from the current one (a collection steps
 among the collections only), the **arrangement** after a drop, and the **announcement** for an event
-(`announcementFor(event, before, after)` in `model/board-announcements.ts`: picked up, moved, dropped,
+(`screenReaderAnnouncementFor(event, before, after)` in `model/screen-reader-announcements.ts`: picked up, moved, dropped,
 cancelled; «помещено в …» only when a poem's list changes, the «— позиция n из total» phrase otherwise and
 for every collection, n and total taken from the target list; the strings come from the messages module).
 A **place** is `{ container, index }` in model types (container: a collection id or the free poems), with
@@ -218,7 +218,7 @@ guesses, so keyboard and pointer end in the same arrangement function. ArrowLeft
 
 Texts: the handle instructions go in the `accessibility.screenReaderInstructions` option, with the Russian
 copy of the proposal in the feature's messages module. Announcements: the island owns one visually hidden
-`aria-live="polite"` region and writes into it the string `announcementFor` returns (it holds no wording
+`aria-live="polite"` region and writes into it the string `screenReaderAnnouncementFor` returns (it holds no wording
 rule itself); the library's own `accessibility.announcements` return nothing, so its assertive region stays
 silent and nothing is read twice (spike checks this, task 5.1). Focus after a drop or a cancel: the library
 restores it to the activator; the island verifies it and sets it on the moved item's handle explicitly if it
@@ -231,7 +231,7 @@ and handles use the native `disabled` attribute while a move is sending.
 ```mermaid
 sequenceDiagram
   participant A as Author (browser)
-  participant B as WorkBoardIsland
+  participant B as SortableWorkBoard
   participant S as movePoemAction (server)
   participant D as Supabase (move_my_poem)
   participant C as Next cache / router
@@ -364,13 +364,24 @@ is the result reason `unauthenticated`, redirected by the island, as the sibling
 | `src/features/work-ordering/index.ts` | public API, read only by the `/account/poems` route file | `WorkBoard` |
 | `src/features/work-ordering/model/work-ordering.constants.ts` | the move limit and its scope, the database statuses, the failure reasons, the lowercase-UUID pattern | `MOVE_LIMIT_PER_MINUTE`, `MOVE_LIMIT_SCOPE`, `MOVE_DB_STATUS`, `LOWERCASE_UUID`, `MOVE_FAILURE_REASON` |
 | `src/features/work-ordering/model/work-ordering.types.ts` | board, drop, read, write, and result types | `ServiceFailure`, `BoardPoem`, `BoardCollection`, `Arrangement`, `PoemContainer`, `Drop`, `OwnBoardResult`, `MoveWriteResult`, `MoveResult`, `WriteAllowance` |
-| `src/features/work-ordering/model/work-ordering-messages.ts` | the Russian copy of the proposal's UI table | `WORK_BOARD_COPY`, `MOVE_FAILURE_MESSAGES`, `collectionHandleLabel`, `poemHandleLabel`, `ANNOUNCEMENTS` |
+| `src/features/work-ordering/model/work-ordering-messages.ts` | the Russian copy of the proposal's UI table | `WORK_BOARD_COPY`, `MOVE_FAILURE_MESSAGES`, `collectionHandleLabel`, `poemHandleLabel`, `SCREEN_READER_ANNOUNCEMENTS` |
 | `src/features/work-ordering/model/move.schema.ts` | the two actions' input schemas and the ids guard | `movePoemInputSchema`, `moveCollectionInputSchema`, `MovePoemInput`, `MoveCollectionInput`, `areMoveIdsValid` |
 | `src/features/work-ordering/model/arrange-drop.ts` | the arrangement after one drop | `arrangeDrop` |
-| `src/features/work-ordering/model/board-places.ts` | added by the 2026-11-11 revision (D8): the board's places in reading order and the next place for an ArrowUp/ArrowDown; pure | `boardPlaces`, `nextPlace` |
-| `src/features/work-ordering/model/board-announcements.ts` | added by the 2026-11-11 revision (D8): the screen reader string for a pick-up, move, drop, or cancel; pure | `announcementFor` |
-| `src/features/work-ordering/components/WorkBoardIsland/use-board-drag.ts` | added by the 2026-11-11 revision (D4, D8): the `@dnd-kit` glue, the in-drag arrangement, live region, focus repair | `useBoardDrag` |
-| `src/features/work-ordering/components/WorkBoardIsland/use-move-submit.ts` | added by the 2026-11-11 revision (D4): the transition, the action call, the result | `useMoveSubmit` |
+| `src/features/work-ordering/model/board-places.ts` | added by the 2026-11-11 revision (D8): the board's places in reading order and the next place for an ArrowUp/ArrowDown; pure | `boardPlaces`, `nextKeyboardPlace` |
+| `src/features/work-ordering/model/screen-reader-announcements.ts` | added by the 2026-11-11 revision (D8): the screen reader string for a pick-up, move, drop, or cancel; pure | `screenReaderAnnouncementFor` |
+| `src/features/work-ordering/model/board-drag.ts` | the arrangement rules of a drag; pure: where a pointer pass, a keyboard step and a drop leave the board | `arrangeOverByPointer`, `stepArrangementByKeyboard`, `dropBetween`, `enteredContainer` |
+| `src/features/work-ordering/model/board-lookup.ts` | where a poem is on the board; pure | `findPoem` |
+| `src/features/work-ordering/model/keyboard-drag-step.ts` | the arrow-key rules of a lifted item: which keys are the board's, and the step one key press takes; pure | `resolveKeyboardDrag`, `KeyboardDragOutcome`, `HeldItem` |
+| `src/features/work-ordering/model/board-drag-session.ts` | the life of one drag as pure steps: each answers with the next state and the effects to apply (announce, store, give focus back) | `beginDrag`, `moveDrag`, `dragOver`, `cancelDrag`, `endDrag` |
+| `src/features/work-ordering/model/board-drag-session.types.ts` | the drag session's types | `DragState`, `DragTransition`, `DragActivator`, `DragEndInput`, `ScreenReaderAnnouncementRequest` |
+| `src/features/work-ordering/components/SortableWorkBoard/use-board-drag.ts` | added by the 2026-11-11 revision (D4, D8), split by responsibility after the PR #215 review: the `@dnd-kit` glue only reads the library's event, asks the drag session and applies its answer | `useBoardDrag` |
+| `src/features/work-ordering/components/SortableWorkBoard/use-board-sensors.ts` | the mouse, touch and keyboard sensors | `useBoardSensors` |
+| `src/features/work-ordering/components/SortableWorkBoard/use-screen-reader-announcement.ts` | the board's live region text | `useScreenReaderAnnouncement` |
+| `src/features/work-ordering/components/SortableWorkBoard/use-handle-focus-repair.ts` | focus back on the moved item's handle once it exists and is enabled (the library's `restoreFocus` is off) | `useHandleFocusRepair` |
+| `src/features/work-ordering/components/SortableWorkBoard/use-board-connection.ts` | the connection status and whether a move may be sent | `useBoardConnection` |
+| `src/features/work-ordering/components/SortableWorkBoard/board-dnd-config.ts` | the fixed `DndContext` settings: id, silent library announcements, collision rule | `BOARD_ID`, `BOARD_ACCESSIBILITY`, `boardCollisionDetection` |
+| `src/features/work-ordering/components/SortableWorkBoard/board-drag-ids.ts` | the one place that translates the library's ids, data and events into model terms | `draggedItemOf`, `overTargetOf`, `activatorOf`, `listDroppableId` |
+| `src/features/work-ordering/components/SortableWorkBoard/use-move-submit.ts` | added by the 2026-11-11 revision (D4): the transition, the action call, the result | `useMoveSubmit` |
 | `src/features/work-ordering/model/board-nesting.ts` | the feature's own nesting of poems under collections | `nestBoard`, `BoardCollectionRow`, `BoardPoemRow` |
 | `src/features/work-ordering/dal/own-board.ts` | the two ordered reads of the author's board | `listOwnBoard` |
 | `src/features/work-ordering/dal/move-writes.ts` | the two move function calls | `moveOwnPoem`, `moveOwnCollection` |
@@ -384,7 +395,7 @@ is the result reason `unauthenticated`, redirected by the island, as the sibling
 | `src/features/work-ordering/actions/move-poem.actions.ts` | the poem move action | `movePoemAction` |
 | `src/features/work-ordering/actions/move-collection.actions.ts` | the collection move action | `moveCollectionAction` |
 | `src/features/work-ordering/components/WorkBoard/WorkBoard.tsx` | the board's entry: content in Suspense with the skeleton | `WorkBoard` |
-| `src/features/work-ordering/components/WorkBoardContent/WorkBoardContent.tsx` | the reads, the failure matrix, and the island | `WorkBoardContent` |
-| `src/features/work-ordering/components/WorkBoardIsland/WorkBoardIsland.tsx` | the interactive board (client) | `WorkBoardIsland` |
-| `src/features/work-ordering/components/WorkBoardIsland/WorkBoardIsland.types.ts` | the island's props | `WorkBoardIslandProps` |
+| `src/features/work-ordering/components/WorkBoardContent/WorkBoardContent.tsx` | the reads, the failure matrix, and the board | `WorkBoardContent` |
+| `src/features/work-ordering/components/SortableWorkBoard/SortableWorkBoard.tsx` | the interactive board (client) | `SortableWorkBoard` |
+| `src/features/work-ordering/components/SortableWorkBoard/SortableWorkBoard.types.ts` | the board's props: the stored collections and free poems | `SortableWorkBoardProps` |
 | `src/features/work-ordering/components/WorkBoardSkeleton/WorkBoardSkeleton.tsx` | the loading state | `WorkBoardSkeleton` |
