@@ -171,3 +171,15 @@ Archived at `openspec/changes/archive/2026-11-13-drag-and-drop-ordering/`.
 - **Verified instead:** the spike results are in `PROGRESS.md`; the throwaway page lived only in the scratchpad.
 - **Decision:** user, 2026-11-11: take the design R1 fallback, `@dnd-kit/core` with a custom keyboard coordinates getter. Design D5/R1, FR-7 wording and groups 5-6 need a re-plan (`opsx-update-review`), and the user swaps the dependency (uninstall `@hello-pangea/dnd`, install `@dnd-kit/core` and its sortable package with exact pins).
 - **Status:** resolved (drag-and-drop-ordering, group 5: the `@dnd-kit` spike passed every item, including keyboard moves between stacked lists and into an empty collection; facts for group 6 are under task 5.1 in `tasks.md`).
+
+## admin-moderation
+
+### admin-moderation · 2.8 — hosted-project check not run
+
+- **State:** skipped
+- **Requirement:** FR-4, FR-6, FR-8, FR-17, NFR-1
+- **What is missing:** the hosted-project half of the check: that the `postgres` role may update `auth.users` and delete `auth.sessions` there, and that Auth and Storage answer as they do locally (a blocked account is refused with the finite `banned_until`, a revoked refresh token stops, an admin removes another author's illustration and a non-admin cannot, the Before User Created hook rejects a banned address with HTTP 403 and `signup not allowed`).
+- **Why:** the agent has no access to the hosted project, and the owner chose to run it at deploy.
+- **Verified instead:** the same checks on the local stack, recorded in `openspec/changes/admin-moderation/_debug/admin-functions-auth-and-storage-check.md`; pgTAP covers the Storage policies and the hook's answers.
+- **Decision:** user, 2026-11-13: defer to the deploy.
+- **Status:** open. Natural place to close it is the deploy step (design Migration Plan, steps 1 and 2): after `supabase db push` and registering the hook in the dashboard, run the local probe steps against the hosted project. If the `postgres` role may not write `auth`, design D3's fallback applies (a `security definer` function owned by a role that holds the grant).
