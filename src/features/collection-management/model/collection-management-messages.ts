@@ -8,11 +8,9 @@ import type {
 
 // Every string of the proposal's UI copy table this feature shows, verbatim and in Russian.
 
-/** `/account/poems`: the create link, the section, and the one-time notices (FR-1, FR-2, FR-4, FR-13). */
+/** `/account/poems`: the create link and the one-time notices (FR-1, FR-4, FR-13). */
 export const COLLECTION_LIST_COPY = {
   createLink: "Создать сборник произведений",
-  sectionHeading: "Сборники произведений",
-  sectionUnavailable: "Не удалось загрузить сборники. Попробуйте позже.",
   created: (title: string) => `Сборник «${title}» создан.`,
   deleted: (title: string) => `Сборник «${title}» удалён.`,
   alreadyDeleted: "Сборник уже удалён.",
