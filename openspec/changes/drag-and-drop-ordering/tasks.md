@@ -119,12 +119,12 @@ verification. Each group exports only what it already consumes (tests count as c
 
 ## 7. Compose the board; delete what it replaces <!-- judgement-heavy -->
 
-- [ ] 7.1 (FR-9, NFR-3) `MyPoemsPage` gets the `board` slot replacing `beforeList` and its own free list; the
+- [x] 7.1 (FR-9, NFR-3) `MyPoemsPage` gets the `board` slot replacing `beforeList` and its own free list; the
   route passes `<WorkBoard />`; remove `OwnCollectionsSection`, `OwnCollectionItem`, `nestCollectedPoems`,
   the `readCollectedPoems` prop, `selectFreePoems`, the free list component, and whatever knip then reports,
   with their tests; keep `listCollectedPoems` only if something still reads it.
   - Verify with updated `MyPoemsPage` tests and the route file's test; `npm run knip` green.
-- [ ] 7.2 (NFR-8) `npm run build` with no env: `/account/poems` keeps its render marker; the library's code is
+- [x] 7.2 (NFR-8) `npm run build` with no env: `/account/poems` keeps its render marker; the library's code is
   absent from the client chunks of `/authors/[id]`.
 
 ## 8. Docs and verification <!-- judgement-heavy -->

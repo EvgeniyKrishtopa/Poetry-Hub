@@ -14,8 +14,7 @@ const LINK_INTERACTION_CLASS =
 
 /**
  * The author page's collections section: each visible collection with its poems nested under it, the unavailable
- * text, or nothing (public-collections D6). Markup and classes repeat `OwnCollectionItem` on `/account/poems`. It reads
- * no session, so every visitor sees the same section.
+ * text, or nothing (public-collections D6). It reads no session, so every visitor sees the same section.
  */
 export async function PublicCollectionsSection({ authorId }: PublicCollectionsSectionProps) {
   const id = await authorId;

@@ -5,8 +5,6 @@ export { CollectionPoemsPage } from "./components/CollectionPoemsPage/Collection
 export { CreateCollectionLink } from "./components/CreateCollectionLink/CreateCollectionLink";
 export { EditCollectionPage } from "./components/EditCollectionPage/EditCollectionPage";
 export { NewCollectionPage } from "./components/NewCollectionPage/NewCollectionPage";
-export { OwnCollectionsSection } from "./components/OwnCollectionsSection/OwnCollectionsSection";
-export { listCollectedPoems } from "./dal/collection-poems";
 export { getOwnCollectionTitle } from "./dal/own-collections";
 export { COLLECTION_TRAIL_LABELS } from "./model/collection-management-messages";
 export {
