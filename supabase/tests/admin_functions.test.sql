@@ -7,7 +7,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(132);
+select plan(134);
 
 -- Start from empty content tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -107,14 +107,31 @@ select is(
 select is(
   (select count(*)::int from unnest(array[
       'public.delete_poem_of(uuid, uuid)', 'public.delete_collection_of(uuid, uuid)',
-      'public.apply_restriction(uuid, text)', 'public.log_moderation(text, uuid, text, uuid)'
+      'public.apply_restriction(uuid, text)', 'public.log_moderation(text, uuid, text, uuid)',
+      'public.banned_email_hash(text)'
     ]) f
     where not has_function_privilege('authenticated', f, 'execute')
       and not has_function_privilege('anon', f, 'execute')
       and not has_function_privilege('public', f, 'execute')),
-  4,
+  5,
   'the internal functions are executable by no client role'
 );
+
+-- The one home of the ban-list digest: the same value for the address however it is written. Both admin_ban_user
+-- and the sign-up hook call it (debug record ban-hash-rule-written-twice).
+select is(
+  public.banned_email_hash('  Foo@Example.Test '),
+  encode(sha256(convert_to('foo@example.test', 'UTF8')), 'hex'),
+  'the ban-list digest is the sha256 of the trimmed, lower-cased address');
+
+-- A block never replaces a ban (FR-4): the second writer of a race must not turn `banned` into `blocked`
+-- (debug record concurrent-block-downgrades-a-ban). BAN is banned in the fixtures above.
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select public.apply_restriction('44444444-4444-4444-8444-444444444444', 'blocked');
+select is(
+  (select kind from public.account_restrictions where user_id = '44444444-4444-4444-8444-444444444444'),
+  'banned',
+  'applying a block to a banned account leaves it banned');
 
 select is(has_function_privilege('supabase_auth_admin', 'public.reject_banned_signup(jsonb)', 'execute'), true,
   'the auth service can execute the sign-up hook');

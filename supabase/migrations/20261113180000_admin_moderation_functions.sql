@@ -46,6 +46,7 @@
 --   drop function if exists public.admin_list_users(integer, timestamptz, uuid, text);
 --   drop function if exists public.log_moderation(text, uuid, text, uuid);
 --   drop function if exists public.apply_restriction(uuid, text);
+--   drop function if exists public.banned_email_hash(text);
 --   then re-run, as `create or replace`, the bodies of delete_my_poem and delete_my_collection from
 --   20261113170000_admin_moderation.sql with the deletes inline (as they were before this migration), and drop
 --   public.delete_collection_of(uuid, uuid) and public.delete_poem_of(uuid, uuid). Remove the
@@ -53,8 +54,21 @@
 
 -- ---------- Internal helpers ----------
 
+-- The one home of the ban-list digest: sha256 of the trimmed, lower-cased address, as hex. admin_ban_user stores
+-- it and reject_banned_signup looks it up, so they must never compute it separately.
+create function public.banned_email_hash(address text)
+returns text
+language sql
+immutable
+set search_path = ''
+as $$
+  select encode(sha256(convert_to(lower(btrim(banned_email_hash.address)), 'UTF8')), 'hex');
+$$;
+
 -- Sets the Auth ban (finite far-future time), ends every session and records the restriction. A blocked account
--- that is banned later has its row replaced. The callers have already checked admin, target and state.
+-- that is banned later has its row replaced; a banned row is never replaced, so a block that loses a race to a
+-- ban cannot undo it (FR-4). The callers have already checked admin, target and state, and hold the user's
+-- auth.users row lock.
 create function public.apply_restriction(target_user uuid, restriction_kind text)
 returns void
 language plpgsql
@@ -73,7 +87,8 @@ begin
   on conflict (user_id) do update set
     kind = excluded.kind,
     created_at = now(),
-    created_by = excluded.created_by;
+    created_by = excluded.created_by
+  where r.kind = 'blocked';
 end;
 $$;
 
@@ -284,7 +299,10 @@ begin
     return jsonb_build_object('status', 'target-is-admin');
   end if;
 
-  if not exists (select 1 from auth.users u where u.id = admin_block_user.target_user_id) then
+  -- One lock per user, taken first and in the same place by block, ban and unblock: two moderation calls on one
+  -- user run one after the other, and the second sees the first's restriction.
+  perform 1 from auth.users u where u.id = admin_block_user.target_user_id for update;
+  if not found then
     return jsonb_build_object('status', 'not-found');
   end if;
 
@@ -310,6 +328,9 @@ set search_path = ''
 as $$
 begin
   perform public.assert_admin();
+
+  -- The same per-user lock as block and ban, so the lock order is one everywhere.
+  perform 1 from auth.users u where u.id = admin_unblock_user.target_user_id for update;
 
   delete from public.account_restrictions r
   where r.user_id = admin_unblock_user.target_user_id
@@ -345,7 +366,8 @@ begin
     return jsonb_build_object('status', 'target-is-admin');
   end if;
 
-  select u.email into target_email from auth.users u where u.id = admin_ban_user.target_user_id;
+  -- The per-user lock, as in admin_block_user.
+  select u.email into target_email from auth.users u where u.id = admin_ban_user.target_user_id for update;
   if not found then
     return jsonb_build_object('status', 'not-found');
   end if;
@@ -361,7 +383,7 @@ begin
 
   if nullif(btrim(target_email), '') is not null then
     insert into public.banned_emails (email_hash)
-    values (encode(sha256(convert_to(lower(btrim(target_email)), 'UTF8')), 'hex'))
+    values (public.banned_email_hash(target_email))
     on conflict (email_hash) do nothing;
   end if;
 
@@ -510,7 +532,7 @@ begin
 
   if nullif(btrim(address), '') is not null and exists (
     select 1 from public.banned_emails b
-    where b.email_hash = encode(sha256(convert_to(lower(btrim(address)), 'UTF8')), 'hex')
+    where b.email_hash = public.banned_email_hash(address)
   ) then
     return jsonb_build_object(
       'error', jsonb_build_object('http_code', 403, 'message', 'signup not allowed')
@@ -526,6 +548,7 @@ $$;
 
 -- ---------- Grants (NFR-1) ----------
 
+revoke execute on function public.banned_email_hash(text) from public, anon, authenticated;
 revoke execute on function public.apply_restriction(uuid, text) from public, anon, authenticated;
 revoke execute on function public.log_moderation(text, uuid, text, uuid) from public, anon, authenticated;
 revoke execute on function public.delete_poem_of(uuid, uuid) from public, anon, authenticated;
