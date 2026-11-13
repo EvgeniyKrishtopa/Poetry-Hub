@@ -38,37 +38,39 @@ each group lands its own tests.
 
 ## 2. Database: admin functions, storage policies, auth hook <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-8, FR-9, NFR-1) Move the bodies of `delete_my_poem` and `delete_my_collection` into
+- [x] 2.1 (FR-8, FR-9, NFR-1) Move the bodies of `delete_my_poem` and `delete_my_collection` into
   `delete_poem_of(profile, poem_id)` and `delete_collection_of(profile, collection_id)`, revoked from `public`,
   `anon` and `authenticated`, no admin assert inside; the owner functions call them with `my_author_profile_id()`
   and keep their signatures and results (design D7). The existing delete pgTAP tests must stay green unedited.
-- [ ] 2.2 (FR-8, FR-9, FR-11, NFR-1) `admin_delete_poem` and `admin_delete_collection`: `assert_admin()`, resolve
+- [x] 2.2 (FR-8, FR-9, FR-11, NFR-1) `admin_delete_poem` and `admin_delete_collection`: `assert_admin()`, resolve
   the row's `author_id` and that author's auth user id (stored as `target_user_id`), call the internal function (the collection's advisory lock is the target author's),
   append a log row only on `deleted`.
-- [ ] 2.2a (FR-10, NFR-1) `may_moderate_author(author_profile_id)`: true only for an admin who is not the profile's
+- [x] 2.2a (FR-10, NFR-1) `may_moderate_author(author_profile_id)`: true only for an admin who is not the profile's
   owner; executable by `authenticated` only; pgTAP for admin on others' work, admin on own work, non-admin, signed out.
-- [ ] 2.3 (FR-8) Storage: `for select` and `for delete` policies on `poem-illustrations`, `to authenticated`, using
+- [x] 2.3 (FR-8) Storage: `for select` and `for delete` policies on `poem-illustrations`, `to authenticated`, using
   `public.is_admin()`;
   no SQL deletes from `storage.objects`.
-- [ ] 2.4 (FR-3, NFR-1) `admin_list_users(page_size, after_created_at, after_id, email)`: forward keyset by
+- [x] 2.4 (FR-3, NFR-1) `admin_list_users(page_size, after_created_at, after_id, email)`: forward keyset by
   `created_at, id`, joins `auth.users`, `author_profiles` and `account_restrictions`, exact-email filter (whole address, trimmed and lower-cased on both sides), returns
   only the columns the page shows plus an `is_admin` flag per row.
-- [ ] 2.5 (FR-4, FR-5, FR-6, FR-7, FR-11) `admin_block_user`, `admin_unblock_user`, `admin_ban_user`,
+- [x] 2.5 (FR-4, FR-5, FR-6, FR-7, FR-11) `admin_block_user`, `admin_unblock_user`, `admin_ban_user`,
   `admin_revoke_sessions`: `assert_admin()`, refuse own id and admin targets, `not-found`, idempotent answers (`no-sessions` for a revoke that ends nothing, with no log row),
   `banned_until` set to the named far-future constant and cleared, `auth.sessions` rows deleted, ban adds the email
   hash, one log row per change, one transaction.
-- [ ] 2.6 (FR-17, NFR-1) `reject_banned_signup(event jsonb)`: `security definer`, empty `search_path`, execute for
+- [x] 2.6 (FR-17, NFR-1) `reject_banned_signup(event jsonb)`: `security definer`, empty `search_path`, execute for
   `supabase_auth_admin` only, whole body wrapped so any error or unrecognised input allows, one fixed rejection
   code; register it as the Before User Created hook in `supabase/config.toml` for the local stack.
-- [ ] 2.7 (FR-1 – FR-11, FR-13, FR-17, NFR-1) pgTAP `supabase/tests/admin_functions.test.sql` covering every
+- [x] 2.7 (FR-1 – FR-11, FR-13, FR-17, NFR-1) pgTAP `supabase/tests/admin_functions.test.sql` covering every
   scenario of FR-3 – FR-9, FR-11 and FR-17 plus the no-op cases (no log row), a direct call as `anon` and as a
   non-admin to every `admin_*` function and to `delete_poem_of`, `delete_collection_of`, `reject_banned_signup`.
-- [ ] 2.8 (FR-4, FR-6, FR-8) Local-stack and hosted-project check, recorded in the change's `_debug/` folder:
+- [x] 2.8 (FR-4, FR-6, FR-8) Local-stack and hosted-project check, recorded in the change's `_debug/` folder:
   blocking makes Auth refuse sign-in and refresh with the chosen `banned_until` value (and whether `infinity`
   works); deleting `auth.sessions` stops a refresh token; the `postgres` role may update `auth.users` and delete
   `auth.sessions` on the hosted project; an admin removes another author's illustration with their own session and a
   non-admin cannot; and the error shape (status, code, message) supabase-js actually receives when the sign-up hook
-  rejects, which task 4.5 matches exactly.
+  rejects, which task 4.5 matches exactly. Local half done (`_debug/admin-functions-auth-and-storage-check.md`: the
+  hook rejects with HTTP 403, `code` `unknown`, message `signup not allowed`, so 4.5 matches status and message, not
+  `code`; `infinity` gives a 500, so the finite value stays); the hosted half waits for the deploy. <!-- deferred: docs/deferred.md -->
 
 ## 3. Admin feature: DAL, model, actions (no UI) <!-- judgement-heavy -->
 
@@ -104,7 +106,8 @@ each group lands its own tests.
 - [ ] 4.4 (FR-16) `auth`: a `restricted` sign-in failure kind from the Auth refusal of a banned user, with its
   message; wrong credentials stay generic. Vitest for both.
 - [ ] 4.4a (FR-16) Vitest: the Auth error shape of a banned refresh run through `readClaimsState` is signed out.
-- [ ] 4.5 (FR-17) `signUpAction` maps exactly the hook's fixed rejection code to its `check-email` answer; every
+- [ ] 4.5 (FR-17) `signUpAction` maps exactly the hook's fixed rejection (status 403 and the message `signup not
+  allowed`; the `code` field is `unknown`, see design D6) to its `check-email` answer; every
   other sign-up error keeps its mapping. Vitest for the banned path and an ordinary error.
 
 ## 5. The `/admin` page (UI) <!-- judgement-heavy -->

@@ -134,9 +134,11 @@ local `supabase/config.toml` and, at deploy, a manual dashboard step).
   so nobody can ask the database whether an address is banned.
 - Its whole body is wrapped so any internal error or unrecognised input **allows** the sign-up. A broken hook can
   weaken a ban; it can never block every sign-up.
-- A banned address is rejected with one fixed error code and message. `signUpAction` maps exactly that code to its
-  existing `check-email` answer, so the form shows the same thing for every address; every other sign-up error keeps
-  its existing mapping.
+- A banned address is rejected with one fixed answer: HTTP 403 and the message `signup not allowed`. On the local
+  stack (`_debug/admin-functions-auth-and-storage-check.md`) supabase-js receives an `AuthApiError` with `status` 403,
+  `code` `unknown` and that message, so `code` carries nothing and `signUpAction` matches **status and message**
+  together. It maps exactly that to its existing `check-email` answer, so the form shows the same thing for every
+  address; every other sign-up error keeps its existing mapping.
 
 Alternative: check in the sign-up Server Action. Rejected: a direct call to Supabase Auth with the publishable key
 would skip it.
