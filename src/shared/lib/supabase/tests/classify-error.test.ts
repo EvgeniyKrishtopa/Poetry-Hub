@@ -20,6 +20,8 @@ describe("classifySupabaseError", () => {
     ["a Storage 500 (statusCode)", { name: "StorageApiError", statusCode: "500" }, "unavailable"],
     ["a Storage 502 (status)", { name: "StorageApiError", status: 502 }, "unavailable"],
     ["permission denied (42501)", { code: "42501", status: 403 }, "unknown"],
+    ["a restricted account (AM001, HTTP 400)", { code: "AM001", status: 400 }, "restricted"],
+    ["a restricted account with no status", { code: "AM001" }, "restricted"],
     ["a check violation", { code: "23514", status: 400 }, "unknown"],
     ["Storage AccessDenied", { name: "StorageApiError", statusCode: "403" }, "unknown"],
     ["a non-numeric statusCode", { statusCode: "unknown" }, "unknown"],

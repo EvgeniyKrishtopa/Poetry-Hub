@@ -10,9 +10,9 @@ import { Alert, Button, Dialog } from "@/shared/ui";
 
 import { deletePoemAction } from "../../actions/delete-poem.actions";
 import { useDeletedPoemNotice } from "../../model/deleted-poem-notice-ui.store";
-import { DELETE_POEM_COPY } from "../../model/poem-management-messages";
+import { DELETE_POEM_COPY, DELETE_POEM_FAILURE_MESSAGES } from "../../model/poem-management-messages";
 import { DELETE_POEM_STATUS } from "../../model/poem-management.constants";
-import type { DeletePoemResult } from "../../model/poem-management.types";
+import type { DeleteAlertFailure, DeletePoemResult } from "../../model/poem-management.types";
 
 import type { DeletePoemButtonProps } from "./DeletePoemButton.types";
 
@@ -20,7 +20,7 @@ import type { DeletePoemButtonProps } from "./DeletePoemButton.types";
 export function DeletePoemButton({ poemId, title }: DeletePoemButtonProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<DeleteAlertFailure | null>(null);
   // The transition stays pending through the navigation, so leaving must allow the dialog to close by itself.
   const [leaving, setLeaving] = useState(false);
   // Set synchronously on confirm: a second click can arrive before the pending state disables the button.
@@ -32,8 +32,8 @@ export function DeletePoemButton({ poemId, title }: DeletePoemButtonProps) {
 
   // A disabled button can't take focus, so focus waits for the request to end (NFR-4).
   useEffect(() => {
-    if (failed && !isPending) confirmRef.current?.focus();
-  }, [failed, isPending]);
+    if (failure !== null && !isPending) confirmRef.current?.focus();
+  }, [failure, isPending]);
 
   function open() {
     setLeaving(false);
@@ -47,7 +47,7 @@ export function DeletePoemButton({ poemId, title }: DeletePoemButtonProps) {
 
   // Every close path ends here: a dialog opened again starts without the alert (FR-5).
   function handleClosed() {
-    setFailed(false);
+    setFailure(null);
     openerRef.current?.focus();
   }
 
@@ -72,22 +72,26 @@ export function DeletePoemButton({ poemId, title }: DeletePoemButtonProps) {
       leaveFor(POEM_MANAGEMENT_PATH);
       return;
     }
-    if (result?.failure === "unauthenticated") {
-      useSessionExpiredNotice.getState().markSessionExpired();
-      leaveFor(SIGN_IN_PATH);
-      // The root layout's header still shows the signed-in links until the server renders it again.
-      router.refresh();
+    if (result?.status === DELETE_POEM_STATUS.failed) {
+      if (result.failure === "unauthenticated") {
+        useSessionExpiredNotice.getState().markSessionExpired();
+        leaveFor(SIGN_IN_PATH);
+        // The root layout's header still shows the signed-in links until the server renders it again.
+        router.refresh();
+        return;
+      }
+      setFailure(result.failure);
       return;
     }
-    // Any other failure, or no data at all (a server error or a rejected input).
-    setFailed(true);
+    // No data at all (a server error or a rejected input).
+    setFailure("unknown");
   }
 
   function confirm() {
     if (sendingRef.current) return;
     sendingRef.current = true;
     // The next attempt hides the previous failure (FR-5).
-    setFailed(false);
+    setFailure(null);
     startTransition(async () => {
       let result: DeletePoemResult | undefined;
       try {
@@ -120,7 +124,7 @@ export function DeletePoemButton({ poemId, title }: DeletePoemButtonProps) {
         closable={!isPending || leaving}
         onClose={handleClosed}
       >
-        {failed && <Alert tone="danger">{DELETE_POEM_COPY.failure}</Alert>}
+        {failure !== null && <Alert tone="danger">{DELETE_POEM_FAILURE_MESSAGES[failure]}</Alert>}
         <div className="flex flex-wrap justify-end gap-2">
           <Button ref={cancelRef} variant="ghost" disabled={isPending} onClick={cancel}>
             {DELETE_POEM_COPY.cancel}

@@ -202,6 +202,18 @@ describe("AuthorProfileEditor", () => {
     expect(screen.queryByText("Сохранение сейчас недоступно. Попробуйте позже.")).toBeNull();
   });
 
+  // implements FR-19 of admin-moderation
+  it("shows the restricted message under the field and keeps the typed value when the account is blocked", async () => {
+    render(<AuthorProfileEditor profile={PROFILE} />);
+    const { save } = await startPendingFirstNameSave("Anya");
+
+    await act(async () => save.resolve({ data: { status: "failed", failure: "restricted" } } as const));
+
+    const input = screen.getByRole("textbox", { name: "Имя" });
+    expect(input).toHaveValue("Anya");
+    expect(input).toHaveAccessibleDescription("Ваш аккаунт заблокирован: изменения недоступны.");
+  });
+
   // implements FR-8, NFR-5 of add-author-profiles
   it("shows a validation error under the field, wired to the input", async () => {
     render(<AuthorProfileEditor profile={PROFILE} />);

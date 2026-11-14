@@ -39,6 +39,8 @@ const FAILURE_MESSAGES: Readonly<Record<AuthFlow, Readonly<Partial<Record<AuthFa
     "invalid-credentials": "Неверный адрес электронной почты или пароль.",
     "email-not-confirmed": "Сначала подтвердите адрес электронной почты: ссылка в письме, которое мы отправили.",
     "rate-limited": RATE_LIMITED_MESSAGE,
+    // Says that the account is blocked, never why (FR-16).
+    restricted: "Аккаунт заблокирован.",
     unavailable: "Вход сейчас недоступен.",
   },
   "sign-up": {

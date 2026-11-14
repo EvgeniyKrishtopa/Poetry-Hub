@@ -285,6 +285,8 @@ describe("EditCollectionForm: saving", () => {
     ["too-many-saves", "Слишком много сохранений. Попробуйте через минуту."],
     ["not-public", "Чтобы сохранять изменения, укажите имя и фамилию в профиле автора."],
     ["unknown", UNKNOWN_TEXT],
+    // implements FR-15 of admin-moderation
+    ["restricted", "Ваш аккаунт заблокирован: изменения недоступны."],
   ] as const)("shows the %s failure above the form, focuses it, and keeps every value", async (failure, message) => {
     vi.mocked(updateCollectionAction).mockResolvedValue(respond({ status: "failed", failure }));
     const { user } = renderForm();

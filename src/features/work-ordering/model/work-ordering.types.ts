@@ -63,13 +63,11 @@ export type MoveWriteResult =
     }
   | { readonly ok: false; readonly failure: ServiceFailure };
 
+/** Why a move did not happen, in the terms the board shows. */
+export type MoveFailureReason = (typeof MOVE_FAILURE_REASON)[keyof typeof MOVE_FAILURE_REASON];
+
 /** What a move action answers (FR-6, FR-11): explicit success, never `null`. */
-export type MoveResult =
-  | { readonly ok: true }
-  | {
-      readonly ok: false;
-      readonly reason: (typeof MOVE_FAILURE_REASON)[keyof typeof MOVE_FAILURE_REASON];
-    };
+export type MoveResult = { readonly ok: true } | { readonly ok: false; readonly reason: MoveFailureReason };
 
 /** The limit step's answer. */
 export type WriteAllowance =

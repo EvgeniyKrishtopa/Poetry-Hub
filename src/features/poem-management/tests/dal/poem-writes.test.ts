@@ -11,6 +11,7 @@ import type { CreateOwnPoemInput } from "../../model/poem-management.types";
 vi.mock("@/shared/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
 
 const HTTP_OK = 200;
+const HTTP_BAD_REQUEST = 400;
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_UNAVAILABLE = 503;
 
@@ -129,6 +130,14 @@ describe("poem writes", () => {
       expectNoPoemContentLogged();
     });
 
+    // implements FR-14 of admin-moderation
+    it("is restricted for a blocked account (AM001), not an expired session", async () => {
+      supabase.onRpc("can_create_poem", rpcError("AM001", HTTP_BAD_REQUEST));
+
+      await expect(checkCanCreatePoem()).resolves.toEqual({ ok: false, failure: "restricted" });
+      expectNoPoemContentLogged();
+    });
+
     it("is unavailable without a log line when Supabase isn't configured", async () => {
       vi.mocked(createSupabaseServerClient).mockRejectedValue(new SupabaseConfigError(["NEXT_PUBLIC_SUPABASE_URL"]));
 
@@ -209,6 +218,18 @@ describe("poem writes", () => {
       const [path] = supabase.bucket.upload.mock.calls[0];
       expect(supabase.bucket.remove).toHaveBeenCalledExactlyOnceWith([path]);
       expect(console.error).toHaveBeenCalledWith("[poem-management] create poem failed: PostgrestError 23514");
+      expectNoPoemContentLogged();
+    });
+
+    // implements FR-14 of admin-moderation
+    it("is restricted when the account was blocked after the pre-check, and removes the upload", async () => {
+      supabase.onRpc("create_my_poem", rpcError("AM001", HTTP_BAD_REQUEST));
+
+      const result = await createOwnPoem(input({ illustration: { file: pngFile(), type: "png" } }));
+
+      expect(result).toEqual({ ok: false, failure: "restricted" });
+      const [path] = supabase.bucket.upload.mock.calls[0];
+      expect(supabase.bucket.remove).toHaveBeenCalledExactlyOnceWith([path]);
       expectNoPoemContentLogged();
     });
 

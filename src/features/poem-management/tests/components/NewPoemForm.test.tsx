@@ -309,6 +309,8 @@ describe("NewPoemForm", () => {
     ["unavailable", "Сохранение сейчас недоступно. Попробуйте позже."],
     ["unauthenticated", "Сессия истекла. Войдите снова."],
     ["too-many-poems", "Слишком много новых произведений. Попробуйте позже."],
+    // implements FR-14 of admin-moderation
+    ["restricted", "Ваш аккаунт заблокирован: изменения недоступны."],
   ] as const)("shows the %s failure above the submit button, keeps the drafts, and focuses the alert", async (failure, message) => {
     vi.mocked(createPoemAction).mockResolvedValue(respond({ status: "failed", failure }));
     const user = renderForm();

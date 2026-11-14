@@ -88,6 +88,8 @@ describe("SignInForm", () => {
     ["rate-limited", "Слишком много попыток. Попробуйте через несколько минут."],
     ["unavailable", "Вход сейчас недоступен."],
     ["unknown", "Что-то пошло не так. Попробуйте ещё раз."],
+    // implements FR-16 of admin-moderation
+    ["restricted", "Аккаунт заблокирован."],
   ])("shows the %s alert and keeps the email", async (failure, message) => {
     mockResult({ data: { status: "failed", failure } });
     render(<SignInForm />);

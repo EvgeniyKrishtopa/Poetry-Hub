@@ -92,21 +92,21 @@ each group lands its own tests.
 
 ## 4. Failure kinds in the write features, sign-in and sign-up <!-- judgement-heavy -->
 
-- [ ] 4.1 (FR-14, FR-15, FR-18, FR-19) Map SQLSTATE `AM001` once, in `src/shared/lib/supabase/classify-error.ts`
+- [x] 4.1 (FR-14, FR-15, FR-18, FR-19) Map SQLSTATE `AM001` once, in `src/shared/lib/supabase/classify-error.ts`
   (a `restricted` member of `SupabaseFailure`, checked before the `42501` and generic mappings), with its test; then
   each feature (`poem-management`, `collection-management`, `work-ordering`, `authors`) only adds its message and
   surface. No feature detects the code itself. Turn the single-value comparisons that would silently send
   `restricted` to the generic path into exhaustive switches checked by `tsc`: `work-ordering/actions/run-move.ts`,
   `DeletePoemButton`, and the `"unauthenticated"` checks in the collection-management forms; keep read results narrow
   where the type allows.
-- [ ] 4.2 (FR-14, FR-15, FR-18, FR-19) Show the message on the poem and collection forms and delete flows, the
+- [x] 4.2 (FR-14, FR-15, FR-18, FR-19) Show the message on the poem and collection forms and delete flows, the
   board (item snaps back) and the profile editor; input stays on screen; no retry.
-- [ ] 4.3 (FR-14, FR-15, FR-18, FR-19) Vitest for each classification and surface: `restricted` is not
+- [x] 4.3 (FR-14, FR-15, FR-18, FR-19) Vitest for each classification and surface: `restricted` is not
   `session-expired`; fields kept; nothing retried; other failures keep their message.
-- [ ] 4.4 (FR-16) `auth`: a `restricted` sign-in failure kind from the Auth refusal of a banned user, with its
+- [x] 4.4 (FR-16) `auth`: a `restricted` sign-in failure kind from the Auth refusal of a banned user, with its
   message; wrong credentials stay generic. Vitest for both.
-- [ ] 4.4a (FR-16) Vitest: the Auth error shape of a banned refresh run through `readClaimsState` is signed out.
-- [ ] 4.5 (FR-17) `signUpAction` maps exactly the hook's fixed rejection (status 403 and the message `signup not
+- [x] 4.4a (FR-16) Vitest: the Auth error shape of a banned refresh run through `readClaimsState` is signed out.
+- [x] 4.5 (FR-17) `signUpAction` maps exactly the hook's fixed rejection (status 403 and the message `signup not
   allowed`; the `code` field is `unknown`, see design D6) to its `check-email` answer; every
   other sign-up error keeps its mapping. Vitest for the banned path and an ordinary error.
 
@@ -155,7 +155,8 @@ each group lands its own tests.
   `/admin` route (no breadcrumbs `STATIC_ROUTES` row).
 - [ ] 7.3 (NFR-2) A test that fails when `src/` reads a service-role or secret Supabase key variable.
 - [ ] 7.4 (all) Web QA of the whole flow on the local stack: admin sign-in, block, sign-in refused, unblock, ban and
-  the sign-up showing the neutral answer, revoke, delete another user's poem (with illustration) and collection from
+  the sign-up showing the neutral answer (the check also asserts the hook's exact status 403 and message `signup not
+  allowed` reaching `signUpAction`, so a Supabase upgrade that rewords it breaks a check, not the mask), revoke, delete another user's poem (with illustration) and collection from
   the public pages, and a non-admin's `/admin` 404. Keep the passing flows as `tests/web-qa-scenarios` specs.
 - [ ] 7.5 (all) Validate: `npm run typecheck && npm run lint && npm run test:coverage && npm run build &&
   npm run knip`, and the whole pgTAP suite after `supabase db reset`.
