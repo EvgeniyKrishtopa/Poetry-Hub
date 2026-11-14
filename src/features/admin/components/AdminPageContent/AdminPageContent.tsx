@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 import { requireSession } from "@/features/auth";
 import { SESSION_STATE } from "@/shared/config/constants";
@@ -12,7 +13,6 @@ import { AdminUserFilter } from "../AdminUserFilter/AdminUserFilter";
 import { AdminUserList } from "../AdminUserList/AdminUserList";
 
 import type { AdminPageContentProps } from "./AdminPageContent.types";
-import { Suspense } from "react";
 
 /**
  * The `/admin` gate, then the page: signed out goes to `/login`, an unreadable session or admin check shows the
