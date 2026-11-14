@@ -80,6 +80,8 @@ const FAILURES: readonly [string, () => void, string][] = [
   ["no response (status 0)", () => answer(rpcError("", NO_RESPONSE)), "unavailable"],
   ["a rejected JWT", () => answer(rpcError("PGRST301", HTTP_UNAUTHORIZED)), "unauthenticated"],
   ["an input guard (22023)", () => answer(rpcError("22023", HTTP_OK)), "unknown"],
+  // implements FR-18 of admin-moderation: both moves, since the table is shared
+  ["a blocked account (AM001)", () => answer(rpcError("AM001", HTTP_BAD_REQUEST)), "restricted"],
   ["an unknown status", () => answer(ok({ status: "maybe" })), "unknown"],
   ["a moved answer with no author", () => answer(ok({ status: "moved" })), "unknown"],
   ["a throw", () => rpc.mockRejectedValue(new TypeError("fetch failed")), "unavailable"],
