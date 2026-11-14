@@ -1,10 +1,18 @@
 import "server-only";
 
+import { updateTag } from "next/cache";
+
+import { authorWorksTag } from "@/shared/config/cache-tags";
+
 /**
  * Expires the author's public works tag after a delete that already happened; a failure is only logged, never turned
  * into a failed delete. The feature's own copy of its siblings' helper: the features don't import each other.
+ * Callable only while a Server Action runs (`updateTag`'s own rule).
  */
 export function expireAuthorWorksTag(authorId: string): void {
-  void authorId;
-  throw new Error("not implemented");
+  try {
+    updateTag(authorWorksTag(authorId));
+  } catch (error) {
+    console.error(`[admin] expire author works tag failed: ${error instanceof Error ? error.name : typeof error}`);
+  }
 }

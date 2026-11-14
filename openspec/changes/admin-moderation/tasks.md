@@ -74,19 +74,19 @@ each group lands its own tests.
 
 ## 3. Admin feature: DAL, model, actions (no UI) <!-- judgement-heavy -->
 
-- [ ] 3.1 (NFR-4, NFR-2) Scaffold `src/features/admin/` (`actions`, `dal`, `model`, `components`, `tests`,
+- [x] 3.1 (NFR-4, NFR-2) Scaffold `src/features/admin/` (`actions`, `dal`, `model`, `components`, `tests`,
   `index.ts`) per the approved scaffold; `AdminPage` and `AdminDeleteControl` as the only public API; lint boundary entries so only
   `src/app/` imports `@/features/admin`, and `poems`/`collections` boundary tests assert they do not.
   `AdminDeleteControl` takes `kind`, `id`, `title` and `redirectHref` as props.
-- [ ] 3.2 (FR-2, FR-12) `model/`: `admin.types.ts` (discriminated results), `admin.schema.ts` (uuid target), `admin.constants.ts` (named constants), `admin-messages.ts` (Russian copy).
-- [ ] 3.3 (FR-2, FR-3, NFR-6) `dal/`: `admin-check.ts` (`is_admin()`, `unknown` on outage; reads the session through
+- [x] 3.2 (FR-2, FR-12) `model/`: `admin.types.ts` (discriminated results), `admin.schema.ts` (uuid target), `admin.constants.ts` (named constants), `admin-messages.ts` (Russian copy).
+- [x] 3.3 (FR-2, FR-3, NFR-6) `dal/`: `admin-check.ts` (`is_admin()`, `unknown` on outage; reads the session through
   `@/features/auth`), `user-list.ts`, `moderation-rpc.ts` (block, unblock, ban, revoke), `delete-rpc.ts`,
   `illustration-cleanup.ts` (bucket constant from `@/features/poems`); errors classified by SQLSTATE, never logging
   email or text.
-- [ ] 3.4 (FR-4 – FR-9, FR-12) Server Actions: block, unblock, ban, revoke sessions, delete poem (expires the
+- [x] 3.4 (FR-4 – FR-9, FR-12) Server Actions: block, unblock, ban, revoke sessions, delete poem (expires the
   author's works tag, removes the illustration best-effort), delete collection (expires the tag). Each validates on
   the server, re-reads the session, and returns a discriminated result.
-- [ ] 3.5 (FR-2, FR-4 – FR-9, FR-12, NFR-6) Vitest for the DAL and actions (`features/admin/tests/`): validation
+- [x] 3.5 (FR-2, FR-4 – FR-9, FR-12, NFR-6) Vitest for the DAL and actions (`features/admin/tests/`): validation
   failures call no RPC; every function answer maps to its message; permission, expired session and outage stay
   distinct; a failed illustration removal does not undo the delete; logs carry no personal data.
 
