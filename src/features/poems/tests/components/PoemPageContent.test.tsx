@@ -29,6 +29,13 @@ function renderContent(poemId = POEM_ID) {
   return PoemPageContent({ authorId: Promise.resolve(AUTHOR_ID), poemId: Promise.resolve(poemId) });
 }
 
+/** The article inside the content's fragment; with no moderation function nothing follows it. */
+function articleOf(content: unknown): ReactElement<PoemArticleProps> {
+  const { children } = (content as ReactElement<{ children: [ReactElement<PoemArticleProps>, unknown] }>).props;
+  expect(children[1]).toBeUndefined();
+  return children[0];
+}
+
 afterEach(() => {
   vi.clearAllMocks();
 });
@@ -39,7 +46,7 @@ describe("PoemPageContent", () => {
     vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Anna Akhmatova" });
     vi.mocked(getAuthorPoem).mockResolvedValue({ ok: true, poem: AUTUMN_GARDEN });
 
-    const element = (await renderContent()) as ReactElement<PoemArticleProps>;
+    const element = articleOf(await renderContent());
 
     expect(getAuthorPoem).toHaveBeenCalledWith(AUTHOR_ID, POEM_ID);
     expect(element.type).toBe(PoemArticle);
@@ -52,7 +59,7 @@ describe("PoemPageContent", () => {
     vi.mocked(getAuthorPoem).mockResolvedValue({ ok: true, poem: AUTUMN_GARDEN });
 
     // The async article can't render in jsdom: the page is the article alone, and the view it renders has no link.
-    const element = (await renderContent()) as ReactElement<PoemArticleProps>;
+    const element = articleOf(await renderContent());
     expect(element.type).toBe(PoemArticle);
     expect(Object.keys(element.props)).toEqual(["poem"]);
 

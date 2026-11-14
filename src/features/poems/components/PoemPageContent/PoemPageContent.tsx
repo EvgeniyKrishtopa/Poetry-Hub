@@ -27,13 +27,10 @@ export async function PoemPageContent({ authorId, poemId, moderation }: PoemPage
   }
 
   const { poem } = result;
-  const article = <PoemArticle poem={poem} />;
-  if (moderation === undefined) return article;
-
   return (
     <>
-      {article}
-      {moderation({ id: poem.id, title: poem.title, authorId: id })}
+      <PoemArticle poem={poem} />
+      {moderation?.({ id: poem.id, title: poem.title, authorId: id })}
     </>
   );
 }
