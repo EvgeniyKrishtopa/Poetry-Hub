@@ -22,7 +22,7 @@ FR-15 in `collection-management`, FR-16 and FR-17 in `auth`, FR-18 in `work-orde
 | FR-20 admin sees the link | `AdminNavLink` test: renders «Админка» with `href` `/admin` for an admin (mocked session and RPC); web-qa flow clicks it | unit; end-to-end |
 | FR-20 others never see it | `AdminNavLink` tests: guest, non-admin and unreadable session render nothing; layout test: no extra markup | unit |
 | FR-20 guest costs no RPC | `AdminNavLink` test: `is_admin()` mock not called for a guest | unit |
-| FR-3 first page | pgTAP: `admin_list_users` returns 25 newest first with 30 users; `AdminUserList` renders rows and a next link | integration; unit |
+| FR-3 first page | pgTAP: `admin_list_users` returns the requested page size, newest first, with more users than one page; `AdminUserList` renders rows and a next link | integration; unit |
 | FR-3 next page | `AdminPage` with `after` cursor renders the rest, no next link, a first-page link | unit |
 | FR-3 fresh after an action | `refresh()` is called after a successful action and the row shows blocked (component test) | unit |
 | FR-3 admin row has no controls | `AdminUserRow` renders the admin badge and no control when `is_admin` is true | unit |

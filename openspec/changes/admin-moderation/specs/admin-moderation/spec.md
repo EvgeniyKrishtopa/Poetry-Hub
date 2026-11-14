@@ -65,12 +65,12 @@ The site header SHALL show a link to `/admin` to a signed-in admin, and to no on
 - **THEN** `is_admin()` is not called
 
 ### Requirement: User list (FR-3)
-The `/admin` page SHALL list users newest first, 25 per page, paged by a keyset cursor in the URL (`after`, built from `created_at` and `id`) with a next link and a link back to the first page, rendered on the server. No page SHALL be held in client state. Each row SHALL show the user's email, their author name when set, when they joined, when they last signed in, and their state: active, blocked, or banned. A row of an admin SHALL be marked as an admin and SHALL show no block, ban, or revoke control; `admin_list_users` SHALL return the flag for it. The page SHALL offer an exact-email filter: the whole address, not a part of it, compared after trimming and lower-casing both the input and the stored address. The list SHALL come from `admin_list_users()`, which returns rows to an admin only.
+The `/admin` page SHALL list users newest first, 10 per page, paged by a keyset cursor in the URL (`after`, built from `created_at` and `id`) with a next link and a link back to the first page, rendered on the server. No page SHALL be held in client state. Each row SHALL show the user's email, their author name when set, when they joined, when they last signed in, and their state: active, blocked, or banned. A row of an admin SHALL be marked as an admin and SHALL show no block, ban, or revoke control; `admin_list_users` SHALL return the flag for it. The page SHALL offer an exact-email filter: the whole address, not a part of it, compared after trimming and lower-casing both the input and the stored address. The list SHALL come from `admin_list_users()`, which returns rows to an admin only.
 
 #### Scenario: First page
-- **GIVEN** 30 users exist
+- **GIVEN** 15 users exist
 - **WHEN** an admin opens `/admin`
-- **THEN** 25 rows show, newest first, with a link to the next page
+- **THEN** 10 rows show, newest first, with a link to the next page
 
 #### Scenario: Next page
 - **GIVEN** the first page is shown
