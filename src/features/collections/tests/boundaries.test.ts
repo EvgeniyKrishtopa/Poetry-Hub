@@ -38,7 +38,8 @@ describe("collections feature boundaries", () => {
   });
 
   // implements NFR-3 of public-collections
-  it.each(["auth", "collection-management", "poem-management"])("imports nothing from %s", (feature) => {
+  // implements NFR-4 of admin-moderation
+  it.each(["admin", "auth", "collection-management", "poem-management"])("imports nothing from %s", (feature) => {
     expect(filesMatching(collectionsFiles, importOf(feature))).toEqual([]);
   });
 

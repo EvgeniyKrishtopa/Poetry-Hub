@@ -43,6 +43,11 @@ describe("poems feature boundaries", () => {
     expect(filesMatching(poemsFiles, /from ["']@\/shared\/lib\/supabase\/(server|session)["']/)).toEqual([]);
   });
 
+  // implements NFR-4 of admin-moderation
+  it("never imports the admin feature: the moderation control reaches a poem page through the route's render function", () => {
+    expect(filesMatching(poemsFiles, /from ["']@\/features\/admin["']/)).toEqual([]);
+  });
+
   // implements FR-6 of add-author-poems
   it("never redirects, so no visitor is sent to sign in", () => {
     // Any mention, not only a named import: `import * as navigation` would slip past an import pattern.
