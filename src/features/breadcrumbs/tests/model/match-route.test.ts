@@ -61,6 +61,12 @@ describe("matchRoute", () => {
     });
   });
 
+  // implements FR-2 of admin-moderation
+  it("has no route row for /admin, so its trail is none, the same as an unknown URL", () => {
+    expect(matchRoute(["admin"])).toEqual({ kind: "none" });
+    expect(STATIC_ROUTES.map((route) => route.path)).not.toContain("/admin");
+  });
+
   // implements FR-6 of public-collections
   it.each([
     [["authors", ANNA_ID, "collections"]],

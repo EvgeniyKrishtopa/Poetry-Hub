@@ -1,4 +1,12 @@
-/** The header link to `/admin`: session first, `is_admin()` only for a signed-in reader, otherwise nothing (design D13). */
+import { Suspense } from "react";
+
+import { AdminNavLinkContent } from "./AdminNavLinkContent";
+
+/** The header link to `/admin`, in its own boundary with an empty fallback: the prerendered shell is the same for everyone (design D13). */
 export function AdminNavLink() {
-  return null;
+  return (
+    <Suspense fallback={null}>
+      <AdminNavLinkContent />
+    </Suspense>
+  );
 }

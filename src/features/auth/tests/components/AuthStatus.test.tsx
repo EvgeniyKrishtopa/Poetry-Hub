@@ -26,6 +26,17 @@ describe("AuthStatus", () => {
     expect(container).not.toHaveTextContent("@");
   });
 
+  // implements FR-20 of admin-moderation
+  it("renders the admin slot between the account link and Sign out for a signed-in reader only", () => {
+    const { container, rerender } = render(<AuthStatus session="signed-in" adminLink={<a href="/admin">Админка</a>} />);
+
+    const labels = Array.from(container.querySelectorAll("a, button")).map((element) => element.textContent);
+    expect(labels).toEqual(["Мастерская поэта", "Админка", "Выйти"]);
+
+    rerender(<AuthStatus session="signed-out" adminLink={<a href="/admin">Админка</a>} />);
+    expect(screen.queryByRole("link", { name: "Админка" })).not.toBeInTheDocument();
+  });
+
   // implements FR-20 of add-author-profiles
   it("shows only the empty placeholder when the session can't be checked", () => {
     const { container } = render(<AuthStatus session="unknown" />);

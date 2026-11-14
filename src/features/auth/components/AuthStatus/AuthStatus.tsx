@@ -15,13 +15,14 @@ import type { AuthStatusProps } from "./AuthStatus.types";
  * outage (add-author-profiles FR-20).
  */
 // implements NFR-4 of add-supabase-auth: token utilities only, no color literals
-export function AuthStatus({ session }: AuthStatusProps) {
+export function AuthStatus({ session, adminLink }: AuthStatusProps) {
   if (session === SESSION_STATE.unknown) return <HeaderAuthPlaceholder />;
 
   if (session === SESSION_STATE.signedIn) {
     return (
       <div className="flex items-center gap-4">
         <AccountLink />
+        {adminLink}
         <SignOutButton />
       </div>
     );

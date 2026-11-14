@@ -11,6 +11,9 @@ export const ADMIN_LIST_COPY = {
   loading: "Загрузка…",
   empty: "Никого не нашли",
   loadFailed: "Не удалось загрузить пользователей",
+  joinedLabel: "Регистрация:",
+  lastSignInLabel: "Последний вход:",
+  noDate: "—",
 } as const;
 
 /** The state badge's text for each state (artboard 41). */
@@ -55,9 +58,9 @@ export const MODERATION_FAILURE_MESSAGES = {
 /** The ban confirmation dialog (artboard 42); the description names the address. */
 export const BAN_DIALOG_COPY = {
   title: "Забанить пользователя?",
-  // Artboard 42 only says the description names the address; this wording is a placeholder, to confirm.
   description: (email: string): string =>
-    `Пользователь ${email} не сможет войти, а этот адрес — зарегистрироваться снова.`,
+    `${email} не сможет войти, писать и зарегистрироваться снова с этим адресом. Отменить бан в приложении нельзя.`,
+  close: "Закрыть",
   cancel: "Отмена",
   confirm: "Забанить",
 } as const;

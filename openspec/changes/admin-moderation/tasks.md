@@ -112,20 +112,20 @@ each group lands its own tests.
 
 ## 5. The `/admin` page (UI) <!-- judgement-heavy -->
 
-- [ ] 5.1 (FR-2) `src/app/(authorized)/admin/page.tsx` (one line, renders `AdminPage`; the session and admin gate
+- [x] 5.1 (FR-2) `src/app/(authorized)/admin/page.tsx` (one line, renders `AdminPage`; the session and admin gate
   live in `AdminPage` inside its own Suspense), its `@breadcrumbs` slot page, and the
   `app/tests/breadcrumbs-slot.test.ts` update; signed-out to `/login`, non-admin to `notFound()`, outage to the
   "service unavailable" state; never cached.
-- [ ] 5.2 (FR-3) `AdminPage`, `AdminUserList`, `AdminUserRow`: the server-rendered list, state badges (admin rows marked, with no controls; blocked rows offer unblock, revoke, ban; banned rows only revoke), results and failures inside the row, URL-cursor
+- [x] 5.2 (FR-3) `AdminPage`, `AdminUserList`, `AdminUserRow`: the server-rendered list, state badges (admin rows marked, with no controls; blocked rows offer unblock, revoke, ban; banned rows only revoke), results and failures inside the row, URL-cursor
   next link and first-page link, the email filter, loading and empty states.
-- [ ] 5.3 (FR-4 – FR-7, FR-12, NFR-5) Block, unblock and revoke controls (one click each) and a ban control with a
+- [x] 5.3 (FR-4 – FR-7, FR-12, NFR-5) Block, unblock and revoke controls (one click each) and a ban control with a
   confirmation dialog naming the user's email; no reason field anywhere; result line;
   `refresh()` after a success. No accessibility work is required for the admin UI (NFR-5).
-- [ ] 5.3a (FR-20, NFR-3, NFR-4) `AdminNavLink` (session first, `is_admin()` only for a signed-in reader, link or `null`)
+- [x] 5.3a (FR-20, NFR-3, NFR-4) `AdminNavLink` (session first, `is_admin()` only for a signed-in reader, link or `null`)
   inside its own `<Suspense fallback={null}>`; an optional `adminLink?: ReactNode` slot on `auth`'s `HeaderAuthLinks`
   rendered between «Личный кабинет» and «Выйти» (artboard 1), filled by `src/app/layout.tsx`; the three-row mobile
   header only when the slot is filled; `AdminNavLink` added to the admin public API.
-- [ ] 5.4 (FR-2 – FR-7, FR-12, FR-20, NFR-5) Component tests for the list, the filter, the paging, the header link (admin, others, guest with no RPC) and the ban dialog (texts come from
+- [x] 5.4 (FR-2 – FR-7, FR-12, FR-20, NFR-5) Component tests for the list, the filter, the paging, the header link (admin, others, guest with no RPC) and the ban dialog (texts come from
   `admin-messages.ts`).
 
 ## 6. Admin delete control on public pages (UI) <!-- judgement-heavy -->
