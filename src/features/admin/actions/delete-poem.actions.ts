@@ -2,7 +2,6 @@
 
 import { deletePoemAsAdmin } from "../dal/delete-rpc";
 import { removeIllustration } from "../dal/illustration-cleanup";
-import { logFailure } from "../dal/rpc-failure";
 import { toFailureReason } from "../model/action-results";
 import { DELETE_DB_STATUS } from "../model/admin.constants";
 import { deleteTargetSchema } from "../model/admin.schema";
@@ -11,8 +10,6 @@ import type { DeleteActionResult } from "../model/admin.types";
 import { adminActionClient } from "./action-client";
 import { expireAuthorWorksTag } from "./expire-author-works-tag";
 import { checkSession } from "./session-check";
-
-const CLEANUP_OPERATION = "remove illustration";
 
 /** The steps of design D8, in order; each failure stops the rest. */
 async function deletePoem(poemId: string): Promise<DeleteActionResult> {
@@ -30,22 +27,10 @@ async function deletePoem(poemId: string): Promise<DeleteActionResult> {
   // 4. The row is gone: the author's public pages must not list it. A failed expiry is only logged.
   expireAuthorWorksTag(result.authorId);
 
-  // 5. The file last: the delete stands whatever happens to it (D8, FR-8).
-  if (result.illustrationPath !== null) await removeFileAfterDelete(result.illustrationPath);
+  // 5. The file last: the helper logs and swallows its own failures, so the delete stands whatever happens (D8, FR-8).
+  if (result.illustrationPath !== null) await removeIllustration(result.illustrationPath);
 
   return { ok: true };
-}
-
-/**
- * The helper already logs and swallows its own failures; this catch keeps the answer a success even if that ever
- * changes, because the row is gone and an error would invite a pointless retry.
- */
-async function removeFileAfterDelete(path: string): Promise<void> {
-  try {
-    await removeIllustration(path);
-  } catch (error) {
-    logFailure(CLEANUP_OPERATION, error);
-  }
 }
 
 /** Deletes another user's poem, expires the author's works tag and removes the illustration best-effort (design D8, FR-8). */

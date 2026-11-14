@@ -24,10 +24,6 @@ vi.mock("../../dal/illustration-cleanup", () => ({ removeIllustration: vi.fn() }
 
 const OTHER_AUTHOR_ID = "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f";
 
-class StorageApiError extends Error {
-  override name = "StorageApiError";
-}
-
 const DELETED = { ok: true, status: "deleted", authorId: AUTHOR_ID, illustrationPath: ILLUSTRATION_PATH } as const;
 
 /** Nothing past the validation or the session check ran. */
@@ -83,17 +79,15 @@ describe("deletePoemAction", () => {
     expect(removeIllustration).not.toHaveBeenCalled();
   });
 
-  // implements FR-8, NFR-6 of admin-moderation
-  it("keeps the delete when the file removal throws: it still answers success and logs the class only", async () => {
-    // The helper never throws by contract; this pins the answer for the day that changes.
-    vi.mocked(removeIllustration).mockRejectedValue(new StorageApiError(`object ${ILLUSTRATION_PATH} not found`));
-
+  // implements FR-8 of admin-moderation
+  it("answers success after the file removal ran: its failure is the helper's to log, never the delete's", async () => {
+    // `removeIllustration` never throws (dal/illustration-cleanup.test.ts pins that), so a failed removal reaches
+    // the action as an ordinary return.
     const result = await deletePoemAction({ id: POEM_ID });
 
     expect(result.data).toEqual({ ok: true });
     expect(updateTag).toHaveBeenCalledOnce();
-    expect(console.error).toHaveBeenCalledExactlyOnceWith("[admin] remove illustration failed: StorageApiError");
-    expectNothingSecretLogged();
+    expect(removeIllustration).toHaveBeenCalledExactlyOnceWith(ILLUSTRATION_PATH);
   });
 
   // implements FR-8, NFR-6 of admin-moderation
