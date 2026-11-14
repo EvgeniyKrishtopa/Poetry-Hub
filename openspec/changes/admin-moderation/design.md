@@ -194,7 +194,7 @@ an unknown URL; an unreadable
 session or admin check shows the "service unavailable" state. Its data is never cached (ADR 0011).
 
 The list is paged forward by a URL cursor (`?after=<created_at>_<id>`, optional `?email=` exact filter), rendered on
-the server, 25 per page (a named constant), with a "Next" link and a "Back to the first page" link (a keyset cannot
+the server, 10 per page (a named constant), with a "Next" link and a "Back to the first page" link (a keyset cannot
 find the previous cursor, and a `before` query is not worth it for a list one owner reads). The email filter sits in the GET URL, so the hosting platform's request logs and the browser history hold it; only the
 admin's own searches reach it, and NFR-6 is scoped to the app's own logs. No page is copied into client state, so
 `refresh()` after an action re-renders the current page with fresh data. It needs its own `@breadcrumbs` slot page
@@ -399,7 +399,7 @@ sequenceDiagram
     else false
       P-->>A: notFound() (soft 404, status 200)
     else true
-      P->>DB: admin_list_users(25, cursor, email)
+      P->>DB: admin_list_users(10, cursor, email)
       alt outage, or 42501 after the admin row was removed
         DB-->>P: error
         P-->>A: service unavailable (any list failure, 42501 included)

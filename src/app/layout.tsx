@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 
+import { AdminNavLink } from "@/features/admin";
 import { HeaderAuthLinks } from "@/features/auth";
 import { AuthorsNavLink } from "@/features/authors";
 import { SiteFooter } from "@/features/site-footer";
@@ -41,9 +42,10 @@ export default function RootLayout({ children, breadcrumbs }: LayoutProps<"/">) 
             <Link href="/" className="text-lg font-semibold">
               {siteConfig.name}
             </Link>
-            <nav className="flex items-center justify-end gap-4">
+            {/* An admin's three links don't fit one row below 600 px, so the session block wraps to its own row. */}
+            <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
               <AuthorsNavLink />
-              <HeaderAuthLinks />
+              <HeaderAuthLinks adminLink={<AdminNavLink />} />
             </nav>
           </header>
           {breadcrumbs}

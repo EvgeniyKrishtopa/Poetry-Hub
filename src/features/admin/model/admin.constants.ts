@@ -1,5 +1,5 @@
 /** Rows on one `/admin` page (design D9). */
-export const ADMIN_USERS_PAGE_SIZE = 25;
+export const ADMIN_USERS_PAGE_SIZE = 10;
 
 /** The admin page's path; it has no breadcrumbs row on purpose (design D9). */
 export const ADMIN_PATH = "/admin";
