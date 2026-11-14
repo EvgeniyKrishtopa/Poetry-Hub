@@ -55,8 +55,10 @@ export const signUpAction = authActionClient
     if ("failure" in client) return failed(client.failure);
 
     const { error } = await client.supabase.auth.signUp(parsedInput);
-    // A banned address gets the same answer as any other, so a ban isn't revealed (FR-17).
-    if (error && !isBannedSignUpRejection(error)) return failed(classifyAuthError(error));
+    // A banned address gets the same answer as any other, so a ban isn't revealed (FR-17). The refusal leaves
+    // one trace for the operator: the action name only, never the address.
+    if (error && isBannedSignUpRejection(error)) console.warn("[auth] sign-up refused for a banned address");
+    else if (error) return failed(classifyAuthError(error));
 
     // The same answer whatever `data.user.identities` holds, so an existing address isn't revealed.
     return { status: "check-email", email: parsedInput.email };

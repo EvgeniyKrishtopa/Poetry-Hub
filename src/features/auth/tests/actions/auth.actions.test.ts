@@ -168,6 +168,16 @@ describe("auth actions", () => {
       expect(result.data).toEqual({ status: "check-email", email: EMAIL });
     });
 
+    // implements NFR-6 of admin-moderation
+    it("logs the refusal of a banned address without the address", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      auth.signUp.mockResolvedValue({ data: { user: null }, error: authError("unknown", 403, "signup not allowed") });
+
+      await signUpAction(CREDENTIALS);
+
+      expect(warn).toHaveBeenCalledExactlyOnceWith("[auth] sign-up refused for a banned address");
+    });
+
     // implements FR-17 of admin-moderation
     it("keeps the weak-password message instead of check-email", async () => {
       auth.signUp.mockResolvedValue({
