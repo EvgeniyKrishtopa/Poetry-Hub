@@ -35,6 +35,7 @@ describe("AdminUserList", () => {
 
     render(await AdminUserList({ query: { email: "a@b.co" } }));
 
+    expect(listUsers).toHaveBeenCalledWith({ email: "a@b.co" });
     expect(screen.getByText(USER.email)).toBeInTheDocument();
     const next = screen.getByRole("link", { name: ADMIN_LIST_COPY.nextLink });
     const params = new URL(next.getAttribute("href") ?? "", "https://example.test").searchParams;
@@ -53,6 +54,7 @@ describe("AdminUserList", () => {
 
     render(await AdminUserList({ query: { after: CURSOR } }));
 
+    expect(listUsers).toHaveBeenCalledWith({ after: CURSOR });
     expect(screen.getByRole("link", { name: ADMIN_LIST_COPY.firstPageLink })).toHaveAttribute("href", "/admin");
     expect(screen.queryByRole("link", { name: ADMIN_LIST_COPY.nextLink })).not.toBeInTheDocument();
   });

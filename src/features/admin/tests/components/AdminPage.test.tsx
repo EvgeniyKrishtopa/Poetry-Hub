@@ -15,8 +15,12 @@ const notFound = vi.fn(() => {
 vi.mock("next/navigation", () => ({ notFound: () => notFound() }));
 vi.mock("@/features/auth", () => ({ requireSession: vi.fn() }));
 vi.mock("../../dal/admin-check", () => ({ checkIsAdmin: vi.fn() }));
+const userList = vi.hoisted(() => vi.fn());
 vi.mock("../../components/AdminUserList/AdminUserList", () => ({
-  AdminUserList: () => <p>rows</p>,
+  AdminUserList: (props: unknown) => {
+    userList(props);
+    return <p>rows</p>;
+  },
 }));
 vi.mock("@/shared/ui", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/ui")>()),
@@ -57,6 +61,7 @@ describe("AdminPageContent", () => {
     expect(screen.getByRole("heading", { name: ADMIN_LIST_COPY.title })).toBeInTheDocument();
     expect(screen.getByLabelText(ADMIN_LIST_COPY.emailLabel)).toHaveValue("a@b.co");
     expect(screen.getByText("rows")).toBeInTheDocument();
+    expect(userList).toHaveBeenCalledWith({ query: { after: undefined, email: "a@b.co" } });
   });
 
   // implements FR-2 of admin-moderation

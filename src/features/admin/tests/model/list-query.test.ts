@@ -17,5 +17,12 @@ describe("readListQuery", () => {
       after: undefined,
       email: "a@b.co",
     });
+    expect(readListQuery({ after: "x", email: ["a@b.co", "c@d.co"] })).toEqual({ after: "x", email: undefined });
+  });
+
+  // implements FR-3 of admin-moderation
+  it("reads no parameters as the first page with no filter", () => {
+    expect(readListQuery({})).toEqual({});
+    expect(readListQuery({ after: ["x"], email: ["y"] })).toEqual({ after: undefined, email: undefined });
   });
 });

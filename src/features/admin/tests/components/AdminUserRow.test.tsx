@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -7,6 +7,7 @@ import { stubModalDialog } from "@/shared/ui/tests/stub-modal-dialog";
 import { banUserAction } from "../../actions/ban-user.actions";
 import { blockUserAction } from "../../actions/block-user.actions";
 import { revokeSessionsAction } from "../../actions/revoke-sessions.actions";
+import { unblockUserAction } from "../../actions/unblock-user.actions";
 import { AdminUserRow } from "../../components/AdminUserRow/AdminUserRow";
 import { BAN_DIALOG_COPY, MODERATION_FAILURE_MESSAGES, MODERATION_RESULT_MESSAGES } from "../../model/admin-messages";
 import type { AdminUser, ModerationActionResult } from "../../model/admin.types";
@@ -91,6 +92,32 @@ describe("AdminUserRow", () => {
     expect(await screen.findByText(MODERATION_RESULT_MESSAGES.blocked)).toBeInTheDocument();
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("dialog", { hidden: true })).not.toHaveAttribute("open");
+  });
+
+  // implements FR-4 of admin-moderation
+  it("unblocks a blocked row with one click and shows the result", async () => {
+    vi.mocked(unblockUserAction).mockResolvedValue(respond({ ok: true, status: "unblocked" }));
+    renderRow({ ...USER, restriction: "blocked" });
+
+    await userEvent.click(screen.getByRole("button", { name: "Разблокировать" }));
+
+    expect(unblockUserAction).toHaveBeenCalledWith({ userId: USER.id });
+    expect(await screen.findByText(MODERATION_RESULT_MESSAGES.unblocked)).toBeInTheDocument();
+  });
+
+  // implements FR-12 of admin-moderation
+  it("sends one request when a button is clicked twice before the row disables", async () => {
+    let settle: (value: Response) => void = () => undefined;
+    vi.mocked(blockUserAction).mockReturnValue(new Promise<Response>((resolve) => (settle = resolve)));
+    renderRow();
+    const button = screen.getByRole("button", { name: "Заблокировать" });
+
+    fireEvent.click(button);
+    fireEvent.click(button);
+
+    expect(blockUserAction).toHaveBeenCalledTimes(1);
+    // An unsettled async transition would keep every later test's transitions pending.
+    await act(async () => settle(respond({ ok: true, status: "blocked" })));
   });
 
   // implements FR-6 of admin-moderation
