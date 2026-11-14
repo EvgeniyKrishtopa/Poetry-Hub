@@ -13,9 +13,9 @@ import type { PublicCollectionContentProps } from "./PublicCollectionContent.typ
 /**
  * Checks the author, then reads the collection and renders its heading, description, and poems; `notFound()` on an
  * unknown author or collection, throws to the error screen on unavailable (public-collections D7). It reads no
- * session, so every visitor sees the same page and no management control.
+ * session, so every visitor sees the same page; a route file may add one control through `moderation`.
  */
-export async function PublicCollectionContent({ authorId, collectionId }: PublicCollectionContentProps) {
+export async function PublicCollectionContent({ authorId, collectionId, moderation }: PublicCollectionContentProps) {
   const id = await authorId;
   const author = await getPublicAuthorName(id);
 
@@ -33,7 +33,7 @@ export async function PublicCollectionContent({ authorId, collectionId }: Public
     throw new Error("Collection page unavailable");
   }
 
-  const { title, description, poems } = result.collection;
+  const { id: collectionIdValue, title, description, poems } = result.collection;
   return (
     <article lang={CONTENT_LANG} className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
@@ -52,6 +52,7 @@ export async function PublicCollectionContent({ authorId, collectionId }: Public
         <h2 className="text-2xl font-semibold tracking-[-0.01em]">{PUBLIC_COLLECTIONS_COPY.poemsHeading}</h2>
         <PoemTitleList poems={poems} poemHref={(poemId) => authorPoemPath(id, poemId)} />
       </section>
+      {moderation?.({ id: collectionIdValue, title, authorId: id })}
     </article>
   );
 }

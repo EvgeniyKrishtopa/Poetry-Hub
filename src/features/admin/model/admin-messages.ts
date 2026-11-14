@@ -79,7 +79,20 @@ export const ADMIN_DELETE_COPY = {
     dialogDescription: "Произведения из сборника останутся у автора как свободные.",
     alreadyGone: "Сборник уже удалён",
   },
+  close: "Закрыть",
   cancel: "Отмена",
   confirm: "Удалить",
   failed: "Не удалось удалить",
+} as const;
+
+/**
+ * The delete dialog's failure line (FR-12): a permission failure and an expired session keep their own texts, reused
+ * from the rows; an outage or a rejected input shows the mockup's «Не удалось удалить» (artboards 44 and 45).
+ * `not-found` is not a failure here: the control shows its «already gone» line instead.
+ */
+export const ADMIN_DELETE_FAILURE_MESSAGES = {
+  forbidden: MODERATION_FAILURE_MESSAGES.forbidden,
+  unauthenticated: MODERATION_FAILURE_MESSAGES.unauthenticated,
+  unavailable: ADMIN_DELETE_COPY.failed,
+  invalid: ADMIN_DELETE_COPY.failed,
 } as const;

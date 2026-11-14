@@ -91,5 +91,8 @@ export type ModerationActionResult =
 /** Why a delete did not happen (FR-8, FR-9, FR-12); `not-found` is the "already gone" answer. */
 export type DeleteFailureReason = "not-found" | "forbidden" | "unauthenticated" | "unavailable" | "invalid";
 
+/** What the delete control removes: a poem or a collection (artboards 44 and 45). */
+export type AdminDeleteKind = "poem" | "collection";
+
 /** What a delete Server Action returns; the control sends the admin to the redirect it was given on success. */
 export type DeleteActionResult = { readonly ok: true } | { readonly ok: false; readonly reason: DeleteFailureReason };

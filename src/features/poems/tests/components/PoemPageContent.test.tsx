@@ -61,6 +61,37 @@ describe("PoemPageContent", () => {
     expect(screen.queryByRole("link", { name: "Редактировать произведение" })).toBeNull();
   });
 
+  // implements FR-10 of admin-moderation
+  it("puts what the moderation function returns after the article, called with the poem's id, title and author", async () => {
+    vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Anna Akhmatova" });
+    vi.mocked(getAuthorPoem).mockResolvedValue({ ok: true, poem: AUTUMN_GARDEN });
+    const moderation = vi.fn(() => <p>control</p>);
+
+    // The async article can't render in jsdom, so the fragment's children are checked instead.
+    const element = (await PoemPageContent({
+      authorId: Promise.resolve(AUTHOR_ID),
+      poemId: Promise.resolve(POEM_ID),
+      moderation,
+    })) as ReactElement<{ children: [ReactElement, ReactElement] }>;
+    const [article, control] = element.props.children;
+
+    expect(moderation).toHaveBeenCalledWith({ id: AUTUMN_GARDEN.id, title: AUTUMN_GARDEN.title, authorId: AUTHOR_ID });
+    expect(article.type).toBe(PoemArticle);
+    expect(control.type).toBe("p");
+  });
+
+  // implements FR-10 of admin-moderation: no control on a soft 404
+  it("never calls the moderation function for a poem that isn't there", async () => {
+    vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: true, name: "Anna Akhmatova" });
+    vi.mocked(getAuthorPoem).mockResolvedValue({ ok: false, reason: "not-found" });
+    const moderation = vi.fn();
+
+    await expect(
+      PoemPageContent({ authorId: Promise.resolve(AUTHOR_ID), poemId: Promise.resolve(POEM_ID), moderation }),
+    ).rejects.toThrow("404");
+    expect(moderation).not.toHaveBeenCalled();
+  });
+
   // implements FR-5 of add-author-poems
   it("calls notFound() for an unknown or malformed author, without reading the poem", async () => {
     vi.mocked(getPublicAuthorName).mockResolvedValue({ ok: false, reason: "not-found" });
