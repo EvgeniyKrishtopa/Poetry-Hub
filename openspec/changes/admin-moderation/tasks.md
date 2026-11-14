@@ -155,7 +155,8 @@ each group lands its own tests.
   `/admin` route (no breadcrumbs `STATIC_ROUTES` row).
 - [ ] 7.3 (NFR-2) A test that fails when `src/` reads a service-role or secret Supabase key variable.
 - [ ] 7.4 (all) Web QA of the whole flow on the local stack: admin sign-in, block, sign-in refused, unblock, ban and
-  the sign-up showing the neutral answer, revoke, delete another user's poem (with illustration) and collection from
+  the sign-up showing the neutral answer (the check also asserts the hook's exact status 403 and message `signup not
+  allowed` reaching `signUpAction`, so a Supabase upgrade that rewords it breaks a check, not the mask), revoke, delete another user's poem (with illustration) and collection from
   the public pages, and a non-admin's `/admin` 404. Keep the passing flows as `tests/web-qa-scenarios` specs.
 - [ ] 7.5 (all) Validate: `npm run typecheck && npm run lint && npm run test:coverage && npm run build &&
   npm run knip`, and the whole pgTAP suite after `supabase db reset`.
