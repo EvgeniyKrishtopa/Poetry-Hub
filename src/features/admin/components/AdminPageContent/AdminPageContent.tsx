@@ -2,10 +2,9 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { requireSession } from "@/features/auth";
-import { SESSION_STATE } from "@/shared/config/constants";
 import { SessionUnavailableAlert } from "@/shared/ui";
 
-import { checkIsAdmin } from "../../dal/admin-check";
+import { readAdminAccess } from "../../dal/admin-access";
 import { ADMIN_LIST_COPY } from "../../model/admin-messages";
 import { readListQuery } from "../../model/list-query";
 import { AdminListSkeleton } from "../AdminListSkeleton/AdminListSkeleton";
@@ -21,11 +20,9 @@ import type { AdminPageContentProps } from "./AdminPageContent.types";
  */
 export async function AdminPageContent({ query }: AdminPageContentProps) {
   const session = await requireSession();
-  if (session.state === SESSION_STATE.unknown) return <SessionUnavailableAlert />;
-
-  const admin = await checkIsAdmin();
-  if (!admin.ok) return <SessionUnavailableAlert />;
-  if (!admin.isAdmin) notFound();
+  const access = await readAdminAccess(session.state);
+  if (access === "unavailable") return <SessionUnavailableAlert />;
+  if (access === "not-admin") notFound();
 
   const listQuery = readListQuery(await query);
   return (

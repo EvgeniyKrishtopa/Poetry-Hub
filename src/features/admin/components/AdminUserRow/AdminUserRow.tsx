@@ -34,9 +34,19 @@ export function AdminUserRow({ user }: AdminUserRowProps) {
     dialogRef.current?.showModal();
   }
 
-  function handleAction(kind: (typeof actions)[number]) {
-    if (kind === "ban") openBanDialog();
-    else run(kind);
+  function createClickHandler(kind: (typeof actions)[number]) {
+    return function handleClick() {
+      if (kind === "ban") openBanDialog();
+      else run(kind);
+    };
+  }
+
+  function handleBanConfirm() {
+    run("ban");
+  }
+
+  function handleBanDialogClose() {
+    setBanDialogOpen(false);
   }
 
   const failure = outcome !== null && !outcome.ok ? outcome.reason : null;
@@ -65,7 +75,7 @@ export function AdminUserRow({ user }: AdminUserRowProps) {
               variant={kind === "ban" ? "danger" : "ghost"}
               aria-haspopup={kind === "ban" ? "dialog" : undefined}
               disabled={isPending}
-              onClick={() => handleAction(kind)}
+              onClick={createClickHandler(kind)}
             >
               {ADMIN_ACTION_LABELS[kind]}
             </Button>
@@ -84,8 +94,8 @@ export function AdminUserRow({ user }: AdminUserRowProps) {
           email={user.email}
           isPending={isPending}
           failure={banDialogOpen ? failure : null}
-          onConfirm={() => run("ban")}
-          onClose={() => setBanDialogOpen(false)}
+          onConfirm={handleBanConfirm}
+          onClose={handleBanDialogClose}
         />
       )}
     </li>
