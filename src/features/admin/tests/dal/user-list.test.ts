@@ -88,6 +88,20 @@ describe("listUsers", () => {
   });
 
   // implements FR-3 of admin-moderation
+  it.each(["", "   "])("sends no filter for the blank address %j, so the whole list shows", async (email) => {
+    rpc.mockResolvedValue(ok([]));
+
+    await listUsers({ email });
+
+    expect(rpc).toHaveBeenCalledExactlyOnceWith("admin_list_users", {
+      page_size: ADMIN_USERS_PAGE_SIZE + 1,
+      after_created_at: null,
+      after_id: null,
+      email: null,
+    });
+  });
+
+  // implements FR-3 of admin-moderation
   it("treats a hand-edited cursor as the first page and sends no half of it", async () => {
     rpc.mockResolvedValue(ok([]));
 
