@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { Children, Suspense, isValidElement, type ReactElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
+import { AdminNavLink } from "@/features/admin";
 import { HeaderAuthLinks } from "@/features/auth";
 import { AuthorsNavLink } from "@/features/authors";
 import { SiteFooter } from "@/features/site-footer";
@@ -49,6 +50,14 @@ describe("RootLayout header", () => {
 
     const items = Children.toArray(nav?.props.children) as AnyElement[];
     expect(items.map((item) => item.type)).toEqual([AuthorsNavLink, HeaderAuthLinks]);
+  });
+
+  // implements FR-20 of admin-moderation
+  it("fills the session part's adminLink slot with AdminNavLink", () => {
+    const sessionPart = pathTo(renderLayoutTree(), HeaderAuthLinks)?.at(-1);
+
+    const props = sessionPart?.props as { adminLink?: ReactElement } | undefined;
+    expect(props?.adminLink?.type).toBe(AdminNavLink);
   });
 
   // implements FR-3 of add-author-profiles
