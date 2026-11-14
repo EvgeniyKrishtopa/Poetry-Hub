@@ -37,6 +37,13 @@ the database or in the buckets.
 - A wrong password for a blocked address also answers `user_banned`, so an anonymous caller can tell that an
   address belongs to a blocked or banned account. Accepted: the owner moderates a small site, and hiding it would
   need the app to proxy sign-in differently.
+- The sign-up mask only works through the app. A direct call to Supabase Auth with the publishable key answers a
+  banned address with HTTP 403 `signup not allowed`, and a fresh address with 200, so an anonymous caller can tell
+  that an address is in `banned_emails`. This outlasts the sign-in leak above: once the owner removes a banned
+  account's rows, sign-in answers `invalid_credentials`, but the sign-up call still shows the ban. Accepted for the
+  same reason (small site, one owner); closing it would need the hook to reject with an answer that looks like an
+  ordinary sign-up failure, which is a design D6 change and a new local-stack check (found in group 4's deep review,
+  DR-06).
 - **Task 4.4a (`readClaimsState`)**: a refresh for a revoked or blocked session is `refresh_token_not_found`,
   not `user_banned`; both must read as signed out.
 
