@@ -15,6 +15,26 @@ describe("list cursor", () => {
   });
 
   // implements FR-3 of admin-moderation
+  it("survives a URL whose offset plus was percent-encoded", () => {
+    const query = new URLSearchParams({ after: formatListCursor({ createdAt: CREATED_AT, id: USER_ID }) });
+    const url = new URL(`https://example.test/admin?${query.toString()}`);
+
+    expect(query.toString()).toContain("%2B");
+    expect(parseListCursor(url.searchParams.get("after") ?? undefined)).toEqual({ createdAt: CREATED_AT, id: USER_ID });
+  });
+
+  // implements FR-3 of admin-moderation
+  it("survives a URL whose offset plus was not encoded, and so was read back as a space", () => {
+    const url = new URL(`https://example.test/admin?after=${CREATED_AT}_${USER_ID}`);
+
+    expect(url.searchParams.get("after")).toContain(" 00:00");
+    expect(parseListCursor(url.searchParams.get("after") ?? undefined)).toEqual({
+      createdAt: CREATED_AT,
+      id: USER_ID,
+    });
+  });
+
+  // implements FR-3 of admin-moderation
   it("is no cursor, so the first page, when the parameter is absent", () => {
     expect(parseListCursor(undefined)).toBeNull();
   });
