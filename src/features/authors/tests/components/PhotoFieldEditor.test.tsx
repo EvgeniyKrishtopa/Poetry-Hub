@@ -151,6 +151,19 @@ describe("PhotoFieldEditor", () => {
     expect(screen.getByRole("button", { name: "Изменить" })).toBeEnabled();
   });
 
+  // implements FR-19 of admin-moderation
+  it("shows the restricted message and the previous photo when a blocked account uploads", async () => {
+    vi.mocked(savePhotoAction).mockResolvedValue({ data: { status: "failed", failure: "restricted" } } as const);
+    const user = await chooseFile(pngFile(), SAVED_URL);
+    await screen.findByRole("img");
+
+    await user.click(screen.getByRole("button", { name: "Сохранить" }));
+
+    expect(await screen.findByText("Ваш аккаунт заблокирован: изменения недоступны.")).toBeInTheDocument();
+    expect(screen.getByRole("img").getAttribute("src")).toContain("/_next/image");
+    expect(screen.getByRole("button", { name: "Изменить" })).toBeEnabled();
+  });
+
   // implements FR-7 of add-author-profiles
   it("shows the placeholder again after a failed first upload", async () => {
     vi.mocked(savePhotoAction).mockResolvedValue(UNAVAILABLE);

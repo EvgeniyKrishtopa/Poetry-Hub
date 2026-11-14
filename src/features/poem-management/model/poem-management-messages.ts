@@ -1,7 +1,7 @@
 import type { ImageFileError } from "@/shared/lib/image-file/image-file.types";
 
 import { TEXT_MAX_LENGTH, TITLE_MAX_LENGTH } from "./poem-management.constants";
-import type { IllustrationLabels, SaveAlertFailure } from "./poem-management.types";
+import type { DeleteAlertFailure, IllustrationLabels, SaveAlertFailure } from "./poem-management.types";
 
 // Every string of the proposal's UI copy table this feature shows, verbatim and in Russian.
 
@@ -50,8 +50,12 @@ export const ILLUSTRATION_ERROR_MESSAGES: Readonly<Record<ImageFileError, string
   "unsupported-type": POEM_FIELD_ERRORS.illustrationUnsupportedType,
 };
 
+/** The text of a write refused for a blocked or banned account, on every poem write surface (FR-14). */
+const RESTRICTED_MESSAGE = "Ваш аккаунт заблокирован: изменения недоступны.";
+
 export const CREATE_POEM_FAILURE_MESSAGES = {
   "too-many-poems": "Слишком много новых произведений. Попробуйте позже.",
+  restricted: RESTRICTED_MESSAGE,
   unauthenticated: "Сессия истекла. Войдите снова.",
   unavailable: "Сохранение сейчас недоступно. Попробуйте позже.",
   unknown: "Что-то пошло не так. Попробуйте ещё раз.",
@@ -71,6 +75,13 @@ export const DELETE_POEM_COPY = {
   deleted: (title: string) => `Произведение «${title}» удалено.`,
   alreadyDeleted: "Произведение уже удалено.",
 } as const;
+
+/** The delete dialog's alert, one text per failure that keeps the owner in the dialog (FR-14). */
+export const DELETE_POEM_FAILURE_MESSAGES: Readonly<Record<DeleteAlertFailure, string>> = {
+  restricted: RESTRICTED_MESSAGE,
+  unavailable: DELETE_POEM_COPY.failure,
+  unknown: DELETE_POEM_COPY.failure,
+};
 
 /** The edit button, the edit page, its form, and the notice after a save (edit-poem). */
 export const EDIT_POEM_COPY = {
@@ -96,6 +107,7 @@ export const EDIT_POEM_ILLUSTRATION_LABELS: IllustrationLabels = {
 export const UPDATE_POEM_FAILURE_MESSAGES: Readonly<Record<SaveAlertFailure, string>> = {
   "too-many-saves": "Слишком много сохранений. Попробуйте через минуту.",
   "not-public": "Чтобы сохранять изменения, укажите имя и фамилию в профиле автора.",
+  restricted: RESTRICTED_MESSAGE,
   unavailable: CREATE_POEM_FAILURE_MESSAGES.unavailable,
   unknown: CREATE_POEM_FAILURE_MESSAGES.unknown,
 };

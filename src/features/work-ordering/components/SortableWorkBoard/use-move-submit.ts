@@ -10,11 +10,11 @@ import { moveCollectionAction } from "../../actions/move-collection.actions";
 import { movePoemAction } from "../../actions/move-poem.actions";
 import { arrangeDrop } from "../../model/arrange-drop";
 import { MOVE_FAILURE_REASON } from "../../model/work-ordering.constants";
-import type { Arrangement, Drop, MoveResult } from "../../model/work-ordering.types";
+import type { Arrangement, Drop, MoveFailureReason, MoveResult } from "../../model/work-ordering.types";
 
 /** A new object per failure, so the same failure twice moves focus to the alert twice. */
 export interface MoveAlert {
-  readonly reason: typeof MOVE_FAILURE_REASON.failed | typeof MOVE_FAILURE_REASON.rateLimited | typeof MOVE_FAILURE_REASON.stale;
+  readonly reason: Exclude<MoveFailureReason, typeof MOVE_FAILURE_REASON.unauthenticated>;
 }
 
 interface UseMoveSubmit {

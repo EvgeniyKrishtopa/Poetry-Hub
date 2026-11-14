@@ -11,6 +11,7 @@ import { moveOwnCollection, moveOwnPoem } from "../../dal/move-writes";
 vi.mock("@/shared/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
 
 const HTTP_OK = 200;
+const HTTP_BAD_REQUEST = 400;
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_UNAVAILABLE = 503;
 const NO_RESPONSE = 0;
@@ -203,6 +204,8 @@ describe("consumeMoveAllowance", () => {
   it.each([
     ["a 5xx", () => answer(rpcError("XX000", HTTP_UNAVAILABLE)), "unavailable"],
     ["a rejected JWT", () => answer(rpcError("PGRST301", HTTP_UNAUTHORIZED)), "unauthenticated"],
+    // implements FR-18 of admin-moderation
+    ["a blocked account (AM001)", () => answer(rpcError("AM001", HTTP_BAD_REQUEST)), "restricted"],
     ["a non-boolean answer", () => answer(ok("yes")), "unknown"],
     ["a throw", () => rpc.mockRejectedValue(new TypeError("fetch failed")), "unavailable"],
   ] as const)("classifies %s", async (_case, arrange, failure) => {

@@ -24,6 +24,7 @@ type CollectionResponse = Awaited<ReturnType<typeof moveCollectionAction>>;
 const FAILED_TEXT = "Не удалось сохранить порядок. Попробуйте ещё раз.";
 const RATE_LIMITED_TEXT = "Слишком много перестановок за минуту. Подождите немного и повторите.";
 const STALE_TEXT = "Список изменился в другой вкладке. Мы обновили его — попробуйте ещё раз.";
+const RESTRICTED_TEXT = "Ваш аккаунт заблокирован: изменения недоступны.";
 const EMPTY_COLLECTION_AREA = "Перетащите сюда произведение.";
 const EMPTY_FREE_AREA = "Перетащите сюда произведение, чтобы оно не входило ни в один сборник.";
 const OFFLINE_TEXT = "Нет подключения к интернету. Сохранение станет доступно, когда связь восстановится.";
@@ -338,10 +339,12 @@ describe("SortableWorkBoard answers", () => {
   }
 
   // implements FR-6, FR-11 of drag-and-drop-ordering
+  // implements FR-18 of admin-moderation: a blocked account's item snaps back with its own message
   it.each([
     ["failed", FAILED_TEXT],
     ["rate-limited", RATE_LIMITED_TEXT],
     ["stale", STALE_TEXT],
+    ["restricted", RESTRICTED_TEXT],
   ] as const)("returns the item and focuses the alert after a %s move", async (reason, text) => {
     const user = userEvent.setup();
     const answer = deferred<PoemResponse>();

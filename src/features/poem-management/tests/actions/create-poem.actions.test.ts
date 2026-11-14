@@ -181,6 +181,17 @@ describe("createPoemAction", () => {
     expectNothingWritten();
   });
 
+  // implements FR-13, FR-14 of admin-moderation
+  it("returns restricted for a blocked account before any profile read or upload", async () => {
+    vi.mocked(checkCanCreatePoem).mockResolvedValue({ ok: false, failure: "restricted" });
+
+    const result = await createPoemAction({ ...VALID, illustration: file(PNG_BYTES, "a.png", "image/png") });
+
+    expect(result.data).toEqual({ status: "failed", failure: "restricted" });
+    expect(getOwnPublicAuthor).not.toHaveBeenCalled();
+    expectNothingWritten();
+  });
+
   it("passes a failed profile read through", async () => {
     vi.mocked(getOwnPublicAuthor).mockResolvedValue({ ok: false, failure: "unauthenticated" });
 

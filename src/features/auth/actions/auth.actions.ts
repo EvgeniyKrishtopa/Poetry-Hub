@@ -8,7 +8,7 @@ import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
 import type { AuthFailedResult, AuthFailure, SignInResult, SignOutResult, SignUpResult } from "../model/auth.types";
-import { classifyAuthError } from "../model/classify-auth-error";
+import { classifyAuthError, isBannedSignUpRejection } from "../model/classify-auth-error";
 import { signInSchema, signUpSchema } from "../model/credentials.schema";
 
 import { authActionClient } from "./action-client";
@@ -55,7 +55,8 @@ export const signUpAction = authActionClient
     if ("failure" in client) return failed(client.failure);
 
     const { error } = await client.supabase.auth.signUp(parsedInput);
-    if (error) return failed(classifyAuthError(error));
+    // A banned address gets the same answer as any other, so a ban isn't revealed (FR-17).
+    if (error && !isBannedSignUpRejection(error)) return failed(classifyAuthError(error));
 
     // The same answer whatever `data.user.identities` holds, so an existing address isn't revealed.
     return { status: "check-email", email: parsedInput.email };

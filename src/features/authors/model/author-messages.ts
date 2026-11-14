@@ -67,6 +67,7 @@ export const PHOTO_FILE_ERROR_MESSAGES: Readonly<Record<ImageFileError, string>>
 };
 
 const FAILURE_MESSAGES: Readonly<Record<WriteFailure, string>> = {
+  restricted: "Ваш аккаунт заблокирован: изменения недоступны.",
   unauthenticated: "Сессия истекла. Войдите снова.",
   unavailable: "Сохранение сейчас недоступно. Попробуйте позже.",
   unknown: "Что-то пошло не так. Попробуйте ещё раз.",

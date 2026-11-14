@@ -308,7 +308,8 @@ describe("CollectionPoemsForm: saving", () => {
   });
 
   // implements FR-7, FR-8, NFR-4 of add-poems-to-collections
-  it.each(["too-many-saves", "not-public", "unavailable", "unknown"] as const)(
+  // implements FR-15 of admin-moderation: `restricted` keeps the selection and shows its own message
+  it.each(["too-many-saves", "not-public", "unavailable", "unknown", "restricted"] as const)(
     "on %s: the alert above the list, focused, the selection kept and the button enabled",
     async (failure) => {
       vi.mocked(saveCollectionPoemsAction).mockResolvedValue(respond({ status: "failed", failure }));
