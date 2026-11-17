@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { AUTHOR_EDITOR_PATH, AUTHORS_PATH } from "@/features/authors";
 import { NEW_COLLECTION_PATH } from "@/features/collection-management";
 import { NEW_POEM_PATH } from "@/features/poem-management";
-import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
+import {
+  ACCOUNT_PATH,
+  ADMIN_PATH,
+  POEM_MANAGEMENT_PATH,
+  SIGN_IN_PATH,
+  SIGN_UP_PATH,
+} from "@/shared/config/account-paths";
 import { ABOUT_PATH, PRIVACY_PATH } from "@/shared/config/constants";
 
 import { matchRoute, STATIC_ROUTES } from "../../model/match-route";
@@ -29,6 +35,7 @@ describe("matchRoute", () => {
     ],
     [["login"], [{ kind: "current", label: "Вход" }]],
     [["signup"], [{ kind: "current", label: "Регистрация" }]],
+    [["admin"], [{ kind: "current", label: "Админка" }]],
   ])("maps %j to its items without «Главная», parents as links and the last as current", (segments, items) => {
     expect(matchRoute(segments)).toEqual({ kind: "static", items });
   });
@@ -61,10 +68,10 @@ describe("matchRoute", () => {
     });
   });
 
-  // implements FR-2 of admin-moderation
-  it("has no route row for /admin, so its trail is none, the same as an unknown URL", () => {
-    expect(matchRoute(["admin"])).toEqual({ kind: "none" });
-    expect(STATIC_ROUTES.map((route) => route.path)).not.toContain("/admin");
+  // implements FR-21 of admin-moderation: the row exists, and the /admin slot shows its trail to an admin only
+  it("has a route row for /admin, so its trail is «Админка», the slot gating who sees it", () => {
+    expect(matchRoute(["admin"])).toEqual({ kind: "static", items: [{ kind: "current", label: "Админка" }] });
+    expect(STATIC_ROUTES.map((route) => route.path)).toContain(ADMIN_PATH);
   });
 
   // implements FR-6 of public-collections
@@ -103,6 +110,7 @@ describe("matchRoute", () => {
       SIGN_UP_PATH,
       ABOUT_PATH,
       PRIVACY_PATH,
+      ADMIN_PATH,
     ]);
   });
 

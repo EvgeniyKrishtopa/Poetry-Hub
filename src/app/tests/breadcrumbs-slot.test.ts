@@ -60,6 +60,14 @@ describe("@breadcrumbs slot", () => {
     expect(entries.filter((entry) => entry.split("/").some((part) => part.includes("[...")))).toEqual([]);
   });
 
+  // implements FR-21 of admin-moderation: the trail of /admin is the admin's alone, or the page announces itself
+  it("wraps the /admin slot's trail in AdminOnly, imported from the admin feature", () => {
+    const source = readFileSync(join(SLOT_DIR, "admin", PAGE_FILE), "utf8");
+
+    expect(source).toMatch(/import \{ AdminOnly \} from "@\/features\/admin";/);
+    expect(source).toMatch(/<AdminOnly>[\s\S]*<Breadcrumbs[\s\S]*<\/AdminOnly>/);
+  });
+
   // implements FR-2 of add-breadcrumbs
   it("passes each static slot page's own folder path as its segments", () => {
     for (const path of slotPages.filter((slotPath) => slotPath !== "" && !slotPath.includes("["))) {

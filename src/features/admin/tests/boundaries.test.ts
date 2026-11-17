@@ -15,7 +15,7 @@ const IMPORTS_ADMIN = /from ["']@\/features\/admin["']/;
 const FEATURE_IMPORT = /from ["']@\/features\/([\w-]+)(?:\/[^"']*)?["']/g;
 
 /** The three components `src/app/` composes (design D12, NFR-4). */
-const PUBLIC_API = ["AdminDeleteControl", "AdminNavLink", "AdminPage"];
+const PUBLIC_API = ["AdminDeleteControl", "AdminNavLink", "AdminOnly", "AdminPage"];
 
 const ESLINT_TIMEOUT_MS = 60_000;
 
@@ -73,7 +73,7 @@ describe("admin feature boundaries", () => {
   });
 
   // implements NFR-4 of admin-moderation
-  it("exposes only AdminPage, AdminNavLink and AdminDeleteControl from its index", () => {
+  it("exposes only AdminPage, AdminNavLink, AdminOnly and AdminDeleteControl from its index", () => {
     const index = readFileSync(join(ADMIN_DIR, "index.ts"), "utf8");
     const exported = [...index.matchAll(/export \{ (\w+) \}/g)].map((match) => match[1]).sort();
 

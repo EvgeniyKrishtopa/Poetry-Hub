@@ -9,7 +9,6 @@ const STATE_CLASSES = {
   active: "border-success text-success",
   blocked: "border-danger text-danger",
   banned: "border-danger bg-danger text-on-danger",
-  admin: "border-accent text-accent",
 } as const satisfies Record<UserState, string>;
 
 /** The 12px outlined pill that names a user's state (artboard 41). */
