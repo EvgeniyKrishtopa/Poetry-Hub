@@ -144,19 +144,19 @@ each group lands its own tests.
 
 ## 7. Docs and verification <!-- isolated -->
 
-- [ ] 7.1 (NFR-2) ADR in `docs/decisions/`: no service-role key; admin power in guarded SQL functions; it amends ADR
+- [x] 7.1 (NFR-2) ADR in `docs/decisions/`: no service-role key; admin power in guarded SQL functions; it amends ADR
   0005 D1 (and notes ADR 0013 D3): a function whose first statement is `assert_admin()` may take a target user id or
   row id, and only `features/admin` sends one; add an "Amended by" line to ADR 0005; the check in every writer instead
   of a choke point, and the dedicated SQLSTATE `AM001`; the auth-schema coupling, the `banned_until` value and the access-token
   window (design D3, D4, D5).
-- [ ] 7.2 (FR-1, FR-17) `docs/environment.md`: the Deploy checklist gains the migration push, the Before User
+- [x] 7.2 (FR-1, FR-17) `docs/environment.md`: the Deploy checklist gains the migration push, the Before User
   Created hook registration in the dashboard, and the SQL that inserts the owner's user id into `public.admins`;
   `docs/architecture.md` lists `features/admin`, its two import edges (`auth`, `poems` bucket constant) and the
   `/admin` route (no breadcrumbs `STATIC_ROUTES` row).
-- [ ] 7.3 (NFR-2) A test that fails when `src/` reads a service-role or secret Supabase key variable.
-- [ ] 7.4 (all) Web QA of the whole flow on the local stack: admin sign-in, block, sign-in refused, unblock, ban and
+- [x] 7.3 (NFR-2) A test that fails when `src/` reads a service-role or secret Supabase key variable.
+- [x] 7.4 (all) Web QA of the whole flow on the local stack: admin sign-in, block, sign-in refused, unblock, ban and
   the sign-up showing the neutral answer (the check also asserts the hook's exact status 403 and message `signup not
   allowed` reaching `signUpAction`, so a Supabase upgrade that rewords it breaks a check, not the mask), revoke, delete another user's poem (with illustration) and collection from
   the public pages, and a non-admin's `/admin` 404. Keep the passing flows as `tests/web-qa-scenarios` specs.
-- [ ] 7.5 (all) Validate: `npm run typecheck && npm run lint && npm run test:coverage && npm run build &&
+- [x] 7.5 (all) Validate: `npm run typecheck && npm run lint && npm run test:coverage && npm run build &&
   npm run knip`, and the whole pgTAP suite after `supabase db reset`.

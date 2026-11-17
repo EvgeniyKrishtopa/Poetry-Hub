@@ -6,6 +6,8 @@ Accepted (2026-10-16)
 
 Amended by 0012 (Decision 1, for a private column on a public table: see ADR 0012)
 
+Amended by 0015 (Decision 1, for admin functions: a function whose first statement is `assert_admin()` may take a target user id or row id; see ADR 0015)
+
 ## Context
 
 `add-author-profiles` stored the first data a reader owns and edits: an author profile (names, a
