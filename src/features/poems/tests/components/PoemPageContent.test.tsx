@@ -32,7 +32,7 @@ function renderContent(poemId = POEM_ID) {
 /** The article inside the content's fragment; with no moderation function nothing follows it. */
 function articleOf(content: unknown): ReactElement<PoemArticleProps> {
   const { children } = (content as ReactElement<{ children: [ReactElement<PoemArticleProps>, unknown] }>).props;
-  expect(children[1]).toBeUndefined();
+  expect(children[1]).toBeNull();
   return children[0];
 }
 
