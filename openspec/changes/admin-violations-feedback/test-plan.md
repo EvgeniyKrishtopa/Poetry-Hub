@@ -94,12 +94,12 @@
 | FR-9 Ban a blocked user | pgTAP: ban of a blocked user replaces the restriction; action test: the standard email is sent | integration |
 | FR-10 Ban closes an open case (admin-moderation) | pgTAP: ban closes the case in the same transaction | integration |
 | FR-9 Ban twice | existing ban tests extended: `already-restricted` and no email | unit |
-| FR-9 Delete another user's poem | pgTAP: the answer now also carries `title`, `notice_email` and `ground`; action test: author gets the email naming the poem | integration |
+| FR-9 Delete another user's poem | pgTAP: the answer now also carries `title`, `user_id`, `notice_email` and `ground`; action test: author gets the email naming the poem | integration |
 | FR-9 Unknown poem | existing delete tests extended: `not-found` and no email | unit |
 | FR-9 Illustration removal fails | existing delete tests extended: the delete stands and the email is still sent | unit |
 | FR-9 Admin removes another author's file | existing pgTAP storage tests, unchanged | integration |
 | FR-9 A non-admin cannot delete another's poem | existing pgTAP test, unchanged | integration |
-| FR-9 Delete another user's collection | pgTAP: the answer carries `notice_email` and `ground`; action test: author gets the email naming the collection | integration |
+| FR-9 Delete another user's collection | pgTAP: the answer carries `user_id`, `notice_email` and `ground`; action test: author gets the email naming the collection | integration |
 | FR-9 Unknown collection | existing delete tests extended: `not-found` and no email | unit |
 | FR-9 A non-admin cannot delete another's collection | existing pgTAP test, unchanged | integration |
 | FR-12 Block is logged | existing pgTAP test, unchanged | integration |

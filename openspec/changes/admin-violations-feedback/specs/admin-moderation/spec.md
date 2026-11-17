@@ -52,7 +52,7 @@ An admin SHALL be able to ban an active or blocked user. Banning SHALL, in one t
 - **THEN** the answer is `already-restricted` and no email is sent
 
 ### Requirement: Delete any poem (FR-8)
-An admin SHALL be able to delete any user's poem through `admin_delete_poem(poem_id)`. It SHALL have the same effect as `delete_my_poem` for the poem's author (remove the row, keep the creation-log row, renumber nothing), and return `{ status: "deleted", author_id, illustration_path, title }`, or `{ status: "not-found" }` for an unknown id. The app SHALL then expire the author's works cache tag and remove the illustration file using the admin's own session; the `poem-illustrations` bucket SHALL allow an admin to select and delete any author's file, and no one else beyond the owner. After a successful delete the app SHALL send the standard email of `moderation-notifications` FR-9 to the author, naming the poem's title.
+An admin SHALL be able to delete any user's poem through `admin_delete_poem(poem_id)`. It SHALL have the same effect as `delete_my_poem` for the poem's author (remove the row, keep the creation-log row, renumber nothing), and return `{ status: "deleted", author_id, user_id, illustration_path, title }` (`author_id` is the author's profile id, `user_id` the auth user id the notice log needs), or `{ status: "not-found" }` for an unknown id. The app SHALL then expire the author's works cache tag and remove the illustration file using the admin's own session; the `poem-illustrations` bucket SHALL allow an admin to select and delete any author's file, and no one else beyond the owner. After a successful delete the app SHALL send the standard email of `moderation-notifications` FR-9 to the author, naming the poem's title.
 
 #### Scenario: Delete another user's poem
 - **GIVEN** a poem of another user, with an illustration
@@ -80,7 +80,7 @@ An admin SHALL be able to delete any user's poem through `admin_delete_poem(poem
 - **THEN** the call fails with a permission error and the poem is untouched
 
 ### Requirement: Delete any collection (FR-9)
-An admin SHALL be able to delete any user's collection through `admin_delete_collection(collection_id)`. It SHALL have the same effect as `delete_my_collection` for the collection's author (the collection's poems become free poems, placed first among that author's free poems; the advisory lock taken is the target author's) and return `{ status: "deleted", author_id, title }`, or `{ status: "not-found" }`. The app SHALL expire the author's works cache tag, and after a successful delete SHALL send the standard email of `moderation-notifications` FR-9 to the author, naming the collection's title.
+An admin SHALL be able to delete any user's collection through `admin_delete_collection(collection_id)`. It SHALL have the same effect as `delete_my_collection` for the collection's author (the collection's poems become free poems, placed first among that author's free poems; the advisory lock taken is the target author's) and return `{ status: "deleted", author_id, user_id, title }` (`user_id` is the auth user id the notice log needs), or `{ status: "not-found" }`. The app SHALL expire the author's works cache tag, and after a successful delete SHALL send the standard email of `moderation-notifications` FR-9 to the author, naming the collection's title.
 
 #### Scenario: Delete another user's collection
 - **GIVEN** a collection of another user holding two poems
