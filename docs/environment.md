@@ -26,6 +26,11 @@ Read before adding, renaming, or reading an environment variable.
   - Validated lazily on each send: the token must be `<digits>:<letters, digits, _ or ->` and the chat id an integer. Unset or malformed → the app still builds and runs, but every contact form submit shows the failure alert, and the server logs `[contact] send failed` with reason `config` (never the value).
   - Deploy step: the contact form has no app-level rate limit (ADR 0007 point 5). Add a per-IP rate rule at the hosting layer (Vercel Firewall or Cloudflare) that covers Server Action POSTs.
   - Rotation: in @BotFather, `/revoke` the bot's token to get a new one (the old one stops working at once), then update `TELEGRAM_BOT_TOKEN` in `.env.local` and on the hosting platform.
+- Resend (the admin's warning and action emails): `RESEND_API_KEY` and `EMAIL_FROM`. Server-only: never prefix them with `NEXT_PUBLIC_`. Only `src/shared/lib/email/` reads them (every module there starts with `import "server-only"`), and no log line, error, or result holds the key, a recipient address, or a message body. The key is a server secret for one outside service, not a database key: the "only the publishable key" rule for Supabase above still holds.
+  - API key: in the Resend dashboard, API Keys → Create API Key with the "Sending access" permission, and copy the `re_…` value (shown once).
+  - Sender: `EMAIL_FROM` is `name@your-domain.tld` or `Display Name <name@your-domain.tld>`, on a domain verified in Resend (Domains → Add Domain, then add the DNS records it lists and wait for "Verified"). Without a verified domain Resend refuses every send.
+  - Validated lazily on each send: the key must start with `re_` and hold no whitespace, and the sender must be an address, with or without a display name. Unset or malformed → the app still builds and runs, but every email shows as not sent to the admin, and the server logs reason `config` naming the variable, never its value.
+  - Rotation: in the Resend dashboard create a new key, update `RESEND_API_KEY` in `.env.local` and on the hosting platform, then delete the old key.
 
 ## Deploy checklist
 

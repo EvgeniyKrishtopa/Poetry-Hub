@@ -12,9 +12,9 @@ Order: group 1 opens the database (the case table, the new guarded functions, th
 
 ## 2. Email module <!-- judgement-heavy -->
 
-- [ ] 2.1 (NFR-1, NFR-3) `src/shared/lib/email/`: `config.ts` (lazy `RESEND_API_KEY` and `EMAIL_FROM` validation, a `config` failure that names the variable and never its value), `client.ts` (`sendEmail` with `fetch`, bearer key, plain text, a named `EMAIL_REQUEST_TIMEOUT_MS` shorter than Telegram's, `Idempotency-Key`; failures as values `config`, `timeout`, `network`, `conflict` for an HTTP 409, `http`), constants, types, `index.ts`, every file starting with `import "server-only"`. Verify with `tests/client.test.ts` (a mocked `fetch`): success, each failure kind, the header sent, and no key, address or body in any returned value or log call.
-- [ ] 2.2 (NFR-1) Extend the existing no-secret scan test (`src/shared/lib/supabase/tests/no-secret-key.test.ts`) so it also fails on `NEXT_PUBLIC_RESEND` and on any non-server file reading the email variables. Verify the test passes, and fails when a probe file in the scratchpad copy of the check reads them.
-- [ ] 2.3 (NFR-1) `.env.example` lists both names, no values; `docs/environment.md` gets a Resend section (variables, sender-domain step, rotation) like the Telegram one. Verify by reading the two files; `npm run lint` passes.
+- [x] 2.1 (NFR-1, NFR-3) `src/shared/lib/email/`: `config.ts` (lazy `RESEND_API_KEY` and `EMAIL_FROM` validation, a `config` failure that names the variable and never its value), `client.ts` (`sendEmail` with `fetch`, bearer key, plain text, a named `EMAIL_REQUEST_TIMEOUT_MS` shorter than Telegram's, `Idempotency-Key`; failures as values `config`, `timeout`, `network`, `conflict` for an HTTP 409, `http`), constants, types, `index.ts`, every file starting with `import "server-only"`. Verify with `tests/client.test.ts` (a mocked `fetch`): success, each failure kind, the header sent, and no key, address or body in any returned value or log call.
+- [x] 2.2 (NFR-1) Extend the existing no-secret scan test (`src/shared/lib/supabase/tests/no-secret-key.test.ts`) so it also fails on `NEXT_PUBLIC_RESEND` and on any non-server file reading the email variables. Verify the test passes, and fails when a probe file in the scratchpad copy of the check reads them.
+- [x] 2.3 (NFR-1) `.env.example` lists both names, no values; `docs/environment.md` gets a Resend section (variables, sender-domain step, rotation) like the Telegram one. Verify by reading the two files; `npm run lint` passes.
 
 ## 3. Admin feature: server side <!-- judgement-heavy -->
 
