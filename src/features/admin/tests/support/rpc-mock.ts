@@ -1,6 +1,6 @@
 import { expect, vi } from "vitest";
 
-export const HTTP_OK = 200;
+const HTTP_OK = 200;
 export const HTTP_UNAUTHORIZED = 401;
 export const HTTP_FORBIDDEN = 403;
 export const HTTP_UNAVAILABLE = 503;
@@ -40,7 +40,7 @@ export function rpcError(code: string, status: number): RpcResponse {
 }
 
 /** Everything the code under test wrote with `console.error`, as one string. */
-export function loggedText(): string {
+function loggedText(): string {
   return vi
     .mocked(console.error)
     .mock.calls.flat()

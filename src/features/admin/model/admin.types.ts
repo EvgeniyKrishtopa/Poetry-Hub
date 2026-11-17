@@ -3,7 +3,7 @@ import type { SupabaseFailure } from "@/shared/lib/supabase/classify-error";
 import type { DELETE_DB_STATUS, MODERATION_DB_STATUS, RESTRICTION_KIND, USER_STATE } from "./admin.constants";
 
 export type UserState = (typeof USER_STATE)[keyof typeof USER_STATE];
-export type RestrictionKind = (typeof RESTRICTION_KIND)[keyof typeof RESTRICTION_KIND];
+type RestrictionKind = (typeof RESTRICTION_KIND)[keyof typeof RESTRICTION_KIND];
 /** The four buttons of a user row (artboard 41). */
 export type ModerationActionKind = "block" | "unblock" | "revoke" | "ban";
 export type ModerationDbStatus = (typeof MODERATION_DB_STATUS)[keyof typeof MODERATION_DB_STATUS];
