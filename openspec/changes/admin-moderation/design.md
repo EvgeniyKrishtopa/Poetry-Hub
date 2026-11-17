@@ -189,8 +189,8 @@ the pages read `params`). An admin-only control must not change what any other r
 `src/app/(authorized)/admin/page.tsx` is a one-line page that renders `AdminPage`; the gate lives in that feature
 component, inside its own `<Suspense>`, as `docs/architecture.md` prescribes for every authorized page. `AdminPage`
 reads the session (`requireSession`, so a signed-out request goes to `/login`), then `is_admin()`; a non-admin gets `notFound()`, a soft 404 (the not-found screen with status 200, as on the public pages), so the page
-does not announce itself; `/admin` gets no `STATIC_ROUTES` row in the breadcrumbs, so its trail is `none`, the same as
-an unknown URL; an unreadable
+does not announce itself; `/admin` has a `STATIC_ROUTES` row, but its slot shows the trail to an admin only (D14), so for everyone
+else the trail is `none`, the same as an unknown URL; an unreadable
 session or admin check shows the "service unavailable" state. Its data is never cached (ADR 0011).
 
 The list is paged forward by a URL cursor (`?after=<created_at>_<id>`, optional `?email=` exact filter), rendered on
@@ -242,7 +242,7 @@ src/features/admin/
   model/     admin.types.ts, admin.schema.ts, admin-messages.ts, admin.constants.ts
   components/ AdminPage, AdminUserList, AdminUserRow, AdminDeleteControl, ...
   tests/
-  index.ts   public API: AdminPage, AdminNavLink, AdminDeleteControl
+  index.ts   public API: AdminPage, AdminNavLink, AdminOnly, AdminDeleteControl
 ```
 
 `admin` imports `@/features/auth` (session accessors; copying the three-state session logic would duplicate domain
@@ -250,6 +250,55 @@ logic) and the illustrations bucket constant from `@/features/poems`, server sid
 pass it the target's title and redirect path (D8). Nothing imports
 `admin` except `src/app/`. The admin check lives in `admin`'s own `dal/`, not in `auth`, so `auth` never depends on `admin`; nothing is exported for it until a consumer exists.
 `docs/architecture.md` records these two edges the way it records `poem-management`'s.
+
+### D14. The `/admin` trail is shown to an admin only (revision 2026-11-17, FR-21)
+
+The breadcrumb slot builds a trail from the URL alone, so a plain `STATIC_ROUTES` row would show «Главная › Админка»
+over the not-found screen a non-admin gets, which tells them the page exists (D9). The slot therefore wraps the trail in
+the gate, the same session-then-`is_admin()` read `AdminNavLink` does (D13):
+
+- `breadcrumbs` gets the row `{ path: ADMIN_PATH, label: BREADCRUMB_LABELS.admin }` (label «Админка»). It cannot import
+  `admin` (only `src/app/` may), so `ADMIN_PATH` moves to `shared/config/account-paths.ts`, the way
+  `POEM_MANAGEMENT_PATH` did for `authors`; `admin` reads it from there too.
+- `admin` exports `AdminOnly({ children })`, a Server Component that reads `getSessionState()` first, then calls
+  `readAdminAccess(state)` (the existing step `AdminNavLinkContent` uses, which asks `is_admin()` only of a signed-in
+  reader), and renders `children` for an admin, `null` otherwise (guest, non-admin, outage), inside its own
+  `<Suspense fallback={null}>`. `AdminNavLink` is rebuilt on it (`<AdminOnly><Link/></AdminOnly>`), so there is one
+  gate, not two copies.
+- `src/app/@breadcrumbs/admin/page.tsx` renders `<AdminOnly><Breadcrumbs segments={Promise.resolve(["admin"])} /></AdminOnly>`.
+- Cost and agreement: the header link, this slot and the page each ask `is_admin()` today, so an admin's `/admin` request
+  makes three calls that could disagree (slot says admin, page then hits an outage: a trail over the "service
+  unavailable" state). `readAdminAccess` is therefore wrapped in React's `cache()` (its argument is the session state
+  string, so the key is stable): one RPC and one answer per request for the header, the slot and the page. An outage
+  shows no trail, which matches the page's own "service unavailable" state.
+- The empty `Suspense` fallback means the admin sees the trail appear a moment after the page; it is not given a
+  placeholder, because a placeholder visible to everyone would give the page away (FR-21).
+- Every future `/admin/*` slot page wraps its trail in `AdminOnly` the same way. The slot test checks only the
+  `/admin` slot file today (owner's decision, 2026-11-17); the change that adds the first nested slot page extends it.
+
+Alternative: a plain table row, trail for everyone. Rejected by the owner (2026-11-17): the page would announce itself.
+
+### D15. Admins are left out of the user list (revision 2026-11-17, FR-3)
+
+An admin row only ever showed a badge and no control, so the list is the moderated accounts only. `admin_list_users`
+adds `where not exists (select 1 from public.admins a where a.user_id = u.id)` **before** the keyset predicate and the
+limit, so every page stays full and the cursor still works on `created_at, id`. The result drops its `is_admin` column.
+
+- A new migration drops and re-creates the function (a changed result type needs `drop function`, not `create or replace`),
+  with the same signature, `security definer`, empty `search_path`, `assert_admin()` first, and the same grants
+  (`authenticated` only). The original migration is not edited.
+- FR-7 stays in the database: `target-is-admin` still refuses a direct call that names an admin id; the list just no
+  longer offers one. The email filter finds no admin either.
+- The app drops the admin state from `AdminUser`, `USER_STATE`, the badge and the row (`AdminUserRow` has no admin branch).
+- The deploy checklist gains the third migration file. Order: the new app also works against the old function (its row
+  schema drops the extra `is_admin` field, so admins would show as active rows), but the old app fails against the new
+  function (its row schema requires `is_admin`, so the list shows the unavailable state). So, once the first two migrations are
+  on a project that runs the old app, deploy the app first and push the third migration after it, never before it
+  (owner's decision, 2026-11-17); on a project that has none of the three yet, all three go before the app as the
+  checklist says, since there is no old app to break.
+
+Alternative: filter in the page after the read. Rejected: pages would come back short and the cursor could land on a
+hidden row.
 
 ### Flows
 
@@ -387,6 +436,7 @@ sequenceDiagram
   participant P as /admin page
   participant DB as Supabase (RPC)
   A->>P: GET /admin?after=...&email=...
+  Note over A,DB: The @breadcrumbs slot (AdminOnly) reads in parallel through the same cached admin read: signed out, outage or not an admin -> no trail and, for a guest, no RPC; admin -> trail «Главная › Админка» (D14)
   P->>P: requireSession()
   alt signed out
     P-->>A: redirect /login
@@ -456,6 +506,10 @@ Gate 2b: no CONFIRMED finding. Fixed in the scaffold: `AdminPage` takes the raw 
 `may_moderate_author` has its own `ModerateCheckResult`. `AdminDeleteControl` also takes `authorId` (the control needs it for
 `may_moderate_author`); the examples in D8 and tasks 3.1 and 6.2 still list four props. Copy not in the mockups is marked
 "to confirm" in `admin-messages.ts`.
+
+Revision 2026-11-17 (D14, D15), against this map: `ADMIN_PATH` moves out of `admin.constants.ts` to
+`src/shared/config/account-paths.ts`; `index.ts` also exports `AdminOnly`; `AdminUser`, `USER_STATE` and `UserStateBadge`
+lose their admin member; a new migration re-creates `admin_list_users`.
 
 | File | Responsibility | Exports |
 | --- | --- | --- |

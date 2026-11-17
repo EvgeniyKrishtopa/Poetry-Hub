@@ -11,7 +11,9 @@ publishable key is used).
 - An **admin** role, held in the database by a hand-maintained allowlist of user ids. No sign-up, UI, or API can
   grant it; the owner adds a row with SQL.
 - A closed **`/admin`** page, visible and reachable only by an admin: a list of users with their state, and
-  per-user actions: block, unblock, ban, revoke sessions.
+  per-user actions: block, unblock, ban, revoke sessions. Admins are not listed (revision 2026-11-17), and the
+  page shows the breadcrumb trail «Главная › Админка» to an admin only, so it still does not announce itself to
+  anyone else.
 - An **«Админка» link in the site header**, shown to an admin only, that leads to `/admin`.
 - A **delete** control on the regular poem and collection pages, rendered only for an admin, that removes any
   user's poem or collection.

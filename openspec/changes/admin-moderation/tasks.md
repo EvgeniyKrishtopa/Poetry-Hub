@@ -116,7 +116,7 @@ each group lands its own tests.
   live in `AdminPage` inside its own Suspense), its `@breadcrumbs` slot page, and the
   `app/tests/breadcrumbs-slot.test.ts` update; signed-out to `/login`, non-admin to `notFound()`, outage to the
   "service unavailable" state; never cached.
-- [x] 5.2 (FR-3) `AdminPage`, `AdminUserList`, `AdminUserRow`: the server-rendered list, state badges (admin rows marked, with no controls; blocked rows offer unblock, revoke, ban; banned rows only revoke), results and failures inside the row, URL-cursor
+- [x] 5.2 (FR-3) `AdminPage`, `AdminUserList`, `AdminUserRow`: the server-rendered list, state badges (admin rows marked, with no controls — superseded by 8.2: admins are no longer listed; blocked rows offer unblock, revoke, ban; banned rows only revoke), results and failures inside the row, URL-cursor
   next link and first-page link, the email filter, loading and empty states.
 - [x] 5.3 (FR-4 – FR-7, FR-12, NFR-5) Block, unblock and revoke controls (one click each) and a ban control with a
   confirmation dialog naming the user's email; no reason field anywhere; result line;
@@ -152,7 +152,7 @@ each group lands its own tests.
 - [x] 7.2 (FR-1, FR-17) `docs/environment.md`: the Deploy checklist gains the migration push, the Before User
   Created hook registration in the dashboard, and the SQL that inserts the owner's user id into `public.admins`;
   `docs/architecture.md` lists `features/admin`, its two import edges (`auth`, `poems` bucket constant) and the
-  `/admin` route (no breadcrumbs `STATIC_ROUTES` row).
+  `/admin` route (no breadcrumbs `STATIC_ROUTES` row — superseded by 8.3/8.5: the row exists, shown to an admin only).
 - [x] 7.3 (NFR-2) A test that fails when `src/` reads a service-role or secret Supabase key variable.
 - [x] 7.4 (all) Web QA of the whole flow on the local stack: admin sign-in, block, sign-in refused, unblock, ban and
   the sign-up showing the neutral answer (the check also asserts the hook's exact status 403 and message `signup not
@@ -160,3 +160,41 @@ each group lands its own tests.
   the public pages, and a non-admin's `/admin` 404. Keep the passing flows as `tests/web-qa-scenarios` specs.
 - [x] 7.5 (all) Validate: `npm run typecheck && npm run lint && npm run test:coverage && npm run build &&
   npm run knip`, and the whole pgTAP suite after `supabase db reset`.
+
+## 8. Admin page: breadcrumbs for the admin, admins out of the list (revision 2026-11-17) <!-- judgement-heavy -->
+
+Added after group 7 by the owner, before archiving. No new screen: the trail is the existing `Breadcrumbs`, the list
+only loses a row type (`proposal.md`, `ui-plan.md` notes). Design D14 and D15.
+
+- [ ] 8.1 (FR-3, NFR-1) New migration `supabase/migrations/<timestamp>_admin_list_hides_admins.sql`: `drop function`
+  and re-create `admin_list_users(page_size, after_created_at, after_id, email)` with the same signature, `security
+  definer`, empty `search_path`, `assert_admin()` first and the same grants, leaving out every user in `public.admins`
+  before the keyset predicate and the limit, and without the `is_admin` column; header comment with the down migration
+  (the previous body from `20261113180000_admin_moderation_functions.sql`). Update `supabase/tests/admin_functions.test.sql`:
+  the `is_admin` flag cases become "admins are not returned" (caller included), the page-size and cursor cases run with
+  admins present, the exact-email filter of an admin returns nothing; the non-admin and `anon` refusals stay.
+- [ ] 8.2 (FR-3) App side: `AdminUser`, `USER_STATE`, `user-state.ts`, `UserStateBadge`, `AdminUserRow`, the row schema
+  and `user-list.ts` drop the admin state and the row's `is_admin` flag (`AdminUser.isAdmin`; `AdminCheckResult.isAdmin` in
+  `dal/admin-check.ts` is the caller's own check and stays); the «Админ» label leaves `admin-messages.ts`. Tests change with
+  them (`UserStateBadge`, `AdminUserRow`, `AdminUserList`, `user-state`, `user-list`): no admin branch, nothing renders
+  an admin pill. `target-is-admin` stays in the action results (FR-7, direct calls).
+- [ ] 8.3 (FR-21, NFR-3, NFR-4) `ADMIN_PATH` moves to `shared/config/account-paths.ts` (`admin` reads it from there);
+  `breadcrumbs` gets the `STATIC_ROUTES` row and `BREADCRUMB_LABELS.admin` («Админка»); `admin` gets `AdminOnly`
+  (session first, `readAdminAccess` only for a signed-in reader, children or `null`, own `<Suspense fallback={null}>`)
+  and `AdminNavLink` is rebuilt on it; `readAdminAccess` is wrapped in React `cache()` so the header, the slot and the page
+  share one `is_admin()` answer per request (design D14); `src/app/@breadcrumbs/admin/page.tsx` renders `<AdminOnly><Breadcrumbs …/></AdminOnly>`.
+  `AdminOnly` joins the public API and the boundary test's list.
+- [ ] 8.4 (FR-21, NFR-4) Tests: `AdminOnly` (admin renders children; guest, non-admin and unreadable render nothing; no
+  RPC for a guest), the route row (`build-trail` / `match-route`: «Главная › Админка», the current row not a link),
+  `app/tests/breadcrumbs-slot.test.ts` for the `/admin` slot (it also checks that `src/app/@breadcrumbs/admin/page.tsx` imports `AdminOnly`; only that file), `readAdminAccess` is
+  wrapped in `cache()` (a unit test proves the wrapping and that `AdminOnly` and the page gate go through that one
+  function; sharing at runtime is proved by the web-qa pass, task 8.6, counting one `is_admin()` request per page load), the `AdminNavLink` tests still green on the new base, and
+  the admin boundary test with `AdminOnly`.
+- [ ] 8.5 (FR-3, FR-21) Docs: `docs/environment.md`'s Deploy checklist gains the third migration file (after the two
+  admin ones; on a project already running the old app, deploy the app first and push this migration after it, never before, because the old app fails against the new function, design D15); `docs/architecture.md` (the `/admin` row says "trail for an admin only", `AdminOnly` in `admin`'s public
+  API, `ADMIN_PATH` in `shared/config`).
+- [ ] 8.6 (FR-3, FR-21) Web QA of the changed surfaces on the local stack and the recorded scenarios: extend
+  `tests/web-qa-scenarios/admin-page-is-closed-to-others.spec.ts` (admin sees the trail and no row for an admin;
+  non-admin sees none), keep the other scenarios green.
+- [ ] 8.7 (all) Validate: `npm run typecheck && npm run lint && npm run test:coverage && npm run build && npm run knip`,
+  and the whole pgTAP suite after `supabase db reset`.
