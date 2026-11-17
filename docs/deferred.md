@@ -174,6 +174,8 @@ Archived at `openspec/changes/archive/2026-11-13-drag-and-drop-ordering/`.
 
 ## admin-moderation
 
+Archived at `openspec/changes/archive/2026-11-17-admin-moderation/`.
+
 ### admin-moderation · 2.8 — hosted-project check not run
 
 - **State:** skipped
