@@ -8,7 +8,7 @@ import { PoemArticle } from "../PoemArticle/PoemArticle";
 import type { PoemPageContentProps } from "./PoemPageContent.types";
 
 /** Checks the author, then reads the poem and renders its article, inside `PoemPage`'s Suspense boundary. */
-export async function PoemPageContent({ authorId, poemId, moderation }: PoemPageContentProps) {
+export async function PoemPageContent({ authorId, poemId, renderModeration }: PoemPageContentProps) {
   const id = await authorId;
   const author = await getPublicAuthorName(id);
 
@@ -27,7 +27,7 @@ export async function PoemPageContent({ authorId, poemId, moderation }: PoemPage
   }
 
   const { poem } = result;
-  const moderationControl = moderation ? moderation({ id: poem.id, title: poem.title, authorId: id }) : null;
+  const moderationControl = renderModeration ? renderModeration({ id: poem.id, title: poem.title, authorId: id }) : null;
 
   return (
     <>

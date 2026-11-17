@@ -93,17 +93,17 @@ describe("PublicCollectionContent", () => {
   it("renders what the moderation function returns under the poems, called with the collection's id, title and author", async () => {
     mockFoundAuthor();
     vi.mocked(getPublicCollection).mockResolvedValue({ ok: true, collection: AUTUMN });
-    const moderation = vi.fn(() => <button type="button">control</button>);
+    const renderModeration = vi.fn(() => <button type="button">control</button>);
 
     render(
       await PublicCollectionContent({
         authorId: Promise.resolve(AUTHOR_ID),
         collectionId: Promise.resolve(COLLECTION_ID),
-        moderation,
+        renderModeration,
       }),
     );
 
-    expect(moderation).toHaveBeenCalledWith({ id: COLLECTION_ID, title: AUTUMN.title, authorId: AUTHOR_ID });
+    expect(renderModeration).toHaveBeenCalledWith({ id: COLLECTION_ID, title: AUTUMN.title, authorId: AUTHOR_ID });
     const control = screen.getByRole("button", { name: "control" });
     const poemsList = screen.getByRole("list");
     expect(poemsList.compareDocumentPosition(control) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -113,16 +113,16 @@ describe("PublicCollectionContent", () => {
   it("never calls the moderation function for a collection that isn't there", async () => {
     mockFoundAuthor();
     vi.mocked(getPublicCollection).mockResolvedValue({ ok: false, reason: "not-found" });
-    const moderation = vi.fn();
+    const renderModeration = vi.fn();
 
     await expect(
       PublicCollectionContent({
         authorId: Promise.resolve(AUTHOR_ID),
         collectionId: Promise.resolve(COLLECTION_ID),
-        moderation,
+        renderModeration,
       }),
     ).rejects.toThrow("404");
-    expect(moderation).not.toHaveBeenCalled();
+    expect(renderModeration).not.toHaveBeenCalled();
   });
 
   // implements FR-5 of public-collections

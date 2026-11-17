@@ -8,7 +8,7 @@ export default function CollectionRoutePage({ params }: PageProps<"/authors/[id]
       <PublicCollectionPage
         authorId={params.then(({ id }) => id)}
         collectionId={params.then(({ collectionId }) => collectionId)}
-        moderation={(target) => (
+        renderModeration={(target) => (
           <AdminDeleteControl
             kind="collection"
             id={target.id}

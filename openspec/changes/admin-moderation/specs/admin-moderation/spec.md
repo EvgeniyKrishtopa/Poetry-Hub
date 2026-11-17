@@ -392,7 +392,7 @@ The app SHALL NOT read or hold a service-role or secret Supabase key. Admin powe
 - **THEN** it keeps its rendering mode, with a dynamic hole for the admin control
 
 ### Requirement: Admin module boundaries (NFR-4)
-`src/features/admin/` SHALL follow the feature layout, SHALL import only `@/features/auth` (session accessors) and the illustrations bucket constant from `@/features/poems`, server side and one way (the target's title and author id come from the render function the route file supplies), and SHALL expose only `AdminPage`, `AdminNavLink` and `AdminDeleteControl` from `index.ts`. Only `src/app/` SHALL import `@/features/admin`; `poems`, `collections` and `auth` SHALL NOT. `PoemPage` and `PublicCollectionPage` SHALL take a `moderation` render function, called by their content component after its own read succeeds. Server-only code SHALL start with `import "server-only"`.
+`src/features/admin/` SHALL follow the feature layout, SHALL import only `@/features/auth` (session accessors) and the illustrations bucket constant from `@/features/poems`, server side and one way (the target's title and author id come from the render function the route file supplies), and SHALL expose only `AdminPage`, `AdminNavLink` and `AdminDeleteControl` from `index.ts`. Only `src/app/` SHALL import `@/features/admin`; `poems`, `collections` and `auth` SHALL NOT. `PoemPage` and `PublicCollectionPage` SHALL take a `renderModeration` render function, called by their content component after its own read succeeds. Server-only code SHALL start with `import "server-only"`.
 
 #### Scenario: Lint enforces the boundary
 - **GIVEN** an import of a file inside `features/admin/` from another feature

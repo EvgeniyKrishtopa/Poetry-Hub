@@ -19,10 +19,10 @@ const TARGET = { id: "30000000-0000-4000-8000-000000000051", title: "Осенн�
 
 type ModerationSlot = (target: typeof TARGET) => ReactElement<ComponentProps<typeof AdminDeleteControl>>;
 
-/** The `moderation` render function a route file hands to its page component. */
+/** The `renderModeration` function a route file hands to its page component. */
 function moderationOf(route: ReactElement): ModerationSlot {
-  const main = route as ReactElement<{ children: ReactElement<{ moderation: ModerationSlot }> }>;
-  return main.props.children.props.moderation;
+  const main = route as ReactElement<{ children: ReactElement<{ renderModeration: ModerationSlot }> }>;
+  return main.props.children.props.renderModeration;
 }
 
 const PARAMS = Promise.resolve({ id: AUTHOR_ID, poemId: TARGET.id, collectionId: TARGET.id });

@@ -171,11 +171,11 @@ the pages read `params`). An admin-only control must not change what any other r
   from `authors`) only for a signed-in reader, inside its own `<Suspense>`; it renders nothing for everyone else, an
   admin on their own work included.
 - `poems` and `collections` stay session-free and never import `@/features/admin` (`poems/tests/boundaries.test.ts`
-  pins this). `PoemPage` and `PublicCollectionPage` take an optional `moderation` render function (below), which the route files
+  pins this). `PoemPage` and `PublicCollectionPage` take an optional `renderModeration` render function (below), which the route files
   in `src/app/(public)/authors/[id]/...` fill with `<AdminDeleteControl .../>`.
 - The route files only forward `params` promises; the poem or collection is read inside the page component's own
   Suspense boundary. So the slot is a **render function**: `PoemPage` and `PublicCollectionPage` take
-  `moderation?: (target: { id; title; authorId }) => ReactNode`, and the content component (`PoemPageContent`,
+  `renderModeration?: (target: { id; title; authorId }) => ReactNode`, and the content component (`PoemPageContent`,
   the collection's content) calls it next to the article once its own read has succeeded. The route file supplies
   `(t) => <AdminDeleteControl kind="poem" id={t.id} title={t.title} redirectHref={authorPagePath(t.authorId)} />`.
   Passing a function between two Server Components is allowed; no extra read happens and the route file never awaits
@@ -450,7 +450,7 @@ sequenceDiagram
 Written by `opsx-scaffold` after the files existed (map approved 2026-11-13). Stub bodies only (`throw new Error("not implemented")`,
 `return null`); the constants, types, schema shapes and the mockups' copy are complete. Not scaffolded, left to their groups:
 the migration (1, 2), the `/admin` route file and its breadcrumb slot (5.1), the `adminLink` slot on `HeaderAuthLinks` (5.3a),
-the `moderation` prop on `PoemPage` and `PublicCollectionPage` (6.2), the `restricted` member in `classify-error.ts` and the `auth`
+the `renderModeration` prop on `PoemPage` and `PublicCollectionPage` (6.2), the `restricted` member in `classify-error.ts` and the `auth`
 changes (4), ESLint boundary entries (3.1), docs and tests. `knip.jsonc` ignores `src/features/admin/**` until task 7.5.
 Gate 2b: no CONFIRMED finding. Fixed in the scaffold: `AdminPage` takes the raw search params (parsed inside), and
 `may_moderate_author` has its own `ModerateCheckResult`. `AdminDeleteControl` also takes `authorId` (the control needs it for

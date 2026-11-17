@@ -15,7 +15,7 @@ import type { PublicCollectionContentProps } from "./PublicCollectionContent.typ
  * unknown author or collection, throws to the error screen on unavailable (public-collections D7). It reads no
  * session, so every visitor sees the same page; a route file may add one control through `moderation`.
  */
-export async function PublicCollectionContent({ authorId, collectionId, moderation }: PublicCollectionContentProps) {
+export async function PublicCollectionContent({ authorId, collectionId, renderModeration }: PublicCollectionContentProps) {
   const id = await authorId;
   const author = await getPublicAuthorName(id);
 
@@ -34,7 +34,7 @@ export async function PublicCollectionContent({ authorId, collectionId, moderati
   }
 
   const { id: collectionIdValue, title, description, poems } = result.collection;
-  const moderationControl = moderation ? moderation({ id: collectionIdValue, title, authorId: id }) : null;
+  const moderationControl = renderModeration ? renderModeration({ id: collectionIdValue, title, authorId: id }) : null;
 
   return (
     <article lang={CONTENT_LANG} className="flex flex-col gap-8">

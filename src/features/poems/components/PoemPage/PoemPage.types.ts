@@ -16,5 +16,5 @@ export interface PoemPageProps {
    * Called with the poem once it has been read, so the route file can add a control next to it without this feature
    * knowing what the control is. Never called on a missing poem.
    */
-  readonly moderation?: (target: PoemModerationTarget) => ReactNode;
+  readonly renderModeration?: (target: PoemModerationTarget) => ReactNode;
 }

@@ -133,7 +133,7 @@ each group lands its own tests.
 - [x] 6.1 (FR-10, NFR-3) `AdminDeleteControl` (a Server Component that reads the session first, calls
   `may_moderate_author(author)` only for a signed-in reader, inside its own `<Suspense>`, and renders nothing otherwise, an admin's own work included) with its
   confirmation dialog and the two delete actions.
-- [x] 6.2 (FR-10, NFR-4) A `moderation?: (target: { id; title; authorId }) => ReactNode` prop on `PoemPage` and
+- [x] 6.2 (FR-10, NFR-4) A `renderModeration?: (target: { id; title; authorId }) => ReactNode` prop on `PoemPage` and
   `PublicCollectionPage`, called by `PoemPageContent` and the collection's content component after their own read
   succeeds; the two route files under `src/app/(public)/authors/[id]/` supply
   `(t) => <AdminDeleteControl ... redirectHref={authorPagePath(t.authorId)} />`. No route file awaits `params`

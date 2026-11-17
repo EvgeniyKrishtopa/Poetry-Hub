@@ -8,7 +8,7 @@ export default function PoemRoutePage({ params }: PageProps<"/authors/[id]/poems
       <PoemPage
         authorId={params.then(({ id }) => id)}
         poemId={params.then(({ poemId }) => poemId)}
-        moderation={(target) => (
+        renderModeration={(target) => (
           <AdminDeleteControl
             kind="poem"
             id={target.id}

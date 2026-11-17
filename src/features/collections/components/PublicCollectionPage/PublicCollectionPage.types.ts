@@ -16,5 +16,5 @@ export interface PublicCollectionPageProps {
    * Called with the collection once it has been read, so the route file can add a control under the poems without
    * this feature knowing what the control is. Never called on a missing collection.
    */
-  readonly moderation?: (target: CollectionModerationTarget) => ReactNode;
+  readonly renderModeration?: (target: CollectionModerationTarget) => ReactNode;
 }
