@@ -1,0 +1,7 @@
+{"ts":"2026-11-17T15:04:37Z","change":"admin-violations-feedback","kind":"finding","gate":"spec-review","finding":"SR-03 notice log row: spec says same transaction, design says separate best-effort call","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-17T15:04:37Z","change":"admin-violations-feedback","kind":"finding","gate":"spec-review","finding":"SR-03 sendEmail failure reasons: D1 lacked conflict","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-17T15:04:37Z","change":"admin-violations-feedback","kind":"finding","gate":"spec-review","finding":"SR-01 task 3.3 omitted already-restricted and content-not-found","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-17T15:04:37Z","change":"admin-violations-feedback","kind":"finding","gate":"spec-review","finding":"SR-02 NFR-4 had no requirement or scenario","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-17T15:04:37Z","change":"admin-violations-feedback","kind":"finding","gate":"spec-review","finding":"readiness 1 traceability unmet: task 3.3 vs spec, task 6.5 named no identifier","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-17T15:04:37Z","change":"admin-violations-feedback","kind":"finding","gate":"spec-review","finding":"readiness 2 acceptance criteria unmet: NFR-4 without Given/When/Then","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-17T15:04:37Z","change":"admin-violations-feedback","kind":"finding","gate":"spec-review","finding":"readiness 3 design vs spec unmet: notice log row, conflict reason","outcome":"fixed","ruleNumber":""}

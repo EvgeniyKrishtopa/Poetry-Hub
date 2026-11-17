@@ -1,0 +1,2 @@
+full
+# Route answers: touches more than one module = yes (admin, authors, poems, collections, shared/lib/email); changes the data schema = yes (offender review list, violation notices); changes a contract other code depends on = yes (new SQL functions, admin_list_users, server actions)

@@ -1,0 +1,2 @@
+yes
+# Scaffold answers: creates a new module = yes (src/shared/lib/email, a new admin violations area); opens a new boundary crossing = yes (a new client to Resend, a new route /admin/violations)
