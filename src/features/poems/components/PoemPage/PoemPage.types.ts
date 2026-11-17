@@ -15,6 +15,10 @@ export interface PoemPageProps {
   /**
    * Called with the poem once it has been read, so the route file can add a control next to it without this feature
    * knowing what the control is. Never called on a missing poem.
+   *
+   * Why a function, not an element: the poem's id and title are known only after the read inside the Suspense
+   * boundary, and a missing poem must show no control. Why a prop at all: `poems` may not import `admin`, so the route
+   * file, which sits above both features, is where the two meet.
    */
   readonly renderModeration?: (target: PoemModerationTarget) => ReactNode;
 }
