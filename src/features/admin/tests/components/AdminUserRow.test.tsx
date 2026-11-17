@@ -35,7 +35,6 @@ const USER: AdminUser = {
   createdAt: "2026-11-12T10:00:00+00:00",
   lastSignInAt: null,
   restriction: null,
-  isAdmin: false,
 };
 
 type Response = Awaited<ReturnType<typeof blockUserAction>>;
@@ -62,11 +61,11 @@ describe("AdminUserRow", () => {
   });
 
   // implements FR-3 of admin-moderation
-  it("marks an admin and gives the row no control", () => {
-    renderRow({ ...USER, isAdmin: true });
+  it.each([null, "blocked", "banned"] as const)("never shows an admin pill, for a row with restriction %s", (restriction) => {
+    renderRow({ ...USER, restriction });
 
-    expect(screen.getByText("Админ")).toBeInTheDocument();
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.queryByText("Админ")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { hidden: true }).length).toBeGreaterThan(0);
   });
 
   // implements FR-4 of admin-moderation

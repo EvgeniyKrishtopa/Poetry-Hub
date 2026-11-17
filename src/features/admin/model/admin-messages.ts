@@ -21,7 +21,6 @@ export const USER_STATE_LABELS = {
   active: "Активен",
   blocked: "Заблокирован",
   banned: "Забанен",
-  admin: "Админ",
 } as const;
 
 /** The row buttons' text (artboard 41). */

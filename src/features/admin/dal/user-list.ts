@@ -24,7 +24,6 @@ const userRowSchema = z.object({
   created_at: z.iso.datetime({ offset: true }),
   last_sign_in_at: z.iso.datetime({ offset: true }).nullable(),
   restriction: z.enum([RESTRICTION_KIND.blocked, RESTRICTION_KIND.banned]).nullable(),
-  is_admin: z.boolean(),
 });
 
 const userRowsSchema = z.array(userRowSchema);
@@ -39,7 +38,6 @@ function toAdminUser(row: UserRow): AdminUser {
     createdAt: row.created_at,
     lastSignInAt: row.last_sign_in_at,
     restriction: row.restriction,
-    isAdmin: row.is_admin,
   };
 }
 

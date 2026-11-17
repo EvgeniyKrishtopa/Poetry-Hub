@@ -19,7 +19,6 @@ export interface AdminUser {
   readonly createdAt: string;
   readonly lastSignInAt: string | null;
   readonly restriction: RestrictionKind | null;
-  readonly isAdmin: boolean;
 }
 
 /** The admin check's answer; an unreadable check is a failure, never "not an admin" (FR-2). */

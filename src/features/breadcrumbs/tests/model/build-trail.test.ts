@@ -74,6 +74,14 @@ describe("buildTrail", () => {
     });
   });
 
+  // implements FR-21 of admin-moderation
+  it("builds «Главная» › «Админка» for the admin page, the last item current and not a link", () => {
+    expect(buildTrail(matchRoute(["admin"]))).toEqual({
+      kind: "shown",
+      items: [HOME, { kind: "current", label: "Админка" }],
+    });
+  });
+
   // implements FR-4 of add-breadcrumbs
   it("shows no trail for an author that doesn't exist", () => {
     expect(buildTrail(AUTHOR_MATCH, { ok: false, reason: "not-found" })).toEqual({ kind: "none" });

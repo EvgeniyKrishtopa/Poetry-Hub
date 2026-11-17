@@ -1,7 +1,8 @@
+import { ADMIN_PATH } from "@/shared/config/account-paths";
 import { Button, TextField } from "@/shared/ui";
 
 import { ADMIN_LIST_COPY } from "../../model/admin-messages";
-import { ADMIN_LIST_PARAM, ADMIN_PATH } from "../../model/admin.constants";
+import { ADMIN_LIST_PARAM } from "../../model/admin.constants";
 
 import type { AdminUserFilterProps } from "./AdminUserFilter.types";
 

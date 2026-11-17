@@ -46,6 +46,29 @@ The database SHALL hold the admin role as rows of `public.admins`, keyed by auth
 - **WHEN** an admin requests `/admin`
 - **THEN** the page shows the "service unavailable" state and no user data
 
+### Requirement: Breadcrumbs on the admin page (FR-21)
+The `/admin` page SHALL show the site's breadcrumb trail «Главная › Админка» to an admin, and to no one else: a guest, a signed-in non-admin and an unreadable session or admin check SHALL get no trail, so the not-found screen of a non-admin stays without one and the page does not announce itself (design D9, D14). The trail's page row SHALL be the current page, not a link, like every other trail. The trail SHALL call the `is_admin()` RPC only for a signed-in reader, SHALL read inside its own `Suspense` boundary with an empty fallback, and SHALL NOT change the page's rendering mode (NFR-3).
+
+#### Scenario: Admin sees the trail
+- **GIVEN** a signed-in admin
+- **WHEN** they open `/admin`
+- **THEN** the trail «Главная › Админка» shows above the page, and «Главная» leads home
+
+#### Scenario: Non-admin sees no trail
+- **GIVEN** a signed-in user who is not an admin
+- **WHEN** they open `/admin`
+- **THEN** the not-found screen shows with no breadcrumb trail
+
+#### Scenario: Guest costs no RPC
+- **GIVEN** no session
+- **WHEN** the trail renders for `/admin`
+- **THEN** it shows nothing and `is_admin()` is not called
+
+#### Scenario: Admin check unreadable
+- **GIVEN** the admin check fails with an outage
+- **WHEN** the trail renders for `/admin`
+- **THEN** it shows nothing
+
 ### Requirement: Admin link in the header (FR-20)
 The site header SHALL show a link to `/admin` to a signed-in admin, and to no one else (guest, signed-in non-admin, unreadable session). It SHALL be a dynamic island in the header's `nav`, read inside its own `Suspense` boundary with an empty fallback, and SHALL call the `is_admin()` RPC only for a signed-in reader. It SHALL NOT change the header's prerendered shell or its layout for anyone else.
 
@@ -65,10 +88,10 @@ The site header SHALL show a link to `/admin` to a signed-in admin, and to no on
 - **THEN** `is_admin()` is not called
 
 ### Requirement: User list (FR-3)
-The `/admin` page SHALL list users newest first, 10 per page, paged by a keyset cursor in the URL (`after`, built from `created_at` and `id`) with a next link and a link back to the first page, rendered on the server. No page SHALL be held in client state. Each row SHALL show the user's email, their author name when set, when they joined, when they last signed in, and their state: active, blocked, or banned. A row of an admin SHALL be marked as an admin and SHALL show no block, ban, or revoke control; `admin_list_users` SHALL return the flag for it. The page SHALL offer an exact-email filter: the whole address, not a part of it, compared after trimming and lower-casing both the input and the stored address. The list SHALL come from `admin_list_users()`, which returns rows to an admin only.
+The `/admin` page SHALL list users newest first, 10 per page, paged by a keyset cursor in the URL (`after`, built from `created_at` and `id`) with a next link and a link back to the first page, rendered on the server. No page SHALL be held in client state. Each row SHALL show the user's email, their author name when set, when they joined, when they last signed in, and their state: active, blocked, or banned. Admins SHALL NOT be listed: `admin_list_users` SHALL leave out every user present in `public.admins` (the caller included) before it pages, so each page stays full and the cursor is unaffected, and it SHALL NOT return an admin flag, since no row is an admin. The page SHALL offer an exact-email filter: the whole address, not a part of it, compared after trimming and lower-casing both the input and the stored address. The list SHALL come from `admin_list_users()`, which returns rows to an admin only.
 
 #### Scenario: First page
-- **GIVEN** 15 users exist
+- **GIVEN** 15 users who are not admins exist
 - **WHEN** an admin opens `/admin`
 - **THEN** 10 rows show, newest first, with a link to the next page
 
@@ -82,10 +105,20 @@ The `/admin` page SHALL list users newest first, 10 per page, paged by a keyset 
 - **WHEN** they block a user there
 - **THEN** the same page re-renders with that row showing "blocked"
 
-#### Scenario: An admin's row has no controls
-- **GIVEN** the list shows the admin's own row
-- **WHEN** an admin views it
-- **THEN** the row is marked as an admin and has no block, ban, or revoke control
+#### Scenario: Admins are not listed
+- **GIVEN** users exist and one or more of them, the caller included, are admins
+- **WHEN** an admin opens `/admin`
+- **THEN** no admin has a row, so no row offers a block, ban, or revoke control for an admin
+
+#### Scenario: Admins don't take a place on a page
+- **GIVEN** 12 users exist and 2 of them are admins
+- **WHEN** an admin opens `/admin`
+- **THEN** 10 rows show with no link to a next page, and every page before the last is full
+
+#### Scenario: Filtering by an admin's email finds nothing
+- **GIVEN** a user who is an admin
+- **WHEN** the admin filters by that exact email
+- **THEN** no row shows and the empty-result text appears
 
 #### Scenario: Filter by email
 - **GIVEN** a user with a known email
@@ -392,7 +425,7 @@ The app SHALL NOT read or hold a service-role or secret Supabase key. Admin powe
 - **THEN** it keeps its rendering mode, with a dynamic hole for the admin control
 
 ### Requirement: Admin module boundaries (NFR-4)
-`src/features/admin/` SHALL follow the feature layout, SHALL import only `@/features/auth` (session accessors) and the illustrations bucket constant from `@/features/poems`, server side and one way (the target's title and author id come from the render function the route file supplies), and SHALL expose only `AdminPage`, `AdminNavLink` and `AdminDeleteControl` from `index.ts`. Only `src/app/` SHALL import `@/features/admin`; `poems`, `collections` and `auth` SHALL NOT. `PoemPage` and `PublicCollectionPage` SHALL take a `renderModeration` render function, called by their content component after its own read succeeds. Server-only code SHALL start with `import "server-only"`.
+`src/features/admin/` SHALL follow the feature layout, SHALL import only `@/features/auth` (session accessors) and the illustrations bucket constant from `@/features/poems`, server side and one way (the target's title and author id come from the render function the route file supplies), and SHALL expose only `AdminPage`, `AdminNavLink`, `AdminOnly` (renders its children to a signed-in admin only; the `/admin` breadcrumb slot wraps the trail in it) and `AdminDeleteControl` from `index.ts`. Only `src/app/` SHALL import `@/features/admin`; `poems`, `collections` and `auth` SHALL NOT. `PoemPage` and `PublicCollectionPage` SHALL take a `renderModeration` render function, called by their content component after its own read succeeds. Server-only code SHALL start with `import "server-only"`.
 
 #### Scenario: Lint enforces the boundary
 - **GIVEN** an import of a file inside `features/admin/` from another feature

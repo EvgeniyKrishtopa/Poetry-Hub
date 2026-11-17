@@ -2,12 +2,13 @@
 -- (admin-moderation, design D2, D3, D6, D7, D10, D11).
 -- implements FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, FR-10, FR-11 of admin-moderation
 -- implements FR-17 and NFR-1 of admin-moderation
+-- implements FR-3 of admin-moderation: admins are not listed, from 20261117150000_admin_list_hides_admins.sql
 -- Run against the local stack: npx supabase test db
 begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(137);
+select plan(141);
 
 -- Start from empty content tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -243,14 +244,13 @@ select is(
 );
 select is(
   (select array_agg(user_email order by created_at desc, id desc) from public.admin_list_users(
-    3, '2099-01-05 00:00:00+00', '44444444-4444-4444-8444-444444444444')),
-  array['blk@example.test', 'act@example.test', 'adm2@example.test'],
-  'the cursor continues after the last row of the page');
-select is(
-  (select array_agg(user_email order by created_at desc, id desc) from public.admin_list_users(
-    1, '2099-01-02 00:00:00+00', '66666666-6666-4666-8666-666666666666')),
-  array['adm@example.test'],
-  'the last page holds the rest and nothing newer');
+    2, '2099-01-05 00:00:00+00', '44444444-4444-4444-8444-444444444444')),
+  array['blk@example.test', 'act@example.test'],
+  'the cursor continues after the last row of the page, without the admins');
+select is_empty(
+  $$select * from public.admin_list_users(50, '2099-01-03 00:00:00+00', '22222222-2222-4222-8222-222222222222')
+    where user_email in ('adm@example.test', 'adm2@example.test')$$,
+  'after the last non-admin fixture the older admins are not listed');
 select throws_ok(
   $$select * from public.admin_list_users(3, '2099-01-05 00:00:00+00', null)$$, '22023', null,
   'a cursor with only its date is refused, not answered with an empty page');
@@ -284,12 +284,37 @@ select is(
 select is(
   (select restriction from public.admin_list_users(1, null, null, 'ban@example.test')), 'banned',
   'a banned row says banned');
+-- Admins are not listed (FR-3, design D15).
 select is(
-  (select is_admin from public.admin_list_users(1, null, null, 'adm2@example.test')), true,
-  'an admin''s row carries the admin flag');
+  (select count(*)::int from public.admin_list_users(10)
+    where user_email in ('adm@example.test', 'adm2@example.test')),
+  0, 'no admin is listed, the caller included');
 select is(
-  (select is_admin from public.admin_list_users(1, null, null, 'act@example.test')), false,
-  'another row does not');
+  (select count(*)::int from public.admin_list_users(50)
+    where user_email in (' Mixed@Example.Test ', 'nop@example.test', 'ban@example.test', 'blk@example.test', 'act@example.test')),
+  5, 'every fixture user who is not an admin is listed');
+select is(
+  (select count(*)::int from pg_proc p, unnest(p.proargnames) as arg_name
+    where p.proname = 'admin_list_users' and arg_name = 'is_admin'),
+  0, 'the result has no is_admin column, since no row is an admin');
+select is_empty(
+  $$select * from public.admin_list_users(10, null, null, 'adm2@example.test')$$,
+  'filtering by another admin''s address finds nothing');
+select is_empty(
+  $$select * from public.admin_list_users(10, null, null, 'adm@example.test')$$,
+  'filtering by the caller''s own address finds nothing');
+-- An admin dated between two other rows must not leave a short page or break the cursor.
+reset role;
+update auth.users set created_at = '2099-01-05 12:00:00+00' where id = '66666666-6666-4666-8666-666666666666';
+set local role authenticated;
+select is(
+  (select array_agg(user_email order by created_at desc, id desc) from public.admin_list_users(
+    2, '2099-01-06 00:00:00+00', '55555555-5555-4555-8555-555555555555')),
+  array['ban@example.test', 'blk@example.test'],
+  'a page after the cursor skips an admin dated between rows and stays full');
+reset role;
+update auth.users set created_at = '2099-01-02 00:00:00+00' where id = '66666666-6666-4666-8666-666666666666';
+set local role authenticated;
 
 -- may_moderate_author (FR-10).
 select is(public.may_moderate_author('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'), true,

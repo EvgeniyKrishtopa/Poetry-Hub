@@ -1,4 +1,6 @@
-import { ADMIN_LIST_PARAM, ADMIN_PATH } from "./admin.constants";
+import { ADMIN_PATH } from "@/shared/config/account-paths";
+
+import { ADMIN_LIST_PARAM } from "./admin.constants";
 
 /** A list page's URL: the optional cursor and email filter, built with `URLSearchParams` so the cursor's `+` survives. */
 export function adminListHref(params: { readonly after?: string | null; readonly email?: string | undefined }): string {

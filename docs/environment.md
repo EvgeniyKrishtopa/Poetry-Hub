@@ -94,6 +94,12 @@ git-ignored `PROGRESS.md`, so every clone sees them.
   4. Run the hosted half of the Auth check (`docs/deferred.md`, `admin-moderation` 2.8): the `postgres` role can
      update `auth.users` and delete `auth.sessions`, and the hook's rejection reaches the app as status 403 with
      the message `signup not allowed`.
+- **Admin list migration** (`admin-moderation`, revision 2026-11-17; design D15): `npx supabase db push` applies
+  `20261117150000_admin_list_hides_admins.sql` (`admin_list_users` leaves out admins and drops its `is_admin`
+  column). On a project that has none of the admin migrations yet, push it with the other two, before the app. On a
+  project already running the earlier app, deploy the app first and push this migration after it, never before: the
+  earlier app's row schema requires `is_admin`, so its `/admin` list shows the unavailable state against the new
+  function. Rollback: revert the app first, then the down migration in the file's header.
 - **`poem-illustrations` bucket** (`add-poem-creation`): on the hosted project, confirm it exists,
   public, 5 MiB file size limit, MIME types `image/png` and `image/jpeg` — the same as
   `supabase/config.toml`, which configures the local stack only.

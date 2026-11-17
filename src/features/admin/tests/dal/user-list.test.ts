@@ -36,7 +36,6 @@ function row(n: number, overrides: Record<string, unknown> = {}): Record<string,
     created_at: `2026-11-13T17:15:${String(59 - n).padStart(2, "0")}.123456+00:00`,
     last_sign_in_at: null,
     restriction: null,
-    is_admin: false,
     ...overrides,
   };
 }
@@ -124,7 +123,6 @@ describe("listUsers", () => {
           created_at: CREATED_AT,
           last_sign_in_at: SIGNED_IN_AT,
           restriction: "blocked",
-          is_admin: true,
         }),
       ]),
     );
@@ -139,7 +137,6 @@ describe("listUsers", () => {
           createdAt: CREATED_AT,
           lastSignInAt: SIGNED_IN_AT,
           restriction: "blocked",
-          isAdmin: true,
         },
       ],
       nextCursor: null,

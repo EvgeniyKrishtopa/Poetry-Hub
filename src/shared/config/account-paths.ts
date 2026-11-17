@@ -12,3 +12,9 @@ export function isAccountPath(pathname: string): boolean {
 
 /** The author's poem management area (add-poem-creation design D9); `isAccountPath` already gates it. */
 export const POEM_MANAGEMENT_PATH = "/account/poems";
+
+/**
+ * The admin page (admin-moderation design D9, D14). It lives here, not in `features/admin`, because
+ * `breadcrumbs` needs it for the page's trail and only `src/app/` may import `admin`.
+ */
+export const ADMIN_PATH = "/admin";

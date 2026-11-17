@@ -9,7 +9,13 @@ import {
 import { PUBLIC_COLLECTIONS_SEGMENT } from "@/features/collections";
 import { EDIT_SEGMENT, NEW_POEM_PATH, POEM_MANAGEMENT_TRAIL_LABELS } from "@/features/poem-management";
 import { POEMS_SEGMENT } from "@/features/poems";
-import { ACCOUNT_PATH, POEM_MANAGEMENT_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
+import {
+  ACCOUNT_PATH,
+  ADMIN_PATH,
+  POEM_MANAGEMENT_PATH,
+  SIGN_IN_PATH,
+  SIGN_UP_PATH,
+} from "@/shared/config/account-paths";
 import { ABOUT_PATH, PRIVACY_PATH } from "@/shared/config/constants";
 
 import type { BreadcrumbItem, RouteMatch } from "./breadcrumb.types";
@@ -35,6 +41,8 @@ export const STATIC_ROUTES: readonly RouteRow[] = [
   { path: SIGN_UP_PATH, label: BREADCRUMB_LABELS.signUp },
   { path: ABOUT_PATH, label: BREADCRUMB_LABELS.about },
   { path: PRIVACY_PATH, label: BREADCRUMB_LABELS.privacyPolicy },
+  // The slot page shows this trail to an admin only (admin-moderation design D14).
+  { path: ADMIN_PATH, label: BREADCRUMB_LABELS.admin },
 ];
 
 const AUTHOR_PAGE_PREFIX = `${AUTHORS_PATH}/`;

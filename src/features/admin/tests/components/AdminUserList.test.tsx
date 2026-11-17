@@ -21,7 +21,6 @@ const USER: AdminUser = {
   createdAt: "2026-11-12T10:00:00+00:00",
   lastSignInAt: null,
   restriction: null,
-  isAdmin: false,
 };
 
 describe("AdminUserList", () => {

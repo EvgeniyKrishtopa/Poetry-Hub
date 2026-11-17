@@ -1,6 +1,12 @@
+import { AdminOnly } from "@/features/admin";
 import { Breadcrumbs } from "@/features/breadcrumbs";
 
-// `/admin` has no route-table row on purpose, so its trail is empty, like an unknown URL (admin-moderation design D9).
+// The trail is the admin's alone, so a non-admin's not-found screen at `/admin` shows none and the page does not
+// announce itself (admin-moderation design D9, D14).
 export default function AdminBreadcrumbs() {
-  return <Breadcrumbs segments={Promise.resolve(["admin"])} />;
+  return (
+    <AdminOnly>
+      <Breadcrumbs segments={Promise.resolve(["admin"])} />
+    </AdminOnly>
+  );
 }

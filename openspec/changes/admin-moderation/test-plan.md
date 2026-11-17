@@ -6,7 +6,7 @@ One row per acceptance criterion (each scenario's THEN). Levels: **unit** (isola
 Database tests live in `supabase/tests/` (pgTAP): `admin_foundation.test.sql` (group 1), `admin_functions.test.sql`
 (group 2). App tests live in `src/features/<name>/tests/`.
 
-Identifiers FR-1..FR-13 and NFR-1..NFR-6 are in `specs/admin-moderation/spec.md`; FR-14 in `poem-management`,
+Identifiers FR-1..FR-13, FR-20, FR-21 and NFR-1..NFR-6 are in `specs/admin-moderation/spec.md`; FR-14 in `poem-management`,
 FR-15 in `collection-management`, FR-16 and FR-17 in `auth`, FR-18 in `work-ordering`, FR-19 in `author-profiles`.
 
 | Requirement ID | Tests | Level |
@@ -17,7 +17,7 @@ FR-15 in `collection-management`, FR-16 and FR-17 in `auth`, FR-18 in `work-orde
 | FR-1 role not grantable from a client | pgTAP: client insert/update/delete on `admins` refused, `is_admin()` still false | integration |
 | FR-2 admin opens the page | `AdminPage` renders the list for an admin (mocked DAL); web-qa flow opens `/admin` as admin | unit; end-to-end |
 | FR-2 signed-out visitor | `AdminPage` calls the `requireSession` redirect; web-qa flow: `/admin` signed out lands on `/login` | unit; end-to-end |
-| FR-2 signed-in non-admin | `AdminPage` renders not-found with no data and no trail for a non-admin; breadcrumbs test: no row for `/admin` | unit |
+| FR-2 signed-in non-admin | `AdminPage` renders not-found with no data and no trail for a non-admin; `AdminOnly` renders nothing for a non-admin, so the slot shows no trail (see FR-21) | unit |
 | FR-2 admin check unavailable | `AdminPage` shows the unavailable state when the admin check returns `unknown` | unit |
 | FR-20 admin sees the link | `AdminNavLink` test: renders «Админка» with `href` `/admin` for an admin (mocked session and RPC); web-qa flow clicks it | unit; end-to-end |
 | FR-20 others never see it | `AdminNavLink` tests: guest, non-admin and unreadable session render nothing; layout test: no extra markup | unit |
@@ -25,7 +25,15 @@ FR-15 in `collection-management`, FR-16 and FR-17 in `auth`, FR-18 in `work-orde
 | FR-3 first page | pgTAP: `admin_list_users` returns the requested page size, newest first, with more users than one page; `AdminUserList` renders rows and a next link | integration; unit |
 | FR-3 next page | `AdminPage` with `after` cursor renders the rest, no next link, a first-page link | unit |
 | FR-3 fresh after an action | `refresh()` is called after a successful action and the row shows blocked (component test) | unit |
-| FR-3 admin row has no controls | `AdminUserRow` renders the admin badge and no control when `is_admin` is true | unit |
+| FR-3 admins are not listed | pgTAP: `admin_list_users` as an admin returns no row for any user in `admins`, the caller included, and no `is_admin` column; `AdminUserList` and `AdminUserRow` render no admin pill and no row for an admin (the model has no admin state) | integration; unit |
+| FR-3 admins don't take a place on a page | pgTAP: 12 users of whom 2 are admins, page size 10: 10 rows and no further row after them; with admins interleaved by `created_at` every page before the last is full and the cursor still advances | integration |
+| FR-3 filter by an admin's email finds nothing | pgTAP: exact-email filter with an admin's address returns no row; `AdminPage` shows the empty-result text | integration; unit |
+| FR-21 admin sees the trail | `AdminOnly` renders its children for an admin (mocked session and RPC); route-row test: `/admin` gives «Главная › Админка» with the last row current, not a link; scenario `admin-page-is-closed-to-others` checks the admin's trail | unit; end-to-end |
+| FR-21 non-admin sees no trail | `AdminOnly` renders nothing for a signed-in non-admin; scenario: a non-admin on `/admin` sees the not-found screen and no trail | unit; end-to-end |
+| FR-21 guest costs no RPC | `AdminOnly` test: guest renders nothing and the `is_admin()` mock is not called | unit |
+| FR-21 admin check unreadable | `AdminOnly` test: an `unknown` answer renders nothing | unit |
+| FR-21 one answer per request | unit: `readAdminAccess` is wrapped in `cache()` and `AdminOnly`, `AdminNavLink` and the page gate all call it; web-qa pass (task 8.6) counts one `is_admin()` request per `/admin` page load | unit; end-to-end |
+| FR-21 slot is gated | `app/tests/breadcrumbs-slot.test.ts`: `src/app/@breadcrumbs/admin/page.tsx` exists and imports `AdminOnly` | unit |
 | FR-3 filter by email | pgTAP: exact-email filter returns one row; `AdminPage` passes `email` from the URL | integration; unit |
 | FR-3 filter ignores case and spaces | pgTAP: ` Foo@Example.com ` finds `foo@example.com` | integration |
 | FR-3 non-admin cannot list | pgTAP: `admin_list_users` as non-admin fails with permission error, no rows | integration |
@@ -81,6 +89,7 @@ FR-15 in `collection-management`, FR-16 and FR-17 in `auth`, FR-18 in `work-orde
 | NFR-3 public page stays cached | build output check that both routes keep their rendering mode with a dynamic hole; `npm run build` | integration |
 | NFR-3 control calls the RPC only for a signed-in reader | component test: no RPC call for a guest or unknown session | unit |
 | NFR-4 lint enforces the boundary | lint rule run on a fixture that imports `features/admin` internals | unit |
+| NFR-4 public API is the four components | admin boundary test: `index.ts` exports exactly `AdminDeleteControl`, `AdminNavLink`, `AdminOnly`, `AdminPage`, and `breadcrumbs` imports nothing from `admin` | unit |
 | NFR-4 poems and collections stay free of admin | extended `poems` and `collections` boundary tests | unit |
 | NFR-5 copy from the messages file | component tests of the `/admin` page and the delete dialog: visible texts equal `admin-messages.ts` entries; a lint/grep check for raw colour values in admin styles | unit |
 | NFR-6 failing action | action test: unexpected error logs action name and error kind only (spy on `console.error`) | unit |
@@ -105,5 +114,6 @@ FR-15 in `collection-management`, FR-16 and FR-17 in `auth`, FR-18 in `work-orde
 | FR-19 blocked user uploads a photo | profile editor test: restricted message, stored photo unchanged | unit |
 | FR-19 other failures keep their message | profile editor test: network failure still shows the generic message | unit |
 
-Coverage: all 92 scenarios in the six spec deltas have at least one row (93 rows: NFR-3 has two). Whole-flow
-web-qa (task 7.4) adds end-to-end coverage on top of the rows marked end-to-end.
+Coverage: all 98 scenarios in the six spec deltas have at least one row (102 rows: NFR-3 has two, and the FR-21
+cache and slot-gate checks and NFR-4's public-API check have rows beyond their scenarios). Whole-flow web-qa (task 7.4,
+and task 8.6 for the 2026-11-17 revision) adds end-to-end coverage on top of the rows marked end-to-end.
