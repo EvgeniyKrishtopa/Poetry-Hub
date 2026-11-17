@@ -5,7 +5,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(130);
+select plan(132);
 
 -- Start from empty content tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -251,6 +251,15 @@ select is(
   public.admin_add_violation_case_for_author('e1e1e1e1-e1e1-4e1e-8e1e-e1e1e1e1e1e1', 'harmful-content', 'poem',
     'b0000000-0000-4000-8000-000000000001') ->> 'status',
   'content-not-found', 'another author''s poem cannot be attached through a profile id either');
+
+-- Closed to clients, the admin included: only the functions above write the table (FR-12).
+select throws_ok(
+  $$insert into public.violation_cases (user_id, ground, added_by)
+    values ('44444444-4444-4444-8444-444444444444', 'harmful-content', '11111111-1111-4111-8111-111111111111')$$,
+  '42501', null, 'an admin cannot insert into the case table through the API');
+select throws_ok(
+  $$update public.violation_cases set ground = 'harmful-content'$$,
+  '42501', null, 'an admin cannot update the case table through the API');
 
 reset role;
 
