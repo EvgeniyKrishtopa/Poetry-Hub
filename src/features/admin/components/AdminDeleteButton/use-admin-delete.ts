@@ -1,18 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition, type RefObject } from "react";
-import { flushSync } from "react-dom";
+import type { RefObject } from "react";
 
-import type { AdminDeleteKind, DeleteFailureReason } from "../../model/admin.types";
+import type { AdminDeleteKind } from "../../model/admin.types";
 
-import { callDelete } from "./call-delete";
-
-type ShownFailure = Exclude<DeleteFailureReason, "not-found">;
+import { useDeleteDialog } from "./use-delete-dialog";
+import { useDeleteRequest } from "./use-delete-request";
 
 /**
- * Runs one delete and keeps what the dialog and the button show: the failure, or the «already gone» line. A success
- * closes the dialog and replaces the page with the redirect, since the page it showed no longer exists.
+ * Joins the confirmation dialog and the delete request for one button: opening a dialog starts without the last
+ * «already gone» line, and every way the dialog closes clears the failure, so a reopened dialog starts clean.
  */
 export function useAdminDelete(
   kind: AdminDeleteKind,
@@ -20,57 +17,22 @@ export function useAdminDelete(
   redirectHref: string,
   dialogRef: RefObject<HTMLDialogElement | null>,
 ) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [failure, setFailure] = useState<ShownFailure | null>(null);
-  const [alreadyGone, setAlreadyGone] = useState(false);
-  // The transition stays pending through the navigation, so closing must allow the dialog to close by itself.
-  const [leaving, setLeaving] = useState(false);
-  // Set synchronously: a second click can arrive before the pending state disables the button.
-  const sendingRef = useRef(false);
+  const dialog = useDeleteDialog(dialogRef);
+  const request = useDeleteRequest(kind, id, redirectHref, dialog.closeConfirmDialogBeforeNavigation);
 
-  function open() {
-    setLeaving(false);
-    setAlreadyGone(false);
-    dialogRef.current?.showModal();
+  function openConfirmDialog() {
+    request.clearAlreadyDeletedNotice();
+    dialog.openConfirmDialog();
   }
 
-  function cancel() {
-    dialogRef.current?.close();
-  }
-
-  // Every close path ends here: a dialog opened again starts without the failure.
-  function handleClosed() {
-    setFailure(null);
-  }
-
-  // `flushSync` commits the closable dialog before `close()`, so the close never races the Dialog's re-open guard.
-  function closeWhilePending() {
-    flushSync(() => setLeaving(true));
-    dialogRef.current?.close();
-  }
-
-  function confirm() {
-    if (sendingRef.current) return;
-    sendingRef.current = true;
-    setFailure(null);
-    startTransition(async () => {
-      const result = await callDelete(kind, id);
-      sendingRef.current = false;
-      if (result.ok) {
-        closeWhilePending();
-        // `replace`, so Back does not return to the deleted page.
-        router.replace(redirectHref);
-        return;
-      }
-      if (result.reason === "not-found") {
-        closeWhilePending();
-        setAlreadyGone(true);
-        return;
-      }
-      setFailure(result.reason);
-    });
-  }
-
-  return { open, cancel, confirm, handleClosed, isPending, leaving, failure, alreadyGone };
+  return {
+    openConfirmDialog,
+    cancelDeletion: dialog.closeConfirmDialog,
+    confirmDeletion: request.confirmDeletion,
+    handleDialogClosed: request.clearDeleteFailure,
+    isDeleting: request.isDeleting,
+    isLeavingPage: dialog.isLeavingPage,
+    deleteFailure: request.deleteFailure,
+    isAlreadyDeleted: request.isAlreadyDeleted,
+  };
 }

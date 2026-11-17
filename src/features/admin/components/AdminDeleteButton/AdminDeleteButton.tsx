@@ -13,18 +13,22 @@ import { useAdminDelete } from "./use-admin-delete";
 /** The admin's delete button with its confirmation dialog, for a poem or a collection of another author (FR-10). */
 export function AdminDeleteButton({ kind, id, title, redirectHref }: AdminDeleteButtonProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const { open, cancel, confirm, handleClosed, isPending, leaving, failure, alreadyGone } = useAdminDelete(
-    kind,
-    id,
-    redirectHref,
-    dialogRef,
-  );
+  const {
+    openConfirmDialog,
+    cancelDeletion,
+    confirmDeletion,
+    handleDialogClosed,
+    isDeleting,
+    isLeavingPage,
+    deleteFailure,
+    isAlreadyDeleted,
+  } = useAdminDelete(kind, id, redirectHref, dialogRef);
   const copy = ADMIN_DELETE_COPY[kind];
 
   return (
     <div lang={CONTENT_LANG} className="flex flex-col items-start gap-3">
-      {alreadyGone && <Alert tone="neutral">{copy.alreadyGone}</Alert>}
-      <Button variant="danger" aria-haspopup="dialog" onClick={open}>
+      {isAlreadyDeleted && <Alert tone="neutral">{copy.alreadyGone}</Alert>}
+      <Button variant="danger" aria-haspopup="dialog" onClick={openConfirmDialog}>
         {copy.button}
       </Button>
       <Dialog
@@ -32,15 +36,15 @@ export function AdminDeleteButton({ kind, id, title, redirectHref }: AdminDelete
         title={copy.dialogTitle(title)}
         description={copy.dialogDescription}
         closeLabel={ADMIN_DELETE_COPY.close}
-        closable={!isPending || leaving}
-        onClose={handleClosed}
+        closable={!isDeleting || isLeavingPage}
+        onClose={handleDialogClosed}
       >
-        {failure !== null && <Alert tone="danger">{ADMIN_DELETE_FAILURE_MESSAGES[failure]}</Alert>}
+        {deleteFailure !== null && <Alert tone="danger">{ADMIN_DELETE_FAILURE_MESSAGES[deleteFailure]}</Alert>}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="ghost" disabled={isPending} onClick={cancel}>
+          <Button variant="ghost" disabled={isDeleting} onClick={cancelDeletion}>
             {ADMIN_DELETE_COPY.cancel}
           </Button>
-          <Button variant="danger" disabled={isPending} aria-busy={isPending} onClick={confirm}>
+          <Button variant="danger" disabled={isDeleting} aria-busy={isDeleting} onClick={confirmDeletion}>
             {ADMIN_DELETE_COPY.confirm}
           </Button>
         </div>
