@@ -1,0 +1,4 @@
+{"ts":"2026-11-17T13:00:03Z","change":"admin-moderation","kind":"finding","gate":"spec-clarify","finding":"Deploy order of the third migration (design.md D15 / tasks 8.5): app first, then migration","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-17T13:00:03Z","change":"admin-moderation","kind":"finding","gate":"spec-clarify","finding":"What the slot test checks for AdminOnly (design.md D14 / tasks 8.4): the /admin slot file only","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-17T13:00:03Z","change":"admin-moderation","kind":"finding","gate":"spec-clarify","finding":"test-plan.md FR-2 non-admin row: 'no row for /admin' stale after D14 (fixed by test-plan rebuild)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-17T13:00:03Z","change":"admin-moderation","kind":"finding","gate":"spec-clarify","finding":"test-plan.md FR-3 admin row has no controls stale after D15 (fixed by test-plan rebuild)","outcome":"fixed","ruleNumber":""}

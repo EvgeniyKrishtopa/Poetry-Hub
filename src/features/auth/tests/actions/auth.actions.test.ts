@@ -36,8 +36,8 @@ const auth = {
   signOut: vi.fn(),
 };
 
-function authError(code: string, status: number) {
-  return { code, status, name: "AuthApiError", message: code };
+function authError(code: string, status: number, message: string = code) {
+  return { code, status, name: "AuthApiError", message };
 }
 
 describe("auth actions", () => {
@@ -75,6 +75,8 @@ describe("auth actions", () => {
       ["email_not_confirmed", 400, "email-not-confirmed"],
       ["over_request_rate_limit", 429, "rate-limited"],
       ["unexpected_failure", 500, "unknown"],
+      // implements FR-16 of admin-moderation
+      ["user_banned", 400, "restricted"],
     ])("returns data.failure for Supabase error %s", async (code, status, failure) => {
       auth.signInWithPassword.mockResolvedValue({ data: {}, error: authError(code, status) });
 
@@ -155,6 +157,37 @@ describe("auth actions", () => {
       const result = await signUpAction(CREDENTIALS);
 
       expect(result.data).toEqual({ status: "failed", failure });
+    });
+
+    // implements FR-17 of admin-moderation
+    it("returns the same check-email for a banned address (the hook's rejection)", async () => {
+      auth.signUp.mockResolvedValue({ data: { user: null }, error: authError("unknown", 403, "signup not allowed") });
+
+      const result = await signUpAction(CREDENTIALS);
+
+      expect(result.data).toEqual({ status: "check-email", email: EMAIL });
+    });
+
+    // implements NFR-6 of admin-moderation
+    it("logs the refusal of a banned address without the address", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      auth.signUp.mockResolvedValue({ data: { user: null }, error: authError("unknown", 403, "signup not allowed") });
+
+      await signUpAction(CREDENTIALS);
+
+      expect(warn).toHaveBeenCalledExactlyOnceWith("[auth] sign-up refused for a banned address");
+    });
+
+    // implements FR-17 of admin-moderation
+    it("keeps the weak-password message instead of check-email", async () => {
+      auth.signUp.mockResolvedValue({
+        data: { user: null },
+        error: authError("weak_password", 422, "Password should be at least 8 characters"),
+      });
+
+      const result = await signUpAction(CREDENTIALS);
+
+      expect(result.data).toEqual({ status: "failed", failure: "weak-password" });
     });
 
     // implements FR-8 of add-supabase-auth

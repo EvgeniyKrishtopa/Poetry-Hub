@@ -51,12 +51,12 @@ const PUBLIC_VIEWS: readonly (readonly [string, Render, string])[] = [
   [
     "PoemPageContent",
     async () => {
-      const article = (await PoemPageContent({
+      const content = (await PoemPageContent({
         authorId: Promise.resolve(AUTHOR_ID),
         poemId: Promise.resolve(POEM_ROW.id),
-      })) as ReactElement<PoemArticleProps>;
+      })) as ReactElement<{ children: [ReactElement<PoemArticleProps>, unknown] }>;
       // An async Server Component can't render in jsdom, so the article is resolved here too.
-      return PoemArticle(article.props);
+      return PoemArticle(content.props.children[0].props);
     },
     "<time ",
   ],

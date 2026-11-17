@@ -5,6 +5,7 @@ export type AuthFailure =
   | "invalid-credentials"
   | "email-not-confirmed"
   | "rate-limited"
+  | "restricted"
   | "weak-password"
   | "unavailable"
   | "unknown";

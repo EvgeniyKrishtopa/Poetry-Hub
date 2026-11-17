@@ -9,6 +9,9 @@ const EXPIRED = new AuthApiError("JWT expired", 401, "bad_jwt");
 const OUTAGE = new AuthRetryableFetchError("fetch failed", 0);
 const SERVER_ERROR = new AuthApiError("Service Unavailable", 503, undefined);
 const RATE_LIMITED = new AuthApiError("Too many requests", 429, "over_request_rate_limit");
+// The two answers Auth gives for a refresh after an admin blocked an account (admin-moderation `_debug/`).
+const BANNED_REFRESH = new AuthApiError("User is banned", 400, "user_banned");
+const REVOKED_REFRESH = new AuthApiError("Invalid Refresh Token: Refresh Token Not Found", 400, "refresh_token_not_found");
 
 describe("readClaimsState", () => {
   // implements FR-19, FR-20 of add-author-profiles
@@ -28,6 +31,14 @@ describe("readClaimsState", () => {
     ["claims with a retryable error", { data: CLAIMS, error: OUTAGE }, "unknown"],
   ])("%s → %s", (_label, result, expected) => {
     expect(readClaimsState(result).state).toBe(expected);
+  });
+
+  // implements FR-16 of admin-moderation
+  it.each<[string, ClaimsResult]>([
+    ["a refresh refused for a banned user", { data: null, error: BANNED_REFRESH }],
+    ["a refresh with a token the block deleted", { data: null, error: REVOKED_REFRESH }],
+  ])("reads %s as signed out, not unknown", (_label, result) => {
+    expect(readClaimsState(result)).toEqual({ state: "signed-out" });
   });
 
   it("carries the user id only when signed in", () => {

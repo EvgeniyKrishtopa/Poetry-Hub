@@ -11,6 +11,7 @@ import { moveOwnCollection, moveOwnPoem } from "../../dal/move-writes";
 vi.mock("@/shared/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
 
 const HTTP_OK = 200;
+const HTTP_BAD_REQUEST = 400;
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_UNAVAILABLE = 503;
 const NO_RESPONSE = 0;
@@ -79,6 +80,8 @@ const FAILURES: readonly [string, () => void, string][] = [
   ["no response (status 0)", () => answer(rpcError("", NO_RESPONSE)), "unavailable"],
   ["a rejected JWT", () => answer(rpcError("PGRST301", HTTP_UNAUTHORIZED)), "unauthenticated"],
   ["an input guard (22023)", () => answer(rpcError("22023", HTTP_OK)), "unknown"],
+  // implements FR-18 of admin-moderation: both moves, since the table is shared
+  ["a blocked account (AM001)", () => answer(rpcError("AM001", HTTP_BAD_REQUEST)), "restricted"],
   ["an unknown status", () => answer(ok({ status: "maybe" })), "unknown"],
   ["a moved answer with no author", () => answer(ok({ status: "moved" })), "unknown"],
   ["a throw", () => rpc.mockRejectedValue(new TypeError("fetch failed")), "unavailable"],
@@ -203,6 +206,8 @@ describe("consumeMoveAllowance", () => {
   it.each([
     ["a 5xx", () => answer(rpcError("XX000", HTTP_UNAVAILABLE)), "unavailable"],
     ["a rejected JWT", () => answer(rpcError("PGRST301", HTTP_UNAUTHORIZED)), "unauthenticated"],
+    // implements FR-18 of admin-moderation
+    ["a blocked account (AM001)", () => answer(rpcError("AM001", HTTP_BAD_REQUEST)), "restricted"],
     ["a non-boolean answer", () => answer(ok("yes")), "unknown"],
     ["a throw", () => rpc.mockRejectedValue(new TypeError("fetch failed")), "unavailable"],
   ] as const)("classifies %s", async (_case, arrange, failure) => {

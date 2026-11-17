@@ -147,6 +147,11 @@ from seed_author_poems ap
 join seed_readers r on r.email = ap.email
 join seed_poems p on p.position = ap.position;
 
+-- The one admin for the recorded moderation scenarios (admin-moderation). It owns no public profile, so no
+-- scenario that reads the public authors changes. Never seed an admin on a hosted project (docs/environment.md).
+insert into public.admins (user_id)
+select user_id from seed_readers where email = 'draft-author@example.test';
+
 drop table seed_author_poems;
 drop table seed_poems;
 drop table seed_readers;

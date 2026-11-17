@@ -1,0 +1,2 @@
+full
+# modules: yes (admin, auth, poems, collections); schema: yes (admins, account_restrictions, moderation_log); contract: yes (existing write functions refuse restricted callers, new admin functions)

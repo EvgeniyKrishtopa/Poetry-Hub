@@ -176,6 +176,8 @@ describe("NewCollectionForm", () => {
     ["too-many-collections", "Слишком много новых сборников. Попробуйте позже."],
     ["not-public", "Чтобы создавать сборники, укажите имя и фамилию в профиле автора."],
     ["unknown", UNKNOWN_TEXT],
+    // implements FR-15 of admin-moderation
+    ["restricted", "Ваш аккаунт заблокирован: изменения недоступны."],
   ] as const)("shows the %s failure above the submit button, keeps both values, and focuses the alert", async (failure, message) => {
     vi.mocked(createCollectionAction).mockResolvedValue(respond({ status: "failed", failure }));
     const user = renderForm();

@@ -221,6 +221,23 @@ describe("DeleteCollectionButton: sending and outcomes", () => {
     expect(dialogElement().open).toBe(false);
   });
 
+  // implements FR-15 of admin-moderation
+  it("keeps the dialog open with the restricted message, not the session-expired path, when the account is blocked", async () => {
+    vi.mocked(deleteCollectionAction).mockResolvedValue(respond({ status: "failed", failure: "restricted" }));
+    const user = await renderOpen();
+
+    await user.click(confirmButton());
+
+    expect(await inDialog().findByRole("alert", { hidden: true })).toHaveTextContent(
+      "Ваш аккаунт заблокирован: изменения недоступны.",
+    );
+    expect(dialogElement().open).toBe(true);
+    expect(replace).not.toHaveBeenCalled();
+    expect(useSessionExpiredNotice.getState().expired).toBe(false);
+    expect(useCollectionListNotice.getState().notice).toBeNull();
+    expect(deleteCollectionAction).toHaveBeenCalledTimes(1);
+  });
+
   // implements FR-13, NFR-4 of add-poem-collections
   it.each<[string, () => Promise<ActionResponse>]>([
     ["unavailable", async () => respond({ status: "failed", failure: "unavailable" })],

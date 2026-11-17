@@ -89,6 +89,42 @@ describe("PublicCollectionContent", () => {
     expect(screen.getAllByRole("link")).toHaveLength(AUTUMN.poems.length);
   });
 
+  // implements FR-10 of admin-moderation
+  it("renders what the moderation function returns under the poems, called with the collection's id, title and author", async () => {
+    mockFoundAuthor();
+    vi.mocked(getPublicCollection).mockResolvedValue({ ok: true, collection: AUTUMN });
+    const renderModeration = vi.fn(() => <button type="button">control</button>);
+
+    render(
+      await PublicCollectionContent({
+        authorId: Promise.resolve(AUTHOR_ID),
+        collectionId: Promise.resolve(COLLECTION_ID),
+        renderModeration,
+      }),
+    );
+
+    expect(renderModeration).toHaveBeenCalledWith({ id: COLLECTION_ID, title: AUTUMN.title, authorId: AUTHOR_ID });
+    const control = screen.getByRole("button", { name: "control" });
+    const poemsList = screen.getByRole("list");
+    expect(poemsList.compareDocumentPosition(control) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // implements FR-10 of admin-moderation: no control on a soft 404
+  it("never calls the moderation function for a collection that isn't there", async () => {
+    mockFoundAuthor();
+    vi.mocked(getPublicCollection).mockResolvedValue({ ok: false, reason: "not-found" });
+    const renderModeration = vi.fn();
+
+    await expect(
+      PublicCollectionContent({
+        authorId: Promise.resolve(AUTHOR_ID),
+        collectionId: Promise.resolve(COLLECTION_ID),
+        renderModeration,
+      }),
+    ).rejects.toThrow("404");
+    expect(renderModeration).not.toHaveBeenCalled();
+  });
+
   // implements FR-5 of public-collections
   it("renders no description element for a collection without one", async () => {
     mockFoundAuthor();

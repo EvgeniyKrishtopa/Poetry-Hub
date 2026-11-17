@@ -17,6 +17,7 @@ export const LOWERCASE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-
 /** Why a move did not happen, in the terms the board shows (FR-6, FR-11, design D6). */
 export const MOVE_FAILURE_REASON = {
   rateLimited: "rate-limited",
+  restricted: "restricted",
   stale: "stale",
   unauthenticated: "unauthenticated",
   failed: "failed",

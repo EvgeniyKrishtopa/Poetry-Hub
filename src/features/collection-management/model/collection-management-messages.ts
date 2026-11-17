@@ -1,6 +1,7 @@
 import { COLLECTION_DESCRIPTION_MAX_LENGTH, COLLECTION_TITLE_MAX_LENGTH } from "./collection-management.constants";
 import type {
   CreateCollectionFailure,
+  DeleteAlertFailure,
   ManageCollectionPoemsError,
   SaveCollectionPoemsFailure,
   UpdateCollectionFailure,
@@ -39,11 +40,15 @@ export const NEW_COLLECTION_COPY = {
   profileEditorLink: "Перейти к профилю автора",
 } as const;
 
+/** The text of a write refused for a blocked or banned account, on every collection write surface (FR-15). */
+const RESTRICTED_MESSAGE = "Ваш аккаунт заблокирован: изменения недоступны.";
+
 /** The create form's failure alert, one text per failure that keeps the author on the page (FR-4, FR-5). */
 export const CREATE_COLLECTION_FAILURE_MESSAGES: Readonly<Record<Exclude<CreateCollectionFailure, "unauthenticated">, string>> =
   {
     "not-public": NEW_COLLECTION_COPY.notPublic,
     "too-many-collections": "Слишком много новых сборников. Попробуйте позже.",
+    restricted: RESTRICTED_MESSAGE,
     unavailable: "Сохранение сейчас недоступно. Попробуйте позже.",
     unknown: "Что-то пошло не так. Попробуйте ещё раз.",
   };
@@ -62,6 +67,13 @@ export const COLLECTION_PAGE_COPY = {
   deleteFailure: "Не удалось удалить сборник. Попробуйте позже.",
 } as const;
 
+/** The delete dialog's alert, one text per failure that keeps the owner in the dialog (FR-15). */
+export const DELETE_COLLECTION_FAILURE_MESSAGES: Readonly<Record<DeleteAlertFailure, string>> = {
+  restricted: RESTRICTED_MESSAGE,
+  unavailable: COLLECTION_PAGE_COPY.deleteFailure,
+  unknown: COLLECTION_PAGE_COPY.deleteFailure,
+};
+
 /** The edit page (FR-7, FR-8, FR-9). */
 export const EDIT_COLLECTION_COPY = {
   heading: "Редактирование сборника",
@@ -76,6 +88,7 @@ export const UPDATE_COLLECTION_FAILURE_MESSAGES: Readonly<Record<Exclude<UpdateC
   {
     "too-many-saves": "Слишком много сохранений. Попробуйте через минуту.",
     "not-public": "Чтобы сохранять изменения, укажите имя и фамилию в профиле автора.",
+    restricted: RESTRICTED_MESSAGE,
     unavailable: CREATE_COLLECTION_FAILURE_MESSAGES.unavailable,
     unknown: CREATE_COLLECTION_FAILURE_MESSAGES.unknown,
   };

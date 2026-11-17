@@ -235,6 +235,8 @@ describe("updateOwnPoem", () => {
     ["a 5xx", rpcError("XX000", HTTP_UNAVAILABLE), "unavailable"],
     ["a network failure", rpcError("", NO_RESPONSE), "unavailable"],
     ["a path outside the author's folder", rpcError("23514", HTTP_BAD_REQUEST), "unknown"],
+    // implements FR-14 of admin-moderation
+    ["a blocked account (AM001)", rpcError("AM001", HTTP_BAD_REQUEST), "restricted"],
   ] as const)("classifies %s", async (_case, response, failure) => {
     supabase.rpc.mockResolvedValue(response);
 

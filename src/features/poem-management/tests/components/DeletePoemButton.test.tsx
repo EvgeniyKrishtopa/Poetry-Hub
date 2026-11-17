@@ -219,6 +219,22 @@ describe("DeletePoemButton", () => {
     expect(useDeletedPoemNotice.getState().notice).toBeNull();
   });
 
+  // implements FR-14 of admin-moderation
+  it("keeps the dialog open with the restricted message, not the session-expired path, when the account is blocked", async () => {
+    vi.mocked(deletePoemAction).mockResolvedValue(respond({ status: "failed", failure: "restricted" }));
+    const user = await renderOpen();
+
+    await user.click(confirmButton());
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Ваш аккаунт заблокирован: изменения недоступны.");
+    expect(dialogElement().open).toBe(true);
+    expect(replace).not.toHaveBeenCalled();
+    expect(useSessionExpiredNotice.getState().expired).toBe(false);
+    expect(useDeletedPoemNotice.getState().notice).toBeNull();
+    // No retry control: the buttons are the same two as before.
+    expect(deletePoemAction).toHaveBeenCalledTimes(1);
+  });
+
   // implements FR-5 of delete-poem
   it("opens again without the alert after a failure", async () => {
     const user = await renderOpen();

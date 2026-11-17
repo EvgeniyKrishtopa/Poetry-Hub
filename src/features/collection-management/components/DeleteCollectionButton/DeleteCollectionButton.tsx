@@ -12,9 +12,9 @@ import { Alert, Button, ConnectionNotice, Dialog } from "@/shared/ui";
 
 import { deleteCollectionAction } from "../../actions/delete-collection.actions";
 import { useCollectionListNotice } from "../../model/collection-list-notice-ui.store";
-import { COLLECTION_PAGE_COPY } from "../../model/collection-management-messages";
+import { COLLECTION_PAGE_COPY, DELETE_COLLECTION_FAILURE_MESSAGES } from "../../model/collection-management-messages";
 import { DELETE_COLLECTION_STATUS } from "../../model/collection-management.constants";
-import type { DeleteCollectionResult } from "../../model/collection-management.types";
+import type { DeleteAlertFailure, DeleteCollectionResult } from "../../model/collection-management.types";
 
 import type { DeleteCollectionButtonProps } from "./DeleteCollectionButton.types";
 
@@ -22,7 +22,7 @@ import type { DeleteCollectionButtonProps } from "./DeleteCollectionButton.types
 export function DeleteCollectionButton({ collectionId, title }: DeleteCollectionButtonProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<DeleteAlertFailure | null>(null);
   // The transition stays pending through the navigation, so leaving must allow the dialog to close by itself.
   const [leaving, setLeaving] = useState(false);
   // Set synchronously on confirm: a second click can arrive before the pending state disables the button.
@@ -40,8 +40,8 @@ export function DeleteCollectionButton({ collectionId, title }: DeleteCollection
 
   // A disabled button can't take focus, so focus waits for the request to end (NFR-4).
   useEffect(() => {
-    if (failed && !isPending) confirmRef.current?.focus();
-  }, [failed, isPending]);
+    if (failure !== null && !isPending) confirmRef.current?.focus();
+  }, [failure, isPending]);
 
   // `aria-disabled`, not `disabled`, while the connection isn't normal: the opener stays focusable, so focus
   // can return to it when the dialog closes (FR-14, design D7). A press is ignored here instead.
@@ -61,7 +61,7 @@ export function DeleteCollectionButton({ collectionId, title }: DeleteCollection
 
   // Every close path ends here: a dialog opened again starts without the alert.
   function handleClosed() {
-    setFailed(false);
+    setFailure(null);
     openerRef.current?.focus();
   }
 
@@ -87,15 +87,19 @@ export function DeleteCollectionButton({ collectionId, title }: DeleteCollection
       leaveFor(POEM_MANAGEMENT_PATH);
       return;
     }
-    if (result?.failure === "unauthenticated") {
-      useSessionExpiredNotice.getState().markSessionExpired();
-      leaveFor(SIGN_IN_PATH);
-      // The root layout's header still shows the signed-in links until the server renders it again.
-      router.refresh();
+    if (result?.status === DELETE_COLLECTION_STATUS.failed) {
+      if (result.failure === "unauthenticated") {
+        useSessionExpiredNotice.getState().markSessionExpired();
+        leaveFor(SIGN_IN_PATH);
+        // The root layout's header still shows the signed-in links until the server renders it again.
+        router.refresh();
+        return;
+      }
+      setFailure(result.failure);
       return;
     }
-    // Any other failure, or no data at all (a server error or a rejected input).
-    setFailed(true);
+    // No data at all (a server error or a rejected input).
+    setFailure("unknown");
   }
 
   async function send() {
@@ -106,7 +110,7 @@ export function DeleteCollectionButton({ collectionId, title }: DeleteCollection
       // The error's type only: never the collection's content (NFR-5).
       console.error(`[collection-management] delete call rejected: ${error instanceof Error ? error.name : typeof error}`);
       // Offline: the live notice in the dialog already says why, so no failure text (FR-14).
-      if (connectionRef.current !== CONNECTION_STATUS.offline) setFailed(true);
+      if (connectionRef.current !== CONNECTION_STATUS.offline) setFailure("unknown");
       return;
     }
     handleResult(result);
@@ -117,7 +121,7 @@ export function DeleteCollectionButton({ collectionId, title }: DeleteCollection
     if (!isOnline || sendingRef.current) return;
     sendingRef.current = true;
     // The next attempt hides the previous failure.
-    setFailed(false);
+    setFailure(null);
     startTransition(async () => {
       try {
         await send();
@@ -147,7 +151,7 @@ export function DeleteCollectionButton({ collectionId, title }: DeleteCollection
         closable={!isPending || leaving}
         onClose={handleClosed}
       >
-        {failed && <Alert tone="danger">{COLLECTION_PAGE_COPY.deleteFailure}</Alert>}
+        {failure !== null && <Alert tone="danger">{DELETE_COLLECTION_FAILURE_MESSAGES[failure]}</Alert>}
         {/* The page's own notice sits behind the modal, so the dialog shows one above its buttons (design D9). */}
         <ConnectionNotice status={connection} />
         <div className="flex flex-wrap justify-end gap-2">

@@ -1,3 +1,5 @@
+import { AdminDeleteControl } from "@/features/admin";
+import { authorPagePath } from "@/features/authors";
 import { PublicCollectionPage } from "@/features/collections";
 
 export default function CollectionRoutePage({ params }: PageProps<"/authors/[id]/collections/[collectionId]">) {
@@ -6,6 +8,15 @@ export default function CollectionRoutePage({ params }: PageProps<"/authors/[id]
       <PublicCollectionPage
         authorId={params.then(({ id }) => id)}
         collectionId={params.then(({ collectionId }) => collectionId)}
+        renderModeration={(target) => (
+          <AdminDeleteControl
+            kind="collection"
+            id={target.id}
+            title={target.title}
+            authorId={target.authorId}
+            redirectHref={authorPagePath(target.authorId)}
+          />
+        )}
       />
     </main>
   );

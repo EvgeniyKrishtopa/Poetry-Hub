@@ -10,6 +10,7 @@ import { deleteOwnPoem } from "../../dal/poem-delete";
 vi.mock("@/shared/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
 
 const HTTP_OK = 200;
+const HTTP_BAD_REQUEST = 400;
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_UNAVAILABLE = 503;
 const NO_RESPONSE = 0;
@@ -109,6 +110,8 @@ describe("deleteOwnPoem", () => {
     ["a 401 without a JWT code", rpcError("42501", HTTP_UNAUTHORIZED), "unauthenticated"],
     ["a 5xx", rpcError("XX000", HTTP_UNAVAILABLE), "unavailable"],
     ["a network failure", rpcError("", NO_RESPONSE), "unavailable"],
+    // implements FR-14 of admin-moderation
+    ["a blocked account (AM001)", rpcError("AM001", HTTP_BAD_REQUEST), "restricted"],
   ] as const)("classifies %s", async (_case, response, failure) => {
     answer(response);
 

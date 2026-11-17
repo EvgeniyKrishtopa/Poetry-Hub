@@ -52,6 +52,9 @@ export type DeleteCollectionResult =
   | { readonly status: typeof DELETE_COLLECTION_STATUS.notFound }
   | { readonly status: typeof DELETE_COLLECTION_STATUS.failed; readonly failure: ServiceFailure };
 
+/** A delete failure shown in the dialog's alert; an expired session leaves for `/login` instead. */
+export type DeleteAlertFailure = Exclude<ServiceFailure, "unauthenticated">;
+
 /** `create_my_collection()`'s answer, or a classified failure (design D2, D5). */
 export type CreateOwnCollectionResult =
   | { readonly ok: true; readonly status: "created"; readonly id: string }

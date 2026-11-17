@@ -137,6 +137,8 @@ describe.each(ACTIONS)("%s", (_name, run, write) => {
     ["unavailable", "failed"],
     ["unknown", "failed"],
     ["unauthenticated", "unauthenticated"],
+    // implements FR-18 of admin-moderation: a blocked account is told so, and is not sent to sign in
+    ["restricted", "restricted"],
   ] as const)("answers a limit check that failed (%s) as %s, writing nothing", async (failure, reason) => {
     vi.mocked(consumeMoveAllowance).mockResolvedValue({ ok: false, failure });
 
@@ -152,6 +154,8 @@ describe.each(ACTIONS)("%s", (_name, run, write) => {
     ["unavailable", "failed"],
     ["unknown", "failed"],
     ["unauthenticated", "unauthenticated"],
+    // implements FR-18 of admin-moderation
+    ["restricted", "restricted"],
   ] as const)("answers a failed write (%s) as %s, expiring and refreshing nothing", async (failure, reason) => {
     vi.mocked(write).mockResolvedValue({ ok: false, failure });
 

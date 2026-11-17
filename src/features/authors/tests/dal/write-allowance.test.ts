@@ -12,6 +12,7 @@ import { createFakeSupabase, errorResponse, okResponse, type FakeSupabase } from
 vi.mock("@/shared/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
 
 const FUNCTION_NAME = "consume_write_allowance";
+const HTTP_BAD_REQUEST = 400;
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_NOT_FOUND = 404;
 const HTTP_SERVICE_UNAVAILABLE = 503;
@@ -94,6 +95,8 @@ describe("consumeWriteAllowance", () => {
     ["a server error", errorResponse("XX000", HTTP_SERVICE_UNAVAILABLE), "unavailable"],
     ["an expired session", errorResponse("PGRST303", HTTP_UNAUTHORIZED), "unauthenticated"],
     ["a missing function", errorResponse("PGRST202", HTTP_NOT_FOUND), "unknown"],
+    // implements FR-19 of admin-moderation: the pre-check raises AM001 for a blocked account, before any write
+    ["a blocked account (AM001)", errorResponse("AM001", HTTP_BAD_REQUEST), "restricted"],
   ] as const)("maps %s from the function to %s", async (_label, response, failure) => {
     supabase.onRpc(FUNCTION_NAME, response);
 

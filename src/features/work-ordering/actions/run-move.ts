@@ -17,10 +17,22 @@ import { checkSession } from "./session-check";
 
 const FAILED: MoveResult = { ok: false, reason: MOVE_FAILURE_REASON.failed };
 const UNAUTHENTICATED: MoveResult = { ok: false, reason: MOVE_FAILURE_REASON.unauthenticated };
+const RESTRICTED: MoveResult = { ok: false, reason: MOVE_FAILURE_REASON.restricted };
 
-/** A classified failure in the board's terms: a gone session sends the author to sign in, the rest is `failed`. */
+/**
+ * A classified failure in the board's terms: a gone session sends the author to sign in, a blocked account gets its
+ * own message, the rest is `failed`. A switch, so a new failure kind is a compile error here, not a silent `failed`.
+ */
 function reasonOf(failure: ServiceFailure): MoveResult {
-  return failure === "unauthenticated" ? UNAUTHENTICATED : FAILED;
+  switch (failure) {
+    case "unauthenticated":
+      return UNAUTHENTICATED;
+    case "restricted":
+      return RESTRICTED;
+    case "unavailable":
+    case "unknown":
+      return FAILED;
+  }
 }
 
 /** What the answered move means for the caches and for the board. */

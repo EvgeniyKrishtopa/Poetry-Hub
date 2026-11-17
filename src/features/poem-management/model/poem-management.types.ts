@@ -1,5 +1,6 @@
 import type { Poem } from "@/features/poems";
 import type { ImageType } from "@/shared/lib/image-file/image-file.types";
+import type { SupabaseFailure } from "@/shared/lib/supabase/classify-error";
 
 import type {
   CREATE_POEM_STATUS,
@@ -24,7 +25,7 @@ export interface IllustrationLabels {
 }
 
 /** A service read or write that failed, classified like the profile editor's failures. */
-export type ServiceFailure = "unauthenticated" | "unavailable" | "unknown";
+export type ServiceFailure = SupabaseFailure;
 
 export type CreatePoemFailure = ServiceFailure | "too-many-poems";
 
@@ -83,6 +84,9 @@ export type DeletePoemResult =
   | { readonly status: typeof DELETE_POEM_STATUS.deleted }
   | { readonly status: typeof DELETE_POEM_STATUS.notFound }
   | { readonly status: typeof DELETE_POEM_STATUS.failed; readonly failure: ServiceFailure };
+
+/** A delete failure shown in the dialog's alert; an expired session leaves for `/login` instead. */
+export type DeleteAlertFailure = Exclude<ServiceFailure, "unauthenticated">;
 
 /**
  * `delete_my_poem()`'s answer, or why it couldn't be read (delete-poem design D2, D3).

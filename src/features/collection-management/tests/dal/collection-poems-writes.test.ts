@@ -11,6 +11,7 @@ import { saveOwnCollectionPoems } from "../../dal/collection-poems-writes";
 vi.mock("@/shared/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
 
 const HTTP_OK = 200;
+const HTTP_BAD_REQUEST = 400;
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_UNAVAILABLE = 503;
 const NO_RESPONSE = 0;
@@ -71,6 +72,8 @@ const FAILURES: readonly [string, () => void, string][] = [
   ["no response (status 0)", () => answer(rpcError("", NO_RESPONSE)), "unavailable"],
   ["a rejected JWT", () => answer(rpcError("PGRST301", HTTP_UNAUTHORIZED)), "unauthenticated"],
   ["the input guard (22023)", () => answer(rpcError("22023", HTTP_OK)), "unknown"],
+  // implements FR-15 of admin-moderation
+  ["a blocked account (AM001)", () => answer(rpcError("AM001", HTTP_BAD_REQUEST)), "restricted"],
   ["a bad shape", () => answer(ok({ status: "maybe" })), "unknown"],
   ["a throw", () => rpc.mockRejectedValue(new TypeError("fetch failed")), "unavailable"],
   ["a missing config", () => vi.mocked(createSupabaseServerClient).mockRejectedValue(new SupabaseConfigError([CONFIG_VARIABLE])), "unavailable"],

@@ -7,7 +7,7 @@
      term>, because <what actually differs>. -->
 - Collection (сборник произведений) — an author's own named group of their poems, with a title and an
   optional description, visible to everyone once it holds a poem and its author is public, and managed
-  only by its author. Not to be confused with a reader's saved or favourite poems, because a collection
+  only by its author, except that the site admin may delete any collection as moderation. Not to be confused with a reader's saved or favourite poems, because a collection
   is made by the poems' author, not by someone reading them.
 - Free poem (свободное произведение) — a poem that belongs to no collection; a poem belongs to at most
   one collection, of its own author. Not to be confused with a public poem, because every stored poem of
