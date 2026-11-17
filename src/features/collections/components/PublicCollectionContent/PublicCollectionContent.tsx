@@ -34,6 +34,8 @@ export async function PublicCollectionContent({ authorId, collectionId, moderati
   }
 
   const { id: collectionIdValue, title, description, poems } = result.collection;
+  const moderationControl = moderation ? moderation({ id: collectionIdValue, title, authorId: id }) : null;
+
   return (
     <article lang={CONTENT_LANG} className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
@@ -52,7 +54,7 @@ export async function PublicCollectionContent({ authorId, collectionId, moderati
         <h2 className="text-2xl font-semibold tracking-[-0.01em]">{PUBLIC_COLLECTIONS_COPY.poemsHeading}</h2>
         <PoemTitleList poems={poems} poemHref={(poemId) => authorPoemPath(id, poemId)} />
       </section>
-      {moderation?.({ id: collectionIdValue, title, authorId: id })}
+      {moderationControl}
     </article>
   );
 }
