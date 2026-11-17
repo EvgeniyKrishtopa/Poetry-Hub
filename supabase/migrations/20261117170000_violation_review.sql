@@ -473,7 +473,9 @@ end;
 $$;
 
 -- From 20261113180000_admin_moderation_functions.sql, plus `notice_email` and `ground` in the answer. The
--- ground is read under the per-user lock and before apply_restriction closes the case.
+-- ground is read before apply_restriction closes the case, under the per-user lock and with the case row locked
+-- (`for update`), so a ground switch by another admin either finishes first or waits: the ground in the answer is
+-- the one the closed case keeps. Lock order is the user row, then the case row, as everywhere else.
 create or replace function public.admin_block_user(target_user_id uuid)
 returns jsonb
 language plpgsql
@@ -505,7 +507,8 @@ begin
 
   select vc.ground into case_ground
   from public.violation_cases vc
-  where vc.user_id = admin_block_user.target_user_id and vc.closed_at is null;
+  where vc.user_id = admin_block_user.target_user_id and vc.closed_at is null
+  for update;
 
   perform public.apply_restriction(admin_block_user.target_user_id, 'blocked');
   perform public.log_moderation('block', admin_block_user.target_user_id, 'user', admin_block_user.target_user_id);
@@ -552,7 +555,8 @@ begin
 
   select vc.ground into case_ground
   from public.violation_cases vc
-  where vc.user_id = admin_ban_user.target_user_id and vc.closed_at is null;
+  where vc.user_id = admin_ban_user.target_user_id and vc.closed_at is null
+  for update;
 
   perform public.apply_restriction(admin_ban_user.target_user_id, 'banned');
 
