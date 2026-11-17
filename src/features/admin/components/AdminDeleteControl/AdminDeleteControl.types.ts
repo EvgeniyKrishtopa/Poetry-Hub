@@ -1,5 +1,7 @@
+import type { AdminDeleteKind } from "../../model/admin.types";
+
 export interface AdminDeleteControlProps {
-  readonly kind: "poem" | "collection";
+  readonly kind: AdminDeleteKind;
   readonly id: string;
   readonly title: string;
   /** The target's author: the only value `may_moderate_author` needs to decide whether the control shows (design D8). */
