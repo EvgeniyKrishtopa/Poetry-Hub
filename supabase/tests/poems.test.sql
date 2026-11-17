@@ -275,8 +275,10 @@ select is(
   'delete_my_poem() answers not-found for an unknown id'
 );
 
+-- The answer also carries the poem's `title` (the admin delete's notice needs it, via delete_poem_of); the owner's
+-- app ignores it, so this check is about the keys the owner uses.
 select is(
-  public.delete_my_poem((select id from public.poems where title = repeat('я', 80))),
+  public.delete_my_poem((select id from public.poems where title = repeat('я', 80))) - 'title',
   '{"status": "deleted", "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "illustration_path": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee.jpg"}'::jsonb,
   'the owner deletes their poem and gets its author id and illustration path'
 );
@@ -537,7 +539,7 @@ select results_eq(
 set local role authenticated;
 
 select is(
-  public.delete_my_poem('a0000000-0000-4000-8000-000000000001'),
+  public.delete_my_poem('a0000000-0000-4000-8000-000000000001') - 'title',
   '{"status": "deleted", "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "illustration_path": null}'::jsonb,
   'an owner with a non-public profile can still delete their own poem'
 );

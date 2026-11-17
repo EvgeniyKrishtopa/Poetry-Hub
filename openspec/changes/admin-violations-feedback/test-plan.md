@@ -21,7 +21,7 @@
 | FR-4 Signed-in non-admin | page test: the not-found screen, no trail and no case data | unit |
 | FR-4 Signed out | page test: redirect to `/login` | unit |
 | FR-4 Empty list | page test: the empty state shows | unit |
-| FR-4 More cases than the cap | pgTAP: 101 open cases return 100 rows newest first; page test: the "more cases exist" line shows | integration |
+| FR-4 More cases than the cap | pgTAP: with more than 100 open cases the list function returns 101 rows newest first (one more than the page shows, so the page can tell "more exist" from "exactly 100"); page test: the DAL trims to 100 and the "more cases exist" line shows | integration |
 | FR-4 A non-admin cannot list cases | pgTAP: a non-admin and a signed-out caller get a permission error from the list function | integration |
 | FR-5 Waiting | model unit test: no `warned_at` gives `waiting` and no deadline; row component test shows it | unit |
 | FR-5 Warned | model unit test: warned 2 hours ago gives `warned` and the deadline as the UTC date and time plus 24 hours | unit |

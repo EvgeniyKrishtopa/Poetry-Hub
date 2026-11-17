@@ -402,7 +402,9 @@ create temp view unguarded_writers as
     and p.prosrc !~ 'perform\s+public\.assert_not_restricted\s*\('
     and p.proname <> all (array[
       'admin_block_user', 'admin_unblock_user', 'admin_ban_user',
-      'admin_revoke_sessions', 'admin_delete_poem', 'admin_delete_collection'
+      'admin_revoke_sessions', 'admin_delete_poem', 'admin_delete_collection',
+      'admin_add_violation_case', 'admin_add_violation_case_for_author', 'admin_set_case_ground',
+      'admin_remove_violation_case', 'admin_mark_warned', 'admin_log_notice'
     ]);
 
 select is_empty('select * from unguarded_writers', 'every writer an authenticated user can execute calls assert_not_restricted()');
