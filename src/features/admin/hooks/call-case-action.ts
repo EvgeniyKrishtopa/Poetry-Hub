@@ -16,7 +16,10 @@ export async function callCaseAction<Result extends { readonly ok: boolean }>(
   try {
     const answer = await run();
     return answer ?? NO_ANSWER;
-  } catch {
+  } catch (error) {
+    // The error's name only: its message can carry what the call was sent, an address or a message text (NFR-1).
+    const name = error instanceof Error ? error.name : "unknown";
+    console.error(`[admin] case action failed: ${name}`);
     return NO_ANSWER;
   }
 }
