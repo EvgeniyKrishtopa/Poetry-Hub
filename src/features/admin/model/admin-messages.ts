@@ -113,6 +113,23 @@ export const ADD_CASE_RESULT_MESSAGES = {
   "already-in-list": "Уже в списке нарушителей",
 } as const;
 
+/** The add control on the author, poem and collection pages (artboard 52). */
+export const ADD_TO_VIOLATIONS_COPY = {
+  button: "В список нарушителей (админ)",
+  added: "Автор добавлен в список нарушителей",
+  "already-in-list": "Автор уже в списке нарушителей",
+} as const;
+
+/**
+ * The one-time line on the author page after an admin delete whose email did not go out (artboard 53), per kind of
+ * what was deleted. `noAddress` follows it, for an author whose account holds no address.
+ */
+export const DELETE_NOTICE_FAILED_COPY = {
+  poem: "Произведение удалено, но письмо автору не отправлено",
+  collection: "Сборник удалён, но письмо автору не отправлено",
+  noAddress: ": у автора нет адреса почты",
+} as const;
+
 /**
  * The failure line of a case action, one text per reason (artboards 48 and 49). Reasons the user rows already
  * have reuse their texts; `content-not-found` has a text per kind of content (`CONTENT_GONE_MESSAGES`).

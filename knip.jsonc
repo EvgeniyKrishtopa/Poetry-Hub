@@ -12,11 +12,7 @@
     "src/features/work-ordering/**",
     // Temporary, admin-violations-feedback scaffold: the new stubs have no importer until their tasks wire or test
     // them. Only the new files, so knip still sees the rest of the admin feature. Task 6.5 removes these entries.
-    "src/shared/lib/email/**",
-    "src/features/admin/model/violation-notice-ui.store.ts",
-    "src/features/admin/components/AddToViolationsButton/**",
-    "src/features/admin/components/AddToViolationsControl/**",
-    "src/features/admin/components/AdminActionNotice/**"
+    "src/shared/lib/email/**"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.

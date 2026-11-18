@@ -34,7 +34,9 @@ export async function PublicCollectionContent({ authorId, collectionId, renderMo
   }
 
   const { id: collectionIdValue, title, description, poems } = result.collection;
-  const moderationControl = renderModeration ? renderModeration({ id: collectionIdValue, title, authorId: id }) : null;
+  const moderationControl = renderModeration
+    ? renderModeration({ id: collectionIdValue, title, authorId: id, authorName: author.name })
+    : null;
 
   return (
     <article lang={CONTENT_LANG} className="flex flex-col gap-8">

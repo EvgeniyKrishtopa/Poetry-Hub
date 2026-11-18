@@ -1,4 +1,4 @@
-import { AdminDeleteControl } from "@/features/admin";
+import { AddToViolationsControl, AdminDeleteControl } from "@/features/admin";
 import { authorPagePath } from "@/features/authors";
 import { PoemPage } from "@/features/poems";
 
@@ -9,13 +9,20 @@ export default function PoemRoutePage({ params }: PageProps<"/authors/[id]/poems
         authorId={params.then(({ id }) => id)}
         poemId={params.then(({ poemId }) => poemId)}
         renderModeration={(target) => (
-          <AdminDeleteControl
-            kind="poem"
-            id={target.id}
-            title={target.title}
-            authorId={target.authorId}
-            redirectHref={authorPagePath(target.authorId)}
-          />
+          <div className="flex flex-wrap items-end gap-3">
+            <AddToViolationsControl
+              authorId={target.authorId}
+              authorName={target.authorName}
+              content={{ kind: "poem", id: target.id, title: target.title }}
+            />
+            <AdminDeleteControl
+              kind="poem"
+              id={target.id}
+              title={target.title}
+              authorId={target.authorId}
+              redirectHref={authorPagePath(target.authorId)}
+            />
+          </div>
         )}
       />
     </main>

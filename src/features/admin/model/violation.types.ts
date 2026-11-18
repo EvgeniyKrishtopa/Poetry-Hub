@@ -116,10 +116,7 @@ export type ActionNoticeResult =
   | { readonly outcome: "skipped" }
   | { readonly outcome: "failed"; readonly cause: NoticeFailureCause };
 
-/**
- * A failed notice after an admin delete, kept for the author page's one-time notice (design D7).
- * @public Read by `violation-notice-ui.store.ts`, which knip skips until task 5.3 consumes it; drop the tag then.
- */
+/** A failed notice after an admin delete, kept for the author page's one-time notice (design D7). */
 export interface FailedNoticeValue {
   readonly deleted: AdminDeleteKind;
   readonly cause: NoticeFailureCause;

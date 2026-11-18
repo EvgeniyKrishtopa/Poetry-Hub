@@ -1,8 +1,6 @@
-import type { ReactNode } from "react";
+import type { AuthorPageProps } from "../AuthorPage/AuthorPage.types";
 
-export interface AuthorPageContentProps {
+export interface AuthorPageContentProps extends Pick<AuthorPageProps, "poems" | "renderModeration"> {
   /** The route's `id` param, still a promise: it is runtime data, awaited only inside the boundary. */
   readonly id: Promise<string>;
-  /** The poems entry, passed through to the profile view. */
-  readonly poems: ReactNode;
 }

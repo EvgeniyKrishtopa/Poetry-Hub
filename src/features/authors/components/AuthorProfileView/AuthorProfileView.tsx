@@ -7,7 +7,7 @@ import { AuthorPhoto } from "../AuthorPhoto/AuthorPhoto";
 import type { AuthorProfileViewProps } from "./AuthorProfileView.types";
 
 /** The public profile: owner link, full-name heading, photo or placeholder, about, poems entry. */
-export function AuthorProfileView({ author, ownerLink, poems }: AuthorProfileViewProps) {
+export function AuthorProfileView({ author, ownerLink, moderation, poems }: AuthorProfileViewProps) {
   const name = fullName(author);
 
   return (
@@ -15,6 +15,7 @@ export function AuthorProfileView({ author, ownerLink, poems }: AuthorProfileVie
       <header className="flex flex-col gap-2">
         {ownerLink}
         <h1 className="text-4xl font-bold tracking-tight">{name}</h1>
+        {moderation}
       </header>
       <AuthorPhoto photoUrl={author.photoUrl} fullName={name} />
       {author.about !== null && <MarkdownText markdown={author.about} />}

@@ -1,3 +1,4 @@
+import { AddToViolationsControl, AdminActionNotice } from "@/features/admin";
 import { AuthorPage } from "@/features/authors";
 import { PublicCollectionsSection } from "@/features/collections";
 import { AuthorPoemsEntry } from "@/features/poems";
@@ -15,6 +16,12 @@ export default function AuthorRoutePage({ params }: PageProps<"/authors/[id]">) 
             <AuthorPoemsEntry authorId={id} />
           </>
         }
+        renderModeration={(target) => (
+          <>
+            <AdminActionNotice />
+            <AddToViolationsControl authorId={target.authorId} authorName={target.authorName} />
+          </>
+        )}
       />
     </main>
   );

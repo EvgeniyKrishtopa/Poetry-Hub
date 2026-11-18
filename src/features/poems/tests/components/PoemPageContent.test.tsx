@@ -82,7 +82,12 @@ describe("PoemPageContent", () => {
     })) as ReactElement<{ children: [ReactElement, ReactElement] }>;
     const [article, control] = element.props.children;
 
-    expect(renderModeration).toHaveBeenCalledWith({ id: AUTUMN_GARDEN.id, title: AUTUMN_GARDEN.title, authorId: AUTHOR_ID });
+    expect(renderModeration).toHaveBeenCalledWith({
+      id: AUTUMN_GARDEN.id,
+      title: AUTUMN_GARDEN.title,
+      authorId: AUTHOR_ID,
+      authorName: "Anna Akhmatova",
+    });
     expect(article.type).toBe(PoemArticle);
     expect(control.type).toBe("p");
   });

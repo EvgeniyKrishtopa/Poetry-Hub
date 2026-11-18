@@ -2,12 +2,20 @@ import { describe, expect, it } from "vitest";
 
 import {
   ADD_CASE_RESULT_MESSAGES,
+  ADD_TO_VIOLATIONS_COPY,
   CASE_FAILURE_MESSAGES,
   CONTENT_GONE_MESSAGES,
+  DELETE_NOTICE_FAILED_COPY,
   MODERATION_RESULT_MESSAGES,
   NOTICE_RESULT_SUFFIX,
 } from "../../model/admin-messages";
-import { caseFailureMessage, describeAddResult, describeModerationSuccess } from "../../model/case-notices";
+import {
+  caseFailureMessage,
+  describeAddResult,
+  describeAuthorAddResult,
+  describeFailedDeleteNotice,
+  describeModerationSuccess,
+} from "../../model/case-notices";
 import type { CaseFailureReason } from "../../model/violation.types";
 
 const REASONS_WITH_A_TEXT = [
@@ -80,6 +88,52 @@ describe("describeAddResult", () => {
       tone: "danger",
       text: CASE_FAILURE_MESSAGES["target-is-admin"],
     });
+  });
+});
+
+describe("describeAuthorAddResult", () => {
+  // implements FR-2 of admin-violations-feedback
+  it("names the author in the success and the already-on-the-list lines", () => {
+    expect(describeAuthorAddResult({ ok: true, status: "added" }, null)).toEqual({
+      tone: "success",
+      text: ADD_TO_VIOLATIONS_COPY.added,
+    });
+    expect(describeAuthorAddResult({ ok: true, status: "already-in-list" }, "poem")).toEqual({
+      tone: "neutral",
+      text: ADD_TO_VIOLATIONS_COPY["already-in-list"],
+    });
+  });
+
+  // implements FR-15 of admin-violations-feedback
+  it("is a danger line for a failure, worded by the kind of content that is gone", () => {
+    expect(describeAuthorAddResult({ ok: false, reason: "content-not-found" }, "poem")).toEqual({
+      tone: "danger",
+      text: CONTENT_GONE_MESSAGES.poem,
+    });
+    expect(describeAuthorAddResult({ ok: false, reason: "already-restricted" }, null)).toEqual({
+      tone: "danger",
+      text: CASE_FAILURE_MESSAGES["already-restricted"],
+    });
+  });
+});
+
+describe("describeFailedDeleteNotice", () => {
+  // implements FR-14 of admin-violations-feedback
+  it.each([
+    ["poem", DELETE_NOTICE_FAILED_COPY.poem],
+    ["collection", DELETE_NOTICE_FAILED_COPY.collection],
+  ] as const)("says the email after a deleted %s was not sent", (deleted, text) => {
+    expect(describeFailedDeleteNotice({ deleted, cause: "http" })).toBe(text);
+  });
+
+  // implements FR-14 of admin-violations-feedback
+  it("adds that the author has no address, and only for that cause", () => {
+    expect(describeFailedDeleteNotice({ deleted: "collection", cause: "no-address" })).toBe(
+      `${DELETE_NOTICE_FAILED_COPY.collection}${DELETE_NOTICE_FAILED_COPY.noAddress}`,
+    );
+    expect(describeFailedDeleteNotice({ deleted: "collection", cause: "unexpected" })).toBe(
+      DELETE_NOTICE_FAILED_COPY.collection,
+    );
   });
 });
 

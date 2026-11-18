@@ -1,4 +1,4 @@
-import { AdminDeleteControl } from "@/features/admin";
+import { AddToViolationsControl, AdminDeleteControl } from "@/features/admin";
 import { authorPagePath } from "@/features/authors";
 import { PublicCollectionPage } from "@/features/collections";
 
@@ -9,13 +9,20 @@ export default function CollectionRoutePage({ params }: PageProps<"/authors/[id]
         authorId={params.then(({ id }) => id)}
         collectionId={params.then(({ collectionId }) => collectionId)}
         renderModeration={(target) => (
-          <AdminDeleteControl
-            kind="collection"
-            id={target.id}
-            title={target.title}
-            authorId={target.authorId}
-            redirectHref={authorPagePath(target.authorId)}
-          />
+          <div className="flex flex-wrap items-end gap-3">
+            <AddToViolationsControl
+              authorId={target.authorId}
+              authorName={target.authorName}
+              content={{ kind: "collection", id: target.id, title: target.title }}
+            />
+            <AdminDeleteControl
+              kind="collection"
+              id={target.id}
+              title={target.title}
+              authorId={target.authorId}
+              redirectHref={authorPagePath(target.authorId)}
+            />
+          </div>
         )}
       />
     </main>
