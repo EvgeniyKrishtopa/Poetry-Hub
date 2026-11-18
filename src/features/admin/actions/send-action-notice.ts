@@ -28,6 +28,11 @@ function logNotSent(kind: ActionNoticeKind, cause: string): void {
   console.error(`[admin] action notice not sent: ${kind}: ${cause}`);
 }
 
+/** The error's class only: its message could carry the address or the text. */
+function logUnexpected(kind: ActionNoticeKind, error: unknown): void {
+  console.error(`[admin] action notice step threw: ${kind}: ${error instanceof Error ? error.name : typeof error}`);
+}
+
 async function deliver(input: SendActionNoticeInput): Promise<ActionNoticeResult> {
   if (input.email === null) {
     logNotSent(input.kind, "no-address");
@@ -50,11 +55,24 @@ async function deliver(input: SendActionNoticeInput): Promise<ActionNoticeResult
  * transient failure under the same key, then `admin_log_notice` best-effort (design D5, FR-9, FR-14).
  */
 export async function sendActionNotice(input: SendActionNoticeInput): Promise<ActionNoticeResult> {
-  const result = await deliver(input);
-  await logNotice(
-    input.userId,
-    input.kind,
-    result.outcome === "sent" ? NOTICE_LOG_OUTCOME.sent : NOTICE_LOG_OUTCOME.failed,
-  );
+  // `sendEmail` and `logNotice` return failures as values, so neither should throw. The action has already
+  // committed, though, so a throw anywhere here still must not reach the admin as a failed action (FR-14).
+  let result: ActionNoticeResult;
+  try {
+    result = await deliver(input);
+  } catch (error) {
+    logUnexpected(input.kind, error);
+    result = { outcome: "failed", cause: "unexpected" };
+  }
+
+  try {
+    await logNotice(
+      input.userId,
+      input.kind,
+      result.outcome === "sent" ? NOTICE_LOG_OUTCOME.sent : NOTICE_LOG_OUTCOME.failed,
+    );
+  } catch (error) {
+    logUnexpected(input.kind, error);
+  }
   return result;
 }

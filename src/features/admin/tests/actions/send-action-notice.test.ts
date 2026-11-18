@@ -151,6 +151,29 @@ describe("sendActionNotice", () => {
     expect(console.error).toHaveBeenCalledExactlyOnceWith(`[admin] action notice not sent: delete-poem: ${logged}`);
   });
 
+  // implements FR-14 of admin-violations-feedback
+  it("answers failed, not a throw, and logs the class only, when the send throws after the action committed", async () => {
+    vi.mocked(sendEmail).mockRejectedValue(new RangeError(`boom for ${TARGET_EMAIL} ${POEM_TITLE}`));
+
+    const result = await sendActionNotice(INPUT);
+
+    expect(result).toEqual({ outcome: "failed", cause: "unexpected" });
+    expect(logNotice).toHaveBeenCalledExactlyOnceWith(TARGET_USER_ID, "delete-poem", "failed");
+    expect(console.error).toHaveBeenCalledExactlyOnceWith("[admin] action notice step threw: delete-poem: RangeError");
+    expectNothingSensitiveLogged();
+  });
+
+  // implements FR-14 of admin-violations-feedback
+  it("keeps the sent outcome, and logs the class only, when the log call throws", async () => {
+    vi.mocked(logNotice).mockRejectedValue(new TypeError(`boom for ${TARGET_USER_ID}`));
+
+    const result = await sendActionNotice(INPUT);
+
+    expect(result).toEqual({ outcome: "sent" });
+    expect(console.error).toHaveBeenCalledExactlyOnceWith("[admin] action notice step threw: delete-poem: TypeError");
+    expectNothingSensitiveLogged();
+  });
+
   // implements NFR-1 of admin-violations-feedback
   it.each([
     ["a failure", { ok: false, reason: "http", status: 500 }],
