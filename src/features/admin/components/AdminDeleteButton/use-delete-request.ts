@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 
 import type { AdminDeleteKind, DeleteFailureReason } from "../../model/admin.types";
+import { useViolationNotice } from "../../model/violation-notice-ui.store";
 
 import { callDelete } from "./call-delete";
 
@@ -43,6 +44,10 @@ export function useDeleteRequest(
       const result = await callDelete(kind, id);
       isRequestInFlightRef.current = false;
       if (result.ok) {
+        // The author page is where the admin lands, so a failed email is stored first and shown there once.
+        if (result.notice.outcome === "failed") {
+          useViolationNotice.getState().setFailedNotice({ deleted: kind, cause: result.notice.cause });
+        }
         closeDialogBeforeNavigation();
         // `replace`, so Back does not return to the deleted page.
         router.replace(redirectHref);

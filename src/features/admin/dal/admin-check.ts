@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { z } from "zod";
 
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
@@ -34,8 +35,11 @@ export async function checkIsAdmin(): Promise<AdminCheckResult> {
   }
 }
 
-/** Calls `may_moderate_author(author_profile_id)`: an admin who is not the profile's owner (design D8, FR-10). */
-export async function checkMayModerateAuthor(authorProfileId: string): Promise<ModerateCheckResult> {
+/**
+ * Calls `may_moderate_author(author_profile_id)`: an admin who is not the profile's owner (design D8, FR-10).
+ * Wrapped in React's `cache()` so the delete control and the add control on one page share one call per request.
+ */
+export const checkMayModerateAuthor = cache(async (authorProfileId: string): Promise<ModerateCheckResult> => {
   try {
     const supabase = await createSupabaseServerClient();
     const response = await supabase.rpc("may_moderate_author", { author_profile_id: authorProfileId });
@@ -49,4 +53,4 @@ export async function checkMayModerateAuthor(authorProfileId: string): Promise<M
   } catch (error) {
     return { ok: false, failure: toAdminFailure(MODERATE_OPERATION, error) };
   }
-}
+});

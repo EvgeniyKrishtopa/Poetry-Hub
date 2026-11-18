@@ -81,6 +81,16 @@ describe("AuthorProfileView", () => {
     expect(link.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  // implements FR-2 of admin-violations-feedback
+  it("renders the moderation control in the header, right after the h1", () => {
+    render(<AuthorProfileView author={ANNA} ownerLink={null} moderation={<p data-moderation-slot />} poems={null} />);
+
+    const heading = screen.getByRole("heading", { level: 1 });
+    const slot = document.querySelector("[data-moderation-slot]");
+    expect(heading.nextElementSibling).toBe(slot);
+    expect(slot?.parentElement).toBe(heading.parentElement);
+  });
+
   // implements FR-1 of add-author-poems
   it("renders the poems slot last, after the about section", () => {
     const { container } = render(<AuthorProfileView author={ANNA} ownerLink={null} poems={<p data-poems-slot />} />);
@@ -196,6 +206,38 @@ describe("AuthorPageContent", () => {
     expect(element.props.ownerLink.props.children.props.profileId).toBe(PROFILE_ID);
   });
 
+  // implements FR-2 of admin-violations-feedback
+  it("calls the moderation function with the profile id and full name, and passes its result to the view", async () => {
+    vi.mocked(getPublicAuthor).mockResolvedValue({ ok: true, author: ANNA });
+    const control = <p data-moderation-slot />;
+    const renderModeration = vi.fn(() => control);
+
+    const element = (await AuthorPageContent({
+      id: Promise.resolve(PROFILE_ID),
+      poems: null,
+      renderModeration,
+    })) as ReactElement<{ moderation: ReactNode }>;
+
+    expect(renderModeration).toHaveBeenCalledWith({ authorId: PROFILE_ID, authorName: "Anna Akhmatova" });
+    expect(element.props.moderation).toBe(control);
+  });
+
+  // implements FR-2 of admin-violations-feedback
+  it("passes no moderation control when the route gives no function, and never calls it for a missing author", async () => {
+    vi.mocked(getPublicAuthor).mockResolvedValueOnce({ ok: true, author: ANNA });
+    const withoutFunction = (await AuthorPageContent({ id: Promise.resolve(PROFILE_ID), poems: null })) as ReactElement<{
+      moderation: ReactNode;
+    }>;
+    expect(withoutFunction.props.moderation).toBeNull();
+
+    vi.mocked(getPublicAuthor).mockResolvedValueOnce({ ok: false, reason: "not-found" });
+    const renderModeration = vi.fn();
+    await expect(
+      AuthorPageContent({ id: Promise.resolve(PROFILE_ID), poems: null, renderModeration }),
+    ).rejects.toThrow("404");
+    expect(renderModeration).not.toHaveBeenCalled();
+  });
+
   // implements FR-14 of add-author-profiles
   it("calls notFound() for an unknown or malformed id", async () => {
     vi.mocked(getPublicAuthor).mockResolvedValue({ ok: false, reason: "not-found" });
@@ -219,16 +261,18 @@ describe("AuthorPage", () => {
   it("streams the content inside Suspense, with heading, photo, and text skeletons as the fallback", () => {
     const id = Promise.resolve(PROFILE_ID);
     const poems = <p data-poems-slot />;
-    const element = AuthorPage({ id, poems });
+    const renderModeration = vi.fn();
+    const element = AuthorPage({ id, poems, renderModeration });
     expect(element.type).toBe(Suspense);
     const { fallback, children } = element.props as {
       fallback: ReactNode;
-      children: ReactElement<{ id: unknown; poems: unknown }>;
+      children: ReactElement<{ id: unknown; poems: unknown; renderModeration: unknown }>;
     };
 
     expect(children.type).toBe(AuthorPageContent);
     expect(children.props.id).toBe(id);
     expect(children.props.poems).toBe(poems);
+    expect(children.props.renderModeration).toBe(renderModeration);
     const { container } = render(fallback);
     expect(container.querySelectorAll("[data-skeleton]")).toHaveLength(5);
     expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");

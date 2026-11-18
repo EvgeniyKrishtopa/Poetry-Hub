@@ -27,7 +27,9 @@ export async function PoemPageContent({ authorId, poemId, renderModeration }: Po
   }
 
   const { poem } = result;
-  const moderationControl = renderModeration ? renderModeration({ id: poem.id, title: poem.title, authorId: id }) : null;
+  const moderationControl = renderModeration
+    ? renderModeration({ id: poem.id, title: poem.title, authorId: id, authorName: author.name })
+    : null;
 
   return (
     <>
