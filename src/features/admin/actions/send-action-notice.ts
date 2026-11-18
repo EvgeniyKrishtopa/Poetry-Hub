@@ -11,7 +11,11 @@ import type { ActionNoticeKind, ActionNoticeResult, NoticeEmailContent, SendActi
 /** Every notice gets its own key, so two different notices are never mistaken for one repeated request. */
 const NOTICE_KEY_PREFIX = "action-notice-";
 
-/** One send and, after a transient failure, one more under the same key, so a first send that landed isn't repeated. */
+/**
+ * Sends the email once and, only after a transient failure, once more under the same idempotency key, so a first
+ * request that was in fact accepted is not delivered twice. Returns the last attempt's result; a key conflict on the
+ * retry counts as sent, because only an accepted request can cause it.
+ */
 async function sendWithOneRetry(to: string, message: NoticeEmailContent, idempotencyKey: string): Promise<EmailSendResult> {
   const request = { to, subject: message.subject, text: message.text, idempotencyKey };
   const first = await sendEmail(request);
@@ -23,16 +27,26 @@ async function sendWithOneRetry(to: string, message: NoticeEmailContent, idempot
   return retry;
 }
 
-/** The log line holds the notice kind and the failure only: never the address, the text or a title (NFR-1). */
+/**
+ * Logs that a notice was not sent, as the notice kind and the failure reason only: never the address, the text or a
+ * title (NFR-1).
+ */
 function logNotSent(kind: ActionNoticeKind, cause: string): void {
   console.error(`[admin] action notice not sent: ${kind}: ${cause}`);
 }
 
-/** The error's class only: its message could carry the address or the text. */
+/**
+ * Logs that the notice step threw, as the notice kind and the error's class only: the error's message could carry the
+ * address or the text.
+ */
 function logUnexpected(kind: ActionNoticeKind, error: unknown): void {
   console.error(`[admin] action notice step threw: ${kind}: ${error instanceof Error ? error.name : typeof error}`);
 }
 
+/**
+ * Builds the email for a notice and sends it. Answers `failed` with its cause when there is no address or the send
+ * failed, and `sent` otherwise. It does not catch throws: `sendActionNotice` does.
+ */
 async function deliver(input: SendActionNoticeInput): Promise<ActionNoticeResult> {
   if (input.email === null) {
     logNotSent(input.kind, "no-address");
@@ -51,8 +65,10 @@ async function deliver(input: SendActionNoticeInput): Promise<ActionNoticeResult
 }
 
 /**
- * The standard email after a restricting action, never decisive for the action: one send, one retry on a
- * transient failure under the same key, then `admin_log_notice` best-effort (design D5, FR-9, FR-14).
+ * Sends the standard email after a block, ban or admin delete, and records what happened. Never decisive for the
+ * action: it always answers `sent` or `failed` with a cause, never throws, and never undoes the action. Steps: one
+ * send with one retry on a transient failure under the same key, then `admin_log_notice` best-effort (design D5,
+ * FR-9, FR-14).
  */
 export async function sendActionNotice(input: SendActionNoticeInput): Promise<ActionNoticeResult> {
   // `sendEmail` and `logNotice` return failures as values, so neither should throw. The action has already
