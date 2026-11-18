@@ -12,6 +12,7 @@ import { POEMS_SEGMENT } from "@/features/poems";
 import {
   ACCOUNT_PATH,
   ADMIN_PATH,
+  ADMIN_VIOLATIONS_PATH,
   POEM_MANAGEMENT_PATH,
   SIGN_IN_PATH,
   SIGN_UP_PATH,
@@ -43,6 +44,7 @@ export const STATIC_ROUTES: readonly RouteRow[] = [
   { path: PRIVACY_PATH, label: BREADCRUMB_LABELS.privacyPolicy },
   // The slot page shows this trail to an admin only (admin-moderation design D14).
   { path: ADMIN_PATH, label: BREADCRUMB_LABELS.admin },
+  { path: ADMIN_VIOLATIONS_PATH, label: BREADCRUMB_LABELS.adminViolations },
 ];
 
 const AUTHOR_PAGE_PREFIX = `${AUTHORS_PATH}/`;

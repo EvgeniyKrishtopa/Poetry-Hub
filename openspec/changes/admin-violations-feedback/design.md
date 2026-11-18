@@ -88,7 +88,7 @@ sequenceDiagram
     S-->>A: ok, notice confirms
 ```
 
-Set-ground and remove follow the same shape with one function call each (`admin_set_case_ground`, `admin_remove_violation_case`): session check, the call, and `not-found` (the case is already closed or gone, from another tab) or `forbidden` or `unavailable` as the only non-success answers, each shown as its own notice with the row refreshing.
+Set-ground and remove follow the same shape with one function call each (`admin_set_case_ground`, `admin_remove_violation_case`): session check, the call, and `not-found` (the case is already closed or gone, from another tab) or `forbidden` or `unavailable` as the only non-success answers, each shown as its own notice. A case that is gone closes its row instead of refreshing it (D7).
 
 ### D4. The warning is two database steps around one email, with a stable key
 
@@ -194,6 +194,10 @@ Alternative: refuse a harmful-content block before the deadline in SQL. Rejected
 - On the public pages the poem and collection page components already take a `renderModeration` slot that the route files fill with admin's `AdminDeleteControl`; the add control joins that same render function, so one check (`getSessionState()` plus `may_moderate_author`) serves both controls, and `checkMayModerateAuthor` is wrapped in React `cache()` like `readAdminAccess`. `AuthorPage` has only a `poems` slot today and gets a new `moderation` slot for the add control. All of it sits inside its own `Suspense` with an empty fallback, and features stay decoupled: route files import only `@/features/admin`.
 - A failed standard email after an admin delete has to survive the redirect to the author page: before `router.replace`, the delete control stores the outcome in a feature-local one-time notice store (`model/violation-notice-ui.store.ts`, the same shape as poem-management's `deleted-poem-notice-ui.store.ts`), and an admin-only notice island on the author page reads it once through `shared/lib/one-time-notice`'s `useOneTimeValue`. No new shared or global store.
 - The messages for the new failure kinds go into `model/admin-messages.ts`, in Russian, next to the existing ones. Placeholder copy is marked "to confirm", as the existing placeholders are.
+- **Decided with the owner while implementing group 4.**
+  - Only an active user row has the drag handle and the «add to the review list» button (artboard 41's caption also names blocked rows, but FR-1 refuses a restricted user, so that button could only ever answer «already blocked»). A blocked or banned row keeps an empty slot of the handle's width, so the list stays aligned. The row component finds the area through a React context (`ViolationAddContext`) that only `ViolationDndArea` provides, so a row rendered anywhere else has no add controls; the one ground dialog, the pending flag and the result notice live in that area, not in each row.
+  - A case row whose case is over (a block, a ban, or a notice that the case is gone or the user already restricted) keeps its message, loses its action buttons, and is not refreshed: a refresh would remove the row together with the only place the admin reads whether the standard email went out (FR-14), and the row leaves the list the next time the page loads. A ground switch, a warning, and the «already warned» and «ground changed» notices refresh the list at once.
+  - The status is derived from a `renderedAt` instant the server passes to the rows, never from the browser's clock, so the server and the browser print the same status and a refresh recomputes it.
 
 ### D8. About page: a deliverable, not code
 
@@ -251,15 +255,17 @@ Written by `opsx-scaffold` after the files existed (map approved 2026-11-17). St
 | `src/features/admin/actions/send-warning.actions.ts` | the two-step warning around one email | `sendWarningAction` |
 | `src/features/admin/actions/send-action-notice.ts` | the standard email after a restricting action | `sendActionNotice` |
 | `src/features/admin/hooks/call-case-action.ts` | a missing or thrown answer reads as unavailable; shared by the add hook, the row and the warning dialog | `callCaseAction` |
-| `src/features/admin/hooks/use-add-violation-case.ts` (+ `.types.ts`) | the add call both entry points share | `useAddViolationCase`, `AddViolationTarget`, `UseAddViolationCaseOptions`, `UseAddViolationCaseResult` |
+| `src/features/admin/hooks/use-add-violation-case.ts` (+ `.types.ts`) | the add call both entry points share; the target, ground and content go in per call (`add(request)`), since the `/admin` list adds a different user each time; it also returns the connection the controls read | `useAddViolationCase`, `AddViolationRequest`, `UseAddViolationCaseResult` |
 | `src/features/admin/components/AdminViolationsPage/` | `/admin/violations` page shell with its own Suspense | `AdminViolationsPage` |
 | `src/features/admin/components/AdminViolationsPageContent/` | the gate and the server-rendered list | `AdminViolationsPageContent` |
 | `src/features/admin/components/ViolationCaseRow/` (+ `.types.ts`) | one open case and its actions | `ViolationCaseRow` |
 | `src/features/admin/components/WarnDialog/` (+ `.types.ts`) | the warning dialog and its read-only lock | `WarnDialog` |
-| `src/features/admin/components/EarlyBlockDialog/` (+ `.types.ts`) | block confirmation before the deadline | `EarlyBlockDialog`, `EarlyBlockNote` |
+| `src/features/admin/components/EarlyBlockDialog/` (+ `.types.ts`) | block confirmation before the deadline; `EarlyBlockNote` lives in `model/early-block-note.ts` with its two functions, so `BanUserDialog` can show the same line | `EarlyBlockDialog` |
 | `src/features/admin/components/GroundChoiceDialog/` (+ `.types.ts`) | the ground choice before adding | `GroundChoiceDialog` |
 | `src/features/admin/components/ViolationDropLink/` (+ `.types.ts`) | the list link as a droppable | `ViolationDropLink` |
 | `src/features/admin/components/ViolationDndArea/` (+ `.types.ts`) | the `DndContext` island on `/admin` | `ViolationDndArea` |
 | `src/features/admin/components/AddToViolationsButton/` (+ `.types.ts`) | the add button, dialog and result on public pages | `AddToViolationsButton` |
 | `src/features/admin/components/AddToViolationsControl/` (+ `.types.ts`, `Content`) | admin-only wrapper with its own Suspense | `AddToViolationsControl`, `AddToViolationsControlContent` |
 | `src/features/admin/components/AdminActionNotice/` | one-time notice on the author page after an admin delete | `AdminActionNotice` |
+
+Added by group 4 beyond this map: `model/case-notices.ts` (the result and failure lines of the add, case and moderation actions), `model/early-block-note.ts`, `model/warning-message-check.ts`, `model/dragged-user.ts`, `model/other-ground.ts`, `model/violation-content-href.ts`; in `components/`, `ViolationsConnectionNotice` (the offline notice above the list), `ViolationDndArea/violation-add-context.ts` and `violation-dnd-config.ts`, `ViolationCaseRow/use-case-row.ts`, `case-calls.ts` and `case-pill-classes.ts`, `WarnDialog/use-warn-form.ts` and `classify-warning.ts`, `AdminUserRow/use-user-row-drag.ts`; the route file `app/(authorized)/admin/violations/page.tsx` and its `@breadcrumbs` slot page.

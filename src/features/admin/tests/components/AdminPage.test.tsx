@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { Suspense, isValidElement, type ReactElement } from "react";
+import { render, screen, within } from "@testing-library/react";
+import { Suspense, isValidElement, type ReactElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { requireSession } from "@/features/auth";
@@ -22,6 +22,9 @@ vi.mock("../../components/AdminUserList/AdminUserList", () => ({
     return <p>rows</p>;
   },
 }));
+vi.mock("../../components/ViolationDndArea/ViolationDndArea", () => ({
+  ViolationDndArea: ({ children }: { children: ReactNode }) => <section aria-label="area">{children}</section>,
+}));
 vi.mock("@/shared/ui", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/ui")>()),
   SessionUnavailableAlert: () => <p>unavailable</p>,
@@ -33,7 +36,7 @@ const SIGNED_IN = {
   state: "signed-in",
   userId: "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b",
 } as const;
-const QUERY = Promise.resolve({ email: "a@b.co" });
+const QUERY = Promise.resolve({});
 
 describe("AdminPage", () => {
   // implements FR-2 of admin-moderation
@@ -52,16 +55,27 @@ describe("AdminPage", () => {
 
 describe("AdminPageContent", () => {
   // implements FR-2 of admin-moderation
-  it("shows the title, the filter with the URL's address and the list to an admin", async () => {
+  it("shows the title and the list, inside the review-list area, to an admin", async () => {
     vi.mocked(requireSession).mockResolvedValue(SIGNED_IN);
     vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: true });
 
     render(await AdminPageContent({ query: QUERY }));
 
     expect(screen.getByRole("heading", { name: ADMIN_LIST_COPY.title })).toBeInTheDocument();
-    expect(screen.getByLabelText(ADMIN_LIST_COPY.emailLabel)).toHaveValue("a@b.co");
-    expect(screen.getByText("rows")).toBeInTheDocument();
-    expect(userList).toHaveBeenCalledWith({ query: { after: undefined, email: "a@b.co" } });
+    expect(within(screen.getByRole("region", { name: "area" })).getByText("rows")).toBeInTheDocument();
+    expect(userList).toHaveBeenCalledWith({ query: {} });
+  });
+
+  // implements FR-3 of admin-violations-feedback
+  it("has no email field and no find button, and a request carrying ?email= shows the unfiltered list", async () => {
+    vi.mocked(requireSession).mockResolvedValue(SIGNED_IN);
+    vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: true });
+
+    render(await AdminPageContent({ query: Promise.resolve({ email: "a@b.co" }) }));
+
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Найти" })).not.toBeInTheDocument();
+    expect(userList).toHaveBeenCalledWith({ query: {} });
   });
 
   // implements FR-2 of admin-moderation

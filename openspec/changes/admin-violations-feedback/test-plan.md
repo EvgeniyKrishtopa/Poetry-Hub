@@ -78,8 +78,8 @@
 | FR-15 Prompting content already deleted | action test maps `content-not-found`; component test shows the "poem no longer exists" notice and no case | unit |
 | FR-15 Offline | component test: every action of this change shows the no-connection notice and changes nothing | unit |
 | FR-15 Server error | component test: a thrown or missing answer shows the failure notice and the case stays | unit |
-| FR-15 User blocked in another tab | action test maps `already-restricted`; component test: notice and row refresh | unit |
-| FR-15 Case removed in another tab | action test: warning on a missing case sends no email; component test: notice and the row disappears | unit |
+| FR-15 User blocked in another tab | action test maps `already-restricted`; component test: notice, no action buttons and no refresh | unit |
+| FR-15 Case removed in another tab | action test: warning on a missing case sends no email; component test: notice, no action buttons and no refresh | unit |
 | FR-15 Account deleted in another tab | component test: the same "case no longer exists" notice as a removed case | unit |
 | NFR-1 Config missing | email module test: unset key gives `config`, no request made | unit |
 | NFR-1 Service rejects | email module test: a 422 gives `http` with the status, nothing logged holds the address or body | unit |

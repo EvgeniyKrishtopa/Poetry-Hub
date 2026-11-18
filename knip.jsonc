@@ -13,15 +13,7 @@
     // Temporary, admin-violations-feedback scaffold: the new stubs have no importer until their tasks wire or test
     // them. Only the new files, so knip still sees the rest of the admin feature. Task 6.5 removes these entries.
     "src/shared/lib/email/**",
-    "src/features/admin/hooks/**",
-    "src/features/admin/model/violation*.ts",
-    "src/features/admin/components/AdminViolationsPage*/**",
-    "src/features/admin/components/ViolationCaseRow/**",
-    "src/features/admin/components/WarnDialog/**",
-    "src/features/admin/components/EarlyBlockDialog/**",
-    "src/features/admin/components/GroundChoiceDialog/**",
-    "src/features/admin/components/ViolationDropLink/**",
-    "src/features/admin/components/ViolationDndArea/**",
+    "src/features/admin/model/violation-notice-ui.store.ts",
     "src/features/admin/components/AddToViolationsButton/**",
     "src/features/admin/components/AddToViolationsControl/**",
     "src/features/admin/components/AdminActionNotice/**"

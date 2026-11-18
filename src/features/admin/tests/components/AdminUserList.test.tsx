@@ -25,21 +25,20 @@ const USER: AdminUser = {
 
 describe("AdminUserList", () => {
   // implements FR-3 of admin-moderation
-  it("renders the rows and a next link that carries the cursor and the filter, no first-page link on page 1", async () => {
+  it("renders the rows and a next link that carries the cursor, no first-page link on page 1", async () => {
     vi.mocked(listUsers).mockResolvedValue({
       ok: true,
       users: [USER],
       nextCursor: CURSOR,
     });
 
-    render(await AdminUserList({ query: { email: "a@b.co" } }));
+    render(await AdminUserList({ query: {} }));
 
-    expect(listUsers).toHaveBeenCalledWith({ email: "a@b.co" });
+    expect(listUsers).toHaveBeenCalledWith({});
     expect(screen.getByText(USER.email)).toBeInTheDocument();
     const next = screen.getByRole("link", { name: ADMIN_LIST_COPY.nextLink });
     const params = new URL(next.getAttribute("href") ?? "", "https://example.test").searchParams;
     expect(params.get("after")).toBe(CURSOR);
-    expect(params.get("email")).toBe("a@b.co");
     expect(screen.queryByRole("link", { name: ADMIN_LIST_COPY.firstPageLink })).not.toBeInTheDocument();
   });
 
@@ -66,7 +65,7 @@ describe("AdminUserList", () => {
       nextCursor: null,
     });
 
-    render(await AdminUserList({ query: { email: "none@b.co" } }));
+    render(await AdminUserList({ query: {} }));
 
     expect(screen.getByText(ADMIN_LIST_COPY.empty)).toBeInTheDocument();
   });

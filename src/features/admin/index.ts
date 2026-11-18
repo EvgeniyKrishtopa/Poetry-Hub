@@ -3,3 +3,4 @@ export { AdminDeleteControl } from "./components/AdminDeleteControl/AdminDeleteC
 export { AdminNavLink } from "./components/AdminNavLink/AdminNavLink";
 export { AdminOnly } from "./components/AdminOnly/AdminOnly";
 export { AdminPage } from "./components/AdminPage/AdminPage";
+export { AdminViolationsPage } from "./components/AdminViolationsPage/AdminViolationsPage";

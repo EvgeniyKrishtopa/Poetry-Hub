@@ -1,19 +1,27 @@
+import type { ConnectionStatus } from "@/shared/lib/network/use-connection-status";
+
 import type { AddCaseActionResult, ViolationContent, ViolationGround } from "../model/violation.types";
 
 /** Who to add: a user known by id (the `/admin` list) or an author known by profile id (the public pages). */
-export type AddViolationTarget =
+type AddViolationTarget =
   | { readonly by: "user"; readonly userId: string }
   | { readonly by: "author"; readonly authorProfileId: string };
 
-export interface UseAddViolationCaseOptions {
+/** One add: the target, the ground the admin chose, and the poem or collection that prompted it, when there is one. */
+export interface AddViolationRequest {
   readonly target: AddViolationTarget;
-  /** The poem or collection that prompted the case, when the control sits on one. */
+  readonly ground: ViolationGround;
   readonly content?: Pick<ViolationContent, "kind" | "id">;
 }
 
 export interface UseAddViolationCaseResult {
   readonly isPending: boolean;
-  /** The last answer, shown above the control; null before the first call. */
+  /** The last answer, shown above the control; null before the first call and after `clearResult`. */
   readonly result: AddCaseActionResult | null;
-  readonly add: (ground: ViolationGround) => Promise<AddCaseActionResult>;
+  /** A second call while one is running joins it and gets the same answer. */
+  readonly add: (request: AddViolationRequest) => Promise<AddCaseActionResult>;
+  readonly clearResult: () => void;
+  /** The connection the controls read: the notice shows when it is not online, and sending is disabled. */
+  readonly connectionStatus: ConnectionStatus;
+  readonly isOnline: boolean;
 }

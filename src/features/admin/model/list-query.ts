@@ -4,8 +4,5 @@ import { listQuerySchema, type ListQuery } from "./admin.schema";
 export function readListQuery(raw: Record<string, string | string[] | undefined>): ListQuery {
   const parsed = listQuerySchema.safeParse(raw);
   if (parsed.success) return parsed.data;
-  return {
-    after: typeof raw.after === "string" ? raw.after : undefined,
-    email: typeof raw.email === "string" ? raw.email : undefined,
-  };
+  return { after: typeof raw.after === "string" ? raw.after : undefined };
 }

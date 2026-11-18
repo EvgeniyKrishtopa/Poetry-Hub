@@ -82,6 +82,14 @@ describe("buildTrail", () => {
     });
   });
 
+  // implements FR-4 of admin-violations-feedback
+  it("builds «Главная» › «Админка» › «Список нарушителей» for the review list, only the middle one a link", () => {
+    expect(buildTrail(matchRoute(["admin", "violations"]))).toEqual({
+      kind: "shown",
+      items: [HOME, { kind: "link", label: "Админка", href: "/admin" }, { kind: "current", label: "Список нарушителей" }],
+    });
+  });
+
   // implements FR-4 of add-breadcrumbs
   it("shows no trail for an author that doesn't exist", () => {
     expect(buildTrail(AUTHOR_MATCH, { ok: false, reason: "not-found" })).toEqual({ kind: "none" });

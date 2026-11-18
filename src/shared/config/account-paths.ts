@@ -18,3 +18,6 @@ export const POEM_MANAGEMENT_PATH = "/account/poems";
  * `breadcrumbs` needs it for the page's trail and only `src/app/` may import `admin`.
  */
 export const ADMIN_PATH = "/admin";
+
+/** The review list under the admin page (admin-violations-feedback design D7); here for the same reason as `ADMIN_PATH`. */
+export const ADMIN_VIOLATIONS_PATH = `${ADMIN_PATH}/violations`;
