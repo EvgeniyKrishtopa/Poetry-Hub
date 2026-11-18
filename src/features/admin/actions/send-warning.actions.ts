@@ -47,13 +47,15 @@ async function sendWarning({ caseId, message }: SendWarningInput): Promise<SendW
     idempotencyKey: `${WARNING_KEY_PREFIX}${caseId}`,
   });
   if (!sent.ok && sent.reason !== "conflict") {
-    logWarning(caseId, `email not sent (${sent.reason}${sent.status === undefined ? "" : ` ${sent.status}`})`);
+    const statusSuffix = sent.status === undefined ? "" : ` ${sent.status}`;
+    logWarning(caseId, `email not sent (${sent.reason}${statusSuffix})`);
     return { ok: false, reason: "email-failed", cause: sent.reason, outcomeUnknown: isTransientEmailFailure(sent) };
   }
 
   // 5. Marked only now, so a failed send leaves the case waiting. A mark that fails after an accepted email is
   // retried by the admin under the same key, which sends nothing twice.
-  const result = toMarkWarnedActionResult(await markWarned({ caseId }));
+  const mark = await markWarned({ caseId });
+  const result = toMarkWarnedActionResult(mark);
   if (!result.ok && result.reason !== "already-warned") logWarning(caseId, "email accepted, case not recorded");
   return result;
 }

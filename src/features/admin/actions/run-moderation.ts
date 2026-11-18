@@ -19,5 +19,6 @@ export async function runModeration(
   const session = await checkSession();
   if (!session.ok) return { ok: false, reason: session.failure };
 
-  return toModerationActionResult(await call(input));
+  const write = await call(input);
+  return toModerationActionResult(write);
 }
