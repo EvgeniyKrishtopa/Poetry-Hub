@@ -82,7 +82,7 @@ describe("AdminUserRow", () => {
 
   // implements FR-12, FR-3 of admin-moderation
   it("blocks with one click, no dialog, shows the result and refreshes the route", async () => {
-    vi.mocked(blockUserAction).mockResolvedValue(respond({ ok: true, status: "blocked" }));
+    vi.mocked(blockUserAction).mockResolvedValue(respond({ ok: true, status: "blocked", notice: { outcome: "sent" } }));
     renderRow();
 
     await userEvent.click(screen.getByRole("button", { name: "Заблокировать" }));
@@ -116,7 +116,7 @@ describe("AdminUserRow", () => {
 
     expect(blockUserAction).toHaveBeenCalledTimes(1);
     // An unsettled async transition would keep every later test's transitions pending.
-    await act(async () => settle(respond({ ok: true, status: "blocked" })));
+    await act(async () => settle(respond({ ok: true, status: "blocked", notice: { outcome: "sent" } })));
   });
 
   // implements FR-6 of admin-moderation
@@ -160,7 +160,7 @@ describe("AdminUserRow", () => {
     await userEvent.click(screen.getByRole("button", { name: "Заблокировать" }));
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Заблокировать" })).toBeDisabled());
-    await act(async () => settle(respond({ ok: true, status: "blocked" })));
+    await act(async () => settle(respond({ ok: true, status: "blocked", notice: { outcome: "sent" } })));
     await waitFor(() => expect(screen.getByRole("button", { name: "Заблокировать" })).toBeEnabled());
   });
 
@@ -181,7 +181,7 @@ describe("AdminUserRow", () => {
 
     // implements FR-12 of admin-moderation
     it("bans on confirm, closes the dialog and shows the result in the row", async () => {
-      vi.mocked(banUserAction).mockResolvedValue(respond({ ok: true, status: "banned" }));
+      vi.mocked(banUserAction).mockResolvedValue(respond({ ok: true, status: "banned", notice: { outcome: "sent" } }));
       renderRow();
       await userEvent.click(screen.getByRole("button", { name: "Забанить" }));
 

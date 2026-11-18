@@ -1,12 +1,12 @@
 import { z } from "zod";
 
+import { trimmedLength } from "@/shared/lib/text/trimmed-length";
+
 import { targetIdSchema } from "./admin.schema";
-import { VIOLATION_CONTENT_KIND, VIOLATION_GROUND } from "./violation.constants";
+import { VIOLATION_CONTENT_KIND, VIOLATION_GROUND, WARNING_MESSAGE_MAX_LENGTH } from "./violation.constants";
 
-// Shapes only: the message limits arrive with the warning action (task 3.4), which validates on the server before
-// any RPC.
-
-const groundSchema = z.enum([VIOLATION_GROUND.harmfulContent, VIOLATION_GROUND.maliciousActivity]);
+/** The two grounds, as the database spells them; also what the DAL accepts back from it. */
+export const groundSchema = z.enum([VIOLATION_GROUND.harmfulContent, VIOLATION_GROUND.maliciousActivity]);
 
 const contentSchema = z.object({
   kind: z.enum([VIOLATION_CONTENT_KIND.poem, VIOLATION_CONTENT_KIND.collection]),
@@ -31,7 +31,15 @@ export const setCaseGroundSchema = z.object({ caseId: targetIdSchema, ground: gr
 
 export const caseIdSchema = z.object({ caseId: targetIdSchema });
 
-export const sendWarningSchema = z.object({ caseId: targetIdSchema, message: z.string() });
+/** The warning's input: the message is required, trimmed and at most `WARNING_MESSAGE_MAX_LENGTH` code points. */
+export const sendWarningSchema = z.object({
+  caseId: targetIdSchema,
+  message: z
+    .string()
+    .trim()
+    .min(1)
+    .refine((message) => trimmedLength(message) <= WARNING_MESSAGE_MAX_LENGTH),
+});
 
 export type AddViolationCaseInput = z.infer<typeof addViolationCaseSchema>;
 export type AddViolationCaseForAuthorInput = z.infer<typeof addViolationCaseForAuthorSchema>;

@@ -7,9 +7,7 @@ import type { ModerationDbStatus } from "../../model/admin.types";
 describe("toModerationActionResult", () => {
   // implements FR-4, FR-5, FR-6 of admin-moderation
   it.each([
-    ["blocked", "blocked"],
     ["unblocked", "unblocked"],
-    ["banned", "banned"],
     ["revoked", "revoked"],
     ["no-sessions", "no-sessions"],
   ] as const)("maps the answer %s to the success the row shows", (status, shown) => {

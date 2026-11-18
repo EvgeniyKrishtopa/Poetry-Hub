@@ -46,17 +46,22 @@ Sending the warning SHALL check the case, send the email under a key that is the
 - **THEN** the user still has one email, the case becomes `warned`, and the deadline counts from that second recording
 
 #### Scenario: Key conflict means already accepted
-- **GIVEN** the email service answers with an idempotency conflict for this case's key
+- **GIVEN** the email service answers that this case's key was already used with a different body (`invalid_idempotent_request`), which it says only when an earlier request with that key was accepted
 - **WHEN** the admin sends the warning
 - **THEN** the case is marked `warned` and no failure is shown
 
+#### Scenario: A request still in progress is not accepted
+- **GIVEN** the email service answers with a conflict that says a request with this case's key is still in progress (`concurrent_idempotent_requests`), or with a 409 whose kind can't be read
+- **WHEN** the admin sends the warning
+- **THEN** the case stays `waiting`, the modal stays open with the message read-only, and a notice says the email was not confirmed
+
 #### Scenario: Unknown outcome keeps the text
-- **GIVEN** a send that timed out, failed on the network, got a service answer of 500 or more, or whose answer never arrived
+- **GIVEN** a send that timed out, failed on the network, got a service answer of 500 or more or a 409 that is not an accepted-key conflict, or whose answer never arrived
 - **WHEN** the modal stays open
 - **THEN** the message field is read-only, so a retry carries the same text
 
 #### Scenario: A refusal leaves the text editable
-- **GIVEN** a send refused with a missing config or a service answer below 500
+- **GIVEN** a send refused with a missing config or a service answer below 500 other than a 409
 - **WHEN** the modal stays open
 - **THEN** the message field stays editable
 
@@ -114,7 +119,7 @@ After a successful block, ban, admin delete of a poem, or admin delete of a coll
 - **THEN** no email is sent
 
 ### Requirement: Notice failure never undoes the action (FR-14)
-The standard email SHALL be sent only after the restricting action committed. A send that fails with a temporary failure (a timeout, a network error, or a service answer of 500 or more) SHALL be retried once, with the same key. A missing config and a service answer below 500 SHALL NOT be retried. A send that still fails, or fails with one of those, SHALL leave the action done, SHALL record the notice as failed, and SHALL tell the admin the action was done but the email was not sent. A user with no email address SHALL count as a failed send, recorded as failed and shown to the admin as «no address on file». A failure SHALL NOT change the action's result for the page's data. After an admin delete, which sends the admin to the author's page, the notice outcome SHALL still be shown there, once.
+The standard email SHALL be sent only after the restricting action committed. A send that fails with a temporary failure (a timeout, a network error, a service answer of 500 or more, or a 409 that is not an accepted-key conflict) SHALL be retried once, with the same key. A missing config and a service answer below 500 other than a 409 SHALL NOT be retried. A send that still fails, or fails with one of those, SHALL leave the action done, SHALL record the notice as failed, and SHALL tell the admin the action was done but the email was not sent. A user with no email address SHALL count as a failed send, recorded as failed and shown to the admin as «no address on file». A failure SHALL NOT change the action's result for the page's data. After an admin delete, which sends the admin to the author's page, the notice outcome SHALL still be shown there, once.
 
 #### Scenario: Email service down
 - **GIVEN** the email service is unreachable
@@ -122,9 +127,14 @@ The standard email SHALL be sent only after the restricting action committed. A 
 - **THEN** the user is blocked, the admin sees the block done and a line saying the email was not sent, and the notice is recorded as failed
 
 #### Scenario: Conflict on the retry counts as sent
-- **GIVEN** the first send timed out and the retry answers with an idempotency conflict
+- **GIVEN** the first send timed out and the retry answers that the key was already used with a different body (`invalid_idempotent_request`)
 - **WHEN** an admin bans a user
 - **THEN** the notice is recorded as sent
+
+#### Scenario: A retry still in progress is not sent
+- **GIVEN** the first send timed out and the retry answers with a conflict that says a request with that key is still in progress
+- **WHEN** an admin bans a user
+- **THEN** the ban stands, the notice is recorded as failed, and the admin sees the email was not sent
 
 #### Scenario: One retry succeeds
 - **GIVEN** the first send times out and the retry succeeds
@@ -190,7 +200,7 @@ Every admin action of this change (add to the list, switch the ground, remove, s
 - **THEN** the same «case no longer exists» notice shows as when the case was removed, and the row disappears
 
 ### Requirement: Email delivery module (NFR-1, NFR-3)
-Email SHALL be sent through one server-only module. It SHALL read `RESEND_API_KEY` and `EMAIL_FROM` lazily on each send; an unset or malformed value SHALL be a `config` failure that names the variable and never its value. It SHALL send plain text, SHALL time out, and SHALL return failures as values (`config`, `timeout`, `network`, `conflict` for an idempotency-key conflict, `http` with the status). No log line, error or result SHALL hold the API key, a recipient address, or a message body. The key SHALL NOT be prefixed `NEXT_PUBLIC_`, and no service-role or secret database key SHALL exist in `src/`.
+Email SHALL be sent through one server-only module. It SHALL read `RESEND_API_KEY` and `EMAIL_FROM` lazily on each send; an unset or malformed value SHALL be a `config` failure that names the variable and never its value. It SHALL send plain text, SHALL time out, and SHALL return failures as values (`config`, `timeout`, `network`, `conflict` for a key already used with a different body (`invalid_idempotent_request`, which proves an earlier request was accepted), `http` with the status). Any other HTTP 409, a request still in progress (`concurrent_idempotent_requests`) included, SHALL be `http` with status 409. Only the `name` field of a 409 body SHALL be read, never its message. No log line, error or result SHALL hold the API key, a recipient address, or a message body. The key SHALL NOT be prefixed `NEXT_PUBLIC_`, and no service-role or secret database key SHALL exist in `src/`.
 
 #### Scenario: Config missing
 - **GIVEN** `RESEND_API_KEY` is unset

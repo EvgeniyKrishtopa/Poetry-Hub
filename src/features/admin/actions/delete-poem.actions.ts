@@ -6,9 +6,11 @@ import { toFailureReason } from "../model/action-results";
 import { DELETE_DB_STATUS } from "../model/admin.constants";
 import { deleteTargetSchema } from "../model/admin.schema";
 import type { DeleteActionResult } from "../model/admin.types";
+import { ACTION_NOTICE_KIND } from "../model/violation.constants";
 
 import { adminActionClient } from "./action-client";
 import { expireAuthorWorksTag } from "./expire-author-works-tag";
+import { sendActionNotice } from "./send-action-notice";
 import { checkSession } from "./session-check";
 
 /** The steps of design D8, in order; each failure stops the rest. */
@@ -30,7 +32,17 @@ async function deletePoem(poemId: string): Promise<DeleteActionResult> {
   // 5. The file last: the helper logs and swallows its own failures, so the delete stands whatever happens (D8, FR-8).
   if (result.illustrationPath !== null) await removeIllustration(result.illustrationPath);
 
-  return { ok: true };
+  // 6. The email last, after everything else the delete does: it never decides the result (FR-9, FR-14). The title
+  // is the database's, never the browser's.
+  const notice = await sendActionNotice({
+    kind: ACTION_NOTICE_KIND.deletePoem,
+    userId: result.userId,
+    email: result.noticeEmail,
+    ground: result.ground,
+    title: result.title,
+  });
+
+  return { ok: true, notice };
 }
 
 /** Deletes another user's poem, expires the author's works tag and removes the illustration best-effort (design D8, FR-8). */

@@ -6,6 +6,7 @@ import {
   EMAIL_REQUEST_TIMEOUT_MS,
   HTTP_STATUS_CONFLICT,
   IDEMPOTENCY_KEY_HEADER,
+  IDEMPOTENCY_KEY_REUSED_ERROR_NAME,
   TIMEOUT_ERROR_NAME,
 } from "./email.constants";
 import type { EmailSendResult, SendEmailInput } from "./email.types";
@@ -38,17 +39,33 @@ export async function sendEmail(input: SendEmailInput): Promise<EmailSendResult>
   }
 
   // Read the body on every status, so the connection is released. The timeout signal still covers
-  // this read, so a slow body is a `timeout`, not an `http` failure. The text itself is dropped:
-  // an error body can echo the address.
+  // this read, so a slow body is a `timeout`, not an `http` failure. The text is never returned or
+  // logged: an error body can echo the address. Only a 409's `name` is looked at, below.
+  let bodyText: string;
   try {
-    await response.text();
+    bodyText = await response.text();
   } catch (error) {
     return toThrownFailure(error);
   }
 
   if (response.ok) return { ok: true };
-  if (response.status === HTTP_STATUS_CONFLICT) return { ok: false, reason: "conflict" };
+  // Only a key already used with a different body proves an earlier request was accepted. A 409 for a request
+  // still in progress, or one whose kind can't be read, proves nothing, so it stays an `http` failure.
+  if (response.status === HTTP_STATUS_CONFLICT && readErrorName(bodyText) === IDEMPOTENCY_KEY_REUSED_ERROR_NAME) {
+    return { ok: false, reason: "conflict" };
+  }
   return { ok: false, reason: "http", status: response.status };
+}
+
+/** The `name` of an error body, or undefined when the body isn't JSON with one. The message is never read. */
+function readErrorName(bodyText: string): string | undefined {
+  try {
+    const body: unknown = JSON.parse(bodyText);
+    if (typeof body === "object" && body !== null && "name" in body && typeof body.name === "string") return body.name;
+  } catch {
+    // Not JSON: the kind is unknown.
+  }
+  return undefined;
 }
 
 /** A thrown request or body read: `timeout` when the signal fired, `network` for anything else. */

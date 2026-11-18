@@ -38,3 +38,17 @@ export const DELETE_DB_STATUS = {
   deleted: "deleted",
   notFound: "not-found",
 } as const;
+
+/** The operation names the moderation DAL logs and reports failures under, one per function. */
+export const MODERATION_OPERATION = {
+  block: "block user",
+  unblock: "unblock user",
+  ban: "ban user",
+  revoke: "revoke sessions",
+} as const;
+
+/** The operation names the delete DAL logs and reports failures under. */
+export const DELETE_OPERATION = {
+  poem: "delete poem",
+  collection: "delete collection",
+} as const;

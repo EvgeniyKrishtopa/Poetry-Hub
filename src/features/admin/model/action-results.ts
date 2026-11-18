@@ -3,7 +3,7 @@ import type {
   AdminFailure,
   ModerationActionResult,
   ModerationFailureReason,
-  ModerationWriteResult,
+  NonRestrictingWriteResult,
 } from "./admin.types";
 
 /**
@@ -17,16 +17,12 @@ export function toFailureReason(failure: AdminFailure): "forbidden" | "unauthent
 }
 
 /** A moderation function's answer in the terms the row shows (FR-4 to FR-7, FR-12). */
-export function toModerationActionResult(write: ModerationWriteResult): ModerationActionResult {
+export function toModerationActionResult(write: NonRestrictingWriteResult): ModerationActionResult {
   if (!write.ok) return { ok: false, reason: toFailureReason(write.failure) };
 
   switch (write.status) {
-    case MODERATION_DB_STATUS.blocked:
-      return { ok: true, status: "blocked" };
     case MODERATION_DB_STATUS.unblocked:
       return { ok: true, status: "unblocked" };
-    case MODERATION_DB_STATUS.banned:
-      return { ok: true, status: "banned" };
     case MODERATION_DB_STATUS.revoked:
       return { ok: true, status: "revoked" };
     case MODERATION_DB_STATUS.noSessions:

@@ -14,8 +14,14 @@ export const EMAIL_REQUEST_TIMEOUT_MS = 5_000;
 /** The header that makes a repeated request return the first result instead of sending again. */
 export const IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
 
-/** The answer for a key that is still in flight, or was used with a different body. */
+/** The answer for a key that is still in progress, or was used with a different body. */
 export const HTTP_STATUS_CONFLICT = 409;
+
+/**
+ * The error `name` Resend gives a 409 when the key was already used with a different body. A failed request is not
+ * stored, so only an accepted one can cause it. The other 409, `concurrent_idempotent_requests`, means in progress.
+ */
+export const IDEMPOTENCY_KEY_REUSED_ERROR_NAME = "invalid_idempotent_request";
 
 /** The `DOMException` name `AbortSignal.timeout` rejects with once that time is up. */
 export const TIMEOUT_ERROR_NAME = "TimeoutError";

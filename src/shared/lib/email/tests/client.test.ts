@@ -138,10 +138,37 @@ describe("sendEmail", () => {
     });
 
     // implements NFR-3 of admin-violations-feedback
-    it("reports conflict, not http, for a 409", async () => {
+    it("reports conflict, not http, for a 409 saying the key was used with a different body", async () => {
       respond(JSON.stringify({ name: "invalid_idempotent_request" }), HTTP_CONFLICT);
 
       expect(await sendEmail(INPUT)).toEqual({ ok: false, reason: "conflict" });
+    });
+
+    // implements NFR-3, FR-11 of admin-violations-feedback
+    it.each([
+      ["a request still in progress", JSON.stringify({ name: "concurrent_idempotent_requests" })],
+      ["an unknown error name", JSON.stringify({ name: "something_else" })],
+      ["a body with no name", JSON.stringify({ message: `echo ${RECIPIENT}` })],
+      ["a name that is not text", JSON.stringify({ name: 7 })],
+      ["a body that is not JSON", "<html>conflict</html>"],
+      ["an empty body", ""],
+    ])("reports http 409, which proves nothing was accepted, for %s", async (_case, body) => {
+      respond(body, HTTP_CONFLICT);
+
+      const result = await sendEmail(INPUT);
+
+      expect(result).toEqual({ ok: false, reason: "http", status: HTTP_CONFLICT });
+      expectNoSecret(result);
+    });
+
+    // implements NFR-1 of admin-violations-feedback
+    it("never returns or logs the message of a 409 body, which can echo the address", async () => {
+      respond(JSON.stringify({ name: "concurrent_idempotent_requests", message: `in progress for ${RECIPIENT}` }), HTTP_CONFLICT);
+
+      const result = await sendEmail(INPUT);
+
+      expectNoSecret(result);
+      expect(loggedText(consoleSpies)).not.toContain(RECIPIENT);
     });
 
     it("reads the body of an error answer, so its connection is released", async () => {

@@ -75,7 +75,7 @@ export type RemoveCaseActionResult =
   { readonly ok: true } | { readonly ok: false; readonly reason: CaseFailureReason };
 
 /** What the warning action can fail with besides the shared reasons (design D4). */
-type WarningStopReason = CaseFailureReason | "wrong-ground" | "already-warned" | "no-address";
+export type WarningStopReason = CaseFailureReason | "wrong-ground" | "already-warned" | "no-address";
 
 /** `outcomeUnknown` locks the message in the modal, so a retry carries the same text (design D4). */
 export type SendWarningActionResult =
@@ -107,14 +107,17 @@ export interface NoticeEmailContent {
   readonly text: string;
 }
 
+/** Why a standard notice was not sent; `unexpected` is a throw inside the notice step, which never undoes the action. */
+export type NoticeFailureCause = "no-address" | "unexpected" | EmailFailureReason;
+
 /** What the notice step did; `failed` is still a successful action (design D5, FR-14). */
 export type ActionNoticeResult =
   | { readonly outcome: "sent" }
   | { readonly outcome: "skipped" }
-  | { readonly outcome: "failed"; readonly cause: "no-address" | EmailFailureReason };
+  | { readonly outcome: "failed"; readonly cause: NoticeFailureCause };
 
 /** A failed notice after an admin delete, kept for the author page's one-time notice (design D7). */
 export interface FailedNoticeValue {
   readonly deleted: AdminDeleteKind;
-  readonly cause: "no-address" | EmailFailureReason;
+  readonly cause: NoticeFailureCause;
 }
