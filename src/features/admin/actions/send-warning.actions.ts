@@ -18,7 +18,7 @@ import { checkSession } from "./session-check";
 const WARNING_KEY_PREFIX = "violation-warning-";
 
 /**
- * A log line holds the case id and the reason only: never the address, the message or the key (CR-05, NFR-1). The
+ * A log line holds the case id and the reason only: never the address, the message or the key (NFR-1). The
  * case id is what lets the owner find a warning that was accepted but not recorded.
  */
 function logWarning(caseId: string, what: string): void {
