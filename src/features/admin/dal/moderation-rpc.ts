@@ -4,41 +4,22 @@ import { z } from "zod";
 
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
-import { MODERATION_DB_STATUS } from "../model/admin.constants";
+import { MODERATION_OPERATION } from "../model/admin.constants";
 import type { TargetUserInput } from "../model/admin.schema";
 import type { AdminFailure, ModerationWriteResult, NonRestrictingWriteResult } from "../model/admin.types";
-import { groundSchema } from "../model/violation.schema";
+import {
+  banAnswerSchema,
+  blockAnswerSchema,
+  revokeAnswerSchema,
+  unblockAnswerSchema,
+  type RestrictionAnswer,
+} from "../model/moderation-rpc.schema";
 
 import { toAdminFailure, withStatus } from "./rpc-failure";
 
 // Every call runs with the cookie client as the signed-in admin; the database checks the admin right itself (design D2)
-// and a caller who is not one fails with 42501, which is `forbidden` here. Each function may answer only its own
-// statuses: any other value fails the parse and is `unknown`, never a guessed success. A failure is a value, never a
-// throw, and a log line holds the operation and the failure kind only (NFR-6).
-
-const { blocked, unblocked, banned, revoked, noSessions, alreadyRestricted, notBlocked, targetIsAdmin, notFound } =
-  MODERATION_DB_STATUS;
-
-const BLOCK_OPERATION = "block user";
-const UNBLOCK_OPERATION = "unblock user";
-const BAN_OPERATION = "ban user";
-const REVOKE_OPERATION = "revoke sessions";
-
-/**
- * A restriction's answer: what the email needs rides along with the restriction, read in the same transaction.
- * `notice_email` and `ground` are required keys (null when absent), so an answer without them fails the parse.
- */
-function restrictionAnswerSchema(done: typeof blocked | typeof banned) {
-  return z.union([
-    z.object({ status: z.literal(done), notice_email: z.string().min(1).nullable(), ground: groundSchema.nullable() }),
-    z.object({ status: z.enum([alreadyRestricted, targetIsAdmin, notFound]) }),
-  ]);
-}
-
-const blockAnswerSchema = restrictionAnswerSchema(blocked);
-const banAnswerSchema = restrictionAnswerSchema(banned);
-const unblockAnswerSchema = z.object({ status: z.enum([unblocked, notBlocked]) });
-const revokeAnswerSchema = z.object({ status: z.enum([revoked, noSessions, targetIsAdmin, notFound]) });
+// and a caller who is not one fails with 42501, which is `forbidden` here. A failure is a value, never a throw, and a
+// log line holds the operation and the failure kind only (NFR-6).
 
 interface ModerationCall<Answer> {
   readonly operation: string;
@@ -77,8 +58,6 @@ async function callModeration(
 
 type NonRestrictingStatus = Extract<NonRestrictingWriteResult, { readonly ok: true }>["status"];
 
-type RestrictionAnswer = z.infer<ReturnType<typeof restrictionAnswerSchema>>;
-
 async function callRestriction(
   call: ModerationCall<RestrictionAnswer>,
   input: TargetUserInput,
@@ -95,7 +74,7 @@ async function callRestriction(
 /** Calls `admin_block_user`; the caller's admin right is checked inside the database (design D2). */
 export async function blockUser(input: TargetUserInput): Promise<ModerationWriteResult> {
   return callRestriction(
-    { operation: BLOCK_OPERATION, rpcName: "admin_block_user", answerSchema: blockAnswerSchema },
+    { operation: MODERATION_OPERATION.block, rpcName: "admin_block_user", answerSchema: blockAnswerSchema },
     input,
   );
 }
@@ -103,7 +82,7 @@ export async function blockUser(input: TargetUserInput): Promise<ModerationWrite
 /** Calls `admin_unblock_user`. */
 export async function unblockUser(input: TargetUserInput): Promise<NonRestrictingWriteResult> {
   return callModeration(
-    { operation: UNBLOCK_OPERATION, rpcName: "admin_unblock_user", answerSchema: unblockAnswerSchema },
+    { operation: MODERATION_OPERATION.unblock, rpcName: "admin_unblock_user", answerSchema: unblockAnswerSchema },
     input,
   );
 }
@@ -111,7 +90,7 @@ export async function unblockUser(input: TargetUserInput): Promise<NonRestrictin
 /** Calls `admin_ban_user`. */
 export async function banUser(input: TargetUserInput): Promise<ModerationWriteResult> {
   return callRestriction(
-    { operation: BAN_OPERATION, rpcName: "admin_ban_user", answerSchema: banAnswerSchema },
+    { operation: MODERATION_OPERATION.ban, rpcName: "admin_ban_user", answerSchema: banAnswerSchema },
     input,
   );
 }
@@ -119,7 +98,7 @@ export async function banUser(input: TargetUserInput): Promise<ModerationWriteRe
 /** Calls `admin_revoke_sessions`. */
 export async function revokeSessions(input: TargetUserInput): Promise<NonRestrictingWriteResult> {
   return callModeration(
-    { operation: REVOKE_OPERATION, rpcName: "admin_revoke_sessions", answerSchema: revokeAnswerSchema },
+    { operation: MODERATION_OPERATION.revoke, rpcName: "admin_revoke_sessions", answerSchema: revokeAnswerSchema },
     input,
   );
 }

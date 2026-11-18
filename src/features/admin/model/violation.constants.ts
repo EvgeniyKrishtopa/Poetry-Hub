@@ -46,6 +46,18 @@ export const VIOLATION_DB_STATUS = {
   warned: "warned",
 } as const;
 
+/** The operation names the DAL logs and reports failures under, one per violation function. */
+export const VIOLATION_OPERATION = {
+  add: "add violation case",
+  addForAuthor: "add violation case for author",
+  list: "list violation cases",
+  setGround: "set case ground",
+  remove: "remove violation case",
+  startWarning: "start warning",
+  markWarned: "mark warned",
+  logNotice: "log notice",
+} as const;
+
 /** The restricting actions that email the affected user (design D5). */
 export const ACTION_NOTICE_KIND = {
   block: "block",

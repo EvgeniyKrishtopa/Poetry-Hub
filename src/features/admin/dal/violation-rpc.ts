@@ -4,16 +4,23 @@ import { z } from "zod";
 
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
-import { targetIdSchema } from "../model/admin.schema";
 import type { AdminFailure } from "../model/admin.types";
-import { VIOLATION_CONTENT_KIND, VIOLATION_DB_STATUS, VIOLATION_LIST_LIMIT } from "../model/violation.constants";
+import { VIOLATION_DB_STATUS, VIOLATION_LIST_LIMIT, VIOLATION_OPERATION } from "../model/violation.constants";
 import {
-  groundSchema,
   type AddViolationCaseForAuthorInput,
   type AddViolationCaseInput,
   type CaseIdInput,
   type SetCaseGroundInput,
 } from "../model/violation.schema";
+import {
+  addAnswerSchema,
+  caseRowSchema,
+  markWarnedAnswerSchema,
+  removeAnswerSchema,
+  setGroundAnswerSchema,
+  startWarningAnswerSchema,
+  type CaseRow,
+} from "../model/violation-rpc.schema";
 import type {
   ActionNoticeKind,
   CaseWriteResult,
@@ -26,65 +33,8 @@ import type {
 import { logFailure, toAdminFailure, withStatus } from "./rpc-failure";
 
 // Every call runs with the cookie client as the signed-in admin; the database checks the admin right itself and a
-// caller who is not one fails with 42501, which is `forbidden` here. Each function may answer only its own statuses:
-// any other value fails the parse and is `unknown`, never a guessed success. A failure is a value, never a throw, and
-// a log line holds the operation and the failure kind only.
-
-const {
-  added,
-  alreadyInList,
-  targetIsAdmin,
-  alreadyRestricted,
-  notFound,
-  contentNotFound,
-  groundChanged,
-  removed,
-  ready,
-  wrongGround,
-  alreadyWarned,
-  noAddress,
-  warned,
-} = VIOLATION_DB_STATUS;
-
-const ADD_OPERATION = "add violation case";
-const ADD_FOR_AUTHOR_OPERATION = "add violation case for author";
-const LIST_OPERATION = "list violation cases";
-const SET_GROUND_OPERATION = "set case ground";
-const REMOVE_OPERATION = "remove violation case";
-const START_WARNING_OPERATION = "start warning";
-const MARK_WARNED_OPERATION = "mark warned";
-const LOG_NOTICE_OPERATION = "log notice";
-
-const addAnswerSchema = z.object({
-  status: z.enum([added, alreadyInList, targetIsAdmin, alreadyRestricted, notFound, contentNotFound]),
-});
-const setGroundAnswerSchema = z.object({ status: z.enum([groundChanged, notFound]) });
-const removeAnswerSchema = z.object({ status: z.enum([removed, notFound]) });
-const markWarnedAnswerSchema = z.object({ status: z.enum([warned, notFound, alreadyWarned]) });
-const startWarningAnswerSchema = z.union([
-  z.object({ status: z.literal(ready), email: z.string().min(1) }),
-  z.object({ status: z.enum([notFound, wrongGround, alreadyWarned, alreadyRestricted, noAddress]) }),
-]);
-
-/** One row of `admin_list_violation_cases()`; the content columns are both set or both null. */
-const caseRowSchema = z
-  .object({
-    id: targetIdSchema,
-    user_id: targetIdSchema,
-    user_email: z.string(),
-    author_name: z.string().nullable(),
-    author_profile_id: targetIdSchema.nullable(),
-    ground: groundSchema,
-    content_kind: z.enum([VIOLATION_CONTENT_KIND.poem, VIOLATION_CONTENT_KIND.collection]).nullable(),
-    content_id: targetIdSchema.nullable(),
-    content_title: z.string().nullable(),
-    // Real timestamps only: a garbage `warned_at` would otherwise read as "deadline passed" (a NaN comparison).
-    created_at: z.iso.datetime({ offset: true }),
-    warned_at: z.iso.datetime({ offset: true }).nullable(),
-  })
-  .refine((row) => (row.content_kind === null) === (row.content_id === null));
-
-type CaseRow = z.infer<typeof caseRowSchema>;
+// caller who is not one fails with 42501, which is `forbidden` here. A failure is a value, never a throw, and a log
+// line holds the operation and the failure kind only.
 
 type RpcOutcome<Answer> =
   { readonly ok: true; readonly answer: Answer } | { readonly ok: false; readonly failure: AdminFailure };
@@ -127,7 +77,7 @@ type CaseWriteStatus = Extract<CaseWriteResult, { readonly ok: true }>["status"]
 /** Calls `admin_add_violation_case`. */
 export async function addViolationCase(input: AddViolationCaseInput): Promise<CaseWriteResult> {
   return callWrite(
-    ADD_OPERATION,
+    VIOLATION_OPERATION.add,
     "admin_add_violation_case",
     {
       target_user_id: input.userId,
@@ -142,7 +92,7 @@ export async function addViolationCase(input: AddViolationCaseInput): Promise<Ca
 /** Calls `admin_add_violation_case_for_author`: the public pages know a profile id, not a user id. */
 export async function addViolationCaseForAuthor(input: AddViolationCaseForAuthorInput): Promise<CaseWriteResult> {
   return callWrite(
-    ADD_FOR_AUTHOR_OPERATION,
+    VIOLATION_OPERATION.addForAuthor,
     "admin_add_violation_case_for_author",
     {
       author_profile_id: input.authorProfileId,
@@ -175,7 +125,7 @@ function toViolationCase(row: CaseRow): ViolationCase {
 
 /** Calls `admin_list_violation_cases`: open cases, newest first, at most `VIOLATION_LIST_LIMIT`. */
 export async function listViolationCases(): Promise<ViolationListResult> {
-  const outcome = await callRpc(LIST_OPERATION, "admin_list_violation_cases", {}, z.array(caseRowSchema));
+  const outcome = await callRpc(VIOLATION_OPERATION.list, "admin_list_violation_cases", {}, z.array(caseRowSchema));
   if (!outcome.ok) return outcome;
 
   // The function reads one row more than the cap, so "more exist" is told apart from "exactly the cap".
@@ -187,7 +137,7 @@ export async function listViolationCases(): Promise<ViolationListResult> {
 /** Calls `admin_set_case_ground`. */
 export async function setCaseGround(input: SetCaseGroundInput): Promise<CaseWriteResult> {
   return callWrite(
-    SET_GROUND_OPERATION,
+    VIOLATION_OPERATION.setGround,
     "admin_set_case_ground",
     { case_id: input.caseId, ground: input.ground },
     setGroundAnswerSchema,
@@ -196,25 +146,27 @@ export async function setCaseGround(input: SetCaseGroundInput): Promise<CaseWrit
 
 /** Calls `admin_remove_violation_case`. */
 export async function removeViolationCase(input: CaseIdInput): Promise<CaseWriteResult> {
-  return callWrite(REMOVE_OPERATION, "admin_remove_violation_case", { case_id: input.caseId }, removeAnswerSchema);
+  return callWrite(VIOLATION_OPERATION.remove, "admin_remove_violation_case", { case_id: input.caseId }, removeAnswerSchema);
 }
 
 /** Calls `admin_start_warning`: the checks before an email, answering with the address to send to. */
 export async function startWarning(input: CaseIdInput): Promise<StartWarningWriteResult> {
   const outcome = await callRpc(
-    START_WARNING_OPERATION,
+    VIOLATION_OPERATION.startWarning,
     "admin_start_warning",
     { case_id: input.caseId },
     startWarningAnswerSchema,
   );
   if (!outcome.ok) return outcome;
-  if (outcome.answer.status === ready) return { ok: true, status: ready, email: outcome.answer.email };
+  if (outcome.answer.status === VIOLATION_DB_STATUS.ready) {
+    return { ok: true, status: VIOLATION_DB_STATUS.ready, email: outcome.answer.email };
+  }
   return { ok: true, status: outcome.answer.status };
 }
 
 /** Calls `admin_mark_warned`: sets `warned_at` once, only after the email was accepted. */
 export async function markWarned(input: CaseIdInput): Promise<CaseWriteResult> {
-  return callWrite(MARK_WARNED_OPERATION, "admin_mark_warned", { case_id: input.caseId }, markWarnedAnswerSchema);
+  return callWrite(VIOLATION_OPERATION.markWarned, "admin_mark_warned", { case_id: input.caseId }, markWarnedAnswerSchema);
 }
 
 /**
@@ -229,8 +181,8 @@ export async function logNotice(userId: string, kind: ActionNoticeKind, outcome:
       notice_kind: kind,
       outcome,
     });
-    if (response.error) logFailure(LOG_NOTICE_OPERATION, withStatus(response.error, response.status));
+    if (response.error) logFailure(VIOLATION_OPERATION.logNotice, withStatus(response.error, response.status));
   } catch (error) {
-    logFailure(LOG_NOTICE_OPERATION, error);
+    logFailure(VIOLATION_OPERATION.logNotice, error);
   }
 }
