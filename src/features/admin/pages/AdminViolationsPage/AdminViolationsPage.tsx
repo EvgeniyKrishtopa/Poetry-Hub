@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { AdminListSkeleton } from "../AdminListSkeleton/AdminListSkeleton";
+import { AdminListSkeleton } from "../../components/AdminListSkeleton/AdminListSkeleton";
 import { AdminViolationsPageContent } from "../AdminViolationsPageContent/AdminViolationsPageContent";
 
 /**

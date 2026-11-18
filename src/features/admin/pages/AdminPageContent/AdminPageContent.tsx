@@ -7,9 +7,9 @@ import { SessionUnavailableAlert } from "@/shared/ui";
 import { readAdminAccess } from "../../dal/admin-access";
 import { ADMIN_LIST_COPY } from "../../model/admin-messages";
 import { readListQuery } from "../../model/list-query";
-import { AdminListSkeleton } from "../AdminListSkeleton/AdminListSkeleton";
-import { AdminUserList } from "../AdminUserList/AdminUserList";
-import { ViolationDndArea } from "../ViolationDndArea/ViolationDndArea";
+import { AdminListSkeleton } from "../../components/AdminListSkeleton/AdminListSkeleton";
+import { AdminUserList } from "../../components/AdminUserList/AdminUserList";
+import { ViolationDndArea } from "../../components/ViolationDndArea/ViolationDndArea";
 
 import type { AdminPageContentProps } from "./AdminPageContent.types";
 

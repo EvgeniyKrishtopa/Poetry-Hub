@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { requireSession } from "@/features/auth";
 
-import { AdminViolationsPage } from "../../components/AdminViolationsPage/AdminViolationsPage";
-import { AdminViolationsPageContent } from "../../components/AdminViolationsPageContent/AdminViolationsPageContent";
+import { AdminViolationsPage } from "../../pages/AdminViolationsPage/AdminViolationsPage";
+import { AdminViolationsPageContent } from "../../pages/AdminViolationsPageContent/AdminViolationsPageContent";
 import { checkIsAdmin } from "../../dal/admin-check";
 import { listViolationCases } from "../../dal/violation-rpc";
 import { VIOLATIONS_PAGE_COPY } from "../../model/admin-messages";

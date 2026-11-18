@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { requireSession } from "@/features/auth";
 
-import { AdminPage } from "../../components/AdminPage/AdminPage";
-import { AdminPageContent } from "../../components/AdminPageContent/AdminPageContent";
+import { AdminPage } from "../../pages/AdminPage/AdminPage";
+import { AdminPageContent } from "../../pages/AdminPageContent/AdminPageContent";
 import { checkIsAdmin } from "../../dal/admin-check";
 import { ADMIN_LIST_COPY } from "../../model/admin-messages";
 

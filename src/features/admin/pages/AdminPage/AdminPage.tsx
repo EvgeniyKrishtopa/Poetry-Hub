@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { AdminListSkeleton } from "../AdminListSkeleton/AdminListSkeleton";
+import { AdminListSkeleton } from "../../components/AdminListSkeleton/AdminListSkeleton";
 import { AdminPageContent } from "../AdminPageContent/AdminPageContent";
 
 import type { AdminPageProps } from "./AdminPage.types";

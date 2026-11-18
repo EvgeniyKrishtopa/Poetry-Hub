@@ -6,8 +6,8 @@ import { Alert, SessionUnavailableAlert } from "@/shared/ui";
 import { readAdminAccess } from "../../dal/admin-access";
 import { listViolationCases } from "../../dal/violation-rpc";
 import { VIOLATIONS_PAGE_COPY } from "../../model/admin-messages";
-import { ViolationCaseRow } from "../ViolationCaseRow/ViolationCaseRow";
-import { ViolationsConnectionNotice } from "../ViolationsConnectionNotice/ViolationsConnectionNotice";
+import { ViolationCaseRow } from "../../components/ViolationCaseRow/ViolationCaseRow";
+import { ViolationsConnectionNotice } from "../../components/ViolationsConnectionNotice/ViolationsConnectionNotice";
 
 /**
  * `/admin/violations`: the same gate as `AdminPageContent` (`requireSession`, `readAdminAccess`, `notFound()`),
