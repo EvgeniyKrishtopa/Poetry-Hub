@@ -17,8 +17,8 @@ The app is deployed on Vercel from the repository. No Docker image, `Dockerfile`
 **Positive**
 
 - No image to build, scan or maintain; Vercel builds Next.js itself.
-- Preview deployments per pull request, and Vercel's own build and edge caching, come for free.
-- The deploy checklist in `docs/environment.md` can name the platform instead of "hosting platform".
+- Preview deployments per pull request, and Vercel's own build and edge caching, are included in the platform.
+- The deploy checklist in `docs/environment.md` can name the platform instead of "hosting platform". That edit is a separate follow-up, not part of this record.
 
 **Negative**
 
