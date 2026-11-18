@@ -21,7 +21,7 @@ export function AddToViolationsButton({ authorProfileId, authorName, content }: 
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { isPending, result, add, clearResult, connectionStatus } = useAddViolationCase();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const contentKind = content === undefined ? null : content.kind;
+  const contentKind = content?.kind ?? null;
 
   function openDialog() {
     clearResult();
