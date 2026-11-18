@@ -15,7 +15,8 @@ export const addViolationCaseAction = adminActionClient
     const session = await checkSession();
     if (!session.ok) return { ok: false, reason: session.failure };
 
-    return toAddCaseActionResult(await addViolationCase(parsedInput));
+    const write = await addViolationCase(parsedInput);
+    return toAddCaseActionResult(write);
   });
 
 /** Adds an author to the review list from a public page, by profile id: `admin_add_violation_case_for_author`. */
@@ -25,5 +26,6 @@ export const addViolationCaseForAuthorAction = adminActionClient
     const session = await checkSession();
     if (!session.ok) return { ok: false, reason: session.failure };
 
-    return toAddCaseActionResult(await addViolationCaseForAuthor(parsedInput));
+    const write = await addViolationCaseForAuthor(parsedInput);
+    return toAddCaseActionResult(write);
   });

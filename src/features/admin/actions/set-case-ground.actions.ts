@@ -15,5 +15,6 @@ export const setCaseGroundAction = adminActionClient
     const session = await checkSession();
     if (!session.ok) return { ok: false, reason: session.failure };
 
-    return toSetCaseGroundActionResult(await setCaseGround(parsedInput));
+    const write = await setCaseGround(parsedInput);
+    return toSetCaseGroundActionResult(write);
   });

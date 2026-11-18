@@ -15,5 +15,6 @@ export const removeViolationCaseAction = adminActionClient
     const session = await checkSession();
     if (!session.ok) return { ok: false, reason: session.failure };
 
-    return toRemoveCaseActionResult(await removeViolationCase(parsedInput));
+    const write = await removeViolationCase(parsedInput);
+    return toRemoveCaseActionResult(write);
   });
