@@ -108,7 +108,7 @@ export interface NoticeEmailContent {
 }
 
 /** Why a standard notice was not sent; `unexpected` is a throw inside the notice step, which never undoes the action. */
-export type NoticeFailureCause = "no-address" | "unexpected" | EmailFailureReason;
+type NoticeFailureCause = "no-address" | "unexpected" | EmailFailureReason;
 
 /** What the notice step did; `failed` is still a successful action (design D5, FR-14). */
 export type ActionNoticeResult =
@@ -116,8 +116,26 @@ export type ActionNoticeResult =
   | { readonly outcome: "skipped" }
   | { readonly outcome: "failed"; readonly cause: NoticeFailureCause };
 
-/** A failed notice after an admin delete, kept for the author page's one-time notice (design D7). */
+/**
+ * A failed notice after an admin delete, kept for the author page's one-time notice (design D7).
+ * @public Read by `violation-notice-ui.store.ts`, which knip skips until task 5.3 consumes it; drop the tag then.
+ */
 export interface FailedNoticeValue {
   readonly deleted: AdminDeleteKind;
   readonly cause: NoticeFailureCause;
+}
+
+/** The tone of a line the admin reads after an action; it picks the `Alert` tone. */
+type NoticeTone = "success" | "neutral" | "danger";
+
+/** A result line: what to say and in which tone. */
+export interface AdminNotice {
+  readonly tone: NoticeTone;
+  readonly text: string;
+}
+
+/** The user a dragged row of the `/admin` list stands for. */
+export interface DraggedUser {
+  readonly userId: string;
+  readonly email: string;
 }

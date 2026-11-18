@@ -41,15 +41,11 @@ function toAdminUser(row: UserRow): AdminUser {
   };
 }
 
-/** A filter with nothing but spaces (`?email=`) is no filter: the whole list, not a search for an empty address. */
-function hasAddress(email: string | undefined): email is string {
-  return email !== undefined && email.trim() !== "";
-}
-
 /**
- * Calls `admin_list_users`: a forward keyset page, optionally one exact address (design D9, FR-3). It asks for one row
- * more than the page shows: that extra row is only the proof that a next page exists, and the cursor continues after
- * the last row shown. The address is passed as typed; the database trims and lower-cases both sides. Never logged.
+ * Calls `admin_list_users`: a forward keyset page (design D9, FR-3). It asks for one row more than the page shows:
+ * that extra row is only the proof that a next page exists, and the cursor continues after the last row shown. The
+ * function keeps its `email` argument in the database, so the call still names it, always empty: the app no longer
+ * filters by address (admin-violations-feedback design D3).
  */
 export async function listUsers(query: ListQuery): Promise<UserListResult> {
   try {
@@ -59,7 +55,7 @@ export async function listUsers(query: ListQuery): Promise<UserListResult> {
       page_size: ADMIN_USERS_PAGE_SIZE + 1,
       after_created_at: cursor === null ? null : cursor.createdAt,
       after_id: cursor === null ? null : cursor.id,
-      email: hasAddress(query.email) ? query.email : null,
+      email: null,
     });
     if (response.error) {
       return { ok: false, failure: toAdminFailure(LIST_OPERATION, withStatus(response.error, response.status)) };

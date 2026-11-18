@@ -162,7 +162,7 @@ The standard email SHALL be sent only after the restricting action committed. A 
 - **THEN** one request is made, the ban stands, and the admin sees the email was not sent
 
 ### Requirement: Failures surfaced to the admin (FR-15)
-Every admin action of this change (add to the list, switch the ground, remove, send the warning, block or ban from the list) SHALL show a specific notice for each of: no connection, a server error, a session that ended, and the target having changed in another tab. The target-changed notices SHALL cover a case that is already removed, resolved, or gone with its deleted account (one notice, since an account's deletion removes its case and the database answers `not-found` for both), a user already blocked or banned, and a poem or collection already deleted when it is the content a case would record. A failed action SHALL NOT change the row, and the row SHALL be refreshed to the current state after a target-changed notice.
+Every admin action of this change (add to the list, switch the ground, remove, send the warning, block or ban from the list) SHALL show a specific notice for each of: no connection, a server error, a session that ended, and the target having changed in another tab. The target-changed notices SHALL cover a case that is already removed, resolved, or gone with its deleted account (one notice, since an account's deletion removes its case and the database answers `not-found` for both), a user already blocked or banned, and a poem or collection already deleted when it is the content a case would record. A failed action SHALL NOT change the row. After a target-changed notice that means the case is over (a case already removed, resolved or gone, or a user already blocked or banned) the row SHALL keep its notice and lose its action buttons, and SHALL leave the list the next time the page loads: the page is not refreshed at once, because the refresh would remove the notice with the row. After a notice that leaves the case open but changed (a warning already sent, a ground already switched) the row SHALL be refreshed to the current state.
 
 #### Scenario: Session ended
 - **GIVEN** the admin's session ended
@@ -187,17 +187,17 @@ Every admin action of this change (add to the list, switch the ground, remove, s
 #### Scenario: User blocked in another tab
 - **GIVEN** a user was blocked in another tab
 - **WHEN** the admin blocks them from this tab
-- **THEN** a notice says they are already restricted and the row refreshes to show it
+- **THEN** a notice says they are already restricted, and the row keeps it with no action buttons until the page loads again
 
 #### Scenario: Case removed in another tab
 - **GIVEN** a case was removed in another tab
 - **WHEN** the admin sends the warning for it
-- **THEN** a notice says the case no longer exists, no email is sent, and the row disappears
+- **THEN** a notice says the case no longer exists, no email is sent, and the row keeps the notice with no action buttons until the page loads again
 
 #### Scenario: Account deleted in another tab
 - **GIVEN** an account was deleted in another tab, which removed its case
 - **WHEN** the admin acts on that case
-- **THEN** the same «case no longer exists» notice shows as when the case was removed, and the row disappears
+- **THEN** the same «case no longer exists» notice shows as when the case was removed, and the row behaves the same way
 
 ### Requirement: Email delivery module (NFR-1, NFR-3)
 Email SHALL be sent through one server-only module. It SHALL read `RESEND_API_KEY` and `EMAIL_FROM` lazily on each send; an unset or malformed value SHALL be a `config` failure that names the variable and never its value. It SHALL send plain text, SHALL time out, and SHALL return failures as values (`config`, `timeout`, `network`, `conflict` for a key already used with a different body (`invalid_idempotent_request`, which proves an earlier request was accepted), `http` with the status). Any other HTTP 409, a request still in progress (`concurrent_idempotent_requests`) included, SHALL be `http` with status 409. Only the `name` field of a 409 body SHALL be read, never its message. No log line, error or result SHALL hold the API key, a recipient address, or a message body. The key SHALL NOT be prefixed `NEXT_PUBLIC_`, and no service-role or secret database key SHALL exist in `src/`.

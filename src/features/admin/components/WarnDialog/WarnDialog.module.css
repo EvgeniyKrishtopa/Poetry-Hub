@@ -1,0 +1,5 @@
+/* A read-only field sits on the surface fill: the address always, the message once its text is fixed (design D4). */
+.fields input[readonly],
+.fields textarea[readonly] {
+  background: var(--color-surface);
+}

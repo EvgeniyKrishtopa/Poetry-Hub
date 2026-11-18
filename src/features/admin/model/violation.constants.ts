@@ -20,7 +20,7 @@ export const CASE_STATUS = {
 const MS_PER_HOUR = 3_600_000;
 
 /** How long a warned user has to react, as a reminder only: nothing enforces it (design D6). */
-export const WARNING_PERIOD_HOURS = 24;
+const WARNING_PERIOD_HOURS = 24;
 export const WARNING_PERIOD_MS = WARNING_PERIOD_HOURS * MS_PER_HOUR;
 
 /** The longest message an admin can add to a warning, in code points after trimming. */
@@ -71,3 +71,15 @@ export const NOTICE_LOG_OUTCOME = {
   sent: "sent",
   failed: "failed",
 } as const;
+
+/** The droppable the `/admin` list link registers with dnd-kit; a drop on it asks to add the dragged user (FR-3). */
+export const VIOLATION_DROP_TARGET_ID = "violation-list-link";
+
+/** A mouse drag starts after the pointer moved this far, so a plain click on the handle never lifts a row. */
+export const VIOLATION_MOUSE_DRAG_DISTANCE_PX = 4;
+
+/** A touch drag starts after a hold on the handle this long, so a swipe from the handle still scrolls. */
+export const VIOLATION_TOUCH_HOLD_MS = 200;
+
+/** How far a finger may drift during the hold before the hold is a scroll instead. */
+export const VIOLATION_TOUCH_HOLD_TOLERANCE_PX = 5;

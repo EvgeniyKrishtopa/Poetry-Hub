@@ -26,8 +26,12 @@ describe("readAdminAccess and React's cache (structural guard)", () => {
 
   // implements FR-21 of admin-moderation
   it("keeps the gate and the page gate reading the admin check only through that one function", () => {
-    for (const file of ["AdminOnly/AdminOnlyContent.tsx", "AdminPageContent/AdminPageContent.tsx"]) {
-      const source = readFileSync(join(ADMIN_DIR, "components", file), "utf8");
+    for (const file of [
+      "components/AdminOnly/AdminOnlyContent.tsx",
+      "pages/AdminPageContent/AdminPageContent.tsx",
+      "pages/AdminViolationsPageContent/AdminViolationsPageContent.tsx",
+    ]) {
+      const source = readFileSync(join(ADMIN_DIR, file), "utf8");
 
       expect(source, file).toMatch(ADMIN_ACCESS_IMPORT);
       expect(source, file).not.toMatch(/checkIsAdmin/);

@@ -9,7 +9,14 @@ import { blockUserAction } from "../../actions/block-user.actions";
 import { revokeSessionsAction } from "../../actions/revoke-sessions.actions";
 import { unblockUserAction } from "../../actions/unblock-user.actions";
 import { AdminUserRow } from "../../components/AdminUserRow/AdminUserRow";
-import { BAN_DIALOG_COPY, MODERATION_FAILURE_MESSAGES, MODERATION_RESULT_MESSAGES } from "../../model/admin-messages";
+import { ViolationAddContext } from "../../components/ViolationDndArea/violation-add-context";
+import {
+  ADMIN_VIOLATION_COPY,
+  BAN_DIALOG_COPY,
+  MODERATION_FAILURE_MESSAGES,
+  MODERATION_RESULT_MESSAGES,
+  NOTICE_RESULT_SUFFIX,
+} from "../../model/admin-messages";
 import type { AdminUser, ModerationActionResult } from "../../model/admin.types";
 
 const refresh = vi.fn();
@@ -88,9 +95,24 @@ describe("AdminUserRow", () => {
     await userEvent.click(screen.getByRole("button", { name: "Заблокировать" }));
 
     expect(blockUserAction).toHaveBeenCalledWith({ userId: USER.id });
-    expect(await screen.findByText(MODERATION_RESULT_MESSAGES.blocked)).toBeInTheDocument();
+    expect(
+      await screen.findByText(`${MODERATION_RESULT_MESSAGES.blocked}${NOTICE_RESULT_SUFFIX.sent}`),
+    ).toBeInTheDocument();
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("dialog", { hidden: true })).not.toHaveAttribute("open");
+  });
+
+  // implements FR-14 of admin-violations-feedback
+  it.each([
+    [{ outcome: "failed", cause: "http" }, NOTICE_RESULT_SUFFIX.failed],
+    [{ outcome: "failed", cause: "no-address" }, NOTICE_RESULT_SUFFIX.noAddress],
+  ] as const)("says the email was not sent after a block when the notice is %j", async (notice, suffix) => {
+    vi.mocked(blockUserAction).mockResolvedValue(respond({ ok: true, status: "blocked", notice }));
+    renderRow();
+
+    await userEvent.click(screen.getByRole("button", { name: "Заблокировать" }));
+
+    expect(await screen.findByText(`${MODERATION_RESULT_MESSAGES.blocked}${suffix}`)).toBeInTheDocument();
   });
 
   // implements FR-4 of admin-moderation
@@ -188,7 +210,9 @@ describe("AdminUserRow", () => {
       await userEvent.click(confirm());
 
       expect(banUserAction).toHaveBeenCalledWith({ userId: USER.id });
-      expect(await screen.findByText(MODERATION_RESULT_MESSAGES.banned)).toBeInTheDocument();
+      expect(
+        await screen.findByText(`${MODERATION_RESULT_MESSAGES.banned}${NOTICE_RESULT_SUFFIX.sent}`),
+      ).toBeInTheDocument();
       expect(refresh).toHaveBeenCalledTimes(1);
       expect(dialog()).not.toHaveAttribute("open");
     });
@@ -222,6 +246,65 @@ describe("AdminUserRow", () => {
 
       expect(banUserAction).not.toHaveBeenCalled();
       expect(dialog()).not.toHaveAttribute("open");
+    });
+  });
+
+  describe("inside the review-list area", () => {
+    const requestAdd = vi.fn();
+
+    function renderInArea(user: AdminUser, disabled = false) {
+      return render(
+        <ViolationAddContext value={{ requestAdd, disabled }}>
+          <ul>
+            <AdminUserRow user={user} />
+          </ul>
+        </ViolationAddContext>,
+      );
+    }
+
+    // implements FR-3 of admin-violations-feedback
+    it("offers an active row a handle and the add button, between «Отозвать сессии» and «Забанить»", () => {
+      renderInArea(USER);
+
+      expect(screen.getByRole("button", { name: ADMIN_VIOLATION_COPY.grabLabel(USER.email) })).toBeInTheDocument();
+      const labels = screen.getAllByRole("button").map((button) => button.textContent);
+      expect(labels.indexOf(ADMIN_VIOLATION_COPY.addButton)).toBe(labels.indexOf("Отозвать сессии") + 1);
+      expect(labels.indexOf("Забанить")).toBe(labels.indexOf(ADMIN_VIOLATION_COPY.addButton) + 1);
+    });
+
+    // implements FR-3 of admin-violations-feedback
+    it("asks to add this user when the add button is used", async () => {
+      renderInArea(USER);
+
+      await userEvent.click(screen.getByRole("button", { name: ADMIN_VIOLATION_COPY.addButton }));
+
+      expect(requestAdd).toHaveBeenCalledExactlyOnceWith({ userId: USER.id, email: USER.email });
+    });
+
+    // implements FR-1 of admin-violations-feedback
+    it.each(["blocked", "banned"] as const)("gives a %s row neither a handle nor the add button", (restriction) => {
+      renderInArea({ ...USER, restriction });
+
+      expect(screen.queryByRole("button", { name: ADMIN_VIOLATION_COPY.addButton })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: ADMIN_VIOLATION_COPY.grabLabel(USER.email) }),
+      ).not.toBeInTheDocument();
+    });
+
+    // implements FR-15 of admin-violations-feedback
+    it("disables the handle and the add button offline, and leaves the other actions on", () => {
+      renderInArea(USER, true);
+
+      expect(screen.getByRole("button", { name: ADMIN_VIOLATION_COPY.addButton })).toBeDisabled();
+      expect(screen.getByRole("button", { name: ADMIN_VIOLATION_COPY.grabLabel(USER.email) })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Заблокировать" })).toBeEnabled();
+    });
+
+    // implements FR-3 of admin-violations-feedback
+    it("has no add controls outside the area", () => {
+      renderRow();
+
+      expect(screen.queryByRole("button", { name: ADMIN_VIOLATION_COPY.addButton })).not.toBeInTheDocument();
     });
   });
 });

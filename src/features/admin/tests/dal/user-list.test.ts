@@ -73,32 +73,19 @@ describe("listUsers", () => {
   });
 
   // implements FR-3 of admin-moderation
-  it("sends the cursor's two halves and the address as typed", async () => {
+  it("sends the cursor's two halves", async () => {
     rpc.mockResolvedValue(ok([]));
 
-    await listUsers({ after: `${CREATED_AT}_${TARGET_USER_ID}`, email: ` ${TARGET_EMAIL.toUpperCase()} ` });
+    await listUsers({ after: `${CREATED_AT}_${TARGET_USER_ID}` });
 
     expect(rpc).toHaveBeenCalledExactlyOnceWith("admin_list_users", {
       page_size: ADMIN_USERS_PAGE_SIZE + 1,
       after_created_at: CREATED_AT,
       after_id: TARGET_USER_ID,
-      email: ` ${TARGET_EMAIL.toUpperCase()} `,
-    });
-  });
-
-  // implements FR-3 of admin-moderation
-  it.each(["", "   "])("sends no filter for the blank address %j, so the whole list shows", async (email) => {
-    rpc.mockResolvedValue(ok([]));
-
-    await listUsers({ email });
-
-    expect(rpc).toHaveBeenCalledExactlyOnceWith("admin_list_users", {
-      page_size: ADMIN_USERS_PAGE_SIZE + 1,
-      after_created_at: null,
-      after_id: null,
       email: null,
     });
   });
+
 
   // implements FR-3 of admin-moderation
   it("treats a hand-edited cursor as the first page and sends no half of it", async () => {
@@ -173,7 +160,7 @@ describe("listUsers", () => {
   it("is an empty page with no cursor when nobody matches", async () => {
     rpc.mockResolvedValue(ok([]));
 
-    await expect(listUsers({ email: TARGET_EMAIL })).resolves.toEqual({ ok: true, users: [], nextCursor: null });
+    await expect(listUsers({})).resolves.toEqual({ ok: true, users: [], nextCursor: null });
   });
 
   // implements FR-2, FR-3 of admin-moderation
@@ -183,7 +170,7 @@ describe("listUsers", () => {
   ] as const)("is a failure, with no rows, for %s", async (_case, response, failure) => {
     rpc.mockResolvedValue(response);
 
-    await expect(listUsers({ email: TARGET_EMAIL })).resolves.toEqual({ ok: false, failure });
+    await expect(listUsers({})).resolves.toEqual({ ok: false, failure });
     expectNothingSecretLogged();
   });
 
@@ -201,10 +188,10 @@ describe("listUsers", () => {
   });
 
   // implements NFR-6 of admin-moderation
-  it("never logs the filter address", async () => {
+  it("never logs an address a thrown error carries", async () => {
     rpc.mockRejectedValue(new TypeError(`fetch failed for ${TARGET_EMAIL}`));
 
-    await listUsers({ email: TARGET_EMAIL });
+    await listUsers({});
 
     expect(console.error).toHaveBeenCalledExactlyOnceWith("[admin] list users failed: TypeError");
     expectNothingSecretLogged();

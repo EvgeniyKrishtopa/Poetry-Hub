@@ -25,12 +25,12 @@ export async function AdminUserList({ query }: AdminUserListProps) {
       {(result.nextCursor !== null || !isFirstPage) && (
         <div className="-ml-3 flex flex-wrap gap-2">
           {result.nextCursor !== null && (
-            <ButtonLink variant="ghost" href={adminListHref({ after: result.nextCursor, email: query.email })}>
+            <ButtonLink variant="ghost" href={adminListHref({ after: result.nextCursor })}>
               {ADMIN_LIST_COPY.nextLink}
             </ButtonLink>
           )}
           {!isFirstPage && (
-            <ButtonLink variant="ghost" href={adminListHref({ email: query.email })}>
+            <ButtonLink variant="ghost" href={adminListHref({})}>
               {ADMIN_LIST_COPY.firstPageLink}
             </ButtonLink>
           )}
