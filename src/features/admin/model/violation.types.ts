@@ -75,7 +75,7 @@ export type RemoveCaseActionResult =
   { readonly ok: true } | { readonly ok: false; readonly reason: CaseFailureReason };
 
 /** What the warning action can fail with besides the shared reasons (design D4). */
-export type WarningStopReason =CaseFailureReason | "wrong-ground" | "already-warned" | "no-address";
+export type WarningStopReason = CaseFailureReason | "wrong-ground" | "already-warned" | "no-address";
 
 /** `outcomeUnknown` locks the message in the modal, so a retry carries the same text (design D4). */
 export type SendWarningActionResult =
