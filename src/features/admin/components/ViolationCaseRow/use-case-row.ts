@@ -84,8 +84,11 @@ export function useCaseRow(violationCase: ViolationCase, earlyNote: EarlyBlockNo
     setNotice(null);
     setRestrictionFailure(null);
     startTransition(async () => {
-      await call();
-      sendingRef.current = false;
+      try {
+        await call();
+      } finally {
+        sendingRef.current = false;
+      }
     });
   }
 

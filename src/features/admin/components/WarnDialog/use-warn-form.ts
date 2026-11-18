@@ -62,9 +62,12 @@ export function useWarnForm({ dialogRef, caseId, onSettled, onClose }: WarnDialo
     setFieldError(null);
     setNotice(null);
     startTransition(async () => {
-      const answer = await callCaseAction(() => runSend(caseId, message));
-      sendingRef.current = false;
-      applyOutcome(classifyWarning(answer));
+      try {
+        const answer = await callCaseAction(() => runSend(caseId, message));
+        applyOutcome(classifyWarning(answer));
+      } finally {
+        sendingRef.current = false;
+      }
     });
   }
 
