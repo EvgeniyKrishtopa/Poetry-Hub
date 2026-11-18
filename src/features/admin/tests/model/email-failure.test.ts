@@ -9,6 +9,7 @@ describe("isTransientEmailFailure", () => {
     [{ reason: "network" }],
     [{ reason: "http", status: 500 }],
     [{ reason: "http", status: 503 }],
+    [{ reason: "http", status: 409 }],
   ] as const)("is true for %j: it may have been delivered", (failure) => {
     expect(isTransientEmailFailure(failure)).toBe(true);
   });

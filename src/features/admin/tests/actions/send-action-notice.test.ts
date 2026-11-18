@@ -86,6 +86,7 @@ describe("sendActionNotice", () => {
     ["a network error", { ok: false, reason: "network" }],
     ["a service answer of 500", { ok: false, reason: "http", status: 500 }],
     ["a service answer of 503", { ok: false, reason: "http", status: 503 }],
+    ["a 409 for a request still in progress", { ok: false, reason: "http", status: 409 }],
   ] as const)("retries once, under the same key, after %s, and is sent when the retry succeeds", async (_case, failure) => {
     vi.mocked(sendEmail).mockResolvedValueOnce(failure).mockResolvedValueOnce(OK);
 
@@ -106,6 +107,19 @@ describe("sendActionNotice", () => {
 
     expect(result).toEqual({ outcome: "sent" });
     expect(logNotice).toHaveBeenCalledExactlyOnceWith(TARGET_USER_ID, "delete-poem", "sent");
+  });
+
+  // implements FR-14 of admin-violations-feedback
+  it("is failed, not sent, when the retry meets a request still in progress", async () => {
+    vi.mocked(sendEmail)
+      .mockResolvedValueOnce(TIMEOUT)
+      .mockResolvedValueOnce({ ok: false, reason: "http", status: 409 });
+
+    const result = await sendActionNotice(INPUT);
+
+    expect(result).toEqual({ outcome: "failed", cause: "http" });
+    expect(logNotice).toHaveBeenCalledExactlyOnceWith(TARGET_USER_ID, "delete-poem", "failed");
+    expect(console.error).toHaveBeenCalledExactlyOnceWith("[admin] action notice not sent: delete-poem: http 409");
   });
 
   // implements FR-14 of admin-violations-feedback

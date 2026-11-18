@@ -24,7 +24,10 @@ export interface SendEmailInput {
 
 export type EmailFailureReason = "config" | "timeout" | "network" | "conflict" | "http";
 
-/** `conflict` is HTTP 409: a request with that key is still in flight, or the key was used with a different body. */
+/**
+ * `conflict` is a 409 saying the key was already used with a different body, which proves an earlier request with that
+ * key was accepted. Any other 409 (a request still in progress, or a body that can't be read) is `http` with status 409.
+ */
 export type EmailSendResult =
   | { readonly ok: true }
   | { readonly ok: false; readonly reason: EmailFailureReason; readonly status?: number };

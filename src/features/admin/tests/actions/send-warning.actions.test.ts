@@ -149,6 +149,7 @@ describe("sendWarningAction", () => {
     ["config", { ok: false, reason: "config" }, false],
     ["a service refusal below 500", { ok: false, reason: "http", status: 422 }, false],
     ["a service answer of 500", { ok: false, reason: "http", status: 500 }, true],
+    ["a 409 for a request still in progress", { ok: false, reason: "http", status: 409 }, true],
     ["a timeout", { ok: false, reason: "timeout" }, true],
     ["a network error", { ok: false, reason: "network" }, true],
   ] as const)(
