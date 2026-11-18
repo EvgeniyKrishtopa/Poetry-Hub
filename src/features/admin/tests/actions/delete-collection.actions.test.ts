@@ -5,20 +5,41 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getSessionState } from "@/features/auth";
 
 import { deleteCollectionAction } from "../../actions/delete-collection.actions";
+import { sendActionNotice } from "../../actions/send-action-notice";
 import { deleteCollectionAsAdmin } from "../../dal/delete-rpc";
 import { MODERATION_FAILURE_MESSAGES } from "../../model/admin-messages";
-import { ADMIN_USER_ID, AUTHOR_ID, COLLECTION_ID, expectNothingSecretLogged, POEM_TITLE } from "../support/rpc-mock";
+import {
+  ADMIN_USER_ID,
+  AUTHOR_ID,
+  COLLECTION_ID,
+  expectNothingSecretLogged,
+  POEM_TITLE,
+  TARGET_EMAIL,
+  TARGET_USER_ID,
+} from "../support/rpc-mock";
 
 vi.mock("next/cache", () => ({ updateTag: vi.fn() }));
 vi.mock("@/features/auth", () => ({ getSessionState: vi.fn() }));
 vi.mock("../../dal/delete-rpc", () => ({ deleteCollectionAsAdmin: vi.fn() }));
+vi.mock("../../actions/send-action-notice", () => ({ sendActionNotice: vi.fn() }));
 
-const DELETED = { ok: true, status: "deleted", authorId: AUTHOR_ID, title: POEM_TITLE } as const;
+const SENT = { outcome: "sent" } as const;
+
+const DELETED = {
+  ok: true,
+  status: "deleted",
+  authorId: AUTHOR_ID,
+  userId: TARGET_USER_ID,
+  title: POEM_TITLE,
+  noticeEmail: TARGET_EMAIL,
+  ground: null,
+} as const;
 
 describe("deleteCollectionAction", () => {
   beforeEach(() => {
     vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
     vi.mocked(deleteCollectionAsAdmin).mockResolvedValue(DELETED);
+    vi.mocked(sendActionNotice).mockResolvedValue(SENT);
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
@@ -31,7 +52,7 @@ describe("deleteCollectionAction", () => {
   it("deletes the collection and expires exactly its author's tag, returning no title", async () => {
     const result = await deleteCollectionAction({ id: COLLECTION_ID });
 
-    expect(result.data).toEqual({ ok: true });
+    expect(result.data).toEqual({ ok: true, notice: SENT });
     expect(deleteCollectionAsAdmin).toHaveBeenCalledExactlyOnceWith({ id: COLLECTION_ID });
     expect(updateTag).toHaveBeenCalledExactlyOnceWith(`author-works:${AUTHOR_ID}`);
   });
@@ -44,19 +65,45 @@ describe("deleteCollectionAction", () => {
 
     const result = await deleteCollectionAction({ id: COLLECTION_ID });
 
-    expect(result.data).toEqual({ ok: true });
+    expect(result.data).toEqual({ ok: true, notice: SENT });
     expect(console.error).toHaveBeenCalledExactlyOnceWith("[admin] expire author works tag failed: RangeError");
     expectNothingSecretLogged();
   });
 
   // implements FR-9 of admin-moderation
-  it("answers not-found, expiring nothing, for a collection that is gone", async () => {
+  it("answers not-found, expiring and emailing nothing, for a collection that is gone", async () => {
     vi.mocked(deleteCollectionAsAdmin).mockResolvedValue({ ok: true, status: "not-found" });
 
     const result = await deleteCollectionAction({ id: COLLECTION_ID });
 
     expect(result.data).toEqual({ ok: false, reason: "not-found" });
     expect(updateTag).not.toHaveBeenCalled();
+    expect(sendActionNotice).not.toHaveBeenCalled();
+  });
+
+  // implements FR-9 of moderation-notifications
+  it("sends the author one email, after the tag expiry, with the database's title and no ground without a case", async () => {
+    await deleteCollectionAction({ id: COLLECTION_ID });
+
+    expect(sendActionNotice).toHaveBeenCalledExactlyOnceWith({
+      kind: "delete-collection",
+      userId: TARGET_USER_ID,
+      email: TARGET_EMAIL,
+      ground: null,
+      title: POEM_TITLE,
+    });
+    expect(vi.mocked(updateTag).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(sendActionNotice).mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  // implements FR-14 of moderation-notifications
+  it("keeps the delete a success, carrying the failed notice, when the email was not sent", async () => {
+    vi.mocked(sendActionNotice).mockResolvedValue({ outcome: "failed", cause: "timeout" });
+
+    const result = await deleteCollectionAction({ id: COLLECTION_ID });
+
+    expect(result.data).toEqual({ ok: true, notice: { outcome: "failed", cause: "timeout" } });
   });
 
   // implements FR-12 of admin-moderation
@@ -92,13 +139,14 @@ describe("deleteCollectionAction", () => {
     ["an ended session", "unauthenticated", "unauthenticated"],
     ["an outage", "unavailable", "unavailable"],
     ["an unknown failure", "unknown", "unavailable"],
-  ] as const)("keeps %s apart, expiring nothing", async (_case, failure, reason) => {
+  ] as const)("keeps %s apart, expiring and emailing nothing", async (_case, failure, reason) => {
     vi.mocked(deleteCollectionAsAdmin).mockResolvedValue({ ok: false, failure });
 
     const result = await deleteCollectionAction({ id: COLLECTION_ID });
 
     expect(result.data).toEqual({ ok: false, reason });
     expect(updateTag).not.toHaveBeenCalled();
+    expect(sendActionNotice).not.toHaveBeenCalled();
   });
 
   // implements NFR-6 of admin-moderation

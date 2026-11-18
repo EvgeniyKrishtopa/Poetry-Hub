@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 import { DELETE_DB_STATUS } from "../model/admin.constants";
 import { targetIdSchema, type DeleteTargetInput } from "../model/admin.schema";
 import type { CollectionDeleteWriteResult, PoemDeleteWriteResult } from "../model/admin.types";
+import { groundSchema } from "../model/violation.schema";
 
 import { toAdminFailure, withStatus } from "./rpc-failure";
 
@@ -17,19 +18,38 @@ import { toAdminFailure, withStatus } from "./rpc-failure";
 const DELETE_POEM_OPERATION = "delete poem";
 const DELETE_COLLECTION_OPERATION = "delete collection";
 
+/**
+ * What every successful delete also returns for the email: the author's auth user id (`author_id` is a profile id),
+ * the address (null when the account has none) and the ground of the open case. Required keys, so an answer without
+ * them fails the parse as `unknown`.
+ */
+const noticeFields = {
+  user_id: targetIdSchema,
+  notice_email: z.string().min(1).nullable(),
+  ground: groundSchema.nullable(),
+};
+
 /** `admin_delete_poem()`'s answer; a `deleted` answer without an author fails the parse as `unknown`. */
 const poemAnswerSchema = z.union([
   z.object({
     status: z.literal(DELETE_DB_STATUS.deleted),
     author_id: targetIdSchema,
     illustration_path: z.string().min(1).nullable(),
+    // The poem's own title, never the browser's: the email names it (a title is never empty in the table).
+    title: z.string().min(1),
+    ...noticeFields,
   }),
   z.object({ status: z.literal(DELETE_DB_STATUS.notFound) }),
 ]);
 
 /** `admin_delete_collection()`'s answer. */
 const collectionAnswerSchema = z.union([
-  z.object({ status: z.literal(DELETE_DB_STATUS.deleted), author_id: targetIdSchema, title: z.string().min(1) }),
+  z.object({
+    status: z.literal(DELETE_DB_STATUS.deleted),
+    author_id: targetIdSchema,
+    title: z.string().min(1),
+    ...noticeFields,
+  }),
   z.object({ status: z.literal(DELETE_DB_STATUS.notFound) }),
 ]);
 
@@ -52,7 +72,11 @@ export async function deletePoemAsAdmin(input: DeleteTargetInput): Promise<PoemD
       ok: true,
       status: DELETE_DB_STATUS.deleted,
       authorId: parsed.data.author_id,
+      userId: parsed.data.user_id,
       illustrationPath: parsed.data.illustration_path,
+      title: parsed.data.title,
+      noticeEmail: parsed.data.notice_email,
+      ground: parsed.data.ground,
     };
   } catch (error) {
     return { ok: false, failure: toAdminFailure(DELETE_POEM_OPERATION, error) };
@@ -78,7 +102,10 @@ export async function deleteCollectionAsAdmin(input: DeleteTargetInput): Promise
       ok: true,
       status: DELETE_DB_STATUS.deleted,
       authorId: parsed.data.author_id,
+      userId: parsed.data.user_id,
       title: parsed.data.title,
+      noticeEmail: parsed.data.notice_email,
+      ground: parsed.data.ground,
     };
   } catch (error) {
     return { ok: false, failure: toAdminFailure(DELETE_COLLECTION_OPERATION, error) };

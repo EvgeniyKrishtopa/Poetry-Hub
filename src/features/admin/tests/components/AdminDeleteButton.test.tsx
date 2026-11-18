@@ -63,7 +63,7 @@ describe("AdminDeleteButton", () => {
 
   // implements FR-10 of admin-moderation
   it("deletes the poem on confirm and replaces the page with the author's page", async () => {
-    vi.mocked(deletePoemAction).mockResolvedValue(respond({ ok: true }));
+    vi.mocked(deletePoemAction).mockResolvedValue(respond({ ok: true, notice: { outcome: "sent" } }));
     renderPoemButton();
 
     await openAndConfirm();
@@ -75,7 +75,7 @@ describe("AdminDeleteButton", () => {
 
   // implements FR-10 of admin-moderation
   it("deletes a collection through its own action, with its own wording", async () => {
-    vi.mocked(deleteCollectionAction).mockResolvedValue(respond({ ok: true }));
+    vi.mocked(deleteCollectionAction).mockResolvedValue(respond({ ok: true, notice: { outcome: "sent" } }));
     render(<AdminDeleteButton kind="collection" id={COLLECTION_ID} title="Осенний цикл" redirectHref={AUTHOR_PATH} />);
 
     await userEvent.click(screen.getByRole("button", { name: ADMIN_DELETE_COPY.collection.button }));

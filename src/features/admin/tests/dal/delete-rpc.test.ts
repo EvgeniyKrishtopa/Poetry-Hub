@@ -17,10 +17,16 @@ import {
   POEM_ID,
   POEM_TITLE,
   rpcError,
+  TARGET_EMAIL,
+  TARGET_USER_ID,
   type RpcResponse,
 } from "../support/rpc-mock";
 
 vi.mock("@/shared/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
+
+/** What every successful delete also answers: the author's user id, the address and the open case's ground. */
+const NOTICE_ANSWER = { user_id: TARGET_USER_ID, notice_email: TARGET_EMAIL, ground: "malicious-activity" };
+const NOTICE_RESULT = { userId: TARGET_USER_ID, noticeEmail: TARGET_EMAIL, ground: "malicious-activity" };
 
 describe("admin deletes", () => {
   let rpc: ReturnType<typeof vi.fn<(fn: string, args?: unknown) => Promise<RpcResponse>>>;
@@ -38,27 +44,65 @@ describe("admin deletes", () => {
 
   describe("deletePoemAsAdmin", () => {
     // implements FR-8 of admin-moderation
-    it("returns the author and the illustration path the database gives, sending the poem id only", async () => {
-      rpc.mockResolvedValue(ok({ status: "deleted", author_id: AUTHOR_ID, illustration_path: ILLUSTRATION_PATH }));
+    it("returns the author, the path, the title and the notice data the database gives, sending the poem id only", async () => {
+      rpc.mockResolvedValue(
+        ok({
+          status: "deleted",
+          author_id: AUTHOR_ID,
+          illustration_path: ILLUSTRATION_PATH,
+          title: POEM_TITLE,
+          ...NOTICE_ANSWER,
+        }),
+      );
 
       await expect(deletePoemAsAdmin({ id: POEM_ID })).resolves.toEqual({
         ok: true,
         status: "deleted",
         authorId: AUTHOR_ID,
         illustrationPath: ILLUSTRATION_PATH,
+        title: POEM_TITLE,
+        ...NOTICE_RESULT,
       });
       expect(rpc).toHaveBeenCalledExactlyOnceWith("admin_delete_poem", { poem_id: POEM_ID });
     });
 
     // implements FR-8 of admin-moderation
     it("passes a poem without an illustration as a null path", async () => {
-      rpc.mockResolvedValue(ok({ status: "deleted", author_id: AUTHOR_ID, illustration_path: null }));
+      rpc.mockResolvedValue(
+        ok({
+          status: "deleted",
+          author_id: AUTHOR_ID,
+          illustration_path: null,
+          title: POEM_TITLE,
+          ...NOTICE_ANSWER,
+        }),
+      );
 
-      await expect(deletePoemAsAdmin({ id: POEM_ID })).resolves.toEqual({
+      await expect(deletePoemAsAdmin({ id: POEM_ID })).resolves.toMatchObject({
         ok: true,
         status: "deleted",
-        authorId: AUTHOR_ID,
         illustrationPath: null,
+      });
+    });
+
+    // implements FR-9, FR-14 of moderation-notifications
+    it("passes an account with no address and no open case as two nulls", async () => {
+      rpc.mockResolvedValue(
+        ok({
+          status: "deleted",
+          author_id: AUTHOR_ID,
+          illustration_path: null,
+          title: POEM_TITLE,
+          user_id: TARGET_USER_ID,
+          notice_email: null,
+          ground: null,
+        }),
+      );
+
+      await expect(deletePoemAsAdmin({ id: POEM_ID })).resolves.toMatchObject({
+        ok: true,
+        noticeEmail: null,
+        ground: null,
       });
     });
 
@@ -85,9 +129,31 @@ describe("admin deletes", () => {
     // implements FR-8 of admin-moderation
     it.each([
       ["an unknown status", { status: "gone" }],
-      ["a deleted answer without an author", { status: "deleted", illustration_path: null }],
-      ["a deleted answer with a non-uuid author", { status: "deleted", author_id: POEM_TITLE, illustration_path: null }],
-      ["an empty illustration path", { status: "deleted", author_id: AUTHOR_ID, illustration_path: "" }],
+      ["a deleted answer without an author", { status: "deleted", illustration_path: null, title: POEM_TITLE, ...NOTICE_ANSWER }],
+      [
+        "a deleted answer with a non-uuid author",
+        { status: "deleted", author_id: POEM_TITLE, illustration_path: null, title: POEM_TITLE, ...NOTICE_ANSWER },
+      ],
+      [
+        "an empty illustration path",
+        { status: "deleted", author_id: AUTHOR_ID, illustration_path: "", title: POEM_TITLE, ...NOTICE_ANSWER },
+      ],
+      ["an answer without the title", { status: "deleted", author_id: AUTHOR_ID, illustration_path: null, ...NOTICE_ANSWER }],
+      [
+        "an answer without the author's user id",
+        {
+          status: "deleted",
+          author_id: AUTHOR_ID,
+          illustration_path: null,
+          title: POEM_TITLE,
+          notice_email: null,
+          ground: null,
+        },
+      ],
+      [
+        "an answer without the notice keys",
+        { status: "deleted", author_id: AUTHOR_ID, illustration_path: null, title: POEM_TITLE, user_id: TARGET_USER_ID },
+      ],
       ["no data", null],
     ])("is unknown, never a guessed success, for %s", async (_case, data) => {
       rpc.mockResolvedValue(ok(data));
@@ -108,14 +174,15 @@ describe("admin deletes", () => {
 
   describe("deleteCollectionAsAdmin", () => {
     // implements FR-9 of admin-moderation
-    it("returns the author and the stored title, sending the collection id only", async () => {
-      rpc.mockResolvedValue(ok({ status: "deleted", author_id: AUTHOR_ID, title: POEM_TITLE }));
+    it("returns the author, the stored title and the notice data, sending the collection id only", async () => {
+      rpc.mockResolvedValue(ok({ status: "deleted", author_id: AUTHOR_ID, title: POEM_TITLE, ...NOTICE_ANSWER }));
 
       await expect(deleteCollectionAsAdmin({ id: COLLECTION_ID })).resolves.toEqual({
         ok: true,
         status: "deleted",
         authorId: AUTHOR_ID,
         title: POEM_TITLE,
+        ...NOTICE_RESULT,
       });
       expect(rpc).toHaveBeenCalledExactlyOnceWith("admin_delete_collection", { collection_id: COLLECTION_ID });
     });
@@ -142,8 +209,9 @@ describe("admin deletes", () => {
 
     // implements FR-9 of admin-moderation
     it.each([
-      ["a deleted answer without a title", { status: "deleted", author_id: AUTHOR_ID }],
-      ["a deleted answer without an author", { status: "deleted", title: POEM_TITLE }],
+      ["a deleted answer without a title", { status: "deleted", author_id: AUTHOR_ID, ...NOTICE_ANSWER }],
+      ["a deleted answer without an author", { status: "deleted", title: POEM_TITLE, ...NOTICE_ANSWER }],
+      ["a deleted answer without the notice keys", { status: "deleted", author_id: AUTHOR_ID, title: POEM_TITLE }],
       ["an unknown status", { status: "gone" }],
     ])("is unknown, never a guessed success, for %s", async (_case, data) => {
       rpc.mockResolvedValue(ok(data));
