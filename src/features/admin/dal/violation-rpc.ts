@@ -78,8 +78,9 @@ const caseRowSchema = z
     content_kind: z.enum([VIOLATION_CONTENT_KIND.poem, VIOLATION_CONTENT_KIND.collection]).nullable(),
     content_id: targetIdSchema.nullable(),
     content_title: z.string().nullable(),
-    created_at: z.string(),
-    warned_at: z.string().nullable(),
+    // Real timestamps only: a garbage `warned_at` would otherwise read as "deadline passed" (a NaN comparison).
+    created_at: z.iso.datetime({ offset: true }),
+    warned_at: z.iso.datetime({ offset: true }).nullable(),
   })
   .refine((row) => (row.content_kind === null) === (row.content_id === null));
 

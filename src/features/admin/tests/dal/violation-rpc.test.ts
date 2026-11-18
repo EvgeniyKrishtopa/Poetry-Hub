@@ -178,6 +178,18 @@ describe("violation-rpc", () => {
       });
     });
 
+    // implements FR-5 of admin-violations-feedback
+    it("accepts the timestamps as the database prints them, with microseconds", async () => {
+      rpc.mockResolvedValue(
+        ok([row(1, { created_at: "2026-11-17T10:00:00.123456+00:00", warned_at: "2026-11-17T12:00:00.5+02:00" })]),
+      );
+
+      await expect(listViolationCases()).resolves.toMatchObject({
+        ok: true,
+        cases: [{ createdAt: "2026-11-17T10:00:00.123456+00:00", warnedAt: "2026-11-17T12:00:00.5+02:00" }],
+      });
+    });
+
     // implements FR-4 of admin-violations-feedback
     it("keeps a null title for content that was deleted since", async () => {
       rpc.mockResolvedValue(ok([row(1, { content_title: null })]));
@@ -229,6 +241,9 @@ describe("violation-rpc", () => {
       ["a content kind with no content id", [row(1, { content_id: null })]],
       ["a content id with no content kind", [row(1, { content_kind: null })]],
       ["a non-uuid user id", [row(1, { user_id: "x" })]],
+      ["a warned_at that is not a timestamp", [row(1, { warned_at: "yesterday" })]],
+      ["a created_at that is not a timestamp", [row(1, { created_at: "not a date" })]],
+      ["a timestamp with no offset", [row(1, { warned_at: "2026-11-17T10:00:00" })]],
       ["a row that is not an object", ["x"]],
       ["no data", null],
     ])("is unknown, never a guessed list, for %s", async (_case, data) => {
