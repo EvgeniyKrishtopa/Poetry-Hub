@@ -15,6 +15,14 @@ export const PAGE_TITLES = {
 export const AUTHORS_PAGE_DESCRIPTION =
   "Авторы нашего портала: знакомьтесь с поэтами и читайте их стихи.";
 
+/**
+ * The author page's meta description when the author has no about text (seo-metadata FR-2): one sentence that
+ * names the author. The name stays in its dictionary form, since Russian declension can't be derived from it.
+ */
+export function getAuthorFallbackDescription(authorFullName: string): string {
+  return `${authorFullName} — стихи на Поэтическом Хабе.`;
+}
+
 /** The account page's author-section heading; the same words as the editor's title, but its own key. */
 export const ACCOUNT_AUTHOR_SECTION_TITLE = "Профиль автора";
 

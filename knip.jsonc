@@ -14,11 +14,8 @@
     // Only the new files, so knip still sees the rest of each feature. Task 6.4 removes these entries.
     "src/shared/lib/seo/**",
     "src/features/seo/**",
-    "src/features/poems/metadata/**",
     "src/features/poems/dal/public-poem-refs.ts",
-    "src/features/poems/model/public-poem-refs.types.ts",
-    "src/features/authors/metadata/**",
-    "src/features/collections/metadata/**"
+    "src/features/poems/model/public-poem-refs.types.ts"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
