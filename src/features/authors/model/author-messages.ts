@@ -12,7 +12,8 @@ export const PAGE_TITLES = {
 } as const;
 
 /** The directory's meta description (seo-metadata FR-2): one sentence, different from every other page's. */
-export const AUTHORS_PAGE_DESCRIPTION = "Авторы Поэтического Хаба: знакомьтесь с поэтами и читайте их стихи.";
+export const AUTHORS_PAGE_DESCRIPTION =
+  "Авторы нашего портала: знакомьтесь с поэтами и читайте их стихи.";
 
 /** The account page's author-section heading; the same words as the editor's title, but its own key. */
 export const ACCOUNT_AUTHOR_SECTION_TITLE = "Профиль автора";
@@ -64,7 +65,9 @@ export const VALIDATION_MESSAGES = {
 } as const;
 
 /** The field error for a photo `validateImageFile` rejects, in the browser and in the action (FR-8). */
-export const PHOTO_FILE_ERROR_MESSAGES: Readonly<Record<ImageFileError, string>> = {
+export const PHOTO_FILE_ERROR_MESSAGES: Readonly<
+  Record<ImageFileError, string>
+> = {
   "too-large": VALIDATION_MESSAGES.photoTooLarge,
   "unsupported-type": VALIDATION_MESSAGES.photoUnsupportedType,
 };
@@ -84,7 +87,8 @@ export function getProfileFailureMessage(failure: WriteFailure): string {
 }
 
 /** Shown instead of the account section or the editor when the own profile can't be read (FR-18). */
-export const PROFILE_LOAD_FAILED_MESSAGE = "Не удалось загрузить профиль. Попробуйте позже.";
+export const PROFILE_LOAD_FAILED_MESSAGE =
+  "Не удалось загрузить профиль. Попробуйте позже.";
 
 export const DIRECTORY_MESSAGES = {
   empty: "Пока нет авторов.",
