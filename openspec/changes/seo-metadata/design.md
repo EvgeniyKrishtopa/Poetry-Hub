@@ -49,7 +49,7 @@ Next merges metadata shallowly: a child's `openGraph` replaces its parent's whol
 
 Alternative: defaults in the `(public)` layout and only overrides in pages. Rejected: the canonical and `og:url` differ per page and have no sensible default, and a layout default for a page that forgot to override would publish a wrong canonical.
 
-The `(authorized)` layout exports `metadata = buildNoIndexMetadata({ title: "Личный кабинет", follow: false })` (FR-6). The two admin pages set no metadata of their own and inherit that title (owner, 2026-11-20): `AdminPage` shows no title until the admin check passes and the `/admin` trail is the admin's alone, so an own tab title would tell a non-admin who opens the page by chance that it exists. Every signed-in page inherits nothing but `metadataBase`, the title template and this group's metadata, so no `description`, `og:` or `twitter:` tag appears.
+The `(authorized)` layout exports `metadata = buildNoIndexMetadata({ title: "Личный кабинет", follow: false })` (FR-6). The two admin pages set no metadata of their own and inherit that title (owner, 2026-11-20): `AdminPage` shows no title until the admin check passes and the `/admin` trail is the admin's alone, so an admin-specific tab title would name the page to a non-admin who opens it by chance. The claim is "no admin-specific title", not "indistinguishable from a missing page": a signed-out or non-admin request to `/admin` shows «Личный кабинет | Поэтический Хаб» while an unknown path keeps the root title (code review, DR-02, accepted by the owner on 2026-11-20). Every signed-in page inherits nothing but `metadataBase`, the title template and this group's metadata, so no `description`, `og:` or `twitter:` tag appears.
 
 ### D3. Metadata shares the page's reads and never throws except for `notFound`
 
@@ -101,7 +101,7 @@ Next ships a default `htmlLimitedBots` pattern (the bots that get blocking metad
 
 ### D10. `SITE_URL` is a server-side setting, read lazily
 
-Metadata, `robots.ts` and the sitemap run on the server, so no `NEXT_PUBLIC_` prefix. `getSiteUrl()` is called at use, not at import, so a missing value never fails a build or a test; the localhost fallback keeps local development and CI working with no setup. Documented in `docs/environment.md` with a deploy-checklist line (set `SITE_URL` in the Vercel Production build and runtime environment; Preview inherits the production address for canonicals, which is acceptable: previews are `noindex` on Vercel).
+Metadata, `robots.ts` and the sitemap run on the server, so no `NEXT_PUBLIC_` prefix. `getSiteUrl()` never throws and is called when the metadata is built: in a function (the root layout, `generateMetadata`) when the request or build asks for it, and, for the fixed pages' static `metadata` export (D2), when the module loads, so those canonicals take the address set at build time (code review, CR-01, accepted by the owner on 2026-11-20). A missing value never fails a build or a test; the localhost fallback keeps local development and CI working with no setup. Documented in `docs/environment.md` with a deploy-checklist line (set `SITE_URL` in the Vercel Production build and runtime environment; Preview inherits the production address for canonicals, which is acceptable: previews are `noindex` on Vercel).
 
 ## Sequence: a crawler requests a poem page
 
