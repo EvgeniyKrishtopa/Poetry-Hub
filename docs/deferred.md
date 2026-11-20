@@ -202,6 +202,8 @@ Archived at `openspec/changes/archive/2026-11-20-admin-violations-feedback/`.
 
 ## seo-metadata
 
+Archived at `openspec/changes/archive/2026-11-20-seo-metadata/`.
+
 ### seo-metadata · 6.5 — messenger preview check not run
 
 - **State:** blocked
