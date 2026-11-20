@@ -31,6 +31,11 @@ Read before adding, renaming, or reading an environment variable.
   - Sender: `EMAIL_FROM` is `name@your-domain.tld` or `Display Name <name@your-domain.tld>`, on a domain verified in Resend (Domains → Add Domain, then add the DNS records it lists and wait for "Verified"). Without a verified domain Resend refuses every send.
   - Validated lazily on each send: the key must start with `re_` and hold no whitespace, and the sender must be an address, with or without a display name. Unset or malformed → the app still builds and runs, but every email shows as not sent to the admin, and the server logs reason `config` naming the variable, never its value.
   - Rotation: in the Resend dashboard create a new key, update `RESEND_API_KEY` in `.env.local` and on the hosting platform, then delete the old key.
+- Site address (`seo-metadata`): `SITE_URL`, optional. Server-only: never prefix it with `NEXT_PUBLIC_`. Only `getSiteUrl()` in `src/shared/lib/seo/site-url.ts` reads it. It is the origin every canonical link, `og:url`, share-image URL, `robots.txt` sitemap line and sitemap entry is built on.
+  - Value: an absolute `http(s)` URL, for example `https://poetry-hub.example`. Any path, trailing slash, query or hash is dropped, so only the origin is used.
+  - Fallbacks, in order: `SITE_URL`; then `https://` plus `VERCEL_PROJECT_PRODUCTION_URL` (a system variable Vercel sets, the project's production host without a scheme); then `http://localhost:3000`. A build, a test or a local run with nothing set works on the last one.
+  - An unset or empty value is skipped without a message. A value that is not an absolute `http(s)` URL is skipped too and logged once per server process as `[seo] SITE_URL is not an absolute http(s) URL, using the next fallback`, naming the variable, never its value. It never fails a build or a request.
+  - Set it only when the final address differs from Vercel's production URL (for example a custom domain): until then the Vercel fallback already gives the right address. Set it in the Vercel Production environment for both the build and the runtime: `robots.txt` and the fixed pages' `metadata` are built at build time, the rest at request time. Preview deployments inherit the production address for canonical links, which is acceptable because Vercel marks previews `noindex` itself.
 
 ## Deploy checklist
 
@@ -125,5 +130,18 @@ git-ignored `PROGRESS.md`, so every clone sees them.
 - **Contentful `tag` content type** (`add-poem-creation`): in each Contentful environment, a content type
   with id `tag` and fields `name` and `slug` (both short text, required), plus one published entry per
   genre. Without it the add form shows the genres-unavailable alert and poem pages show no genre line.
+- **Page metadata, `robots.txt` and the sitemap** (`seo-metadata`; ADR 0018): no migration.
+  1. Before the deploy, check that `public/og-default.png` (the default share image, 1200×630) is in the
+     repository. Every page without its own picture points at it, and a missing file shows a broken card.
+  2. After the first deploy, read the real production address. If it differs from Vercel's production URL (for
+     example a custom domain), set `SITE_URL` in the Vercel Production environment (build and runtime) and
+     redeploy: `robots.txt` and the fixed pages read it at build time.
+  3. Open the production `/robots.txt` and `/sitemap.xml` and check one poem page's `<head>` (title,
+     description, canonical, `og:` and `twitter:` tags).
+  4. Submit `<address>/sitemap.xml` in Google Search Console and in Yandex Webmaster (owner, manual; each service
+     asks to verify the site first).
+  5. Run the preview check with a real poem link in Telegram, VK and WhatsApp (`docs/deferred.md`,
+     `seo-metadata` 6.5, while it is open). A messenger that shows the generic site card is a finding for
+     `htmlLimitedBots` in `next.config.ts`.
 - Also before a first deploy: the Supabase dashboard setup and the Contentful webhook above, and the
   hosting-layer per-IP rate rule (Telegram section).
