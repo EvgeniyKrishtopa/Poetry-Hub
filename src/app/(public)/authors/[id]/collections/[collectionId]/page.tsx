@@ -1,6 +1,11 @@
 import { AddToViolationsControl, AdminDeleteControl } from "@/features/admin";
 import { authorPagePath } from "@/features/authors";
-import { PublicCollectionPage } from "@/features/collections";
+import { PublicCollectionPage, getPublicCollectionPageMetadata } from "@/features/collections";
+
+export async function generateMetadata({ params }: PageProps<"/authors/[id]/collections/[collectionId]">) {
+  const { id, collectionId } = await params;
+  return getPublicCollectionPageMetadata(id, collectionId);
+}
 
 export default function CollectionRoutePage({ params }: PageProps<"/authors/[id]/collections/[collectionId]">) {
   return (

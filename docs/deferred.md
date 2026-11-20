@@ -199,3 +199,17 @@ Archived at `openspec/changes/archive/2026-11-20-admin-violations-feedback/`.
 - **Verified instead:** unit tests of the email module and the copy constants, and the Playwright replay with an empty key, where every send fails as `config` and no scenario mails a seed address.
 - **Decision:** user, 2026-11-20: defer to the final testing of this group.
 - **Status:** open. To close it: start the dev server normally, add an author whose address the owner reads, send one warning and then block them, have the owner report both emails, then set this entry to `resolved` and tick 6.4 in `tasks.md`.
+
+## seo-metadata
+
+Archived at `openspec/changes/archive/2026-11-20-seo-metadata/`.
+
+### seo-metadata · 6.5 — messenger preview check not run
+
+- **State:** blocked
+- **Requirement:** NFR-6
+- **What is missing:** a real poem link pasted into Telegram, VK and WhatsApp, and a record of what each preview shows (title, description, picture), so a messenger that shows the generic site card is found.
+- **Why:** no public address exists yet: the app is not deployed, and a local production build cannot be reached by the messengers' servers. The production address is itself an open question of this change (owner, due 2026-12-04).
+- **Verified instead:** the nine crawler user agents (Googlebot, YandexBot, bingbot, `TelegramBot (like TwitterBot)`, vkShare, WhatsApp, facebookexternalhit, Twitterbot, `Slackbot-LinkExpanding`) against the final production build: eight have `og:title`, `og:description`, `og:image` and the canonical link inside `<head>`, and Googlebot streams them after `</head>`, which it reads (task 5.5).
+- **Decision:** none yet; the task's own text says to record the step here as blocked when no public address is available.
+- **Status:** open. To close it: after the first deploy (or with a production build behind a tunnel), paste a poem link into Telegram, VK and WhatsApp, record what each shows, and add a bot that shows the generic card to `htmlLimitedBots` in `next.config.ts` (the full default pattern from task 1.4 plus the addition, with a comment). Then remove the `blocked` marker, tick 6.5 in `tasks.md` and set this entry to `resolved`.

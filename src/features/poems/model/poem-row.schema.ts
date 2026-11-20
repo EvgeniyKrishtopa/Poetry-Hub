@@ -21,3 +21,12 @@ export const poemRowSchema = z.object({
 });
 
 export type PoemRow = z.infer<typeof poemRowSchema>;
+
+/** One `public.poems` row as the sitemap's read selects it: the ids only (seo-metadata design D5). */
+export const poemRefRowSchema = z.object({
+  id: lowercaseUuidSchema,
+  author_id: lowercaseUuidSchema,
+  collection_id: lowercaseUuidSchema.nullable(),
+});
+
+export type PoemRefRow = z.infer<typeof poemRefRowSchema>;

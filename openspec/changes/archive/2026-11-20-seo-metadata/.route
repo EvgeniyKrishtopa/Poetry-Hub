@@ -1,0 +1,2 @@
+full
+# multiple modules: yes (shared/lib/seo, authors, poems, collections, content-page, home, app routes); data schema: no; shared contract: yes (a new shared config constant and per-feature metadata functions exported through their public APIs)

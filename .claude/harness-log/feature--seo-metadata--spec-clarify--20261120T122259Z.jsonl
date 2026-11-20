@@ -1,0 +1,8 @@
+{"ts":"2026-11-20T12:22:59Z","change":"seo-metadata","kind":"finding","gate":"spec-clarify","finding":"login and signup head: card or no card (FR-7 vs FR-4)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-20T12:22:59Z","change":"seo-metadata","kind":"finding","gate":"spec-clarify","finding":"about/privacy entry missing: 404 or fallback","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-20T12:22:59Z","change":"seo-metadata","kind":"finding","gate":"spec-clarify","finding":"SITE_URL with a path or trailing slash","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-20T12:22:59Z","change":"seo-metadata","kind":"finding","gate":"spec-clarify","finding":"description of a text with no space to cut at","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-20T12:22:59Z","change":"seo-metadata","kind":"finding","gate":"spec-clarify","finding":"invalid SITE_URL log: per call or per process","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-20T12:22:59Z","change":"seo-metadata","kind":"finding","gate":"spec-clarify","finding":"fixed description sentence: one shared or one per page","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-20T12:22:59Z","change":"seo-metadata","kind":"finding","gate":"spec-clarify","finding":"which pages count as auth utility pages","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-20T12:22:59Z","change":"seo-metadata","kind":"finding","gate":"spec-clarify","finding":"collection without description: name collection only or collection and author","outcome":"fixed","ruleNumber":""}

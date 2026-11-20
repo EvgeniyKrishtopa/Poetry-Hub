@@ -1,4 +1,6 @@
-import { SignInPanel } from "@/features/auth";
+import { SignInPanel, getLoginPageMetadata } from "@/features/auth";
+
+export const metadata = getLoginPageMetadata();
 
 export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (

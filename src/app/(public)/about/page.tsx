@@ -1,4 +1,8 @@
-import { CONTENT_PAGE_KEYS, ContentPage } from "@/features/content-page";
+import { CONTENT_PAGE_KEYS, ContentPage, getContentPageMetadata } from "@/features/content-page";
+
+export function generateMetadata() {
+  return getContentPageMetadata(CONTENT_PAGE_KEYS.about);
+}
 
 export default function AboutRoutePage() {
   return (

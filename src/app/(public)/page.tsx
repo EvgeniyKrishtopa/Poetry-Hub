@@ -1,7 +1,9 @@
 import { cacheLife, cacheTag } from "next/cache";
 
-import { HomeGreeting, getHomeGreeting, resolveGreeting } from "@/features/home";
+import { HomeGreeting, getHomeGreeting, getHomePageMetadata, resolveGreeting } from "@/features/home";
 import { CONTENTFUL_CACHE_TAG } from "@/shared/lib/contentful";
+
+export const metadata = getHomePageMetadata();
 
 export default async function HomePage() {
   "use cache";

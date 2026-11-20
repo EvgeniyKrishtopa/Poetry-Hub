@@ -1,7 +1,12 @@
 import { AddToViolationsControl, AdminActionNotice } from "@/features/admin";
-import { AuthorPage } from "@/features/authors";
+import { AuthorPage, getAuthorPageMetadata } from "@/features/authors";
 import { PublicCollectionsSection } from "@/features/collections";
 import { AuthorPoemsEntry } from "@/features/poems";
+
+export async function generateMetadata({ params }: PageProps<"/authors/[id]">) {
+  const { id } = await params;
+  return getAuthorPageMetadata(id);
+}
 
 export default function AuthorRoutePage({ params }: PageProps<"/authors/[id]">) {
   const id = params.then(({ id }) => id);

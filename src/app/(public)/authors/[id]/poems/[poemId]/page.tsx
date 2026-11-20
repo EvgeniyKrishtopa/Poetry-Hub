@@ -1,6 +1,11 @@
 import { AddToViolationsControl, AdminDeleteControl } from "@/features/admin";
 import { authorPagePath } from "@/features/authors";
-import { PoemPage } from "@/features/poems";
+import { PoemPage, getPoemPageMetadata } from "@/features/poems";
+
+export async function generateMetadata({ params }: PageProps<"/authors/[id]/poems/[poemId]">) {
+  const { id, poemId } = await params;
+  return getPoemPageMetadata(id, poemId);
+}
 
 export default function PoemRoutePage({ params }: PageProps<"/authors/[id]/poems/[poemId]">) {
   return (

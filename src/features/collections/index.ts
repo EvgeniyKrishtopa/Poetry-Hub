@@ -4,5 +4,6 @@
 export { PublicCollectionPage } from "./components/PublicCollectionPage/PublicCollectionPage";
 export { PublicCollectionsSection } from "./components/PublicCollectionsSection/PublicCollectionsSection";
 export { getPublicCollection } from "./dal/public-collections";
+export { getPublicCollectionPageMetadata } from "./metadata/collection-page-metadata";
 export { PUBLIC_COLLECTIONS_SEGMENT, publicCollectionPath } from "./model/public-collection-paths";
 export type { PublicCollectionResult } from "./model/public-collections.types";

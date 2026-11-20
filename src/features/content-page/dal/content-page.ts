@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cacheLife, cacheTag } from "next/cache";
+import { cache } from "react";
 
 import { CONTENTFUL_CACHE_TAG, ContentfulError, contentfulQuery } from "@/shared/lib/contentful";
 
@@ -55,11 +56,11 @@ async function readContentPage(key: ContentPageKey): Promise<ContentPageResult> 
 }
 
 /**
- * Reads one content page's entry in its own cache scope, tagged for the publish webhook. The key is an
+ * One content page's entry in its own cache scope, tagged for the publish webhook. The key is an
  * argument, so it is part of the cache key: each page has its own entry. A success lives for minutes;
  * a failure for seconds, so it is never frozen into the prerendered shell (design D2).
  */
-export async function getContentPage(key: ContentPageKey): Promise<ContentPageResult> {
+async function cachedContentPage(key: ContentPageKey): Promise<ContentPageResult> {
   "use cache";
   cacheTag(CONTENTFUL_CACHE_TAG);
 
@@ -69,3 +70,9 @@ export async function getContentPage(key: ContentPageKey): Promise<ContentPageRe
   else cacheLife("seconds");
   return result;
 }
+
+/**
+ * The content page's entry. Memoized per request, so the page and its metadata make one read on a cold
+ * cache (ADR 0008; seo-metadata D3).
+ */
+export const getContentPage = cache(cachedContentPage);

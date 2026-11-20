@@ -1,13 +1,16 @@
 import { render, screen } from "@testing-library/react";
 import { Children, Suspense, isValidElement, type ReactElement, type ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdminNavLink } from "@/features/admin";
 import { HeaderAuthLinks } from "@/features/auth";
 import { AuthorsNavLink } from "@/features/authors";
 import { SiteFooter } from "@/features/site-footer";
+import { siteConfig } from "@/shared/config/site";
+import { TITLE_TEMPLATE } from "@/shared/lib/seo";
+import { SITE_URL_ENV } from "@/shared/lib/seo/seo.constants";
 
-import RootLayout from "../layout";
+import RootLayout, { generateMetadata } from "../layout";
 
 vi.mock("next/font/google", () => ({
   Geist: () => ({ variable: "font-sans" }),
@@ -95,5 +98,38 @@ describe("RootLayout header", () => {
     const link = screen.getByRole("link", { name: "Наши авторы" });
     expect(link).toHaveAttribute("href", "/authors");
     expect(link).toHaveAttribute("lang", "ru");
+  });
+});
+
+describe("RootLayout metadata", () => {
+  const SITE_URL = "https://example.org";
+
+  beforeEach(() => {
+    vi.stubEnv(SITE_URL_ENV, SITE_URL);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  // implements FR-1, FR-11 of seo-metadata
+  it("sets the metadata base from the site address", () => {
+    const metadata = generateMetadata();
+
+    expect(metadata.metadataBase).toEqual(new URL(SITE_URL));
+  });
+
+  // implements FR-1 of seo-metadata
+  it("sets the site name as the default title and the template that appends it", () => {
+    const metadata = generateMetadata();
+
+    expect(metadata.title).toEqual({ default: siteConfig.name, template: TITLE_TEMPLATE });
+  });
+
+  // implements FR-6 of seo-metadata: a field on the root reaches every page, the signed-in ones included
+  it("sets no description, Open Graph, Twitter or robots field for the pages to inherit", () => {
+    const metadata = generateMetadata();
+
+    expect(Object.keys(metadata).toSorted()).toEqual(["metadataBase", "title"]);
   });
 });
