@@ -143,7 +143,8 @@ describe("SignOutButton", () => {
       guard.answer(LEAVE_ANSWER.leave);
 
       expect(await screen.findByRole("alert")).toHaveTextContent(FAILURE_TEXT);
-      expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled();
+      // The alert renders before the transition settles, so the button re-enables a moment later.
+      await vi.waitFor(() => expect(screen.getByRole("button", { name: "Выйти" })).toBeEnabled());
     });
   });
 
