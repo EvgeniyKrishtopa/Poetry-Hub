@@ -6,6 +6,7 @@ export { AuthorDirectory } from "./components/AuthorDirectory/AuthorDirectory";
 export { AuthorEditorPanel } from "./components/AuthorEditorPanel/AuthorEditorPanel";
 export { AuthorPage } from "./components/AuthorPage/AuthorPage";
 export { AuthorsNavLink } from "./components/AuthorsNavLink/AuthorsNavLink";
+export { getAuthorsPageMetadata } from "./metadata/authors-page-metadata";
 export { getOwnPublicAuthor } from "./dal/own-public-author";
 export { getPublicAuthorName } from "./dal/public-author-name";
 export { AUTHOR_EDITOR_PATH, AUTHORS_PATH } from "./model/author.constants";

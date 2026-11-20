@@ -18,10 +18,7 @@
     "src/features/poems/dal/public-poem-refs.ts",
     "src/features/poems/model/public-poem-refs.types.ts",
     "src/features/authors/metadata/**",
-    "src/features/collections/metadata/**",
-    "src/features/content-page/metadata/**",
-    "src/features/home/metadata/**",
-    "src/features/auth/metadata/**"
+    "src/features/collections/metadata/**"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.

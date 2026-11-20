@@ -8,6 +8,7 @@ import { AuthorsNavLink } from "@/features/authors";
 import { SiteFooter } from "@/features/site-footer";
 import { CONTENT_LANG } from "@/shared/config/constants";
 import { siteConfig } from "@/shared/config/site";
+import { TITLE_TEMPLATE, getSiteUrl } from "@/shared/lib/seo";
 import { HydrationMarker } from "@/shared/ui";
 
 import { Providers } from "./providers";
@@ -23,10 +24,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: siteConfig.name,
-  description: siteConfig.description,
-};
+// Only the base and the title template live here: a field set on the root is inherited by every page, the
+// signed-in ones included, so each public page sets its own description, canonical and card (seo-metadata D2).
+// A function, not an object, so the site address is read when the metadata is built, not at import (D10).
+export function generateMetadata(): Metadata {
+  const siteUrl = getSiteUrl();
+  return {
+    metadataBase: new URL(siteUrl),
+    title: { default: siteConfig.name, template: TITLE_TEMPLATE },
+  };
+}
 
 export default function RootLayout({ children, breadcrumbs }: LayoutProps<"/">) {
   return (

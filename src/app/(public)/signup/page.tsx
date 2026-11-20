@@ -1,4 +1,6 @@
-import { SignUpForm } from "@/features/auth";
+import { SignUpForm, getSignupPageMetadata } from "@/features/auth";
+
+export const metadata = getSignupPageMetadata();
 
 export default function SignUpPage() {
   return (
