@@ -34,9 +34,9 @@ One row per Then of a scenario in `specs/page-metadata/spec.md` and `specs/crawl
 | NFR-4: Markdown is stripped | `shared/lib/seo/tests/plain-text-excerpt.test.ts`: `**Осень** пришла.\n\n> тихо` gives `Осень пришла. тихо`; table cases for the poem and about formats | unit |
 | NFR-4: A long text is shortened at a word | `shared/lib/seo/tests/plain-text-excerpt.test.ts`: 400 characters of words give at most 160 characters, ending in `…`, never mid-word | unit |
 | NFR-4: A text with no space is cut hard | `shared/lib/seo/tests/plain-text-excerpt.test.ts`: 400 characters with no space give 159 characters plus `…` | unit |
-| NFR-1: One read per request | `poems/tests/metadata/poem-page-metadata.test.ts`: metadata and a simulated page read call the memoized `getAuthorPoem` once (React `cache` mock memo); recorded under task 1.1 for the real pages | unit, end-to-end |
+| NFR-1: One read per request | `poems/tests/metadata/poem-page-metadata.test.ts`: metadata calls the page's own `getPublicAuthorName` and `getAuthorPoem` once each with the page's arguments (the memoization itself is tested in the DAL); the author and collection twins do the same; recorded under task 1.1 for the real pages | unit, end-to-end |
 | NFR-2: Only public fields in metadata | `poems/tests/metadata/poem-page-metadata.test.ts` and the author and collection twins: the serialized metadata contains no field outside the mapped public values | unit |
-| NFR-3: Metadata modules are server-only and not in a client bundle | each feature's `tests/boundaries.test.ts`: `metadata/` starts with `import "server-only"` and is exported only through the index; recorded under task 4.5: `npm run build` shows no client import | unit, end-to-end |
+| NFR-3: Metadata modules are server-only and not in a client bundle | `app/tests/metadata-server-only.test.ts` walks every `features/*/metadata/` folder: it starts with `import "server-only"`, has no `"use client"`, and is exported and imported only through the feature's index; recorded under task 4.5: `npm run build` shows no client import | unit, end-to-end |
 | FR-11: Explicit `SITE_URL` wins | `shared/lib/seo/tests/site-url.test.ts` | unit |
 | FR-11: Vercel fallback | `shared/lib/seo/tests/site-url.test.ts` | unit |
 | FR-11: Local fallback | `shared/lib/seo/tests/site-url.test.ts` | unit |

@@ -15,6 +15,20 @@ export const POEMS_UNAVAILABLE_TEXT = "Произведения сейчас н�
  */
 export const POEMS_LOADING_LABEL = "Загрузка…";
 
+/**
+ * The poem page's meta description when its text leaves nothing after cleaning (seo-metadata FR-2): one sentence
+ * that names the poem and its author. The author's name stays in its dictionary form, since Russian declension
+ * can't be derived from it.
+ */
+export function getPoemFallbackDescription(title: string, authorName: string): string {
+  return `Стихотворение «${title}», автор — ${authorName}. Читайте на Поэтическом Хабе.`;
+}
+
+/** The poem page's title: the poem, then its author (seo-metadata FR-1). */
+export function getPoemPageTitle(title: string, authorName: string): string {
+  return `${title} — ${authorName}`;
+}
+
 /** The poem page illustration's alt text. */
 export function getIllustrationAlt(title: string): string {
   return `Иллюстрация: ${title}`;
