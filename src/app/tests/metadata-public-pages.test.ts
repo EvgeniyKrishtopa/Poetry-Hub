@@ -9,6 +9,9 @@ import { siteConfig } from "@/shared/config/site";
 import { contentfulQuery } from "@/shared/lib/contentful";
 import { DEFAULT_SHARE_IMAGE_PATH, DESCRIPTION_MAX_LENGTH, SITE_URL_ENV } from "@/shared/lib/seo/seo.constants";
 
+import { generateMetadata as aboutGenerateMetadata } from "../(public)/about/page";
+import { generateMetadata as privacyGenerateMetadata } from "../(public)/privacy/page";
+
 vi.mock("@/shared/lib/contentful", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/lib/contentful")>()),
   contentfulQuery: vi.fn(),
@@ -98,6 +101,24 @@ describe.each([
     expect(metadata.description).toBeUndefined();
     expect(metadata.openGraph).toBeUndefined();
     expect(metadata.twitter).toBeUndefined();
+  });
+});
+
+describe.each([
+  ["/about", aboutGenerateMetadata, CONTENT_PAGE_KEYS.about],
+  ["/privacy", privacyGenerateMetadata, CONTENT_PAGE_KEYS.privacyPolicy],
+])("the route file of %s", (path, generateMetadata, key) => {
+  // implements FR-1, FR-3 of seo-metadata: each route passes its own entry key, so a swap shows in the canonical
+  it("builds the metadata of its own entry and path", async () => {
+    vi.mocked(contentfulQuery).mockResolvedValue({
+      greetingCollection: { items: [{ key, title: `Заголовок ${key}`, message: "Текст." }] },
+    });
+
+    const metadata = await generateMetadata();
+
+    expect(vi.mocked(contentfulQuery)).toHaveBeenLastCalledWith(expect.any(String), { key });
+    expect(metadata.title).toBe(`Заголовок ${key}`);
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}${path}`);
   });
 });
 
