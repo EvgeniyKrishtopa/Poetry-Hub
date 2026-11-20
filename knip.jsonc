@@ -9,10 +9,7 @@
     "src/features/collections/**",
     // Temporary, drag-and-drop-ordering scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new feature's files. The last group that wires the board into the route removes this entry.
-    "src/features/work-ordering/**",
-    // Temporary, seo-metadata scaffold: the new stubs have no importer until their tasks wire or test them.
-    // Only the new files, so knip still sees the rest of each feature. Task 6.4 removes these entries.
-    "src/shared/lib/seo/**"
+    "src/features/work-ordering/**"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.

@@ -1,7 +1,7 @@
 import "server-only";
 
 /** The Open Graph type of a page: `article` for a poem, `profile` for an author, `website` elsewhere (FR-4). */
-export type PageType = "website" | "article" | "profile";
+type PageType = "website" | "article" | "profile";
 
 /** What a public page tells the builder; the rest of its metadata is derived from it (FR-1 to FR-5). */
 export interface PageMetadataInput {
