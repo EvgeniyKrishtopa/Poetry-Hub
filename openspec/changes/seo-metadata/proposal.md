@@ -19,7 +19,7 @@ Today every page of the site has the same title and description (the root layout
 
 - A signed-out request to `/account/**` is redirected by the proxy to `/login` before anything renders, and `/admin/**` shows the soft 404 to a non-admin. A crawler or a messenger's preview bot therefore never sees the page, only `/login`. Search snippets and link cards for these pages cannot exist, so writing them is wasted work.
 - A signed-in reader who opens the page does see its `<head>`. A `noindex, nofollow` there is cheap insurance in case a URL ever leaks (a shared screenshot, a copied link), and costs one static `robots` field on the `(authorized)` group layout.
-- A plain tab title helps the reader who keeps several tabs open; it is a usability gain, not SEO, so it stays minimal (one static title for the `(authorized)` group, plus one each for the two admin pages; no per-page copy).
+- A plain tab title helps the reader who keeps several tabs open; it is a usability gain, not SEO, so it stays minimal (one static title for the `(authorized)` group, which the two admin pages inherit so that a non-admin's tab does not reveal the page; no per-page copy).
 - `robots.txt` disallows `/account` (and `/auth`, `/api`), to keep crawlers from spending requests on redirects. It leaves `/admin` out on purpose: the file is public, a non-admin already gets the not-found screen there (which Next marks `noindex`), and listing the path would only announce it.
 - The same reasoning gives `noindex` (with `follow`) to `/login` and `/signup`: thin pages, and `/login?error=…` makes many URLs of one page.
 

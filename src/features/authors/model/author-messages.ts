@@ -11,6 +11,9 @@ export const PAGE_TITLES = {
   authorEditor: "Профиль автора",
 } as const;
 
+/** The directory's meta description (seo-metadata FR-2): one sentence, different from every other page's. */
+export const AUTHORS_PAGE_DESCRIPTION = "Авторы Поэтического Хаба: знакомьтесь с поэтами и читайте их стихи.";
+
 /** The account page's author-section heading; the same words as the editor's title, but its own key. */
 export const ACCOUNT_AUTHOR_SECTION_TITLE = "Профиль автора";
 

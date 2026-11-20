@@ -13,6 +13,10 @@ export const ACCOUNT_LINK_LABEL = "Мастерская поэта";
 
 export const CHECK_EMAIL_TITLE = "Проверьте почту";
 
+/** The document titles of `/login` and `/signup`: the pages' own headings (seo-metadata FR-7). */
+export const SIGN_IN_PAGE_TITLE = "Вход";
+export const SIGN_UP_PAGE_TITLE = "Регистрация";
+
 /** The `/login` notice after a write found the session expired (delete-poem FR-6): the profile editor's text. */
 export const SESSION_EXPIRED_NOTICE = "Сессия истекла. Войдите снова.";
 

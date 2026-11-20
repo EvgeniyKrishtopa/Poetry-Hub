@@ -1,4 +1,6 @@
-import { AuthorDirectory } from "@/features/authors";
+import { AuthorDirectory, getAuthorsPageMetadata } from "@/features/authors";
+
+export const metadata = getAuthorsPageMetadata();
 
 export default function AuthorsPage() {
   return (
