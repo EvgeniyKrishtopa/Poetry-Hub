@@ -10,6 +10,15 @@ export const DESCRIPTION_MAX_LENGTH = 160;
 /** `og:locale` of every public page: the product's copy is Russian. */
 export const OG_LOCALE = "ru_RU";
 
+/** The server-side setting that holds the site's public address (FR-11). */
+export const SITE_URL_ENV = "SITE_URL";
+
+/** Vercel's system variable with the production host, without a scheme: the fallback when `SITE_URL` is not set. */
+export const VERCEL_PRODUCTION_HOST_ENV = "VERCEL_PROJECT_PRODUCTION_URL";
+
+/** The origin used when neither variable holds a usable address, so local development and CI need no setup. */
+export const LOCAL_SITE_URL = "http://localhost:3000";
+
 /** The sign-up email link's route handler; named once so `robots.txt` and the sitemap rules agree on it. */
 export const AUTH_PATH = "/auth";
 
