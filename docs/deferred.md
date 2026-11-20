@@ -188,6 +188,8 @@ Archived at `openspec/changes/archive/2026-11-17-admin-moderation/`.
 
 ## admin-violations-feedback
 
+Archived at `openspec/changes/archive/2026-11-20-admin-violations-feedback/`.
+
 ### admin-violations-feedback · 6.4 — real-email check not run
 
 - **State:** skipped
