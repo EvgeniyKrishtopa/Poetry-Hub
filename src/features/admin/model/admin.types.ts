@@ -1,6 +1,7 @@
 import type { SupabaseFailure } from "@/shared/lib/supabase/classify-error";
 
 import type { DELETE_DB_STATUS, MODERATION_DB_STATUS, RESTRICTION_KIND, USER_STATE } from "./admin.constants";
+import type { ActionNoticeResult, ViolationGround } from "./violation.types";
 
 export type UserState = (typeof USER_STATE)[keyof typeof USER_STATE];
 type RestrictionKind = (typeof RESTRICTION_KIND)[keyof typeof RESTRICTION_KIND];
@@ -38,29 +39,56 @@ export type UserListResult =
     }
   | { readonly ok: false; readonly failure: AdminFailure };
 
-/** A moderation function's answer, or why it could not be asked. */
+/**
+ * What the database returns so the standard email can be sent: the address the account holds (null when it has
+ * none) and the ground of the open case at that moment (null when there is none) (design D3).
+ */
+interface NoticeSource {
+  readonly noticeEmail: string | null;
+  readonly ground: ViolationGround | null;
+}
+
+/** A moderation function's answer, or why it could not be asked; block and ban carry the notice's source. */
 export type ModerationWriteResult =
-  { readonly ok: true; readonly status: ModerationDbStatus } | { readonly ok: false; readonly failure: AdminFailure };
+  | {
+      readonly ok: true;
+      readonly status: Exclude<ModerationDbStatus, typeof MODERATION_DB_STATUS.blocked | typeof MODERATION_DB_STATUS.banned>;
+    }
+  | ({
+      readonly ok: true;
+      readonly status: typeof MODERATION_DB_STATUS.blocked | typeof MODERATION_DB_STATUS.banned;
+    } & NoticeSource)
+  | { readonly ok: false; readonly failure: AdminFailure };
+
+/** A write that did not restrict anyone: a successful block or ban is turned into a result by the email step. */
+export type NonRestrictingWriteResult = Exclude<
+  ModerationWriteResult,
+  { readonly status: typeof MODERATION_DB_STATUS.blocked | typeof MODERATION_DB_STATUS.banned }
+>;
 
 /** A poem delete's answer; only `deleted` carries what the app needs afterwards (design D8). */
 export type PoemDeleteWriteResult =
-  | {
+  | ({
       readonly ok: true;
       readonly status: typeof DELETE_DB_STATUS.deleted;
       readonly authorId: string;
+      /** The author's auth user id, which the notice log takes; `authorId` is a profile id. */
+      readonly userId: string;
       readonly illustrationPath: string | null;
-    }
+      readonly title: string;
+    } & NoticeSource)
   | { readonly ok: true; readonly status: typeof DELETE_DB_STATUS.notFound }
   | { readonly ok: false; readonly failure: AdminFailure };
 
 /** A collection delete's answer. */
 export type CollectionDeleteWriteResult =
-  | {
+  | ({
       readonly ok: true;
       readonly status: typeof DELETE_DB_STATUS.deleted;
       readonly authorId: string;
+      readonly userId: string;
       readonly title: string;
-    }
+    } & NoticeSource)
   | { readonly ok: true; readonly status: typeof DELETE_DB_STATUS.notFound }
   | { readonly ok: false; readonly failure: AdminFailure };
 
@@ -79,12 +107,13 @@ export type ModerationFailureReason =
   | "unavailable"
   | "invalid";
 
-/** What a moderation Server Action returns; `status` is the success the row shows. */
+/**
+ * What a moderation Server Action returns; `status` is the success the row shows. Block and ban also say what the
+ * email step did: a failed email is still a successful action (FR-14).
+ */
 export type ModerationActionResult =
-  | {
-      readonly ok: true;
-      readonly status: "blocked" | "unblocked" | "banned" | "revoked" | "no-sessions";
-    }
+  | { readonly ok: true; readonly status: "unblocked" | "revoked" | "no-sessions" }
+  | { readonly ok: true; readonly status: "blocked" | "banned"; readonly notice: ActionNoticeResult }
   | { readonly ok: false; readonly reason: ModerationFailureReason };
 
 /** Why a delete did not happen (FR-8, FR-9, FR-12); `not-found` is the "already gone" answer. */
@@ -93,5 +122,7 @@ export type DeleteFailureReason = "not-found" | "forbidden" | "unauthenticated" 
 /** What the delete control removes: a poem or a collection (artboards 44 and 45). */
 export type AdminDeleteKind = "poem" | "collection";
 
-/** What a delete Server Action returns; the control sends the admin to the redirect it was given on success. */
-export type DeleteActionResult = { readonly ok: true } | { readonly ok: false; readonly reason: DeleteFailureReason };
+/** What a delete Server Action returns; `notice` is what the email step did, never decisive for the delete (FR-14). */
+export type DeleteActionResult =
+  | { readonly ok: true; readonly notice: ActionNoticeResult }
+  | { readonly ok: false; readonly reason: DeleteFailureReason };

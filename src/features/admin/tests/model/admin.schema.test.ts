@@ -30,11 +30,13 @@ describe("admin input schemas", () => {
   });
 
   // implements FR-3 of admin-moderation
-  it("listQuerySchema takes both parameters as optional text and judges neither", () => {
+  it("listQuerySchema takes the cursor as optional text and judges it not", () => {
     expect(listQuerySchema.parse({})).toEqual({});
-    expect(listQuerySchema.parse({ after: "anything", email: " Ada@Example.com " })).toEqual({
-      after: "anything",
-      email: " Ada@Example.com ",
-    });
+    expect(listQuerySchema.parse({ after: "anything" })).toEqual({ after: "anything" });
+  });
+
+  // implements FR-3 of admin-violations-feedback
+  it("listQuerySchema drops the removed email filter", () => {
+    expect(listQuerySchema.parse({ after: "anything", email: " Ada@Example.com " })).toEqual({ after: "anything" });
   });
 });

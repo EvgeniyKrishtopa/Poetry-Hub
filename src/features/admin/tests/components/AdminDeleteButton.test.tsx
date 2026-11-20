@@ -9,6 +9,7 @@ import { deletePoemAction } from "../../actions/delete-poem.actions";
 import { AdminDeleteButton } from "../../components/AdminDeleteButton/AdminDeleteButton";
 import { ADMIN_DELETE_COPY, ADMIN_DELETE_FAILURE_MESSAGES } from "../../model/admin-messages";
 import type { DeleteActionResult } from "../../model/admin.types";
+import { useViolationNotice } from "../../model/violation-notice-ui.store";
 
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
@@ -16,7 +17,11 @@ vi.mock("../../actions/delete-poem.actions", () => ({ deletePoemAction: vi.fn() 
 vi.mock("../../actions/delete-collection.actions", () => ({ deleteCollectionAction: vi.fn() }));
 
 stubModalDialog();
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+  replace.mockReset();
+  useViolationNotice.getState().clearFailedNotice();
+});
 
 const AUTHOR_PATH = "/authors/11111111-2222-4333-8444-555555555555";
 const POEM_ID = "30000000-0000-4000-8000-000000000051";
@@ -63,7 +68,7 @@ describe("AdminDeleteButton", () => {
 
   // implements FR-10 of admin-moderation
   it("deletes the poem on confirm and replaces the page with the author's page", async () => {
-    vi.mocked(deletePoemAction).mockResolvedValue(respond({ ok: true }));
+    vi.mocked(deletePoemAction).mockResolvedValue(respond({ ok: true, notice: { outcome: "sent" } }));
     renderPoemButton();
 
     await openAndConfirm();
@@ -73,9 +78,38 @@ describe("AdminDeleteButton", () => {
     expect(screen.getByRole("dialog", { hidden: true })).not.toHaveAttribute("open");
   });
 
+  // implements FR-14 of admin-violations-feedback
+  it("stores a failed email notice before the redirect, so the author page can show it once", async () => {
+    let stored: unknown = "not read";
+    replace.mockImplementation(() => {
+      stored = useViolationNotice.getState().notice;
+    });
+    vi.mocked(deletePoemAction).mockResolvedValue(
+      respond({ ok: true, notice: { outcome: "failed", cause: "no-address" } }),
+    );
+    renderPoemButton();
+
+    await openAndConfirm();
+
+    expect(replace).toHaveBeenCalledWith(AUTHOR_PATH);
+    expect(stored).toEqual({ deleted: "poem", cause: "no-address" });
+  });
+
+  // implements FR-14 of admin-violations-feedback
+  it("stores nothing for a sent or skipped email", async () => {
+    vi.mocked(deleteCollectionAction).mockResolvedValue(respond({ ok: true, notice: { outcome: "sent" } }));
+    render(<AdminDeleteButton kind="collection" id={COLLECTION_ID} title="Осенний цикл" redirectHref={AUTHOR_PATH} />);
+
+    await userEvent.click(screen.getByRole("button", { name: ADMIN_DELETE_COPY.collection.button }));
+    await userEvent.click(screen.getByRole("button", { name: ADMIN_DELETE_COPY.confirm }));
+
+    expect(replace).toHaveBeenCalledWith(AUTHOR_PATH);
+    expect(useViolationNotice.getState().notice).toBeNull();
+  });
+
   // implements FR-10 of admin-moderation
   it("deletes a collection through its own action, with its own wording", async () => {
-    vi.mocked(deleteCollectionAction).mockResolvedValue(respond({ ok: true }));
+    vi.mocked(deleteCollectionAction).mockResolvedValue(respond({ ok: true, notice: { outcome: "sent" } }));
     render(<AdminDeleteButton kind="collection" id={COLLECTION_ID} title="Осенний цикл" redirectHref={AUTHOR_PATH} />);
 
     await userEvent.click(screen.getByRole("button", { name: ADMIN_DELETE_COPY.collection.button }));

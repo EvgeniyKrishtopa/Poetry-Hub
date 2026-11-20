@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getSessionState } from "@/features/auth";
 
 import { deletePoemAction } from "../../actions/delete-poem.actions";
+import { sendActionNotice } from "../../actions/send-action-notice";
 import { deletePoemAsAdmin } from "../../dal/delete-rpc";
 import { removeIllustration } from "../../dal/illustration-cleanup";
 import { MODERATION_FAILURE_MESSAGES } from "../../model/admin-messages";
@@ -15,22 +16,37 @@ import {
   ILLUSTRATION_PATH,
   POEM_ID,
   POEM_TITLE,
+  TARGET_EMAIL,
+  TARGET_USER_ID,
 } from "../support/rpc-mock";
 
 vi.mock("next/cache", () => ({ updateTag: vi.fn() }));
 vi.mock("@/features/auth", () => ({ getSessionState: vi.fn() }));
 vi.mock("../../dal/delete-rpc", () => ({ deletePoemAsAdmin: vi.fn() }));
 vi.mock("../../dal/illustration-cleanup", () => ({ removeIllustration: vi.fn() }));
+vi.mock("../../actions/send-action-notice", () => ({ sendActionNotice: vi.fn() }));
 
 const OTHER_AUTHOR_ID = "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f";
 
-const DELETED = { ok: true, status: "deleted", authorId: AUTHOR_ID, illustrationPath: ILLUSTRATION_PATH } as const;
+const SENT = { outcome: "sent" } as const;
 
-/** Nothing past the validation or the session check ran. */
+const DELETED = {
+  ok: true,
+  status: "deleted",
+  authorId: AUTHOR_ID,
+  userId: TARGET_USER_ID,
+  illustrationPath: ILLUSTRATION_PATH,
+  title: POEM_TITLE,
+  noticeEmail: TARGET_EMAIL,
+  ground: "harmful-content",
+} as const;
+
+/** Nothing past the validation or the session check ran, and no email went out. */
 function expectNothingDone(): void {
   expect(deletePoemAsAdmin).not.toHaveBeenCalled();
   expect(updateTag).not.toHaveBeenCalled();
   expect(removeIllustration).not.toHaveBeenCalled();
+  expect(sendActionNotice).not.toHaveBeenCalled();
 }
 
 describe("deletePoemAction", () => {
@@ -38,6 +54,7 @@ describe("deletePoemAction", () => {
     vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
     vi.mocked(deletePoemAsAdmin).mockResolvedValue(DELETED);
     vi.mocked(removeIllustration).mockResolvedValue(undefined);
+    vi.mocked(sendActionNotice).mockResolvedValue(SENT);
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
@@ -50,7 +67,7 @@ describe("deletePoemAction", () => {
   it("deletes the poem, expires exactly its author's tag, then removes the file", async () => {
     const result = await deletePoemAction({ id: POEM_ID });
 
-    expect(result.data).toEqual({ ok: true });
+    expect(result.data).toEqual({ ok: true, notice: SENT });
     expect(deletePoemAsAdmin).toHaveBeenCalledExactlyOnceWith({ id: POEM_ID });
     expect(updateTag).toHaveBeenCalledExactlyOnceWith(`author-works:${AUTHOR_ID}`);
     expect(removeIllustration).toHaveBeenCalledExactlyOnceWith(ILLUSTRATION_PATH);
@@ -74,7 +91,7 @@ describe("deletePoemAction", () => {
 
     const result = await deletePoemAction({ id: POEM_ID });
 
-    expect(result.data).toEqual({ ok: true });
+    expect(result.data).toEqual({ ok: true, notice: SENT });
     expect(updateTag).toHaveBeenCalledOnce();
     expect(removeIllustration).not.toHaveBeenCalled();
   });
@@ -85,7 +102,7 @@ describe("deletePoemAction", () => {
     // the action as an ordinary return.
     const result = await deletePoemAction({ id: POEM_ID });
 
-    expect(result.data).toEqual({ ok: true });
+    expect(result.data).toEqual({ ok: true, notice: SENT });
     expect(updateTag).toHaveBeenCalledOnce();
     expect(removeIllustration).toHaveBeenCalledExactlyOnceWith(ILLUSTRATION_PATH);
   });
@@ -98,14 +115,14 @@ describe("deletePoemAction", () => {
 
     const result = await deletePoemAction({ id: POEM_ID });
 
-    expect(result.data).toEqual({ ok: true });
+    expect(result.data).toEqual({ ok: true, notice: SENT });
     expect(removeIllustration).toHaveBeenCalledExactlyOnceWith(ILLUSTRATION_PATH);
     expect(console.error).toHaveBeenCalledExactlyOnceWith("[admin] expire author works tag failed: RangeError");
     expectNothingSecretLogged();
   });
 
   // implements FR-8 of admin-moderation
-  it("answers not-found, expiring and removing nothing, for a poem that is gone", async () => {
+  it("answers not-found, expiring, removing and emailing nothing, for a poem that is gone", async () => {
     vi.mocked(deletePoemAsAdmin).mockResolvedValue({ ok: true, status: "not-found" });
 
     const result = await deletePoemAction({ id: POEM_ID });
@@ -113,6 +130,40 @@ describe("deletePoemAction", () => {
     expect(result.data).toEqual({ ok: false, reason: "not-found" });
     expect(updateTag).not.toHaveBeenCalled();
     expect(removeIllustration).not.toHaveBeenCalled();
+    expect(sendActionNotice).not.toHaveBeenCalled();
+  });
+
+  // implements FR-9 of moderation-notifications
+  it("sends the author one email, last, with the database's title, the author's user id and the ground", async () => {
+    await deletePoemAction({ id: POEM_ID, title: "from the browser" } as { id: string });
+
+    expect(sendActionNotice).toHaveBeenCalledExactlyOnceWith({
+      kind: "delete-poem",
+      userId: TARGET_USER_ID,
+      email: TARGET_EMAIL,
+      ground: "harmful-content",
+      title: POEM_TITLE,
+    });
+    expect(vi.mocked(removeIllustration).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(sendActionNotice).mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  // implements FR-9 of moderation-notifications
+  it("sends the notice with the profile id never standing in for the user id", async () => {
+    await deletePoemAction({ id: POEM_ID });
+
+    expect(vi.mocked(sendActionNotice).mock.calls[0]?.[0].userId).not.toBe(AUTHOR_ID);
+  });
+
+  // implements FR-14 of moderation-notifications
+  it("keeps the delete a success, carrying the failed notice, when the email was not sent", async () => {
+    vi.mocked(sendActionNotice).mockResolvedValue({ outcome: "failed", cause: "no-address" });
+
+    const result = await deletePoemAction({ id: POEM_ID });
+
+    expect(result.data).toEqual({ ok: true, notice: { outcome: "failed", cause: "no-address" } });
+    expect(updateTag).toHaveBeenCalledOnce();
   });
 
   // implements FR-12 of admin-moderation
@@ -150,7 +201,7 @@ describe("deletePoemAction", () => {
     ["an ended session", "unauthenticated", "unauthenticated"],
     ["an outage", "unavailable", "unavailable"],
     ["an unknown failure", "unknown", "unavailable"],
-  ] as const)("keeps %s apart, expiring and removing nothing", async (_case, failure, reason) => {
+  ] as const)("keeps %s apart, expiring, removing and emailing nothing", async (_case, failure, reason) => {
     vi.mocked(deletePoemAsAdmin).mockResolvedValue({ ok: false, failure });
 
     const result = await deletePoemAction({ id: POEM_ID });
@@ -158,6 +209,7 @@ describe("deletePoemAction", () => {
     expect(result.data).toEqual({ ok: false, reason });
     expect(updateTag).not.toHaveBeenCalled();
     expect(removeIllustration).not.toHaveBeenCalled();
+    expect(sendActionNotice).not.toHaveBeenCalled();
   });
 
   // implements NFR-6 of admin-moderation

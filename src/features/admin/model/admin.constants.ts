@@ -1,10 +1,9 @@
 /** Rows on one `/admin` page (design D9). */
 export const ADMIN_USERS_PAGE_SIZE = 10;
 
-/** The URL parameters of the user list: the keyset cursor and the exact-email filter (design D9). */
+/** The URL parameter of the user list: the keyset cursor (design D9). */
 export const ADMIN_LIST_PARAM = {
   after: "after",
-  email: "email",
 } as const;
 
 /** The state a user's row shows; admins are not listed, so there is no admin state (design D3, D15, FR-3). */
@@ -37,4 +36,18 @@ export const MODERATION_DB_STATUS = {
 export const DELETE_DB_STATUS = {
   deleted: "deleted",
   notFound: "not-found",
+} as const;
+
+/** The operation names the moderation DAL logs and reports failures under, one per function. */
+export const MODERATION_OPERATION = {
+  block: "block user",
+  unblock: "unblock user",
+  ban: "ban user",
+  revoke: "revoke sessions",
+} as const;
+
+/** The operation names the delete DAL logs and reports failures under. */
+export const DELETE_OPERATION = {
+  poem: "delete poem",
+  collection: "delete collection",
 } as const;

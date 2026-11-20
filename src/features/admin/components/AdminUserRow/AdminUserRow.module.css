@@ -1,0 +1,49 @@
+/* The drag handle of a row: the only element that starts a drag, so a swipe on the rest of the row still scrolls. */
+.grip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin: -0.125rem 0;
+  padding: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: grab;
+  touch-action: manipulation;
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.grip:hover {
+  background: var(--color-surface);
+  color: var(--color-foreground);
+}
+
+.grip:active {
+  transform: scale(0.97);
+}
+
+.grip:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.grip:disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Keeps the rows without a handle (blocked, banned) aligned with the ones that have it. */
+.gripSpacer {
+  flex: none;
+  width: 2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grip {
+    transition: none;
+  }
+}

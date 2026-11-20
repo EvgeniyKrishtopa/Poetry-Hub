@@ -56,6 +56,24 @@ Read before writing or changing a component, a helper, a type, a constant, or a 
 
   Existing examples: `PhotoFileCheck`, `MyProfileResult`, `WriteAccess` in `features/authors/model/author.types.ts`. `null` stays fine for a value that is genuinely absent, where `null` is the negative case: `getCurrentUserId(): Promise<string | null>` returns no user. No lint rule enforces this, so reviews do (PR #82).
 
+## One step per line
+
+- Name each step. A call whose argument is another call or an `await` hides two steps in one line, and neither can be inspected, logged or stepped over when something fails. Write the inner step first, give its value a name, then pass the name:
+
+  ```ts
+  // Hard to read and debug: which step failed, and what did the first one return?
+  return toAddCaseActionResult(await addViolationCase(parsedInput));
+
+  // One step per line: the write, then its translation.
+  const write = await addViolationCase(parsedInput);
+  return toAddCaseActionResult(write);
+  ```
+
+- The same goes for other compressed expressions: a call chain, a spread or a ternary that carries a second step inside it. If a reader has to unpack it from the inside out, split it.
+- This is about naming steps, not extracting helpers: don't add a function only to avoid a two-line body (see `docs/architecture.md` on repeating feature logic).
+- Short, flat pipelines of pure, single-argument methods (`items.filter(isOpen).map(toRow)`) stay fine, since each stage reads left to right and has no `await`.
+- No lint rule enforces this, so reviews do (PR #235).
+
 ## Route files compose, features render
 
 - A route file passes a feature only the request data it needs, e.g. `<SignInPanel error={searchParams.then((params) => params.error)} />`, and renders the feature's component.

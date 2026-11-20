@@ -26,6 +26,11 @@ Read before adding, renaming, or reading an environment variable.
   - Validated lazily on each send: the token must be `<digits>:<letters, digits, _ or ->` and the chat id an integer. Unset or malformed → the app still builds and runs, but every contact form submit shows the failure alert, and the server logs `[contact] send failed` with reason `config` (never the value).
   - Deploy step: the contact form has no app-level rate limit (ADR 0007 point 5). Add a per-IP rate rule at the hosting layer (Vercel Firewall or Cloudflare) that covers Server Action POSTs.
   - Rotation: in @BotFather, `/revoke` the bot's token to get a new one (the old one stops working at once), then update `TELEGRAM_BOT_TOKEN` in `.env.local` and on the hosting platform.
+- Resend (the admin's warning and action emails): `RESEND_API_KEY` and `EMAIL_FROM`. Server-only: never prefix them with `NEXT_PUBLIC_`. Only `src/shared/lib/email/` reads them (every module there starts with `import "server-only"`), and no log line, error, or result holds the key, a recipient address, or a message body. The key is a server secret for one outside service, not a database key: the "only the publishable key" rule for Supabase above still holds.
+  - API key: in the Resend dashboard, API Keys → Create API Key with the "Sending access" permission, and copy the `re_…` value (shown once).
+  - Sender: `EMAIL_FROM` is `name@your-domain.tld` or `Display Name <name@your-domain.tld>`, on a domain verified in Resend (Domains → Add Domain, then add the DNS records it lists and wait for "Verified"). Without a verified domain Resend refuses every send.
+  - Validated lazily on each send: the key must start with `re_` and hold no whitespace, and the sender must be an address, with or without a display name. Unset or malformed → the app still builds and runs, but every email shows as not sent to the admin, and the server logs reason `config` naming the variable, never its value.
+  - Rotation: in the Resend dashboard create a new key, update `RESEND_API_KEY` in `.env.local` and on the hosting platform, then delete the old key.
 
 ## Deploy checklist
 
@@ -100,6 +105,20 @@ git-ignored `PROGRESS.md`, so every clone sees them.
   project already running the earlier app, deploy the app first and push this migration after it, never before: the
   earlier app's row schema requires `is_admin`, so its `/admin` list shows the unavailable state against the new
   function. Rollback: revert the app first, then the down migration in the file's header.
+- **Violation review migration and Resend** (`admin-violations-feedback`; ADR 0016), in this order:
+  1. `npx supabase db push` applies `20261117170000_violation_review.sql` (`violation_cases`, the guarded
+     `admin_*_violation_case` and warning functions, and the extra `notice_email`, `ground` and `user_id` keys
+     in the answers of block, ban and the two admin deletes). Push it **before the app**: an old app keeps
+     working against it, but the new app's review list and notices call functions that do not exist without it.
+     Apply it after the admin moderation migrations. Rollback: revert the app first, then the down migration in
+     the file's header (every open case is lost).
+  2. Set `RESEND_API_KEY` and `EMAIL_FROM` on the hosting platform (the Resend section above) and finish the
+     sender-domain verification in Resend first: until the domain shows "Verified" every send fails, the
+     warning stays `waiting` and a block, ban or delete shows the "email not sent" notice.
+  3. Send one warning and one block notice to an address you control and check the text and the reason
+     (`docs/deferred.md`, `admin-violations-feedback` 6.4, if it is still open).
+  4. Owner's own work, outside the code: paste the wording from `docs/about-rules-proposal.md` into the About
+     page in Contentful, and review the privacy policy for the new email use of an account's address.
 - **`poem-illustrations` bucket** (`add-poem-creation`): on the hosted project, confirm it exists,
   public, 5 MiB file size limit, MIME types `image/png` and `image/jpeg` — the same as
   `supabase/config.toml`, which configures the local stack only.

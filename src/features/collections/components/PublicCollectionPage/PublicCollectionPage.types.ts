@@ -5,6 +5,7 @@ interface CollectionModerationTarget {
   readonly id: string;
   readonly title: string;
   readonly authorId: string;
+  readonly authorName: string;
 }
 
 export interface PublicCollectionPageProps {

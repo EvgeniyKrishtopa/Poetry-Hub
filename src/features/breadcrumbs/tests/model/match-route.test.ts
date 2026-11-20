@@ -6,6 +6,7 @@ import { NEW_POEM_PATH } from "@/features/poem-management";
 import {
   ACCOUNT_PATH,
   ADMIN_PATH,
+  ADMIN_VIOLATIONS_PATH,
   POEM_MANAGEMENT_PATH,
   SIGN_IN_PATH,
   SIGN_UP_PATH,
@@ -111,7 +112,19 @@ describe("matchRoute", () => {
       ABOUT_PATH,
       PRIVACY_PATH,
       ADMIN_PATH,
+      ADMIN_VIOLATIONS_PATH,
     ]);
+  });
+
+  // implements FR-4 of admin-violations-feedback
+  it("maps /admin/violations to «Админка» › «Список нарушителей», the first a link to /admin", () => {
+    expect(matchRoute(["admin", "violations"])).toEqual({
+      kind: "static",
+      items: [
+        { kind: "link", label: "Админка", href: ADMIN_PATH },
+        { kind: "current", label: "Список нарушителей" },
+      ],
+    });
   });
 
   // implements FR-8 of add-poem-creation

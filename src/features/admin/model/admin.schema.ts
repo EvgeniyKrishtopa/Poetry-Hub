@@ -13,12 +13,11 @@ export const targetUserSchema = z.object({ userId: targetIdSchema });
 export const deleteTargetSchema = z.object({ id: targetIdSchema });
 
 /**
- * The list's URL parameters as the page reads them. The cursor is parsed by `parseListCursor` and the address by the
- * database, so neither is judged here.
+ * The list's URL parameters as the page reads them. The cursor is parsed by `parseListCursor`, so it is not judged
+ * here. Any other parameter, `?email=` of the removed filter included, is dropped by the object schema.
  */
 export const listQuerySchema = z.object({
   after: z.string().optional(),
-  email: z.string().optional(),
 });
 
 export type TargetUserInput = z.infer<typeof targetUserSchema>;

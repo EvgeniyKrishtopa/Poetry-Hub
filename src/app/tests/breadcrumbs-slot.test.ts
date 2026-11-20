@@ -68,6 +68,14 @@ describe("@breadcrumbs slot", () => {
     expect(source).toMatch(/<AdminOnly>[\s\S]*<Breadcrumbs[\s\S]*<\/AdminOnly>/);
   });
 
+  // implements FR-4 of admin-violations-feedback: the review list's trail is the admin's alone, like /admin's
+  it("wraps the /admin/violations slot's trail in AdminOnly, imported from the admin feature", () => {
+    const source = readFileSync(join(SLOT_DIR, "admin", "violations", PAGE_FILE), "utf8");
+
+    expect(source).toMatch(/import \{ AdminOnly \} from "@\/features\/admin";/);
+    expect(source).toMatch(/<AdminOnly>[\s\S]*<Breadcrumbs[\s\S]*<\/AdminOnly>/);
+  });
+
   // implements FR-2 of add-breadcrumbs
   it("passes each static slot page's own folder path as its segments", () => {
     for (const path of slotPages.filter((slotPath) => slotPath !== "" && !slotPath.includes("["))) {

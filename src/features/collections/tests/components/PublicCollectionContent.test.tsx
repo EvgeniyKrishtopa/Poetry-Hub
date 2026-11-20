@@ -103,7 +103,12 @@ describe("PublicCollectionContent", () => {
       }),
     );
 
-    expect(renderModeration).toHaveBeenCalledWith({ id: COLLECTION_ID, title: AUTUMN.title, authorId: AUTHOR_ID });
+    expect(renderModeration).toHaveBeenCalledWith({
+      id: COLLECTION_ID,
+      title: AUTUMN.title,
+      authorId: AUTHOR_ID,
+      authorName: "Анна Ахматова",
+    });
     const control = screen.getByRole("button", { name: "control" });
     const poemsList = screen.getByRole("list");
     expect(poemsList.compareDocumentPosition(control) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

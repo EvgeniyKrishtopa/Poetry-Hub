@@ -1,11 +1,12 @@
+import { CASE_STATUS, VIOLATION_GROUND, VIOLATION_LIST_LIMIT, WARNING_MESSAGE_MAX_LENGTH } from "./violation.constants";
+import type { CaseFailureReason, CaseStatus, ViolationGround } from "./violation.types";
+
 /** The header link's text (artboard 1). */
 export const ADMIN_NAV_LABEL = "Админка";
 
 /** The `/admin` list's fixed texts (artboard 41). */
 export const ADMIN_LIST_COPY = {
   title: "Пользователи",
-  emailLabel: "Электронная почта",
-  findButton: "Найти",
   nextLink: "Далее",
   firstPageLink: "К первой странице",
   loading: "Загрузка…",
@@ -94,4 +95,158 @@ export const ADMIN_DELETE_FAILURE_MESSAGES = {
   unauthenticated: MODERATION_FAILURE_MESSAGES.unauthenticated,
   unavailable: ADMIN_DELETE_COPY.failed,
   invalid: ADMIN_DELETE_COPY.failed,
+} as const;
+
+/** The `/admin` additions: the review-list link, the add button and the drag handle (artboards 41 and 48). */
+export const ADMIN_VIOLATION_COPY = {
+  listLink: "Список нарушителей",
+  addButton: "В список нарушителей",
+  dropCaption: "Отпустите, чтобы добавить",
+  grabLabel: (email: string): string => `Переместить пользователя ${email}`,
+  dragInstructions:
+    "Перетащите строку на ссылку «Список нарушителей». С клавиатуры используйте кнопку «В список нарушителей».",
+} as const;
+
+/** The result line after adding from `/admin` (artboard 48). */
+export const ADD_CASE_RESULT_MESSAGES = {
+  added: "Пользователь добавлен в список нарушителей",
+  "already-in-list": "Уже в списке нарушителей",
+} as const;
+
+/** The add control on the author, poem and collection pages (artboard 52). */
+export const ADD_TO_VIOLATIONS_COPY = {
+  button: "В список нарушителей (админ)",
+  added: "Автор добавлен в список нарушителей",
+  "already-in-list": "Автор уже в списке нарушителей",
+} as const;
+
+/**
+ * The one-time line on the author page after an admin delete whose email did not go out (artboard 53), per kind of
+ * what was deleted. `noAddress` follows it, for an author whose account holds no address.
+ */
+export const DELETE_NOTICE_FAILED_COPY = {
+  poem: "Произведение удалено, но письмо автору не отправлено",
+  collection: "Сборник удалён, но письмо автору не отправлено",
+  noAddress: ": у автора нет адреса почты",
+} as const;
+
+/**
+ * The failure line of a case action, one text per reason (artboards 48 and 49). Reasons the user rows already
+ * have reuse their texts; `content-not-found` has a text per kind of content (`CONTENT_GONE_MESSAGES`).
+ */
+export const CASE_FAILURE_MESSAGES = {
+  "already-restricted": MODERATION_FAILURE_MESSAGES["already-restricted"],
+  "target-is-admin": MODERATION_FAILURE_MESSAGES["target-is-admin"],
+  "not-found": MODERATION_FAILURE_MESSAGES["not-found"],
+  "case-not-found": "Случая больше нет",
+  forbidden: MODERATION_FAILURE_MESSAGES.forbidden,
+  unauthenticated: MODERATION_FAILURE_MESSAGES.unauthenticated,
+  unavailable: MODERATION_FAILURE_MESSAGES.unavailable,
+  invalid: MODERATION_FAILURE_MESSAGES.invalid,
+} as const satisfies Record<Exclude<CaseFailureReason, "content-not-found">, string>;
+
+/** The prompting poem or collection is already deleted, so no case would be recorded (artboard 48). */
+export const CONTENT_GONE_MESSAGES = {
+  poem: ADMIN_DELETE_COPY.poem.alreadyGone,
+  collection: ADMIN_DELETE_COPY.collection.alreadyGone,
+} as const;
+
+/** The two grounds in the admin's terms: the pill and the choice card (artboards 48 and 49). */
+export const GROUND_COPY = {
+  [VIOLATION_GROUND.harmfulContent]: {
+    label: "Вредный текст",
+    description:
+      "Призывы к насилию и жестокости, унижение человека, оправдание принуждения. Сначала предупреждение, затем сутки на реакцию.",
+  },
+  [VIOLATION_GROUND.maliciousActivity]: {
+    label: "Злонамеренные действия",
+    description: "Попытки XSS, DoS и другие действия, компрометирующие сайт. Без предупреждения.",
+  },
+} as const satisfies Record<ViolationGround, { readonly label: string; readonly description: string }>;
+
+/** The ground choice dialog (artboard 48); the description names the user, a note names the prompting content. */
+export const GROUND_CHOICE_COPY = {
+  title: "Добавить в список нарушителей?",
+  description: (subject: string): string => `${subject} попадёт в список на рассмотрение. Выберите основание.`,
+  contentNote: {
+    poem: (title: string): string => `Произведение «${title}» будет записано как повод.`,
+    collection: (title: string): string => `Сборник «${title}» будет записан как повод.`,
+  },
+  groupLabel: "Основание",
+  close: "Закрыть",
+  cancel: "Отмена",
+  confirm: "Добавить",
+} as const;
+
+/** `/admin/violations`'s fixed texts (artboard 49). */
+export const VIOLATIONS_PAGE_COPY = {
+  title: "Список нарушителей",
+  empty: "В списке никого нет",
+  loadFailed: "Не удалось загрузить список",
+  capReached: `Показаны первые ${VIOLATION_LIST_LIMIT} случаев, есть ещё`,
+  addedOn: (date: string): string => `В списке с ${date}`,
+  deadline: (when: string): string => `Срок до ${when}`,
+  contentLabel: { poem: "Повод: произведение", collection: "Повод: сборник" },
+  contentGone: { poem: "Повод: произведение удалено", collection: "Повод: сборник удалён" },
+} as const;
+
+/** The status pill's text for each derived status (artboard 49). */
+export const CASE_STATUS_LABELS = {
+  [CASE_STATUS.waiting]: "Ожидает решения",
+  [CASE_STATUS.warned]: "Предупреждён",
+  [CASE_STATUS.deadlinePassed]: "Срок истёк",
+} as const satisfies Record<CaseStatus, string>;
+
+/** The case row's buttons (artboard 49); block and ban keep the user rows' words. */
+export const CASE_ACTION_LABELS = {
+  warn: "Отправить предупреждение",
+  switchGround: "Сменить основание",
+  block: ADMIN_ACTION_LABELS.block,
+  ban: ADMIN_ACTION_LABELS.ban,
+  remove: "Убрать из списка",
+} as const;
+
+/** The result line inside a case row after a ground switch or a warning (artboard 49). */
+export const CASE_RESULT_MESSAGES = {
+  groundChanged: "Основание изменено",
+  warned: "Предупреждение отправлено",
+  alreadyWarned: "Предупреждение уже отправлено",
+  // Not in the mockups: placeholder for a warning refused because the ground was switched elsewhere, to confirm.
+  wrongGround: "Основание уже изменено, предупреждение не отправлено",
+} as const;
+
+/** What follows «Пользователь заблокирован» or «Пользователь забанен» once the standard email was tried (FR-14). */
+export const NOTICE_RESULT_SUFFIX = {
+  sent: ". Письмо отправлено",
+  failed: ", но письмо не отправлено",
+  noAddress: ", адреса почты нет",
+} as const;
+
+/** The confirmation of a block before a harmful-content case's deadline (artboard 51); the ban dialog reuses the notes. */
+export const EARLY_BLOCK_COPY = {
+  title: "Заблокировать до истечения срока?",
+  notWarned: "Предупреждение ещё не отправлено.",
+  deadlineOpen: (deadline: string): string => `Срок на реакцию истекает ${deadline}.`,
+  close: "Закрыть",
+  cancel: "Отмена",
+  confirm: ADMIN_ACTION_LABELS.block,
+} as const;
+
+/** The warning dialog (artboard 50). */
+export const WARN_DIALOG_COPY = {
+  title: "Предупреждение пользователю",
+  description: "Письмо уйдёт на адрес ниже. К вашему тексту добавится стандартный блок: причина и сутки на реакцию.",
+  toLabel: "Кому",
+  messageLabel: "Сообщение",
+  hint: `До ${WARNING_MESSAGE_MAX_LENGTH} символов`,
+  emptyError: "Введите сообщение",
+  tooLongError: `Не больше ${WARNING_MESSAGE_MAX_LENGTH} символов`,
+  close: "Закрыть",
+  cancel: "Отмена",
+  send: "Отправить",
+  notSent: "Письмо не отправлено. Попробуйте ещё раз",
+  notConfigured: "Отправка почты не настроена",
+  unknownOutcome: "Не уверены, что письмо ушло. Текст зафиксирован, повторите отправку",
+  // Not in the mockups: placeholder for a user with no address, to confirm.
+  noAddress: "У пользователя нет адреса почты",
 } as const;

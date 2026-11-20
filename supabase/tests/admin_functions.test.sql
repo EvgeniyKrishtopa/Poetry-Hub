@@ -74,8 +74,8 @@ insert into storage.objects (bucket_id, name) values
 select is(
   (select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public' and p.proname like 'admin\_%'),
-  7,
-  'there are seven admin functions (a new one means updating the allowlist in admin_foundation.test.sql)'
+  15,
+  'there are fifteen admin functions (a new one means updating the allowlist in admin_foundation.test.sql)'
 );
 
 select is_empty(
@@ -96,12 +96,17 @@ select is(
   (select count(*)::int from unnest(array[
       'public.admin_list_users(integer, timestamptz, uuid, text)', 'public.admin_block_user(uuid)',
       'public.admin_unblock_user(uuid)', 'public.admin_ban_user(uuid)', 'public.admin_revoke_sessions(uuid)',
-      'public.admin_delete_poem(uuid)', 'public.admin_delete_collection(uuid)', 'public.may_moderate_author(uuid)'
+      'public.admin_delete_poem(uuid)', 'public.admin_delete_collection(uuid)', 'public.may_moderate_author(uuid)',
+      'public.admin_add_violation_case(uuid, text, text, uuid)',
+      'public.admin_add_violation_case_for_author(uuid, text, text, uuid)',
+      'public.admin_list_violation_cases()', 'public.admin_set_case_ground(uuid, text)',
+      'public.admin_remove_violation_case(uuid)', 'public.admin_start_warning(uuid)',
+      'public.admin_mark_warned(uuid)', 'public.admin_log_notice(uuid, text, text)'
     ]) f
     where has_function_privilege('authenticated', f, 'execute')
       and not has_function_privilege('anon', f, 'execute')
       and not has_function_privilege('public', f, 'execute')),
-  8,
+  16,
   'the admin functions and may_moderate_author are executable by authenticated only'
 );
 
@@ -478,8 +483,8 @@ select is(
 -- Delete a poem (FR-8).
 select is(
   (select public.admin_delete_poem('b0000000-0000-4000-8000-000000000001')),
-  '{"status": "deleted", "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "illustration_path": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/b3000000-0000-4000-8000-000000000001.png"}'::jsonb,
-  'an admin deletes another user''s poem and gets the author and the illustration path');
+  '{"status": "deleted", "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "illustration_path": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/b3000000-0000-4000-8000-000000000001.png", "title": "Illustrated", "user_id": "22222222-2222-4222-8222-222222222222", "notice_email": "act@example.test", "ground": null}'::jsonb,
+  'an admin deletes another user''s poem and gets the author, the illustration path and the notice data (violation_review.test.sql covers the data itself)');
 select is(
   (select public.admin_delete_poem('b0000000-0000-4000-8000-000000000001') ->> 'status'), 'not-found',
   'deleting it again answers not-found');
