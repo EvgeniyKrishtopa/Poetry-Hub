@@ -137,7 +137,16 @@ git-ignored `PROGRESS.md`, so every clone sees them.
      example a custom domain), set `SITE_URL` in the Vercel Production environment (build and runtime) and
      redeploy: `robots.txt` and the fixed pages read it at build time.
   3. Open the production `/robots.txt` and `/sitemap.xml` and check one poem page's `<head>` (title,
-     description, canonical, `og:` and `twitter:` tags).
+     description, canonical, `og:` and `twitter:` tags). While the site stays on its `*.vercel.app` address,
+     `SITE_URL` is not set and the address comes from `VERCEL_PROJECT_PRODUCTION_URL`, so check that:
+     - the `Sitemap:` line in `/robots.txt` names the same `*.vercel.app` host;
+     - the sitemap's URLs and the poem page's `canonical` and `og:image` start with that host, not with
+       `localhost`;
+     - if any of them shows `localhost`, `VERCEL_PROJECT_PRODUCTION_URL` was not available to the build: set
+       `SITE_URL` to `https://<project>.vercel.app` in the Vercel Production environment (build and runtime) and
+       redeploy.
+     A Preview deployment shows the production address in its canonical links; that is expected, Vercel marks
+     previews `noindex`.
   4. Submit `<address>/sitemap.xml` in Google Search Console and in Yandex Webmaster (owner, manual; each service
      asks to verify the site first).
   5. Run the preview check with a real poem link in Telegram, VK and WhatsApp (`docs/deferred.md`,
