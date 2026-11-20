@@ -12,10 +12,7 @@
     "src/features/work-ordering/**",
     // Temporary, seo-metadata scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new files, so knip still sees the rest of each feature. Task 6.4 removes these entries.
-    "src/shared/lib/seo/**",
-    "src/features/seo/**",
-    "src/features/poems/dal/public-poem-refs.ts",
-    "src/features/poems/model/public-poem-refs.types.ts"
+    "src/shared/lib/seo/**"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
