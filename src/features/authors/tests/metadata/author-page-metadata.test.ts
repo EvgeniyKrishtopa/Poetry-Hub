@@ -101,6 +101,16 @@ describe("getAuthorPageMetadata", () => {
     expect(metadata.description).toContain(FULL_NAME);
   });
 
+  // implements FR-2 of seo-metadata: the same bound as the poem and collection sentences, whatever the name's length
+  it("keeps the fixed sentence within the description limit for a very long name", async () => {
+    const longName = "я".repeat(DESCRIPTION_MAX_LENGTH);
+    readMock.mockResolvedValue({ ok: true, author: { ...ANNA, firstName: longName, about: null } });
+
+    const metadata = await getAuthorPageMetadata(AUTHOR_ID);
+
+    expect(metadata.description?.length).toBeLessThanOrEqual(DESCRIPTION_MAX_LENGTH);
+  });
+
   // implements FR-3, FR-4 of seo-metadata: the canonical comes from the read result's lowercase id
   it("declares the canonical and og:url with the lowercase id when the request spells it in uppercase", async () => {
     readMock.mockResolvedValue({ ok: true, author: ANNA });

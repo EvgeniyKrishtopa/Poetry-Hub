@@ -20,7 +20,8 @@ function buildDescription(author: PublicAuthor, name: string): string {
   const about = author.about === null ? "" : toPlainTextExcerpt(author.about, DESCRIPTION_MAX_LENGTH);
   if (about !== "") return about;
 
-  return getAuthorFallbackDescription(name);
+  const sentence = getAuthorFallbackDescription(name);
+  return toPlainTextExcerpt(sentence, DESCRIPTION_MAX_LENGTH);
 }
 
 function buildAuthorMetadata(author: PublicAuthor): Metadata {
