@@ -1,12 +1,20 @@
 // @vitest-environment node
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
 import { metadata } from "../(authorized)/layout";
 
-const ADMIN_PAGE_FILES = ["src/app/(authorized)/admin/page.tsx", "src/app/(authorized)/admin/violations/page.tsx"];
+const ADMIN_DIR = "src/app/(authorized)/admin";
+const PAGE_FILE = "page.tsx";
 const OWN_METADATA_EXPORT = /export\s+(?:async\s+)?(?:const\s+metadata\b|function\s+generateMetadata\b)/;
+
+/** Every admin route's page file, found by walking the folder so a new admin page is covered too. */
+const ADMIN_PAGE_FILES = readdirSync(ADMIN_DIR, { recursive: true, encoding: "utf8" })
+  .filter((path) => path === PAGE_FILE || path.endsWith(`/${PAGE_FILE}`))
+  .map((path) => join(ADMIN_DIR, path))
+  .sort();
 
 describe("the (authorized) layout's metadata", () => {
   // implements FR-6 of seo-metadata
@@ -21,6 +29,10 @@ describe("the (authorized) layout's metadata", () => {
     expect(metadata.description).toBeUndefined();
     expect(metadata.openGraph).toBeUndefined();
     expect(metadata.twitter).toBeUndefined();
+  });
+
+  it("finds the admin pages", () => {
+    expect(ADMIN_PAGE_FILES.length).toBeGreaterThanOrEqual(2);
   });
 
   // implements FR-6 of seo-metadata: an own title on /admin would tell a non-admin that the page exists
