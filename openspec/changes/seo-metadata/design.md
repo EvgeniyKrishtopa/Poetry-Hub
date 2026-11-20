@@ -39,7 +39,7 @@ Facts that shape the design:
 - `page-metadata.ts`: `buildPageMetadata({ title, description, path, type, image })` returns a complete `Metadata` (title, description, `alternates.canonical`, `openGraph`, `twitter`); `buildNoIndexMetadata({ title, follow, canonicalPath? })` returns only `title`, `robots` and, when `canonicalPath` is given (login and sign-up), `alternates.canonical`; `FALLBACK_METADATA` (the site title and description).
 - constants: `DEFAULT_SHARE_IMAGE_PATH = "/og-default.png"`, `DESCRIPTION_MAX_LENGTH = 160`, `OG_LOCALE = "ru_RU"`, the `/auth` and `/api` path constants, named once here (`ACCOUNT_PATH` and `ADMIN_PATH` come from `shared/config`). The robots rules have one consumer, so `buildRobots` lives in `features/seo/model/robots-rules.ts` (D5, D6), not here.
 
-Each feature that owns a public page adds an optional `metadata/` folder (a new role, like `pages/`): `features/poems/metadata/poem-page-metadata.ts` (`getPoemPageMetadata(authorId, poemId)`), `features/authors/metadata/…` (`getAuthorPageMetadata(id)`, `AUTHORS_PAGE_METADATA`), `features/collections/metadata/…`, `features/content-page/metadata/…` (`getContentPageMetadata(key)`). Each reads through the page's own memoized read, then calls the builder. They are exported through the feature's `index.ts`, and route files only forward: `export function generateMetadata({ params }) { return getPoemPageMetadata(…) }`.
+Each feature that owns a public page adds an optional `metadata/` folder (a new role, like `pages/`): `features/poems/metadata/poem-page-metadata.ts` (`getPoemPageMetadata(authorId, poemId)`), `features/authors/metadata/…` (`getAuthorPageMetadata(id)`, `getAuthorsPageMetadata()` for the directory), `features/collections/metadata/…`, `features/content-page/metadata/…` (`getContentPageMetadata(key)`), `features/home/metadata/home-page-metadata.ts` (`getHomePageMetadata()`) and `features/auth/metadata/auth-pages-metadata.ts` (`getLoginPageMetadata()`, `getSignupPageMetadata()`). `admin` has no `metadata/` folder: it owns no public page, and its index export list is pinned by its boundaries test, so the two admin pages call `buildNoIndexMetadata` from their route files with the titles as named constants there (D2). Each reads through the page's own memoized read, then calls the builder. They are exported through the feature's `index.ts`, and route files only forward: `export function generateMetadata({ params }) { return getPoemPageMetadata(…) }`.
 
 Why not one central `seo` module that knows poems, authors and collections: it would import three features' internals or all three public APIs for text rules only the owner knows (the poem's first lines, the author's name). Why not inline tags in each route file: it breaks "app/ is routing only" and repeats the title, card and canonical code in a dozen files. `shared/lib` is allowed here from its first use because the builders are used by four features at once (`docs/architecture.md`, "Don't create a `shared/` abstraction until a second feature actually needs it").
 
@@ -180,3 +180,30 @@ sequenceDiagram
 ## Open Questions
 
 - The production address (custom domain or `*.vercel.app`): known only after the first deploy; owner, due 2026-12-04 (see the proposal). It sets `SITE_URL` only if it differs from Vercel's production URL, which the code already uses as the fallback.
+
+## Scaffold map
+
+Stub files at their final paths (types and signatures, bodies `throw new Error("not implemented")`). Not scaffolded on purpose: `app/robots.ts` and `app/sitemap.ts` (a throwing stub fails `next build`; tasks 5.3 and 5.4 create them), the Russian description texts (tasks 3.2 and 4.1 to 4.3 write them for the owner to read), the `index.ts` exports of the existing features, the `generateMetadata` wiring in route files, and any `admin` file (its two pages call `buildNoIndexMetadata` from their route files; its index export list is pinned by a boundaries test). `knip.jsonc` ignores only these files until task 6.4.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/shared/lib/seo/seo.constants.ts` | named constants, no interface text | `DEFAULT_SHARE_IMAGE_PATH`, `TITLE_TEMPLATE`, `DESCRIPTION_MAX_LENGTH`, `OG_LOCALE`, `AUTH_PATH`, `API_PATH` |
+| `src/shared/lib/seo/seo.types.ts` | input types of the builders | `PageType`, `PageMetadataInput`, `NoIndexMetadataInput` |
+| `src/shared/lib/seo/site-url.ts` | the site's origin (FR-11) | `getSiteUrl` |
+| `src/shared/lib/seo/plain-text-excerpt.ts` | Markdown to a bounded plain-text excerpt (NFR-4) | `toPlainTextExcerpt` |
+| `src/shared/lib/seo/page-metadata.ts` | page and no-index metadata, the fallback, the canonical path | `buildPageMetadata`, `buildNoIndexMetadata`, `FALLBACK_METADATA`, `toCanonicalPath` |
+| `src/shared/lib/seo/index.ts` | public entry of the module, server-only | the above |
+| `src/features/poems/metadata/poem-page-metadata.ts` | the poem page's metadata, `notFound()` for a missing poem | `getPoemPageMetadata` |
+| `src/features/poems/dal/public-poem-refs.ts` | every public poem's references for the sitemap, paginated, cached | `listPublicPoemRefs` |
+| `src/features/poems/model/public-poem-refs.types.ts` | the reference type and its result union | `PublicPoemRef`, `PublicPoemRefsResult` |
+| `src/features/authors/metadata/author-page-metadata.ts` | a public author page's metadata | `getAuthorPageMetadata` |
+| `src/features/authors/metadata/authors-page-metadata.ts` | the authors directory's metadata | `getAuthorsPageMetadata` |
+| `src/features/collections/metadata/collection-page-metadata.ts` | a public collection page's metadata | `getPublicCollectionPageMetadata` |
+| `src/features/content-page/metadata/content-page-metadata.ts` | the about and privacy pages' metadata | `getContentPageMetadata` |
+| `src/features/home/metadata/home-page-metadata.ts` | the home page's metadata | `getHomePageMetadata` |
+| `src/features/auth/metadata/auth-pages-metadata.ts` | login and sign-up: title, canonical, `noindex, follow` | `getLoginPageMetadata`, `getSignupPageMetadata` |
+| `src/features/seo/model/sitemap.types.ts` | the sitemap builder's input (ids only, so it stays pure) | `SitemapSource`, `SitemapPoemRef` |
+| `src/features/seo/model/sitemap-entries.ts` | the pure sitemap entries | `buildSitemapEntries` |
+| `src/features/seo/model/robots-rules.ts` | the `robots.txt` rules | `buildRobots` |
+| `src/features/seo/dal/sitemap-entries.ts` | reads authors and poem references, throws when either is unavailable | `getSitemapEntries` |
+| `src/features/seo/index.ts` | public entry, imported only by `src/app/` | `getSitemapEntries`, `buildRobots` |
