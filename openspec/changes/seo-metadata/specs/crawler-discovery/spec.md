@@ -88,4 +88,4 @@ The sitemap SHALL be cached with a bounded lifetime (hours). Content removed aft
 #### Scenario: Deleted poem still listed briefly
 - **GIVEN** a poem was deleted after the sitemap was cached
 - **WHEN** a crawler follows the sitemap's URL to that poem
-- **THEN** the response status is 404 (FR-10)
+- **THEN** the page is marked `noindex` and shows the not-found screen (FR-10)
