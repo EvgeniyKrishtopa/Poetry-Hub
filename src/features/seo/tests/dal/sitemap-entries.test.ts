@@ -54,13 +54,13 @@ describe("getSitemapEntries", () => {
   it("throws when the poems read is unavailable, so the route never serves a partial sitemap", async () => {
     givenReads(AUTHORS_OK, UNAVAILABLE);
 
-    await expect(getSitemapEntries()).rejects.toThrow("Sitemap source unavailable");
+    await expect(getSitemapEntries()).rejects.toThrow("Sitemap source unavailable: public poem refs");
   });
 
   // implements FR-9 of seo-metadata
   it("throws when the authors read is unavailable", async () => {
     givenReads(UNAVAILABLE, REFS_OK);
 
-    await expect(getSitemapEntries()).rejects.toThrow("Sitemap source unavailable");
+    await expect(getSitemapEntries()).rejects.toThrow("Sitemap source unavailable: public authors");
   });
 });

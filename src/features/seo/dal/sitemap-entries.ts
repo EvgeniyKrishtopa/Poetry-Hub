@@ -14,7 +14,8 @@ import { buildSitemapEntries } from "../model/sitemap-entries";
  */
 export async function getSitemapEntries(): Promise<MetadataRoute.Sitemap> {
   const [authors, poems] = await Promise.all([listPublicAuthors(), listPublicPoemRefs()]);
-  if (!authors.ok || !poems.ok) throw new Error("Sitemap source unavailable");
+  if (!authors.ok) throw new Error("Sitemap source unavailable: public authors");
+  if (!poems.ok) throw new Error("Sitemap source unavailable: public poem refs");
 
   return buildSitemapEntries({
     siteUrl: getSiteUrl(),
