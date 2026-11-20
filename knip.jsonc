@@ -9,10 +9,7 @@
     "src/features/collections/**",
     // Temporary, drag-and-drop-ordering scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new feature's files. The last group that wires the board into the route removes this entry.
-    "src/features/work-ordering/**",
-    // Temporary, admin-violations-feedback scaffold: the new stubs have no importer until their tasks wire or test
-    // them. Only the new files, so knip still sees the rest of the admin feature. Task 6.5 removes these entries.
-    "src/shared/lib/email/**"
+    "src/features/work-ordering/**"
   ],
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
