@@ -25,7 +25,7 @@ Facts that shape the design:
 
 - JSON-LD, generated per-poem images, `lastmod`, favicon set and manifest, RSS, search-engine verification tags, sitemap sharding (listed in the proposal as follow-ups).
 - Changing what a page shows, its routes, or its data model. No migration.
-- A real 404 status for browsers (a person opening a removed poem still sees the soft 404 screen; only crawlers are served the status, D4).
+- A real 404 status for anyone, browsers and crawlers alike (a removed poem keeps the soft 404 screen with status 200; the spike showed the metadata step cannot change it, D4).
 - Per-page titles inside `/account/**`: one group title only.
 
 ## Decisions
@@ -58,24 +58,22 @@ The `(authorized)` layout exports `metadata = buildNoIndexMetadata({ title: "Л�
 | Read result | Metadata | Status effect |
 | --- | --- | --- |
 | `ok` | full metadata (FR-1 to FR-5) | none |
-| `not-found` | `notFound()` (D4) | 404 for a crawler |
-| `not-found` of a content page's entry (`/about`, `/privacy`) | `notFound()` too, so a crawler gets 404; the page body's own handling (an error screen today) is not changed by this change | 404 for a crawler |
-| `unavailable` | the metadata throws the same error the page body throws | a crawler that gets blocking metadata gets a 5xx and retries; a browser gets `error.tsx` as today |
+| `not-found` | `notFound()` (D4) | `noindex` and the not-found screen; status stays 200 (spike 1.2) |
+| `not-found` of a content page's entry (`/about`, `/privacy`) | `notFound()` too, so the page is marked `noindex`; the page body's own handling (an error screen today) is not changed by this change | `noindex` |
+| `unavailable` | `FALLBACK_METADATA`; the page body throws to its error screen as today | none from the metadata step |
 | an unexpected exception in the metadata's own code (the excerpt, the builder) | `FALLBACK_METADATA` | none; the page is unaffected |
 
-`notFound()` is called outside any `try`, since it works by throwing. A failed read is not caught to a fallback, because the page body shares the same memoized result and throws to `error.tsx` anyway, so no working page is left to protect; a generic title on a 200 error screen would be a soft error page a crawler could index, and the sitemap makes the opposite choice for the same reason (D5). Only a bug in the metadata code itself falls back, so it can never replace a working page with an error. The spike (1.2) confirms that a thrown error from `generateMetadata` reaches `error.tsx` for a browser; if it does not, the `unavailable` row falls back to `FALLBACK_METADATA`, the risk is recorded as accepted, and FR-1 and FR-10 are amended to say so before group 4.
+`notFound()` is called outside any `try`, since it works by throwing. A failed read maps to the fallback, not to a throw: the spike (1.2) measured that an error thrown from `generateMetadata` shows a browser the not-found screen instead of `error.tsx` (and a crawler a 200), which would present a read failure as a missing page. The page body shares the same memoized read and throws to `error.tsx` itself, so the fallback title only sits above that error screen. This amends the earlier plan to rethrow (the spike's recorded fallback).
 
 The canonical path and `og:url` are built from the ids of the read result (lowercase), never from the raw `params`, since `/authors/<UPPERCASE-UUID>` also renders (FR-3). The content pages' read (`getContentPage`) is wrapped in React's `cache`, as ADR 0008 asks of a read that two callers share, so the page and its metadata make one Contentful call on a cold cache.
 
 Under Cache Components, `generateMetadata` reads `params` (runtime data). These pages already read `params` inside a Suspense boundary and so already have a request-time hole; Next then streams the metadata with the rest and raises no error. The spike (group 1) confirms this on the real pages before the rest is built; if a page is judged "otherwise fully prerenderable" the fix is the documented dynamic marker, not caching the metadata.
 
-### D4. A real 404 for crawlers comes from `notFound()` in the metadata step
+### D4. `notFound()` in the metadata step marks the page `noindex`; a real 404 status is a follow-up
 
-For a client in Next's `htmlLimitedBots` list the metadata is resolved before the response starts (blocking), so `notFound()` in `generateMetadata` can still set status 404 and add `noindex`; for a browser it streams and the page's own soft 404 stays. This gives FR-10 without changing the page bodies.
+The plan was a real 404 status for crawlers: for a client in Next's `htmlLimitedBots` list the metadata is blocking, so `notFound()` in `generateMetadata` was expected to set status 404. The spike (1.2, production build, Next 16.4.6) measured otherwise: a removed poem, an unknown author id and a missing collection answer **200** for Googlebot (with and without it in the list), bingbot (default list) and a browser, always with `<meta name="robots" content="noindex">` and the not-found screen. These pages' prerendered shell (Cache Components, partial prerender) commits status 200 before the metadata resolves, so the status cannot be changed from the metadata step.
 
-"Crawler" and "member of `htmlLimitedBots`" are not the same set. Next's docs say Googlebot executes JavaScript, so it gets streamed metadata and the default list leaves it out (the list names Google's ad and renderer bots, Bingbot, Twitterbot, Slackbot and others). For Googlebot the status would stay 200 and its tags would sit in `<body>`. The fix is the one D9 already provides: add Googlebot (and YandexBot, if the spike finds it missing) to `htmlLimitedBots`. The cost is that metadata blocks the first byte for those bots, which is small here because the reads are cached and memoized. Verified in the spike with a production build (`next build && next start`) for: a removed poem, an unknown author id, an empty collection, each with and without Googlebot in the list.
-
-If the status still stays 200 with the bot in the list, FR-10 is amended to "`noindex` and the not-found screen" (Next adds `noindex` to a not-found response), and the 404 status is recorded as a follow-up. The rest of the change does not depend on it.
+Decision (owner, 2026-11-20): FR-10 becomes "`noindex` and the not-found screen". Googlebot is therefore not added to `htmlLimitedBots` for FR-10; whether any bot needs adding for NFR-6 is decided by 1.4 (D9). A real 404 would need these pages to be fully dynamic (no prerendered shell), which gives up the current prerendering and is a design of its own; it is recorded as a follow-up in the proposal. The rest of the change does not depend on it.
 
 ### D5. The sitemap is composed in a small `features/seo` feature, from public APIs
 
@@ -122,9 +120,9 @@ sequenceDiagram
     alt ok
         M-->>R: buildPageMetadata(title, excerpt, canonical, card, image)
     else not-found
-        M-->>R: notFound() (404 + noindex for a crawler)
+        M-->>R: notFound() (noindex and the not-found screen, status 200)
     else unavailable
-        M-->>R: throws, as the page body does (5xx for a blocking crawler, error.tsx for a browser)
+        M-->>R: FALLBACK_METADATA (the page body throws to error.tsx itself)
     end
     R->>D: page body reads the same memoized results (no second call)
     R-->>C: HTML with head tags
@@ -159,11 +157,11 @@ sequenceDiagram
 ## Risks / Trade-offs
 
 - [Metadata that awaits `params` raises a Cache Components build error on a page judged fully prerenderable] → the pages already have request-time holes; the spike confirms it on the real pages first, and the dynamic marker is the documented fix.
-- [`notFound()` in `generateMetadata` does not yield a 404 status for crawlers in this Next version] → verified first in the spike; FR-10 is amended to `noindex` plus the not-found screen if it does not, and nothing else depends on it.
+- [`notFound()` in `generateMetadata` does not yield a 404 status for crawlers in this Next version] → confirmed by the spike (status 200, `noindex` present); FR-10 now says `noindex` plus the not-found screen (D4), and the real 404 is a follow-up.
 - [A bug in the metadata code turns a working page into an error page] → an unexpected exception in the excerpt or the builder maps to `FALLBACK_METADATA`; a unit test throws from the builder and asserts the fallback. A failed read is deliberately not caught (D3).
-- [Googlebot gets streamed metadata and a soft 404 under the default bot list] → D4: add it to `htmlLimitedBots` (with the full default list, D9), then re-verify.
+- [Googlebot gets streamed metadata under the default bot list] → it executes JavaScript and reads the tags in `<body>` (Next docs); adding it changed no status in the spike, so it is added only if 1.4 or a later check shows a need (D9).
 - [One sitemap cache entry grows with the catalogue; a platform limit on a cache item (about 2 MB on Vercel's data cache, unverified for `"use cache"`) could be reached near 15 000 poems, before the 50 000-URL limit] → the `generateSitemaps` follow-up is keyed to entry size as well as URL count.
-- [The sitemap lists a deleted or banned author's URLs for hours] → accepted (NFR-5); the pages answer 404 at once (D4), and a stale URL in a sitemap is something crawlers handle.
+- [The sitemap lists a deleted or banned author's URLs for hours] → accepted (NFR-5); the pages are marked `noindex` at once (D4), and a stale URL in a sitemap is something crawlers handle.
 - [`listPublicPoemRefs` loads every public poem id into one cache entry] → three short strings per poem; fine to tens of thousands of poems; sharding with `generateSitemaps` is the recorded follow-up before the 50 000-URL limit.
 - [A hosted Supabase `max_rows` below 1000] → the loop stops only when a page returns zero rows, not when it returns fewer than 1000, so a lower cap costs extra requests but never truncates.
 - [The default image is missing at deploy] → the owner supplies it before deploy (Open Question); the unit test only asserts the URL, so a task verifies the file exists in the repo.

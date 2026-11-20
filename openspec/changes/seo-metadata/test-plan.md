@@ -26,11 +26,11 @@ One row per Then of a scenario in `specs/page-metadata/spec.md` and `specs/crawl
 | FR-6: Admin pages carry the same | `app/tests/authorized-layout-metadata.test.ts`: both admin pages' metadata | unit |
 | FR-6: The built signed-in page head has no card tag | recorded under task 3.3: read `/account` and `/admin` HTML for `og:`, `twitter:` and `description` | end-to-end |
 | FR-7: Login head is `noindex, follow` with a canonical and no description or card | `app/tests/metadata-public-pages.test.ts`: login and signup metadata | unit |
-| FR-10: Removed poem answers 404 to a blocking-metadata crawler | `poems/tests/metadata/poem-page-metadata.test.ts`: `not-found` result calls `notFound()`; recorded under task 4.4: `curl -I` with the crawler user agent returns 404 | unit, end-to-end |
-| FR-10: Unknown author id answers 404 to a blocking-metadata crawler | `authors/tests/metadata/author-page-metadata.test.ts`: `not-found` calls `notFound()`; recorded under task 4.4 | unit, end-to-end |
-| FR-10: Missing content entry answers 404 to a blocking-metadata crawler | `content-page/tests/metadata/content-page-metadata.test.ts`: `not-found` calls `notFound()` | unit |
-| FR-10: A read failure is not a 404 | `poems/tests/metadata/poem-page-metadata.test.ts`: `unavailable` throws and never calls `notFound()`; recorded under task 4.4: Supabase stopped gives 5xx | unit, end-to-end |
-| FR-10: An empty collection answers 404 to a blocking-metadata crawler | `collections/tests/metadata/collection-page-metadata.test.ts`: an empty or foreign collection calls `notFound()`; recorded under task 4.4 | unit, end-to-end |
+| FR-10: Removed poem is marked `noindex` with the not-found screen | `poems/tests/metadata/poem-page-metadata.test.ts`: `not-found` result calls `notFound()`; recorded under task 4.4: the production build's HTML for the removed poem has `<meta name="robots" content="noindex">` | unit, end-to-end |
+| FR-10: Unknown author id is marked `noindex` | `authors/tests/metadata/author-page-metadata.test.ts`: `not-found` calls `notFound()`; recorded under task 4.4 | unit, end-to-end |
+| FR-10: Missing content entry is marked `noindex` | `content-page/tests/metadata/content-page-metadata.test.ts`: `not-found` calls `notFound()` | unit |
+| FR-10: A read failure is not reported as not found | `poems/tests/metadata/poem-page-metadata.test.ts`: `unavailable` returns `FALLBACK_METADATA` and never calls `notFound()`; recorded under task 4.4: Supabase stopped shows the error screen, not the not-found screen | unit, end-to-end |
+| FR-10: An empty collection is marked `noindex` | `collections/tests/metadata/collection-page-metadata.test.ts`: an empty or foreign collection calls `notFound()`; recorded under task 4.4 | unit, end-to-end |
 | NFR-4: Markdown is stripped | `shared/lib/seo/tests/plain-text-excerpt.test.ts`: `**Осень** пришла.\n\n> тихо` gives `Осень пришла. тихо`; table cases for the poem and about formats | unit |
 | NFR-4: A long text is shortened at a word | `shared/lib/seo/tests/plain-text-excerpt.test.ts`: 400 characters of words give at most 160 characters, ending in `…`, never mid-word | unit |
 | NFR-4: A text with no space is cut hard | `shared/lib/seo/tests/plain-text-excerpt.test.ts`: 400 characters with no space give 159 characters plus `…` | unit |

@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Site title template and per-page titles (FR-1)
-The site SHALL set a title template in the root layout, so a page title is rendered as `<page title> | Поэтический Хаб`, and the home page title is the site name alone. Each public page SHALL set its own title: the poem page `<poem title> — <author full name>`, the author page `<author full name>`, the collection page `<collection title> — <author full name>`, the authors directory «Наши авторы», and the about and privacy pages the title of their Contentful entry. A title that the metadata code itself fails to build (an exception in it, not a failed read) SHALL fall back to the site name.
+The site SHALL set a title template in the root layout, so a page title is rendered as `<page title> | Поэтический Хаб`, and the home page title is the site name alone. Each public page SHALL set its own title: the poem page `<poem title> — <author full name>`, the author page `<author full name>`, the collection page `<collection title> — <author full name>`, the authors directory «Наши авторы», and the about and privacy pages the title of their Contentful entry. A title that cannot be built, because the metadata code itself fails (an exception in it) or because the page's read failed (`unavailable`), SHALL fall back to the site name; in the failed-read case the page body still throws to its error screen as it does today (spike 1.2: an error thrown from the metadata step shows the not-found screen instead of `error.tsx`, so it is not thrown there).
 
 #### Scenario: Poem page title
 - **GIVEN** a public poem «Осень» by the public author «Анна Иванова»
@@ -116,28 +116,28 @@ Every page under `/account` and `/admin` SHALL declare `robots` `noindex, nofoll
 - **WHEN** a crawler requests `/login`
 - **THEN** the HTML has `<meta name="robots" content="noindex, follow">`, a canonical link `<SITE_URL>/login`, and no `description`, `og:` or `twitter:` tag
 
-### Requirement: Missing content answers 404 to a crawler (FR-10)
-A request for a poem, author or collection page that does not exist, is not public, or was removed, or for `/about` or `/privacy` whose Contentful entry does not exist, SHALL be answered with HTTP status 404 for a crawler (a client the metadata step serves without streaming), together with `noindex`. A failed read (`unavailable`) SHALL NOT be answered with 404: the metadata step raises the same error as the page body, so a crawler that gets blocking metadata receives a 5xx and retries, and a browser sees the error screen it sees today. An unexpected exception in the metadata code itself SHALL NOT break the page (FR-1).
+### Requirement: Missing content is marked noindex for a crawler (FR-10)
+A request for a poem, author or collection page that does not exist, is not public, or was removed, or for `/about` or `/privacy` whose Contentful entry does not exist, SHALL carry `<meta name="robots" content="noindex">` and show the not-found screen, because the metadata step calls `notFound()` for it. The HTTP status stays 200: spike 1.2 measured 200 for every crawler, in and out of `htmlLimitedBots`, since these pages' prerendered shell commits the status before the metadata resolves (Cache Components). A real 404 status is a recorded follow-up (proposal). A failed read (`unavailable`) SHALL NOT be reported as not found: the metadata step returns the site's fallback metadata and the page body throws to its error screen as it does today. An unexpected exception in the metadata code itself SHALL NOT break the page (FR-1).
 
 #### Scenario: Removed poem
 - **GIVEN** an admin has deleted a poem
-- **WHEN** a search crawler that gets blocking metadata requests that poem's page
-- **THEN** the response status is 404
+- **WHEN** a crawler requests that poem's page
+- **THEN** the HTML has `<meta name="robots" content="noindex">` and the not-found screen
 
 #### Scenario: Unknown author id
 - **GIVEN** an id that is a valid UUID but belongs to no public author
-- **WHEN** a search crawler that gets blocking metadata requests `/authors/<id>`
-- **THEN** the response status is 404
+- **WHEN** a crawler requests `/authors/<id>`
+- **THEN** the HTML has `<meta name="robots" content="noindex">` and the not-found screen
 
 #### Scenario: Missing content entry
 - **GIVEN** the Contentful `about_page` entry does not exist
-- **WHEN** a search crawler that gets blocking metadata requests `/about`
-- **THEN** the response status is 404 (the page body's own screen for a browser is unchanged)
+- **WHEN** a crawler requests `/about`
+- **THEN** the HTML has `<meta name="robots" content="noindex">` (the page body's own screen for a browser is unchanged)
 
-#### Scenario: Read failure is not a 404
+#### Scenario: Read failure is not marked as missing
 - **GIVEN** the authors read fails
-- **WHEN** a search crawler that gets blocking metadata requests a public author page
-- **THEN** the response status is not 404 (a 5xx for a crawler that gets blocking metadata) and the page shows its error screen
+- **WHEN** a crawler requests a public author page
+- **THEN** the metadata is the site's fallback (no `noindex` from the metadata step) and the page shows its error screen
 
 ### Requirement: Descriptions are plain text of bounded length (NFR-4)
 A description SHALL be plain text: Markdown syntax (headings, emphasis, list and quote markers, the poem formats for epigraph, separator and indent) removed, runs of whitespace and line breaks collapsed to one space, at most 160 characters, cut at a word boundary with `…` appended when shortened; when the text has no space to cut at within the limit, it SHALL be cut hard so that the result with `…` is exactly 160 characters. A text that is empty after cleaning counts as empty (FR-2).
