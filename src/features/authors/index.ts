@@ -9,6 +9,7 @@ export { AuthorsNavLink } from "./components/AuthorsNavLink/AuthorsNavLink";
 export { getAuthorPageMetadata } from "./metadata/author-page-metadata";
 export { getAuthorsPageMetadata } from "./metadata/authors-page-metadata";
 export { getOwnPublicAuthor } from "./dal/own-public-author";
+export { listPublicAuthors } from "./dal/public-authors";
 export { getPublicAuthorName } from "./dal/public-author-name";
 export { AUTHOR_EDITOR_PATH, AUTHORS_PATH } from "./model/author.constants";
 export { authorPagePath } from "./model/author-page-path";

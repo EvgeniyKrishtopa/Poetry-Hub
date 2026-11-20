@@ -8,8 +8,11 @@ const POEMS_DIR = "src/features/poems";
 const AUTHORS_DIR = "src/features/authors";
 const SRC_DIR = "src";
 
-/** The one module allowed to read the poems table (NFR-3). */
-const POEMS_READER = "src/features/poems/dal/author-poems.ts";
+/**
+ * The modules allowed to read the poems table (NFR-3): the author's poems, and the sitemap's id-only list
+ * (seo-metadata design D5). Both sit in `poems/dal/`, as author-poems NFR-3 requires.
+ */
+const POEMS_READERS = ["src/features/poems/dal/author-poems.ts", "src/features/poems/dal/public-poem-refs.ts"];
 
 const SOURCE_FILE = /\.tsx?$/;
 
@@ -66,10 +69,10 @@ describe("poems feature boundaries", () => {
   });
 
   // implements NFR-3 of add-author-poems
-  it("lets only the poems DAL read the poems table", () => {
+  it("lets only the two poems DAL readers read the poems table", () => {
     const readers = filesMatching(sourceFiles(SRC_DIR), /\.from\(["']poems["']\)/);
 
-    expect(readers).toEqual([POEMS_READER]);
+    expect(readers.toSorted()).toEqual(POEMS_READERS);
   });
 
   // implements NFR-3 of add-author-poems
