@@ -6,7 +6,7 @@ import { signIn } from "./support/sign-in";
 
 /** `draft-author@example.test`: the seeded admin. */
 const ADMIN_EMAIL = "draft-author@example.test";
-/** A seed reader no other scenario touches; blocked and unblocked again by this one. */
+/** A seed reader other scenarios sign in as too: this one is blocked and unblocked again, so playwright.config.ts runs it alone, after them. */
 const USER_EMAIL = "author4@example.test";
 
 const ADD_BUTTON = "В список нарушителей";
@@ -19,7 +19,6 @@ const EARLY_BLOCK_TITLE = "Заблокировать до истечения с
 const NOT_WARNED_LINE = "Предупреждение ещё не отправлено.";
 const EMPTY_MESSAGE_ERROR = "Введите сообщение";
 const CASE_GONE = "Случая больше нет";
-const EMPTY_LIST = "В списке никого нет";
 const OFFLINE_TEXT = "Нет подключения к интернету";
 const UNBLOCK_BUTTON = "Разблокировать";
 
@@ -78,13 +77,10 @@ test(
     const otherTab = await context.newPage();
     await otherTab.goto("/admin/violations");
     await waitForHydration(otherTab);
-    await otherTab
-      .getByRole("main")
-      .getByRole("listitem")
-      .filter({ hasText: USER_EMAIL })
-      .getByRole("button", { name: REMOVE_BUTTON })
-      .click();
-    await expect(otherTab.getByRole("main").getByText(EMPTY_LIST)).toBeVisible();
+    const otherTabRow = otherTab.getByRole("main").getByRole("listitem").filter({ hasText: USER_EMAIL });
+    await otherTabRow.getByRole("button", { name: REMOVE_BUTTON }).click();
+    // Not «the list is empty»: scenarios that run in parallel keep their own cases in the same list.
+    await expect(otherTabRow).toHaveCount(0);
     await otherTab.close();
 
     await row.getByRole("button", { name: SWITCH_BUTTON }).click();
@@ -110,7 +106,7 @@ test(
     // The block closed the case: a fresh load of the list no longer has the row.
     await page.reload();
     await waitForHydration(page);
-    await expect(main.getByText(EMPTY_LIST)).toBeVisible();
+    await expect(main.getByRole("listitem").filter({ hasText: USER_EMAIL })).toHaveCount(0);
 
     // Restore the seed: unblock the user on /admin.
     await page.goto("/admin");

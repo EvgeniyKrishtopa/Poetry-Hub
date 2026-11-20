@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed (2026-11-17) -- written by an autonomous series, not yet confirmed
+Accepted (2026-11-18) -- written 2026-11-17 by an autonomous series, confirmed by the owner 2026-11-18
 
 Amends 0005 (Decision 1) and notes 0013 (Decision 3).
 

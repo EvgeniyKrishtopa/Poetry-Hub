@@ -22,7 +22,6 @@ const WARN_BUTTON = "Отправить предупреждение";
 const SWITCH_BUTTON = "Сменить основание";
 const REMOVE_BUTTON = "Убрать из списка";
 const GROUND_CHANGED_NOTICE = "Основание изменено";
-const EMPTY_LIST = "В списке никого нет";
 
 // A real pointer drag works in viewport coordinates, so the link and every row's grip must be on screen together.
 test.use({ viewport: { width: 1280, height: 1000 } });
@@ -91,26 +90,29 @@ test(
     await expect(page).toHaveURL(/\/admin\/violations$/);
     await waitForHydration(page);
     await expect(page.getByRole("navigation", { name: "Навигационная цепочка" })).toContainText("Админка");
-    const rows = main.getByRole("listitem");
-    await expect(rows).toHaveCount(2);
-    await expect(rows.nth(0)).toContainText(DROPPED_USER);
-    await expect(rows.nth(0)).toContainText(MALICIOUS_GROUND);
-    await expect(rows.nth(0).getByRole("button", { name: WARN_BUTTON })).toHaveCount(0);
-    await expect(rows.nth(1)).toContainText(BUTTON_USER);
-    await expect(rows.nth(1)).toContainText(HARMFUL_GROUND);
-    await expect(rows.nth(1)).toContainText("Ожидает решения");
-    await expect(rows.nth(1).getByRole("button", { name: WARN_BUTTON })).toBeVisible();
+    // Scenarios that run in parallel keep their own cases in the same list, so rows are found by user, never by index.
+    const droppedRow = row(DROPPED_USER);
+    const buttonRow = row(BUTTON_USER);
+    await expect(droppedRow).toContainText(MALICIOUS_GROUND);
+    await expect(droppedRow.getByRole("button", { name: WARN_BUTTON })).toHaveCount(0);
+    await expect(buttonRow).toContainText(HARMFUL_GROUND);
+    await expect(buttonRow).toContainText("Ожидает решения");
+    await expect(buttonRow.getByRole("button", { name: WARN_BUTTON })).toBeVisible();
+    const listedEmails = await main.getByRole("listitem").allInnerTexts();
+    const droppedPosition = listedEmails.findIndex((text) => text.includes(DROPPED_USER));
+    const buttonPosition = listedEmails.findIndex((text) => text.includes(BUTTON_USER));
+    expect(droppedPosition).toBeLessThan(buttonPosition);
 
     // FR-7: the ground switch keeps the row, updates its pill and takes the warning away.
-    await rows.nth(1).getByRole("button", { name: SWITCH_BUTTON }).click();
-    await expect(rows.nth(1).getByText(GROUND_CHANGED_NOTICE)).toBeVisible();
-    await expect(rows.nth(1)).toContainText(MALICIOUS_GROUND);
-    await expect(rows.nth(1).getByRole("button", { name: WARN_BUTTON })).toHaveCount(0);
+    await buttonRow.getByRole("button", { name: SWITCH_BUTTON }).click();
+    await expect(buttonRow.getByText(GROUND_CHANGED_NOTICE)).toBeVisible();
+    await expect(buttonRow).toContainText(MALICIOUS_GROUND);
+    await expect(buttonRow.getByRole("button", { name: WARN_BUTTON })).toHaveCount(0);
 
     // Clean up through the app.
-    await rows.nth(1).getByRole("button", { name: REMOVE_BUTTON }).click();
-    await expect(rows).toHaveCount(1);
-    await rows.nth(0).getByRole("button", { name: REMOVE_BUTTON }).click();
-    await expect(main.getByText(EMPTY_LIST)).toBeVisible();
+    await buttonRow.getByRole("button", { name: REMOVE_BUTTON }).click();
+    await expect(buttonRow).toHaveCount(0);
+    await droppedRow.getByRole("button", { name: REMOVE_BUTTON }).click();
+    await expect(droppedRow).toHaveCount(0);
   },
 );

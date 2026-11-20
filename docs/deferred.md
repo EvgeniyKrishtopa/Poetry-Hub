@@ -185,3 +185,15 @@ Archived at `openspec/changes/archive/2026-11-17-admin-moderation/`.
 - **Verified instead:** the same checks on the local stack, recorded in `openspec/changes/admin-moderation/_debug/admin-functions-auth-and-storage-check.md`; pgTAP covers the Storage policies and the hook's answers.
 - **Decision:** user, 2026-11-13: defer to the deploy.
 - **Status:** open. Natural place to close it is the deploy step (design Migration Plan, steps 1 and 2): after `supabase db push` and registering the hook in the dashboard, run the local probe steps against the hosted project. If the `postgres` role may not write `auth`, design D3's fallback applies (a `security definer` function owned by a role that holds the grant).
+
+## admin-violations-feedback
+
+### admin-violations-feedback · 6.4 — real-email check not run
+
+- **State:** skipped
+- **Requirement:** FR-9, FR-11, FR-14
+- **What is missing:** one warning and one block notice sent through Resend to an address the owner reads, and the owner's report that both emails arrive with the expected text and reason.
+- **Why:** the owner chose to do it during the final testing of group 6, with the real `RESEND_API_KEY` and `EMAIL_FROM` from `.env.local`. Without a verified sender domain Resend sends only from `onboarding@resend.dev` to the account owner's own address.
+- **Verified instead:** unit tests of the email module and the copy constants, and the Playwright replay with an empty key, where every send fails as `config` and no scenario mails a seed address.
+- **Decision:** user, 2026-11-20: defer to the final testing of this group.
+- **Status:** open. To close it: start the dev server normally, add an author whose address the owner reads, send one warning and then block them, have the owner report both emails, then set this entry to `resolved` and tick 6.4 in `tasks.md`.

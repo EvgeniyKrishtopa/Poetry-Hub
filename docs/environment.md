@@ -105,6 +105,20 @@ git-ignored `PROGRESS.md`, so every clone sees them.
   project already running the earlier app, deploy the app first and push this migration after it, never before: the
   earlier app's row schema requires `is_admin`, so its `/admin` list shows the unavailable state against the new
   function. Rollback: revert the app first, then the down migration in the file's header.
+- **Violation review migration and Resend** (`admin-violations-feedback`; ADR 0016), in this order:
+  1. `npx supabase db push` applies `20261117170000_violation_review.sql` (`violation_cases`, the guarded
+     `admin_*_violation_case` and warning functions, and the extra `notice_email`, `ground` and `user_id` keys
+     in the answers of block, ban and the two admin deletes). Push it **before the app**: an old app keeps
+     working against it, but the new app's review list and notices call functions that do not exist without it.
+     Apply it after the admin moderation migrations. Rollback: revert the app first, then the down migration in
+     the file's header (every open case is lost).
+  2. Set `RESEND_API_KEY` and `EMAIL_FROM` on the hosting platform (the Resend section above) and finish the
+     sender-domain verification in Resend first: until the domain shows "Verified" every send fails, the
+     warning stays `waiting` and a block, ban or delete shows the "email not sent" notice.
+  3. Send one warning and one block notice to an address you control and check the text and the reason
+     (`docs/deferred.md`, `admin-violations-feedback` 6.4, if it is still open).
+  4. Owner's own work, outside the code: paste the wording from `docs/about-rules-proposal.md` into the About
+     page in Contentful, and review the privacy policy for the new email use of an account's address.
 - **`poem-illustrations` bucket** (`add-poem-creation`): on the hosted project, confirm it exists,
   public, 5 MiB file size limit, MIME types `image/png` and `image/jpeg` — the same as
   `supabase/config.toml`, which configures the local stack only.

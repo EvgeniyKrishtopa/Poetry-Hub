@@ -2,9 +2,9 @@ import "server-only";
 
 import type { EMAIL_ENV } from "./email.constants";
 
-export type EmailEnvName = (typeof EMAIL_ENV)[keyof typeof EMAIL_ENV];
+type EmailEnvName = (typeof EMAIL_ENV)[keyof typeof EMAIL_ENV];
 
-export interface EmailConfig {
+interface EmailConfig {
   readonly apiKey: string;
   readonly from: string;
 }
