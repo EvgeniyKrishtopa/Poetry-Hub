@@ -105,6 +105,7 @@ describe("home featured ids DAL", () => {
 
     await expect(getHomeFeaturedIds()).resolves.toEqual({ ok: false });
 
+    expect(cacheLife).toHaveBeenCalledExactlyOnceWith("seconds");
     expect(loggedLine()).toBe("[home] read featured ids failed: unavailable");
   });
 });
