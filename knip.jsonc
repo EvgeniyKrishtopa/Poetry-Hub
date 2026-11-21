@@ -32,10 +32,7 @@
     "src/features/home/components/AuthorCard/**",
     "src/features/home/components/HomeLatestWorks/**",
     "src/features/home/components/HomeAbout/**",
-    "src/features/home/components/HomeJoinCta/**",
-    "src/features/poems/dal/poems-by-ids.ts",
-    "src/features/poems/dal/latest-poems.ts",
-    "src/features/poems/model/poem-summary.types.ts"
+    "src/features/home/components/HomeJoinCta/**"
   ],
   // Temporary, home-page-sections scaffold: the re-exports and the two shared constants added for the new stubs have
   // no importer until the route wiring (tasks 4.4, 5.2, 6.6). Only the unused-export checks of these four files; each
