@@ -47,7 +47,7 @@ insert into public.poems (id, author_id, title, text) values
   ('a0000000-0000-4000-8000-0000000000aa', 'a7a7a7a7-a7a7-47a7-87a7-a7a7a7a7a7a7', 'PN', 'Text');
 
 -- ---------- The tables: shape, constraints, closed to clients (task 1.2; FR-10, NFR-6) ----------
--- implements FR-10 of home-curation
+-- implements FR-10 of home-page-sections
 
 select is(
   (select count(*)::int from pg_class
@@ -187,7 +187,7 @@ select is((select count(*)::int from public.home_featured_poems), 0, 'the refuse
 select is((select count(*)::int from public.home_featured_authors), 0, 'the refused calls added no author');
 
 -- ---------- ADM: add poems (task 1.3; FR-8, FR-10) ----------
--- implements FR-8 and FR-10 of home-curation
+-- implements FR-8 and FR-10 of home-page-sections
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
 
@@ -241,7 +241,7 @@ select throws_ok($$select public.admin_remove_home_entry('collection', 'b0000000
   '22023', null, 'a removal of an unknown kind is refused');
 
 -- ---------- A deleted poem frees its slot (FR-11) ----------
--- implements FR-11 of home-curation
+-- implements FR-11 of home-page-sections
 reset role;
 delete from public.poems where id = 'b0000000-0000-4000-8000-000000000002';
 
@@ -266,7 +266,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
 
 -- ---------- Move (task 1.3; FR-9) ----------
--- implements FR-9 of home-curation
+-- implements FR-9 of home-page-sections
 -- The list is P1, P3, P4, P5 at ranks 1 to 4.
 select is(public.admin_move_home_entry('poem', 'b0000000-0000-4000-8000-000000000005', 4, 2) ->> 'status', 'moved',
   'an entry moves to a new place');
@@ -384,7 +384,7 @@ select is(
   array['P1', 'P5', 'P4', 'P6'], 'the poem list was not touched by the author moves');
 
 -- ---------- The public read (task 1.4; FR-2, FR-4, FR-10) ----------
--- implements FR-2, FR-4 and FR-10 of home-curation
+-- implements FR-2, FR-4 and FR-10 of home-page-sections
 reset role;
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
@@ -401,7 +401,7 @@ select is(
   array['author_ids', 'poem_ids'], 'the answer holds the two lists and nothing else');
 
 -- ---------- An author who stops being public stays listed, and is not shown (FR-11) ----------
--- implements FR-10 and FR-11 of home-curation
+-- implements FR-10 and FR-11 of home-page-sections
 reset role;
 update public.author_profiles set last_name = null where id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 
@@ -436,7 +436,7 @@ select is(public.admin_remove_home_entry('author', 'cccccccc-cccc-4ccc-8ccc-cccc
   'an admin removes the hidden entry');
 
 -- ---------- A deleted profile takes its entries (FR-11) ----------
--- implements FR-11 of home-curation
+-- implements FR-11 of home-page-sections
 select is(public.admin_remove_home_entry('poem', 'b0000000-0000-4000-8000-000000000004') ->> 'status', 'removed',
   'an admin makes room in the poem list');
 select is(public.admin_add_home_poem('d0000000-0000-4000-8000-000000000007') ->> 'status', 'added',
