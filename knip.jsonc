@@ -9,8 +9,44 @@
     "src/features/collections/**",
     // Temporary, drag-and-drop-ordering scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new feature's files. The last group that wires the board into the route removes this entry.
-    "src/features/work-ordering/**"
+    "src/features/work-ordering/**",
+    // Temporary, home-page-sections scaffold: the new stubs have no importer until their tasks wire or test them.
+    // Only the new files, so knip still sees the rest of each feature. The last group (7.x) removes these entries.
+    "src/features/admin/actions/*-home-*.actions.ts",
+    "src/features/admin/dal/home-rpc.ts",
+    "src/features/admin/model/home-entry.*.ts",
+    "src/features/admin/components/AddToHomeControl/**",
+    "src/features/admin/components/HomeEntryList/**",
+    "src/features/admin/pages/AdminHomePage/**",
+    "src/features/admin/pages/AdminHomePageContent/**",
+    "src/features/home/dal/home-featured.ts",
+    "src/features/home/dal/home-sections.ts",
+    "src/features/home/model/home.constants.ts",
+    "src/features/home/model/home-section.types.ts",
+    "src/features/home/model/to-author-description.ts",
+    "src/features/home/model/order-by-ids.ts",
+    "src/features/home/components/HomeHero/**",
+    "src/features/home/components/HomeFeaturedWorks/**",
+    "src/features/home/components/WorkCard/**",
+    "src/features/home/components/HomeAuthors/**",
+    "src/features/home/components/AuthorCard/**",
+    "src/features/home/components/HomeLatestWorks/**",
+    "src/features/home/components/HomeAbout/**",
+    "src/features/home/components/HomeJoinCta/**",
+    "src/features/poems/dal/poems-by-ids.ts",
+    "src/features/poems/dal/latest-poems.ts",
+    "src/features/poems/model/poem-summary.types.ts"
   ],
+  // Temporary, home-page-sections scaffold: the re-exports and the two shared constants added for the new stubs have
+  // no importer until the route wiring (tasks 4.4, 5.2, 6.6). Only the unused-export checks of these four files; each
+  // keeps its file, dependency and duplicate checks. The last group (7.x) removes this block. `admin/index.ts` is
+  // not listed: `admin/tests/boundaries.test.ts` pins its exports, so tasks 4.3 and 5.1 add the two new ones.
+  "ignoreIssues": {
+    "src/features/home/index.ts": ["exports"],
+    "src/features/poems/index.ts": ["exports", "types"],
+    "src/shared/config/account-paths.ts": ["exports"],
+    "src/shared/config/cache-tags.ts": ["exports"]
+  },
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
     "@fission-ai/openspec",

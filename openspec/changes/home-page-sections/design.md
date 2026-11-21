@@ -161,3 +161,37 @@ sequenceDiagram
 2. Ship the app. With both tables empty the page shows the hero, about, latest and closing sections; the featured and authors sections stay absent until the admin chooses.
 3. Rollback: revert the app, then run the down migration documented in the migration's header (drop the functions, then the two tables). No data outside them changes.
 4. Add the migration to the Deploy checklist in `docs/environment.md`.
+
+## Scaffold map
+
+Paths are under `src/`. Every function body is `throw new Error("not implemented")` (or a `null` return for a component); nothing is wired. The route files, the migration, the tests, the tokens and the docs are tasks, not scaffold. `admin/index.ts` is deliberately unchanged: `admin/tests/boundaries.test.ts` pins its exports, so tasks 4.3 and 5.1 add the two new ones. The home section components take an already-awaited `result` and stay synchronous, because the page awaits the DAL and passes plain values (`docs/state-management.md`); this is what D5's "each section reads its own result" means in code.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| shared/config/cache-tags.ts (edited) | cache tag of the admin's home choice | `HOME_FEATURED_TAG` |
+| shared/config/account-paths.ts (edited) | the admin's home-choice page path | `ADMIN_HOME_PATH` |
+| features/poems/model/poem-summary.types.ts | a public poem as the home page needs it, and the read's result | `PoemSummary`, `PoemSummariesResult` |
+| features/poems/dal/poems-by-ids.ts | public poems by id, in the requested order | `listPoemsByIds` |
+| features/poems/dal/latest-poems.ts | the newest public poems | `listLatestPoems` |
+| features/poems/index.ts (edited) | public API | the three above |
+| features/home/model/home.constants.ts | limits 4 / 4 / 120 and the hero image path | `FEATURED_LIMIT`, `LATEST_LIMIT`, `AUTHOR_DESCRIPTION_MAX_LENGTH`, `HERO_IMAGE_PATH` |
+| features/home/model/home-section.types.ts | section cards, the chosen ids, section results | `FeaturedWork`, `FeaturedAuthor`, `LatestWork`, `HomeFeaturedIds`, `HomeFeaturedIdsResult`, `SectionResult` |
+| features/home/model/to-author-description.ts | «О себе» to the card's short description | `toAuthorDescription` |
+| features/home/model/order-by-ids.ts | the admin's order, unresolved ids dropped | `orderByIds` |
+| features/home/dal/home-featured.ts | the chosen ids from `home_featured_ids` | `getHomeFeaturedIds` |
+| features/home/dal/home-sections.ts | the data of the three sections | `getFeaturedWorks`, `getFeaturedAuthors`, `getLatestWorks` |
+| features/home/components/HomeHero/ | the hero (replaces `HomeGreeting`) | `HomeHero`, `HomeHeroProps` |
+| features/home/components/HomeFeaturedWorks/, WorkCard/ | the featured section and its card | `HomeFeaturedWorks`, `WorkCard` |
+| features/home/components/HomeAuthors/, AuthorCard/ | the authors section and its card | `HomeAuthors`, `AuthorCard` |
+| features/home/components/HomeLatestWorks/ | the latest section | `HomeLatestWorks` |
+| features/home/components/HomeAbout/, HomeJoinCta/ | the about section and the closing invitation | `HomeAbout`, `HomeJoinCta` |
+| features/home/index.ts (edited) | public API | the DAL and component exports above |
+| features/admin/model/home-entry.constants.ts | cap of 4 and the operation names | `HOME_ENTRY_LIMIT`, `HOME_ENTRY_OPERATION` |
+| features/admin/model/home-entry.types.ts | entry, inputs, statuses, write and action results | `HomeEntry`, `HomeEntryKind`, the inputs, `HomeAddStatus`, `HomeMoveStatus`, `HomeRemoveStatus`, `HomeWriteResult`, `HomeFailureReason`, `HomeActionResult`, `HomeEntriesResult` |
+| features/admin/model/home-entry.schema.ts | the four actions' input schemas | `addHomePoemSchema`, `addHomeAuthorSchema`, `moveHomeEntrySchema`, `removeHomeEntrySchema` |
+| features/admin/dal/home-rpc.ts | the five SQL functions as values | `addHomePoem`, `addHomeAuthor`, `moveHomeEntry`, `removeHomeEntry`, `listHomeEntries` |
+| features/admin/actions/{add-home-poem,add-home-author,move-home-entry,remove-home-entry}.actions.ts | the four admin Server Actions on `adminActionClient` | one action each |
+| features/admin/components/AddToHomeControl/ | «Показать на главной» and its admin check | `AddToHomeControl`, `AddToHomeControlContent` |
+| features/admin/components/HomeEntryList/ | one draggable list of chosen entries | `HomeEntryList` |
+| features/admin/pages/AdminHomePage/, AdminHomePageContent/ | `/admin/home` with its gate | `AdminHomePage`, `AdminHomePageContent` |
+| knip.jsonc (edited) | temporary ignores for the unwired stubs, each with its reason | none |
