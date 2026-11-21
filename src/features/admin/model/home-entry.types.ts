@@ -1,5 +1,7 @@
+import type { z } from "zod";
+
 import type { AdminFailure } from "./admin.types";
-import type { HOME_DB_STATUS } from "./home-entry.constants";
+import type { homeAddAnswerSchema, homeMoveAnswerSchema, homeRemoveAnswerSchema } from "./home-entry-rpc.schema";
 
 /** Which of the two lists an entry belongs to; an entry never moves between them (FR-9). */
 export type HomeEntryKind = "poem" | "author";
@@ -40,15 +42,12 @@ export interface RemoveHomeEntryInput {
   readonly id: string;
 }
 
-export type HomeAddStatus =
-  | typeof HOME_DB_STATUS.added
-  | typeof HOME_DB_STATUS.limitReached
-  | typeof HOME_DB_STATUS.alreadyInList
-  | typeof HOME_DB_STATUS.notFound;
+// Each status union is what its function's answer schema admits, so the two cannot drift apart.
+export type HomeAddStatus = z.infer<typeof homeAddAnswerSchema>["status"];
 
-export type HomeMoveStatus = typeof HOME_DB_STATUS.moved | typeof HOME_DB_STATUS.stale | typeof HOME_DB_STATUS.notFound;
+export type HomeMoveStatus = z.infer<typeof homeMoveAnswerSchema>["status"];
 
-export type HomeRemoveStatus = typeof HOME_DB_STATUS.removed | typeof HOME_DB_STATUS.notFound;
+export type HomeRemoveStatus = z.infer<typeof homeRemoveAnswerSchema>["status"];
 
 /** A write's answer: the database's status, or why the call failed. A failure is a value, never a throw. */
 export type HomeWriteResult<Status extends string> =
