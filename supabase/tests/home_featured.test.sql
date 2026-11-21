@@ -5,7 +5,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(115);
+select plan(121);
 
 -- Start from empty content tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -466,7 +466,37 @@ select is(
   (select array_agg(position order by position) from public.home_featured_authors), array[1, 3]::smallint[],
   'the cascade left a gap in the stored positions, which the next write closes');
 
--- Everything above ran with the unique position checked at the end of each statement.
+-- ---------- The real delete paths free a slot too (FR-11) ----------
+-- implements FR-11 of home-page-sections
+-- The list is P1, P5, P6, P4. The admin's moderation delete and the author's own delete both go through the
+-- foreign key, so the entry leaves with the poem and the next add finds no gap.
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select is(public.admin_delete_poem('b0000000-0000-4000-8000-000000000005') ->> 'status', 'deleted',
+  'an admin deletes a chosen poem as moderation');
+select is(
+  array(select label from public.admin_list_home_entries() where kind = 'poem' order by entry_position),
+  array['P1', 'P6', 'P4'], 'the poem the admin deleted left the list');
+
+select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}', true);
+select is(public.delete_my_poem('b0000000-0000-4000-8000-000000000001') ->> 'status', 'deleted',
+  'an author deletes their own chosen poem');
+
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select is(
+  array(select label from public.admin_list_home_entries() where kind = 'poem' order by entry_position),
+  array['P6', 'P4'], 'the poem the author deleted left the list');
+select is(public.admin_add_home_poem('b0000000-0000-4000-8000-000000000003') ->> 'status', 'added',
+  'the slots both deletes freed can be filled');
+
+reset role;
+select is(
+  (select array_agg(position order by position) from public.home_featured_poems), array[1, 2, 3]::smallint[],
+  'the add closed the gaps both deletes left');
+
+-- The unique position is deferred; `set constraints all immediate` near the top made every statement above check
+-- it at the end of the statement, which is at least as strict as the check at commit. This one proves nothing
+-- is pending now.
 select lives_ok($$set constraints all immediate$$, 'no deferred check is pending at the end of the run');
 
 select * from finish();
