@@ -7,8 +7,6 @@ export function orderByIds<Item>(
   items: readonly Item[],
   getId: (item: Item) => string,
 ): readonly Item[] {
-  void ids;
-  void items;
-  void getId;
-  throw new Error("not implemented");
+  const byId = new Map(items.map((item) => [getId(item), item]));
+  return ids.flatMap((id) => byId.get(id) ?? []);
 }
