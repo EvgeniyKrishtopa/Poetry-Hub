@@ -213,3 +213,15 @@ Archived at `openspec/changes/archive/2026-11-20-seo-metadata/`.
 - **Verified instead:** the nine crawler user agents (Googlebot, YandexBot, bingbot, `TelegramBot (like TwitterBot)`, vkShare, WhatsApp, facebookexternalhit, Twitterbot, `Slackbot-LinkExpanding`) against the final production build: eight have `og:title`, `og:description`, `og:image` and the canonical link inside `<head>`, and Googlebot streams them after `</head>`, which it reads (task 5.5).
 - **Decision:** none yet; the task's own text says to record the step here as blocked when no public address is available.
 - **Status:** open. To close it: after the first deploy (or with a production build behind a tunnel), paste a poem link into Telegram, VK and WhatsApp, record what each shows, and add a bot that shows the generic card to `htmlLimitedBots` in `next.config.ts` (the full default pattern from task 1.4 plus the addition, with a comment). Then remove the `blocked` marker, tick 6.5 in `tasks.md` and set this entry to `resolved`.
+
+## home-page-sections
+
+### home-page-sections · 1.5 — «Все произведения» and «Все публикации» left out
+
+- **State:** skipped
+- **Requirement:** FR-2, FR-5
+- **What is missing:** the links «Все произведения» (under the featured poems) and «Все публикации» (under the latest publications). Both would lead to a page listing every poem.
+- **Why:** the site has no page that lists every poem, so there is nothing for the two links to open. A catalog page is a separate change, and the two links come with it.
+- **Verified instead:** nothing; the home page ships without the links, and the section tests assert there are none.
+- **Decision:** owner, 2026-11-21.
+- **Status:** open. To close it: add a catalog page in its own change, then add the two links to the featured and latest sections and set this entry to `resolved`.

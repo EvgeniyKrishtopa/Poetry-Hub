@@ -74,8 +74,8 @@ insert into storage.objects (bucket_id, name) values
 select is(
   (select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public' and p.proname like 'admin\_%'),
-  15,
-  'there are fifteen admin functions (a new one means updating the allowlist in admin_foundation.test.sql)'
+  20,
+  'there are twenty admin functions (a new one means updating the allowlist in admin_foundation.test.sql)'
 );
 
 select is_empty(

@@ -32,7 +32,7 @@ Full scenarios are in the two new specs and the modified one.
 - **FR-9** The `/admin/home` page lists the chosen poems and authors in order, and an admin can reorder and remove entries there.
 - **FR-10** Guarded writes: only an admin's session can add, reorder or remove entries; the tables accept no direct write from the client roles.
 - **FR-11** Consistency: a poem or author that no longer exists, or whose author is no longer public, never shows on the home page; an entry whose poem or profile is deleted is removed with it, and one whose author is only not public stays on `/admin/home` marked as not shown.
-- **FR-12** Freshness of reads: a failed section read is retried within seconds, and the latest-publications list follows new poems within its named cache lifetime.
+- **FR-12** Freshness of reads: a failed section read is retried after seconds and shows again within the page's minute, and the latest-publications list follows new poems within its named cache lifetime.
 - **FR-13** An admin's change shows on the next request for `/`.
 - **NFR-1** The home page stays a cached, prerenderable page: nothing in its cache scope reads cookies or the session.
 - **NFR-2** The layout works on desktop, tablet and mobile with no horizontal scroll from 360 px wide.
