@@ -1,6 +1,7 @@
 "use server";
 
 import { addHomePoem } from "../dal/home-rpc";
+import { HOME_ENTRY_OPERATION } from "../model/home-entry.constants";
 import { addHomePoemSchema } from "../model/home-entry.schema";
 import type { HomeActionResult, HomeAddStatus } from "../model/home-entry.types";
 
@@ -14,5 +15,5 @@ import { HOME_ADD_EFFECTS, runHomeWrite } from "./run-home-write";
 export const addHomePoemAction = adminActionClient
   .inputSchema(addHomePoemSchema)
   .action(async ({ parsedInput }): Promise<HomeActionResult<HomeAddStatus>> => {
-    return runHomeWrite(() => addHomePoem(parsedInput), HOME_ADD_EFFECTS);
+    return runHomeWrite(HOME_ENTRY_OPERATION.addPoem, () => addHomePoem(parsedInput), HOME_ADD_EFFECTS);
   });

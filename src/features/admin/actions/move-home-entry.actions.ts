@@ -1,6 +1,7 @@
 "use server";
 
 import { moveHomeEntry } from "../dal/home-rpc";
+import { HOME_ENTRY_OPERATION } from "../model/home-entry.constants";
 import { moveHomeEntrySchema } from "../model/home-entry.schema";
 import type { HomeActionResult, HomeMoveStatus } from "../model/home-entry.types";
 
@@ -14,5 +15,5 @@ import { HOME_MOVE_EFFECTS, runHomeWrite } from "./run-home-write";
 export const moveHomeEntryAction = adminActionClient
   .inputSchema(moveHomeEntrySchema)
   .action(async ({ parsedInput }): Promise<HomeActionResult<HomeMoveStatus>> => {
-    return runHomeWrite(() => moveHomeEntry(parsedInput), HOME_MOVE_EFFECTS);
+    return runHomeWrite(HOME_ENTRY_OPERATION.move, () => moveHomeEntry(parsedInput), HOME_MOVE_EFFECTS);
   });

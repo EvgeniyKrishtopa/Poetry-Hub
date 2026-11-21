@@ -53,9 +53,12 @@ function applyCacheEffect(effect: HomeCacheEffect): void {
 /**
  * The steps the four home actions share, each failure stopping the rest: the input is already validated by the
  * action's schema, then the session is read again, then the one function runs, then the caches follow the answer. A
- * failed write touches no cache (FR-13). The admin right is the database's to check, so nothing here decides it.
+ * failed write touches no cache (FR-13). The admin right is the database's to check, so nothing here decides it. An
+ * answer from the database leaves one log line with the operation and the status only, so an admin's change to the
+ * public home page has a trace (NFR-6: no id, no title).
  */
 export async function runHomeWrite<Status extends string>(
+  operation: string,
   call: () => Promise<HomeWriteResult<Status>>,
   effects: Readonly<Record<Status, HomeCacheEffect>>,
 ): Promise<HomeActionResult<Status>> {
@@ -65,6 +68,7 @@ export async function runHomeWrite<Status extends string>(
   const write = await call();
   if (!write.ok) return { ok: false, reason: toFailureReason(write.failure) };
 
+  console.info(`[admin] ${operation}: ${write.status}`);
   applyCacheEffect(effects[write.status]);
   return { ok: true, status: write.status };
 }

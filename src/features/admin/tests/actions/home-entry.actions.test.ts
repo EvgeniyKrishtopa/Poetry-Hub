@@ -82,6 +82,7 @@ function expectCachesUntouched(): void {
 beforeEach(() => {
   vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "info").mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -174,6 +175,40 @@ describe.each(ACTIONS)("$name", ({ action, dal, input, badInputs, successStatus 
     expect(console.error).toHaveBeenCalledExactlyOnceWith("[admin] action failed: RangeError");
     expectNothingSecretLogged();
     expectCachesUntouched();
+  });
+});
+
+describe("the success log line", () => {
+  // implements NFR-6 of home-page-sections
+  it.each([
+    ["add home poem", () => addHomePoemAction({ poemId: POEM_ID }), addHomePoem, "added"],
+    ["add home author", () => addHomeAuthorAction({ authorProfileId: AUTHOR_PROFILE_ID }), addHomeAuthor, "limit-reached"],
+    [
+      "move home entry",
+      () => moveHomeEntryAction({ kind: "poem", id: POEM_ID, fromPosition: 2, toPosition: 1 }),
+      moveHomeEntry,
+      "stale",
+    ],
+    ["remove home entry", () => removeHomeEntryAction({ kind: "author", id: AUTHOR_PROFILE_ID }), removeHomeEntry, "removed"],
+  ] as const)("leaves one line with the operation and the status only for %s", async (operation, run, dal, status) => {
+    (dal as unknown as DalMock).mockResolvedValue({ ok: true, status });
+
+    await run();
+
+    expect(console.info).toHaveBeenCalledExactlyOnceWith(`[admin] ${operation}: ${status}`);
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  // implements NFR-6 of home-page-sections
+  it("logs no success line for a failed write, a signed-out admin or a rejected input", async () => {
+    vi.mocked(addHomePoem).mockResolvedValue({ ok: false, failure: "forbidden" });
+    await addHomePoemAction({ poemId: POEM_ID });
+
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-out" });
+    await addHomePoemAction({ poemId: POEM_ID });
+    await addHomePoemAction({ poemId: "42" });
+
+    expect(console.info).not.toHaveBeenCalled();
   });
 });
 

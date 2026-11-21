@@ -1,6 +1,7 @@
 "use server";
 
 import { removeHomeEntry } from "../dal/home-rpc";
+import { HOME_ENTRY_OPERATION } from "../model/home-entry.constants";
 import { removeHomeEntrySchema } from "../model/home-entry.schema";
 import type { HomeActionResult, HomeRemoveStatus } from "../model/home-entry.types";
 
@@ -14,5 +15,5 @@ import { HOME_REMOVE_EFFECTS, runHomeWrite } from "./run-home-write";
 export const removeHomeEntryAction = adminActionClient
   .inputSchema(removeHomeEntrySchema)
   .action(async ({ parsedInput }): Promise<HomeActionResult<HomeRemoveStatus>> => {
-    return runHomeWrite(() => removeHomeEntry(parsedInput), HOME_REMOVE_EFFECTS);
+    return runHomeWrite(HOME_ENTRY_OPERATION.remove, () => removeHomeEntry(parsedInput), HOME_REMOVE_EFFECTS);
   });
