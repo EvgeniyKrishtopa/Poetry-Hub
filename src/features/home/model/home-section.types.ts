@@ -15,7 +15,7 @@ export interface FeaturedAuthor {
   readonly href: string;
   /** The author's photo URL, or `null` for the avatar placeholder. */
   readonly photoUrl: string | null;
-  /** A plain-text excerpt of «О себе» (at most `AUTHOR_DESCRIPTION_MAX_LENGTH`), or `null` when there is none. */
+  /** A plain-text excerpt of the author's about text (at most `AUTHOR_DESCRIPTION_MAX_LENGTH`), or `null` when there is none. */
   readonly description: string | null;
 }
 
