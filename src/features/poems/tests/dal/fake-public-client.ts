@@ -39,7 +39,7 @@ export function createFakePublicClient() {
         return Promise.resolve(response).then(resolve, reject);
       },
     };
-    for (const method of ["select", "eq", "order", "range"]) {
+    for (const method of ["select", "eq", "in", "order", "limit", "range"]) {
       Object.assign(builder, {
         [method]: (...args: unknown[]) => {
           calls.push([method, args]);

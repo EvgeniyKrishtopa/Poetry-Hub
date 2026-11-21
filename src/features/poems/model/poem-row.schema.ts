@@ -22,6 +22,17 @@ export const poemRowSchema = z.object({
 
 export type PoemRow = z.infer<typeof poemRowSchema>;
 
+/** One `public.poems` row as the home page's reads select it: no text (home-page-sections design D3). */
+export const poemSummaryRowSchema = z.object({
+  id: lowercaseUuidSchema,
+  author_id: lowercaseUuidSchema,
+  title: z.string().min(1),
+  illustration_path: z.string().min(1).nullable(),
+  created_at: z.iso.datetime({ offset: true }),
+});
+
+export type PoemSummaryRow = z.infer<typeof poemSummaryRowSchema>;
+
 /** One `public.poems` row as the sitemap's read selects it: the ids only (seo-metadata design D5). */
 export const poemRefRowSchema = z.object({
   id: lowercaseUuidSchema,
