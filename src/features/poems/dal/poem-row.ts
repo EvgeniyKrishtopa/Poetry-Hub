@@ -31,7 +31,7 @@ export function toPoemSummary(supabase: SupabaseClient, row: PoemSummaryRow): Po
   };
 }
 
-/** A checked row → `Poem`:the illustration's public-bucket URL and `created_at`'s UTC date (design D3). */
+/** A checked row → `Poem`: the illustration's public-bucket URL and `created_at`'s UTC date (design D3). */
 export function toPoem(supabase: SupabaseClient, row: PoemRow): Poem {
   return {
     id: row.id,

@@ -16,6 +16,7 @@ const SECOND_AUTHOR_ID = "1679091c-5a88-4faf-b5e5-1c2b3a4d5e6f";
 const NEWEST_ID = "30000000-0000-4000-8000-000000000052";
 const OLDER_ID = "c3a1b2d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
 const LIMIT = 4;
+const SECRET_TITLE = "Секрет";
 
 /** The rows as PostgREST returns them: already newest first. */
 const NEWEST_ROW = {
@@ -105,7 +106,20 @@ describe("latest poems DAL", () => {
     expect(console.error).toHaveBeenCalledTimes(1);
     const line = String(vi.mocked(console.error).mock.calls[0][0]);
     expect(line).toMatch(/^\[poems\] read latest poems failed: /);
-    expect(line).not.toContain("Секрет");
+    expect(line).not.toContain("failing row contains");
+  });
+
+  // implements FR-12 of home-page-sections
+  it("logs a row that fails its schema by kind only, never the title in that row or its id", async () => {
+    supabase.queueQuery(okResponse([{ ...NEWEST_ROW, title: SECRET_TITLE, author_id: "not-a-uuid" }]));
+
+    await listLatestPoems(LIMIT);
+
+    expect(console.error).toHaveBeenCalledTimes(1);
+    const line = String(vi.mocked(console.error).mock.calls[0][0]);
+    expect(line).toBe("[poems] read latest poems failed: invalid row");
+    expect(line).not.toContain(SECRET_TITLE);
+    expect(line).not.toContain(NEWEST_ID);
   });
 
   // implements FR-12 of home-page-sections

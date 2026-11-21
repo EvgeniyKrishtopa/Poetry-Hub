@@ -2,6 +2,7 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { createSupabasePublicClient } from "@/shared/lib/supabase/public";
 
 import { listPoemsByIds } from "../../dal/poems-by-ids";
@@ -148,7 +149,7 @@ describe("poems by ids DAL", () => {
   });
 
   // implements FR-12 of home-page-sections
-  it("logs the failure by kind only, never a title, an id or the database's message", async () => {
+  it("logs a database error by kind only, never an id or the database's message", async () => {
     supabase.queueQuery(errorResponse("57014", 500));
 
     await listPoemsByIds([STATION_ID]);
@@ -156,7 +157,46 @@ describe("poems by ids DAL", () => {
     expect(console.error).toHaveBeenCalledTimes(1);
     const line = String(vi.mocked(console.error).mock.calls[0][0]);
     expect(line).toMatch(/^\[poems\] read poems by ids failed: /);
+    expect(line).not.toContain(STATION_ID);
+    expect(line).not.toContain("failing row contains");
+  });
+
+  // implements FR-12 of home-page-sections
+  it("logs a row that fails its schema by kind only, never the title in that row or its id", async () => {
+    supabase.queueQuery(okResponse([{ ...STATION_ROW, title: SECRET_TITLE, author_id: "not-a-uuid" }]));
+
+    await listPoemsByIds([STATION_ID]);
+
+    expect(console.error).toHaveBeenCalledTimes(1);
+    const line = String(vi.mocked(console.error).mock.calls[0][0]);
+    expect(line).toBe("[poems] read poems by ids failed: invalid row");
     expect(line).not.toContain(SECRET_TITLE);
     expect(line).not.toContain(STATION_ID);
+  });
+
+  // implements FR-12 of home-page-sections
+  it("answers unavailable without a log line when the Supabase configuration is missing, because the proxy logs it", async () => {
+    vi.mocked(createSupabasePublicClient).mockImplementation(() => {
+      throw new SupabaseConfigError(["NEXT_PUBLIC_SUPABASE_URL"]);
+    });
+
+    await expect(listPoemsByIds([STATION_ID])).resolves.toEqual({ ok: false, reason: "unavailable" });
+
+    expect(console.error).not.toHaveBeenCalled();
+    expect(cacheLife).toHaveBeenCalledExactlyOnceWith("seconds");
+  });
+
+  // implements FR-12 of home-page-sections
+  it("answers unavailable and logs once when the client throws an error that is not a configuration error", async () => {
+    vi.mocked(createSupabasePublicClient).mockImplementation(() => {
+      throw new TypeError("fetch failed");
+    });
+
+    await expect(listPoemsByIds([STATION_ID])).resolves.toEqual({ ok: false, reason: "unavailable" });
+
+    expect(console.error).toHaveBeenCalledTimes(1);
+    const line = String(vi.mocked(console.error).mock.calls[0][0]);
+    expect(line).toMatch(/^\[poems\] read poems by ids failed: /);
+    expect(line).not.toContain("fetch failed");
   });
 });
