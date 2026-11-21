@@ -1,0 +1,7 @@
+{"ts":"2026-11-21T12:37:34Z","change":"home-page-sections","kind":"finding","gate":"spec-clarify","finding":"Shared author list failure: do all three data sections go together or alone (home-sections FR-7)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-21T12:37:34Z","change":"home-page-sections","kind":"finding","gate":"spec-clarify","finding":"Latest publications: exactly N newest or refill after dropping a missing author (home-sections FR-5)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-21T12:37:34Z","change":"home-page-sections","kind":"finding","gate":"spec-clarify","finding":"Whether a no-op move or remove refreshes /admin/home (design D2, tasks 4.2)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-21T12:37:34Z","change":"home-page-sections","kind":"finding","gate":"spec-clarify","finding":"Which images are informative or decorative (home-sections NFR-5)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-21T12:37:34Z","change":"home-page-sections","kind":"finding","gate":"spec-clarify","finding":"Author card description has no length (home-sections FR-4)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-21T12:37:34Z","change":"home-page-sections","kind":"finding","gate":"spec-clarify","finding":"Up and down buttons at the list ends (home-curation FR-9); replaced by drag and drop","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-21T12:37:34Z","change":"home-page-sections","kind":"finding","gate":"spec-clarify","finding":"Hero full-width: full-bleed or content column (home-sections FR-1)","outcome":"fixed","ruleNumber":""}

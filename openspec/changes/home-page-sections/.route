@@ -1,0 +1,2 @@
+full
+# multi-module: yes (home, admin, poems, authors, app/); data schema: yes (new table for the admin's featured poems and authors); contract: yes (new exported reads and admin actions)
