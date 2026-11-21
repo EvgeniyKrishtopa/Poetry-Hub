@@ -3,7 +3,7 @@ import "server-only";
 import { authorPagePath, fullName, listPublicAuthors, type PublicAuthor } from "@/features/authors";
 import { authorPoemPath, listLatestPoems, listPoemsByIds, type PoemSummary } from "@/features/poems";
 
-import { FEATURED_LIMIT, LATEST_LIMIT } from "../model/home.constants";
+import { LATEST_LIMIT } from "../model/home.constants";
 import type { FeaturedAuthor, FeaturedWork, LatestWork, SectionResult } from "../model/home-section.types";
 import { orderByIds } from "../model/order-by-ids";
 import { toAuthorDescription } from "../model/to-author-description";
@@ -63,8 +63,7 @@ export async function getFeaturedWorks(): Promise<SectionResult<FeaturedWork>> {
   const [idsResult, authorsResult] = await Promise.all([getHomeFeaturedIds(), listPublicAuthors()]);
   if (!idsResult.ok || !authorsResult.ok) return FAILED;
 
-  const chosenPoemIds = idsResult.ids.poemIds.slice(0, FEATURED_LIMIT);
-  const poemsResult = await listPoemsByIds(chosenPoemIds);
+  const poemsResult = await listPoemsByIds(idsResult.ids.poemIds);
   if (!poemsResult.ok) return FAILED;
 
   const names = authorNamesById(authorsResult.authors);
@@ -76,8 +75,7 @@ export async function getFeaturedAuthors(): Promise<SectionResult<FeaturedAuthor
   const [idsResult, authorsResult] = await Promise.all([getHomeFeaturedIds(), listPublicAuthors()]);
   if (!idsResult.ok || !authorsResult.ok) return FAILED;
 
-  const chosenAuthorIds = idsResult.ids.authorIds.slice(0, FEATURED_LIMIT);
-  const chosenAuthors = orderByIds(chosenAuthorIds, authorsResult.authors, (author) => author.id);
+  const chosenAuthors = orderByIds(idsResult.ids.authorIds, authorsResult.authors, (author) => author.id);
   return { ok: true, items: chosenAuthors.map(toFeaturedAuthor) };
 }
 
