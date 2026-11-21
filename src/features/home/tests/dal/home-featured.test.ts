@@ -3,6 +3,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HOME_FEATURED_TAG } from "@/shared/config/cache-tags";
+import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { createSupabasePublicClient } from "@/shared/lib/supabase/public";
 
 import { getHomeFeaturedIds } from "../../dal/home-featured";
@@ -107,5 +108,17 @@ describe("home featured ids DAL", () => {
 
     expect(cacheLife).toHaveBeenCalledExactlyOnceWith("seconds");
     expect(loggedLine()).toBe("[home] read featured ids failed: unavailable");
+  });
+
+  // implements FR-7, FR-12 of home-page-sections
+  it("answers a failure without a log line when the Supabase configuration is missing", async () => {
+    vi.mocked(createSupabasePublicClient).mockImplementation(() => {
+      throw new SupabaseConfigError([]);
+    });
+
+    await expect(getHomeFeaturedIds()).resolves.toEqual({ ok: false });
+
+    expect(cacheLife).toHaveBeenCalledExactlyOnceWith("seconds");
+    expect(console.error).not.toHaveBeenCalled();
   });
 });
