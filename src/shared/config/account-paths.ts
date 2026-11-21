@@ -21,3 +21,6 @@ export const ADMIN_PATH = "/admin";
 
 /** The review list under the admin page (admin-violations-feedback design D7); here for the same reason as `ADMIN_PATH`. */
 export const ADMIN_VIOLATIONS_PATH = `${ADMIN_PATH}/violations`;
+
+/** The home-page choice under the admin page (home-page-sections FR-9); here for the same reason as `ADMIN_PATH`. */
+export const ADMIN_HOME_PATH = `${ADMIN_PATH}/home`;
