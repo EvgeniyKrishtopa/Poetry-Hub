@@ -17,7 +17,7 @@
 | FR-7 · one read fails | `home-sections` test: one poem read down, the other poem section and the authors section still `ok`; page test: the other sections render and one log line holds the failure kind only | unit |
 | FR-7 · the author list fails | `home-sections` test: author list down, all three sections `ok: false` together; page test: hero, about and closing render | unit |
 | FR-7 · all reads fail | page test with every read failing: hero, about, closing render and the page is not the error screen | unit |
-| FR-12 · recovery after an outage | DAL tests assert the failed result sets `cacheLife("seconds")` and the success its longer profile (the cache tag and lifetime calls are mocked); spike 1.1 records that a nested short lifetime reaches the page | unit, integration |
+| FR-12 · recovery after an outage | DAL tests assert the failed result sets `cacheLife("seconds")` and the success its longer profile (the cache tag and lifetime calls are mocked); spike 1.1 recorded that a nested short lifetime does not shorten the page, so recovery is bounded by the page's minute (decided 2026-11-21) | unit, integration |
 | NFR-1 · same page for a signed-in reader | page test: nothing in the page's scope imports or calls cookies, headers or the session; `npm run build` lists `/` as prerendered | unit, integration |
 | NFR-2 · narrow viewport | recorded browser scenario at 360, 768 and 1280 px: document width equals the viewport and the cards reflow | end-to-end |
 | NFR-3 · images | `HomeHero` and card tests: `priority` and `sizes` props on the hero, a fixed aspect-ratio class on cover boxes | unit |

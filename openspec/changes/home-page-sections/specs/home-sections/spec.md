@@ -110,11 +110,11 @@ Each data-backed section (featured poems, project authors, latest publications) 
 - **THEN** the hero, about and closing sections render and the page is not the error screen
 
 ### Requirement: A failed read is not kept (FR-12)
-A failed section read SHALL NOT stay in the cache for the lifetime of a successful one: it SHALL be retried within seconds. The latest-publications list SHALL follow new poems within its named cache lifetime, and the page's chosen entries SHALL follow the admin's change on the next request (see `home-curation`).
+A failed section read SHALL NOT stay in the cache for the lifetime of a successful one: the read itself SHALL be retried after seconds, and because the page is cached for its named lifetime of a minute, a recovered section SHALL be shown again within that minute (a failure never outlasts the page's own lifetime). The latest-publications list SHALL follow new poems within its named cache lifetime, and the page's chosen entries SHALL follow the admin's change on the next request (see `home-curation`).
 
 #### Scenario: Recovery after an outage
 - **GIVEN** the latest-publications read failed on one request
-- **WHEN** the database is back and a visitor opens `/` after the short failure lifetime
+- **WHEN** the database is back and a visitor opens `/` after the page's lifetime of a minute has ended
 - **THEN** the latest section is shown again
 
 ### Requirement: Cached, session-free page (NFR-1)
