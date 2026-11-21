@@ -1,9 +1,11 @@
 "use server";
 
-import type { HomeActionResult, HomeMoveStatus } from "../model/home-entry.types";
+import { moveHomeEntry } from "../dal/home-rpc";
 import { moveHomeEntrySchema } from "../model/home-entry.schema";
+import type { HomeActionResult, HomeMoveStatus } from "../model/home-entry.types";
 
 import { adminActionClient } from "./action-client";
+import { HOME_MOVE_EFFECTS, runHomeWrite } from "./run-home-write";
 
 /**
  * Moves an entry to a new place in its list: validate, check the session, call `admin_move_home_entry`; `moved`
@@ -12,6 +14,5 @@ import { adminActionClient } from "./action-client";
 export const moveHomeEntryAction = adminActionClient
   .inputSchema(moveHomeEntrySchema)
   .action(async ({ parsedInput }): Promise<HomeActionResult<HomeMoveStatus>> => {
-    void parsedInput;
-    throw new Error("not implemented");
+    return runHomeWrite(() => moveHomeEntry(parsedInput), HOME_MOVE_EFFECTS);
   });

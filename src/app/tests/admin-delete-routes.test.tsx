@@ -1,7 +1,7 @@
 import { Children, type ComponentProps, type ReactElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
-import { AddToViolationsControl, AdminActionNotice, AdminDeleteControl } from "@/features/admin";
+import { AddToHomeControl, AddToViolationsControl, AdminActionNotice, AdminDeleteControl } from "@/features/admin";
 
 import AuthorRoutePage from "../(public)/authors/[id]/page";
 import CollectionRoutePage from "../(public)/authors/[id]/collections/[collectionId]/page";
@@ -39,6 +39,41 @@ function controlsOf(slot: ReactNode): ReactElement[] {
 }
 
 const PARAMS = Promise.resolve({ id: AUTHOR_ID, poemId: TARGET.id, collectionId: TARGET.id });
+
+describe("the public routes' home-choice control", () => {
+  // implements FR-8 of home-page-sections
+  it("adds «show on the home page» for that poem after the moderation controls, which keep their own props", () => {
+    const [violations, remove, home] = controlsOf(moderationOf(PoemRoutePage({ params: PARAMS } as never))(TARGET));
+
+    expect(violations?.type).toBe(AddToViolationsControl);
+    expect(remove?.type).toBe(AdminDeleteControl);
+    expect(home?.type).toBe(AddToHomeControl);
+    expect((home as ReactElement<ComponentProps<typeof AddToHomeControl>>).props).toEqual({
+      kind: "poem",
+      id: TARGET.id,
+    });
+  });
+
+  // implements FR-8 of home-page-sections
+  it("adds «show on the home page» for the author by profile id, after the notice and the violations control", () => {
+    const [notice, violations, home] = controlsOf(moderationOf(AuthorRoutePage({ params: PARAMS } as never))(TARGET));
+
+    expect(notice?.type).toBe(AdminActionNotice);
+    expect(violations?.type).toBe(AddToViolationsControl);
+    expect(home?.type).toBe(AddToHomeControl);
+    expect((home as ReactElement<ComponentProps<typeof AddToHomeControl>>).props).toEqual({
+      kind: "author",
+      id: AUTHOR_ID,
+    });
+  });
+
+  // implements FR-8 of home-page-sections
+  it("leaves the collection page without it: only a poem or an author can be chosen", () => {
+    const controls = controlsOf(moderationOf(CollectionRoutePage({ params: PARAMS } as never))(TARGET));
+
+    expect(controls.map((control) => control.type)).not.toContain(AddToHomeControl);
+  });
+});
 
 describe("the public routes' admin controls", () => {
   // implements FR-10 of admin-moderation; FR-2 of admin-violations-feedback

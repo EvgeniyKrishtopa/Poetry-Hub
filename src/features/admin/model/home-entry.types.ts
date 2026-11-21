@@ -1,4 +1,5 @@
 import type { AdminFailure } from "./admin.types";
+import type { HOME_DB_STATUS } from "./home-entry.constants";
 
 /** Which of the two lists an entry belongs to; an entry never moves between them (FR-9). */
 export type HomeEntryKind = "poem" | "author";
@@ -39,19 +40,26 @@ export interface RemoveHomeEntryInput {
   readonly id: string;
 }
 
-export type HomeAddStatus = "added" | "limit-reached" | "already-in-list" | "not-found";
+export type HomeAddStatus =
+  | typeof HOME_DB_STATUS.added
+  | typeof HOME_DB_STATUS.limitReached
+  | typeof HOME_DB_STATUS.alreadyInList
+  | typeof HOME_DB_STATUS.notFound;
 
-export type HomeMoveStatus = "moved" | "stale" | "not-found";
+export type HomeMoveStatus = typeof HOME_DB_STATUS.moved | typeof HOME_DB_STATUS.stale | typeof HOME_DB_STATUS.notFound;
 
-export type HomeRemoveStatus = "removed" | "not-found";
+export type HomeRemoveStatus = typeof HOME_DB_STATUS.removed | typeof HOME_DB_STATUS.notFound;
 
 /** A write's answer: the database's status, or why the call failed. A failure is a value, never a throw. */
 export type HomeWriteResult<Status extends string> =
   | { readonly ok: true; readonly status: Status }
   | { readonly ok: false; readonly failure: AdminFailure };
 
-/** Why an action did not change anything beyond the database's own statuses: a refused input or a failed call. */
-export type HomeFailureReason = AdminFailure | "invalid";
+/**
+ * Why an action did not reach the database's answer: a refused admin check, an ended session, or an outage. A
+ * rejected input never gets here: the ids come from the page, and the action client answers it with no data.
+ */
+export type HomeFailureReason = "forbidden" | "unauthenticated" | "unavailable";
 
 /** What an action returns to the client: the database's status, or the reason it stopped (never a throw). */
 export type HomeActionResult<Status extends string> =
