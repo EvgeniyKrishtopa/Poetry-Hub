@@ -1,0 +1,2 @@
+full
+# multi-module: yes (home feature plus next.config image host and shared Contentful asset config); data schema: no (Contentful content model only, no persisted app shape); contract: yes (the home Contentful read contract changes: new Home banner query, two new Greeting keys, image host allow-list)

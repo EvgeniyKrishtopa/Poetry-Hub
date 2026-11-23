@@ -1,0 +1,4 @@
+{"ts":"2026-11-23T15:49:32Z","change":"home-contentful-content","kind":"finding","gate":"spec-review","finding":"SR-01 home-sections FR-1 had no task","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-23T15:49:32Z","change":"home-contentful-content","kind":"finding","gate":"spec-review","finding":"SR-02 four scenarios lacked GIVEN","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-23T15:49:32Z","change":"home-contentful-content","kind":"finding","gate":"spec-review","finding":"design.md open question lacked owner and due","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-23T15:49:32Z","change":"home-contentful-content","kind":"finding","gate":"spec-review","finding":"PLAUSIBLE: ambiguous FR-3/FR-6 ids, NFR-B1 trace, several-banners scenario, proposal scope gaps, space-id export, retired contrast thresholds","outcome":"fixed","ruleNumber":""}

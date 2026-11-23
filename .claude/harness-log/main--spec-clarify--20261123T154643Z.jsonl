@@ -1,0 +1,4 @@
+{"ts":"2026-11-23T15:46:43Z","change":"home-contentful-content","kind":"finding","gate":"spec-clarify","finding":"Unset CONTENTFUL_SPACE_ID: configuration vs validation failure","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-23T15:46:43Z","change":"home-contentful-content","kind":"finding","gate":"spec-clarify","finding":"How the shipped photo is measured against the lightest-photo constant","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-23T15:46:43Z","change":"home-contentful-content","kind":"finding","gate":"spec-clarify","finding":"Whether freshness covers an Asset-only publish","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-23T15:46:43Z","change":"home-contentful-content","kind":"finding","gate":"spec-clarify","finding":"Type of the Description field (Long text vs Rich Text)","outcome":"fixed","ruleNumber":""}
