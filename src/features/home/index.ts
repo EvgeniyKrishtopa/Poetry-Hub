@@ -4,7 +4,6 @@ export { getFeaturedAuthors, getFeaturedWorks, getLatestWorks } from "./dal/home
 export { HomeAbout } from "./components/HomeAbout/HomeAbout";
 export { HomeAuthors } from "./components/HomeAuthors/HomeAuthors";
 export { HomeFeaturedWorks } from "./components/HomeFeaturedWorks/HomeFeaturedWorks";
-export { HomeGreeting } from "./components/HomeGreeting/HomeGreeting";
 export { HomeHero } from "./components/HomeHero/HomeHero";
 export { HomeJoinCta } from "./components/HomeJoinCta/HomeJoinCta";
 export { HomeLatestWorks } from "./components/HomeLatestWorks/HomeLatestWorks";

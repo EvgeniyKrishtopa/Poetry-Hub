@@ -6,6 +6,7 @@ const RESTRICTING_SCENARIOS = [
   "**/admin-warns-and-blocks-from-review-list.spec.ts",
   "**/admin-add-control-on-collection-and-narrow-screens.spec.ts",
   "**/admin-chooses-reorders-removes-home-entries.spec.ts",
+  "**/home-sections.spec.ts",
 ];
 const BASE_URL = "http://localhost:3000";
 const DEV_SERVER_STARTUP_TIMEOUT_MS = 120_000;

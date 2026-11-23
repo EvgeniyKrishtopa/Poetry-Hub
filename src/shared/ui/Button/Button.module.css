@@ -46,3 +46,21 @@
 .ghost:hover {
   background: var(--color-surface);
 }
+
+/* A white outline over a photo; the hero scrim keeps it AA (feedback-contrast.test.ts). The outline is an inset shadow, so it takes no room from the padding. */
+.onImage {
+  background: transparent;
+  color: var(--color-on-hero);
+  box-shadow: inset 0 0 0 2px var(--color-on-hero);
+}
+
+.onImage:hover {
+  background: color-mix(in srgb, var(--color-on-hero) 15%, transparent);
+}
+
+/* 16/24 text with px-5 py-3; `md` is the base size above. */
+.lg {
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}

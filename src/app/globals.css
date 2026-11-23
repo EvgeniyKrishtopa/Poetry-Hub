@@ -19,6 +19,32 @@
   --on-danger: #ffffff;
   /* Behind a modal dialog: dims the page, never lightens it */
   --backdrop: color-mix(in srgb, var(--foreground) 40%, transparent);
+  /* Home page (home-page-sections): the hero's dimming layer and the text on it, AA over the lightest photo */
+  --hero-scrim: rgb(10 10 10 / 0.6);
+  --on-hero: #ffffff;
+  /* Cards: the same border, fill and hover fill the page already uses, under their own names */
+  --card-radius: 16px;
+  --card-border: var(--border);
+  --card-bg: var(--background);
+  --card-bg-hover: var(--surface);
+  /* Vertical rhythm between home sections; narrower screens below */
+  --section-y: 64px;
+  /* Reading column and the wide column of the home sections */
+  --measure-text: 896px;
+  --measure-wide: 1152px;
+}
+
+/* Section rhythm by width: 64 px (mobile), 80 px from the tablet breakpoint, 96 px from the desktop one. */
+@media (min-width: 768px) {
+  :root {
+    --section-y: 80px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --section-y: 96px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -35,6 +61,8 @@
     --on-danger: #0a0a0a;
     /* A light foreground mix would lighten the page here, so mix towards the near-black background. */
     --backdrop: color-mix(in srgb, var(--background) 70%, transparent);
+    --hero-scrim: rgb(0 0 0 / 0.65);
+    --on-hero: #ffffff;
   }
 }
 
@@ -49,8 +77,17 @@
   --color-danger: var(--danger);
   --color-success: var(--success);
   --color-on-danger: var(--on-danger);
+  --color-on-hero: var(--on-hero);
+  --color-card-border: var(--card-border);
+  --color-card-bg: var(--card-bg);
+  --color-card-bg-hover: var(--card-bg-hover);
+  --radius-card: var(--card-radius);
+  --container-measure-text: var(--measure-text);
+  --container-measure-wide: var(--measure-wide);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Section headings of the home page: Literata, Georgia while it loads or when it cannot. */
+  --font-serif: var(--font-literata), Georgia, serif;
   /* Long prose on phones (below 640 px): one step under text-base, the about page. */
   --text-prose-compact: 0.9375rem;
 }
