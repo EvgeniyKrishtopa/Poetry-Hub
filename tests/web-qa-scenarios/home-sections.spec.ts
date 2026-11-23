@@ -69,7 +69,7 @@ async function expectSixSections(page: Page): Promise<void> {
 
 // The chosen lists are shared, so this runs in the project that runs after the rest; it removes everything it
 // added through the app before it ends.
-// implements FR-1 to FR-7, FR-13, NFR-2, NFR-5 of home-page-sections: the six sections for a guest and a signed-in reader.
+// implements FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-13, NFR-2, NFR-5 of home-page-sections: the six sections for a guest and a signed-in reader.
 test(
   "the home page shows six sections to a guest and a signed-in reader without sideways scrolling",
   { tag: ["@home-page-sections"] },
