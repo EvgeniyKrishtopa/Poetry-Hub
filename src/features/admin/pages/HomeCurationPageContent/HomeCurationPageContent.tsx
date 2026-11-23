@@ -10,11 +10,11 @@ import { listHomeEntries } from "../../dal/home-rpc";
 import { ADMIN_HOME_PAGE_COPY } from "../../model/admin-messages";
 
 /**
- * `/admin/home`: the same gate as `AdminViolationsPageContent` (`requireSession`, `readAdminAccess`, `notFound()`),
+ * `/admin/home`: the same gate as `ViolationReviewPageContent` (`requireSession`, `readAdminAccess`, `notFound()`),
  * never cached, then the two `HomeEntryList`s from `listHomeEntries` (FR-9, FR-11). The title appears only after the
  * gate, so a non-admin never sees it.
  */
-export async function AdminHomePageContent() {
+export async function HomeCurationPageContent() {
   const session = await requireSession();
   const access = await readAdminAccess(session.state);
   if (access === "unavailable") return <SessionUnavailableAlert />;

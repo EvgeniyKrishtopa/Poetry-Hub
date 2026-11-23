@@ -10,11 +10,11 @@ import { ViolationCaseRow } from "../../components/ViolationCaseRow/ViolationCas
 import { ViolationsConnectionNotice } from "../../components/ViolationsConnectionNotice/ViolationsConnectionNotice";
 
 /**
- * `/admin/violations`: the same gate as `AdminPageContent` (`requireSession`, `readAdminAccess`, `notFound()`),
+ * `/admin/violations`: the same gate as `UserModerationPageContent` (`requireSession`, `readAdminAccess`, `notFound()`),
  * never cached, then the open cases rendered on the server (design D7, FR-4, FR-5). The title appears only after the
  * gate, so a non-admin never sees it. The render time goes to the rows, which derive each status from it.
  */
-export async function AdminViolationsPageContent() {
+export async function ViolationReviewPageContent() {
   const session = await requireSession();
   const access = await readAdminAccess(session.state);
   if (access === "unavailable") return <SessionUnavailableAlert />;

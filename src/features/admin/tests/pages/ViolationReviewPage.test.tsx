@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { requireSession } from "@/features/auth";
 
-import { AdminViolationsPage } from "../../pages/AdminViolationsPage/AdminViolationsPage";
-import { AdminViolationsPageContent } from "../../pages/AdminViolationsPageContent/AdminViolationsPageContent";
+import { ViolationReviewPage } from "../../pages/ViolationReviewPage/ViolationReviewPage";
+import { ViolationReviewPageContent } from "../../pages/ViolationReviewPageContent/ViolationReviewPageContent";
 import { checkIsAdmin } from "../../dal/admin-check";
 import { listViolationCases } from "../../dal/violation-rpc";
 import { VIOLATIONS_PAGE_COPY } from "../../model/admin-messages";
@@ -56,19 +56,19 @@ function asAdmin() {
   vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: true });
 }
 
-describe("AdminViolationsPage", () => {
+describe("ViolationReviewPage", () => {
   // implements FR-4 of admin-violations-feedback
   it("wraps the gate in its own Suspense whose fallback holds no title", () => {
-    const element = AdminViolationsPage() as ReactElement<{ fallback: ReactElement; children: ReactElement }>;
+    const element = ViolationReviewPage() as ReactElement<{ fallback: ReactElement; children: ReactElement }>;
 
     expect(element.type).toBe(Suspense);
-    expect(isValidElement(element.props.children) && element.props.children.type).toBe(AdminViolationsPageContent);
+    expect(isValidElement(element.props.children) && element.props.children.type).toBe(ViolationReviewPageContent);
     const { container } = render(element.props.fallback);
     expect(container).not.toHaveTextContent(VIOLATIONS_PAGE_COPY.title);
   });
 });
 
-describe("AdminViolationsPageContent", () => {
+describe("ViolationReviewPageContent", () => {
   // implements FR-4 of admin-violations-feedback
   it("lists the cases in the order the database gave, newest first, under the title", async () => {
     asAdmin();
@@ -78,7 +78,7 @@ describe("AdminViolationsPageContent", () => {
       capReached: false,
     });
 
-    render(await AdminViolationsPageContent());
+    render(await ViolationReviewPageContent());
 
     expect(screen.getByRole("heading", { name: VIOLATIONS_PAGE_COPY.title })).toBeInTheDocument();
     expect(screen.getAllByRole("listitem").map((item) => item.textContent)).toEqual([
@@ -94,7 +94,7 @@ describe("AdminViolationsPageContent", () => {
     asAdmin();
     vi.mocked(listViolationCases).mockResolvedValue({ ok: true, cases: [violationCase(1)], capReached: false });
 
-    render(await AdminViolationsPageContent());
+    render(await ViolationReviewPageContent());
 
     const [props] = rowProps.mock.calls[0] ?? [];
     expect(new Date((props as { renderedAt: string }).renderedAt).toISOString()).toBe(
@@ -107,7 +107,7 @@ describe("AdminViolationsPageContent", () => {
     asAdmin();
     vi.mocked(listViolationCases).mockResolvedValue({ ok: true, cases: [violationCase(1)], capReached: true });
 
-    render(await AdminViolationsPageContent());
+    render(await ViolationReviewPageContent());
 
     expect(screen.getByText(VIOLATIONS_PAGE_COPY.capReached)).toBeInTheDocument();
   });
@@ -117,7 +117,7 @@ describe("AdminViolationsPageContent", () => {
     asAdmin();
     vi.mocked(listViolationCases).mockResolvedValue({ ok: true, cases: [], capReached: false });
 
-    render(await AdminViolationsPageContent());
+    render(await ViolationReviewPageContent());
 
     expect(screen.getByText(VIOLATIONS_PAGE_COPY.empty)).toBeInTheDocument();
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
@@ -129,7 +129,7 @@ describe("AdminViolationsPageContent", () => {
     asAdmin();
     vi.mocked(listViolationCases).mockResolvedValue({ ok: false, failure: "unavailable" });
 
-    render(await AdminViolationsPageContent());
+    render(await ViolationReviewPageContent());
 
     expect(screen.getByRole("heading", { name: VIOLATIONS_PAGE_COPY.title })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent(VIOLATIONS_PAGE_COPY.loadFailed);
@@ -141,7 +141,7 @@ describe("AdminViolationsPageContent", () => {
     vi.mocked(requireSession).mockResolvedValue(SIGNED_IN);
     vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: false });
 
-    await expect(AdminViolationsPageContent()).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(ViolationReviewPageContent()).rejects.toThrow("NEXT_NOT_FOUND");
     expect(listViolationCases).not.toHaveBeenCalled();
   });
 
@@ -149,11 +149,11 @@ describe("AdminViolationsPageContent", () => {
   it("shows the outage state, never the list or a 404, when the admin check or the session can't be read", async () => {
     vi.mocked(requireSession).mockResolvedValue(SIGNED_IN);
     vi.mocked(checkIsAdmin).mockResolvedValue({ ok: false, failure: "unavailable" });
-    render(await AdminViolationsPageContent());
+    render(await ViolationReviewPageContent());
     expect(screen.getByText("unavailable")).toBeInTheDocument();
 
     vi.mocked(requireSession).mockResolvedValue({ state: "unknown" });
-    render(await AdminViolationsPageContent());
+    render(await ViolationReviewPageContent());
 
     expect(listViolationCases).not.toHaveBeenCalled();
     expect(notFound).not.toHaveBeenCalled();
@@ -163,7 +163,7 @@ describe("AdminViolationsPageContent", () => {
   it("lets requireSession's redirect through for a signed-out request, reading nothing", async () => {
     vi.mocked(requireSession).mockRejectedValue(new Error("NEXT_REDIRECT"));
 
-    await expect(AdminViolationsPageContent()).rejects.toThrow("NEXT_REDIRECT");
+    await expect(ViolationReviewPageContent()).rejects.toThrow("NEXT_REDIRECT");
     expect(checkIsAdmin).not.toHaveBeenCalled();
     expect(listViolationCases).not.toHaveBeenCalled();
   });

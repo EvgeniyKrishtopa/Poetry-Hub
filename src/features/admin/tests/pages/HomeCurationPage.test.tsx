@@ -8,8 +8,8 @@ import { checkIsAdmin } from "../../dal/admin-check";
 import { listHomeEntries } from "../../dal/home-rpc";
 import { ADMIN_HOME_PAGE_COPY } from "../../model/admin-messages";
 import type { HomeEntry } from "../../model/home-entry.types";
-import { AdminHomePage } from "../../pages/AdminHomePage/AdminHomePage";
-import { AdminHomePageContent } from "../../pages/AdminHomePageContent/AdminHomePageContent";
+import { HomeCurationPage } from "../../pages/HomeCurationPage/HomeCurationPage";
+import { HomeCurationPageContent } from "../../pages/HomeCurationPageContent/HomeCurationPageContent";
 
 const notFound = vi.fn(() => {
   throw new Error("NEXT_NOT_FOUND");
@@ -46,19 +46,19 @@ function asAdmin() {
   vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: true });
 }
 
-describe("AdminHomePage", () => {
+describe("HomeCurationPage", () => {
   // implements FR-9 of home-page-sections
   it("wraps the gate in its own Suspense whose fallback holds no title", () => {
-    const element = AdminHomePage() as ReactElement<{ fallback: ReactElement; children: ReactElement }>;
+    const element = HomeCurationPage() as ReactElement<{ fallback: ReactElement; children: ReactElement }>;
 
     expect(element.type).toBe(Suspense);
-    expect(isValidElement(element.props.children) && element.props.children.type).toBe(AdminHomePageContent);
+    expect(isValidElement(element.props.children) && element.props.children.type).toBe(HomeCurationPageContent);
     const { container } = render(element.props.fallback);
     expect(container).not.toHaveTextContent(ADMIN_HOME_PAGE_COPY.title);
   });
 });
 
-describe("AdminHomePageContent", () => {
+describe("HomeCurationPageContent", () => {
   // implements FR-9 of home-page-sections
   it("shows the two lists in the order the database gave, under the title", async () => {
     asAdmin();
@@ -68,7 +68,7 @@ describe("AdminHomePageContent", () => {
       authors: [entry("author", 1, "Анна Лис")],
     });
 
-    render(await AdminHomePageContent());
+    render(await HomeCurationPageContent());
 
     expect(screen.getByRole("heading", { name: ADMIN_HOME_PAGE_COPY.title })).toBeInTheDocument();
     expect(screen.getByText("poem: Осень, Зима")).toBeInTheDocument();
@@ -81,7 +81,7 @@ describe("AdminHomePageContent", () => {
     asAdmin();
     vi.mocked(listHomeEntries).mockResolvedValue({ ok: true, poems: [], authors: [entry("author", 1, "Анна Лис")] });
 
-    render(await AdminHomePageContent());
+    render(await HomeCurationPageContent());
 
     expect(listProps).toHaveBeenCalledTimes(2);
     expect(screen.getByText("poem:")).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe("AdminHomePageContent", () => {
     asAdmin();
     vi.mocked(listHomeEntries).mockResolvedValue({ ok: false, failure: "unavailable" });
 
-    render(await AdminHomePageContent());
+    render(await HomeCurationPageContent());
 
     expect(screen.getByRole("heading", { name: ADMIN_HOME_PAGE_COPY.title })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent(ADMIN_HOME_PAGE_COPY.loadFailed);
@@ -104,7 +104,7 @@ describe("AdminHomePageContent", () => {
     vi.mocked(requireSession).mockResolvedValue(SIGNED_IN);
     vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: false });
 
-    await expect(AdminHomePageContent()).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(HomeCurationPageContent()).rejects.toThrow("NEXT_NOT_FOUND");
     expect(listHomeEntries).not.toHaveBeenCalled();
   });
 
@@ -112,11 +112,11 @@ describe("AdminHomePageContent", () => {
   it("shows the outage state, never the lists or a 404, when the admin check or the session can't be read", async () => {
     vi.mocked(requireSession).mockResolvedValue(SIGNED_IN);
     vi.mocked(checkIsAdmin).mockResolvedValue({ ok: false, failure: "unavailable" });
-    render(await AdminHomePageContent());
+    render(await HomeCurationPageContent());
     expect(screen.getByText("unavailable")).toBeInTheDocument();
 
     vi.mocked(requireSession).mockResolvedValue({ state: "unknown" });
-    render(await AdminHomePageContent());
+    render(await HomeCurationPageContent());
 
     expect(listHomeEntries).not.toHaveBeenCalled();
     expect(notFound).not.toHaveBeenCalled();
