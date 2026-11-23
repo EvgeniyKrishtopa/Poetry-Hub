@@ -136,6 +136,8 @@ describe("home page", () => {
   });
 
   // implements NFR-1 of home-page-sections
+  // Only half of the check: a source search sees the page file, not what a helper reads. The other half is
+  // `npm run build`, which lists `/` as prerendered and fails if anything in the cache scope reads the request.
   it("reads no cookies, headers or session inside its cache scope", () => {
     const source = readFileSync(PAGE_PATH, "utf8");
 
