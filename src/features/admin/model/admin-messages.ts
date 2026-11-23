@@ -121,6 +121,28 @@ export const ADD_TO_VIOLATIONS_COPY = {
 } as const;
 
 /**
+ * The «show on the home page» control on the poem and author pages (artboards AdminHomeBtnPoem, AdminHomeBtnPoem2 and
+ * AdminHomeBtnAuthor). The limit line names the cap of four in the plural form that fits it.
+ */
+export const ADD_TO_HOME_COPY = {
+  button: "Показать на главной",
+  added: "Показано на главной.",
+  alreadyInList: "Уже показано на главной.",
+  limitReached: {
+    poem: "На главной уже 4 произведения. Уберите одно на странице /admin/home.",
+    author: "На главной уже 4 автора. Уберите одного на странице /admin/home.",
+  },
+  notFound: {
+    poem: "Не удалось найти это произведение.",
+    author: "Не удалось найти этого автора.",
+  },
+  failed: "Не удалось сохранить. Попробуйте ещё раз.",
+  // An expired session and a refused admin check keep the texts the rows already use: a retry would not help there.
+  forbidden: MODERATION_FAILURE_MESSAGES.forbidden,
+  unauthenticated: MODERATION_FAILURE_MESSAGES.unauthenticated,
+} as const;
+
+/**
  * The one-time line on the author page after an admin delete whose email did not go out (artboard 53), per kind of
  * what was deleted. `noAddress` follows it, for an author whose account holds no address.
  */

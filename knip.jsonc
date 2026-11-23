@@ -12,10 +12,6 @@
     "src/features/work-ordering/**",
     // Temporary, home-page-sections scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new files, so knip still sees the rest of each feature. The last group (7.x) removes these entries.
-    "src/features/admin/actions/*-home-*.actions.ts",
-    "src/features/admin/dal/home-rpc.ts",
-    "src/features/admin/model/home-entry.*.ts",
-    "src/features/admin/components/AddToHomeControl/**",
     "src/features/admin/components/HomeEntryList/**",
     "src/features/admin/pages/AdminHomePage/**",
     "src/features/admin/pages/AdminHomePageContent/**",

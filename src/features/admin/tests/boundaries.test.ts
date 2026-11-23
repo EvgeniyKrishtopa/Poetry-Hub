@@ -16,6 +16,7 @@ const FEATURE_IMPORT = /from ["']@\/features\/([\w-]+)(?:\/[^"']*)?["']/g;
 
 /** The components `src/app/` composes (design D12, NFR-4). */
 const PUBLIC_API = [
+  "AddToHomeControl",
   "AddToViolationsControl",
   "AdminActionNotice",
   "AdminDeleteControl",

@@ -1,9 +1,14 @@
 "use server";
 
-import type { HomeActionResult, HomeAddStatus } from "../model/home-entry.types";
+import { HOME_ENTRY_OPERATION } from "../model/home-entry.constants";
 import { addHomeAuthorSchema } from "../model/home-entry.schema";
+import type {
+  HomeActionResult,
+  HomeAddStatus,
+} from "../model/home-entry.types";
 
 import { adminActionClient } from "./action-client";
+import { runHomeWrite } from "./run-home-write";
 
 /**
  * Chooses an author for the home page by profile id: validate the id, check the session, call
@@ -12,6 +17,5 @@ import { adminActionClient } from "./action-client";
 export const addHomeAuthorAction = adminActionClient
   .inputSchema(addHomeAuthorSchema)
   .action(async ({ parsedInput }): Promise<HomeActionResult<HomeAddStatus>> => {
-    void parsedInput;
-    throw new Error("not implemented");
+    return runHomeWrite({ operation: HOME_ENTRY_OPERATION.addAuthor, input: parsedInput });
   });
