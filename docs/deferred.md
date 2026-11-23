@@ -225,3 +225,13 @@ Archived at `openspec/changes/archive/2026-11-20-seo-metadata/`.
 - **Verified instead:** nothing; the home page ships without the links, and the section tests assert there are none.
 - **Decision:** owner, 2026-11-21.
 - **Status:** open. To close it: add a catalog page in its own change, then add the two links to the featured and latest sections and set this entry to `resolved`.
+
+### home-page-sections · 7.3 — focus kept and removal announced on `/admin/home`
+
+- **State:** skipped
+- **Requirement:** FR-9
+- **What is missing:** on `/admin/home`, after a keyboard drop or a click on «Убрать», keyboard focus returns to the page start (`document.activeElement` is `BODY`) instead of staying on the moved row's handle (or the next row after a remove), and a remove makes no live-region announcement, so a screen-reader user is not told the entry is gone.
+- **Why:** Gate 3's Keyboard Pass found it. The change's spec and `ui-plan.md` do not ask for it, and the violation review list the page was copied from behaves the same way, so fixing it only here would make the two lists differ. Both lists should be fixed together in one change.
+- **Verified instead:** lifting, moving and dropping by keyboard work and the moved order persists to `/`; the lifted handle has a visible focus ring; the move announcements («Выбрано…», «Положено на позицию…») are read.
+- **Decision:** owner, 2026-11-23.
+- **Status:** open. To close it: in a change that covers both the home list and the violation list, restore focus to the row after a move, move it to the neighbouring row (or the list heading when empty) after a remove, announce the removal in the live region, and add a keyboard test for each; then set this entry to `resolved`.
