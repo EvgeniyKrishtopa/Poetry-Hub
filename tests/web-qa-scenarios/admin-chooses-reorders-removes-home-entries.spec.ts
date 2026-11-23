@@ -29,6 +29,9 @@ const AUTHOR_NAME = "Ольга Северина";
 const REMOVE_BUTTON = /^Убрать/;
 /** How long a lifted row waits before the first arrow key, so the library has measured the list. */
 const KEYBOARD_MEASURE_PAUSE_MS = 300;
+/** How long one keyboard lift may take to be announced before it is tried again, and how long all tries may take. */
+const LIFT_ATTEMPT_TIMEOUT_MS = 2_000;
+const LIFT_TOTAL_TIMEOUT_MS = 15_000;
 
 // A real pointer drag works in viewport coordinates, so every row's grip must be on screen together.
 test.use({ viewport: { width: 1280, height: 1000 } });
@@ -106,10 +109,16 @@ test(
 
     // FR-9: the keyboard does the same, space to lift, an arrow to move, space to drop.
     const grip = handleOf(poems, "Зимний мост");
-    await grip.focus();
-    await page.keyboard.press("Space");
-    // The library's live region speaks each step; waiting for it also waits for its key listeners to be attached.
-    await expect(page.getByText("Выбрано: «Зимний мост», позиция 4 из 4.")).toBeAttached();
+    // The library attaches its key listeners after the page hydrates and nothing on the page says when; a Space pressed
+    // before that does nothing, so the lift is tried again (Escape drops a half-made lift) until its live region speaks.
+    await expect(async () => {
+      await page.keyboard.press("Escape");
+      await grip.focus();
+      await page.keyboard.press("Space");
+      await expect(page.getByText("Выбрано: «Зимний мост», позиция 4 из 4.")).toBeAttached({
+        timeout: LIFT_ATTEMPT_TIMEOUT_MS,
+      });
+    }).toPass({ timeout: LIFT_TOTAL_TIMEOUT_MS });
     // The library measures the rows just after the lift, and an arrow pressed before that moves nothing. A person never
     // presses that fast; nothing on the page says when the measuring is done, so this waits a fixed moment.
     await page.waitForTimeout(KEYBOARD_MEASURE_PAUSE_MS);
