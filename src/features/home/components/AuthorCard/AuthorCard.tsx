@@ -20,7 +20,11 @@ export function AuthorCard({ author }: AuthorCardProps) {
       href={author.href}
       className="flex h-full items-center gap-4 rounded-card border border-card-border bg-card-bg p-6 transition-colors hover:bg-card-bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:flex-col md:text-center"
     >
-      <div className="relative size-24 shrink-0 overflow-hidden rounded-full bg-surface">
+      {/* The box and the image's `sizes` hint both come from AUTHOR_PHOTO_SIZE, so they cannot drift apart. */}
+      <div
+        className="relative shrink-0 overflow-hidden rounded-full bg-surface"
+        style={{ width: AUTHOR_PHOTO_SIZE, height: AUTHOR_PHOTO_SIZE }}
+      >
         {author.photoUrl === null ? (
           <div aria-hidden="true" className="flex h-full items-center justify-center text-muted">
             <User size={PLACEHOLDER_ICON_SIZE} strokeWidth={1.5} />
