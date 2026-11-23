@@ -88,13 +88,13 @@ The hero's title, text and two buttons SHALL be centred horizontally at every vi
 - **WHEN** it is rendered at 360, 768 and 1280 px
 - **THEN** the title and every paragraph are centre-aligned and the buttons sit on the page's centre line
 
-### Requirement: Ten percent overlay (FR-B7)
-A uniform black layer at 10% opacity SHALL cover the whole hero photo, above the photo and below the text, in the light and the dark theme, for the CMS photo and the shipped one alike. No other darkening (gradient, blur, a second layer) SHALL be applied to the photo.
+### Requirement: Fifty percent overlay (FR-B7)
+A uniform black layer at 50% opacity SHALL cover the whole hero photo, above the photo and below the text, in the light and the dark theme, for the CMS photo and the shipped one alike. No other darkening (gradient, blur, a second layer) SHALL be applied to the photo.
 
 #### Scenario: Overlay strength
 - **GIVEN** the hero shows the CMS photo or the shipped one
 - **WHEN** the hero is rendered in either theme
-- **THEN** the layer over the photo is black at 10% opacity and spans the full hero box
+- **THEN** the layer over the photo is black at 50% opacity and spans the full hero box
 
 #### Scenario: Overlay sits under the text
 - **GIVEN** the hero shows a title and a text over its photo
