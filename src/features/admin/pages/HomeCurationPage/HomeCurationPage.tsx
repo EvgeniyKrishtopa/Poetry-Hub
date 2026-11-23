@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import { AdminListSkeleton } from "../../components/AdminListSkeleton/AdminListSkeleton";
-import { HomeCurationPageContent } from "../HomeCurationPageContent/HomeCurationPageContent";
+import { HomeCurationPageContent } from "./HomeCurationPageContent";
 
 /**
  * `/admin/home`: the gate and the lists inside their own Suspense boundary with a bare skeleton, like

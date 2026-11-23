@@ -9,7 +9,7 @@ import { listHomeEntries } from "../../dal/home-rpc";
 import { ADMIN_HOME_PAGE_COPY } from "../../model/admin-messages";
 import type { HomeEntry } from "../../model/home-entry.types";
 import { HomeCurationPage } from "../../pages/HomeCurationPage/HomeCurationPage";
-import { HomeCurationPageContent } from "../../pages/HomeCurationPageContent/HomeCurationPageContent";
+import { HomeCurationPageContent } from "../../pages/HomeCurationPage/HomeCurationPageContent";
 
 const notFound = vi.fn(() => {
   throw new Error("NEXT_NOT_FOUND");

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import { AdminListSkeleton } from "../../components/AdminListSkeleton/AdminListSkeleton";
-import { ViolationReviewPageContent } from "../ViolationReviewPageContent/ViolationReviewPageContent";
+import { ViolationReviewPageContent } from "./ViolationReviewPageContent";
 
 /**
  * `/admin/violations`: the gate and the list inside their own Suspense boundary, like `UserModerationPage` (design D7). The

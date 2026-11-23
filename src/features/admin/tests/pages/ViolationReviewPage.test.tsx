@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { requireSession } from "@/features/auth";
 
 import { ViolationReviewPage } from "../../pages/ViolationReviewPage/ViolationReviewPage";
-import { ViolationReviewPageContent } from "../../pages/ViolationReviewPageContent/ViolationReviewPageContent";
+import { ViolationReviewPageContent } from "../../pages/ViolationReviewPage/ViolationReviewPageContent";
 import { checkIsAdmin } from "../../dal/admin-check";
 import { listViolationCases } from "../../dal/violation-rpc";
 import { VIOLATIONS_PAGE_COPY } from "../../model/admin-messages";

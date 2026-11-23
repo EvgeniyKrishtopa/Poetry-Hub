@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { requireSession } from "@/features/auth";
 
 import { UserModerationPage } from "../../pages/UserModerationPage/UserModerationPage";
-import { UserModerationPageContent } from "../../pages/UserModerationPageContent/UserModerationPageContent";
+import { UserModerationPageContent } from "../../pages/UserModerationPage/UserModerationPageContent";
 import { checkIsAdmin } from "../../dal/admin-check";
 import { ADMIN_LIST_COPY } from "../../model/admin-messages";
 

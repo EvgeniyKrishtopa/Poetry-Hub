@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import { AdminListSkeleton } from "../../components/AdminListSkeleton/AdminListSkeleton";
-import { UserModerationPageContent } from "../UserModerationPageContent/UserModerationPageContent";
+import { UserModerationPageContent } from "./UserModerationPageContent";
 
 import type { UserModerationPageProps } from "./UserModerationPage.types";
 
