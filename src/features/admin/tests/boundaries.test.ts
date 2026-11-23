@@ -20,6 +20,7 @@ const PUBLIC_API = [
   "AddToViolationsControl",
   "AdminActionNotice",
   "AdminDeleteControl",
+  "AdminHomePage",
   "AdminNavLink",
   "AdminOnly",
   "AdminPage",

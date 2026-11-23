@@ -5,6 +5,7 @@ const SCENARIOS_DIR = "./tests/web-qa-scenarios";
 const RESTRICTING_SCENARIOS = [
   "**/admin-warns-and-blocks-from-review-list.spec.ts",
   "**/admin-add-control-on-collection-and-narrow-screens.spec.ts",
+  "**/admin-chooses-reorders-removes-home-entries.spec.ts",
 ];
 const BASE_URL = "http://localhost:3000";
 const DEV_SERVER_STARTUP_TIMEOUT_MS = 120_000;
@@ -15,7 +16,8 @@ export default defineConfig({
   projects: [
     { name: "chromium", testIgnore: RESTRICTING_SCENARIOS, use: { ...devices["Desktop Chrome"] } },
     // Scenarios that block a seeded user for a moment (which would sign other scenarios out of that account) or add
-    // a collection to an author whose lists others read run after the rest, so nothing else is using those accounts.
+    // a collection to an author whose lists others read, or fill the home page's chosen lists, run after the rest, so
+    // nothing else is using those accounts or reading those lists.
     {
       name: "restricting",
       testMatch: RESTRICTING_SCENARIOS,

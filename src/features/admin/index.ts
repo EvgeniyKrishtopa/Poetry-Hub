@@ -5,5 +5,6 @@ export { AdminActionNotice } from "./components/AdminActionNotice/AdminActionNot
 export { AdminDeleteControl } from "./components/AdminDeleteControl/AdminDeleteControl";
 export { AdminNavLink } from "./components/AdminNavLink/AdminNavLink";
 export { AdminOnly } from "./components/AdminOnly/AdminOnly";
+export { AdminHomePage } from "./pages/AdminHomePage/AdminHomePage";
 export { AdminPage } from "./pages/AdminPage/AdminPage";
 export { AdminViolationsPage } from "./pages/AdminViolationsPage/AdminViolationsPage";

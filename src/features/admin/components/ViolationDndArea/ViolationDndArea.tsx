@@ -3,10 +3,11 @@
 import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { useId, useRef, useState } from "react";
 
-import { ADMIN_VIOLATIONS_PATH } from "@/shared/config/account-paths";
-import { Alert, ConnectionNotice } from "@/shared/ui";
+import { ADMIN_HOME_PATH, ADMIN_VIOLATIONS_PATH } from "@/shared/config/account-paths";
+import { Alert, ButtonLink, ConnectionNotice } from "@/shared/ui";
 
 import { useAddViolationCase } from "../../hooks/use-add-violation-case";
+import { ADMIN_HOME_PAGE_COPY } from "../../model/admin-messages";
 import { describeAddResult } from "../../model/case-notices";
 import { draggedUserOf } from "../../model/dragged-user";
 import {
@@ -80,7 +81,12 @@ export function ViolationDndArea({ children }: ViolationDndAreaProps) {
         >
           <ConnectionNotice status={connectionStatus} />
           {notice !== null && <Alert tone={notice.tone}>{notice.text}</Alert>}
-          <ViolationDropLink href={ADMIN_VIOLATIONS_PATH} disabled={!isOnline} />
+          <div className="flex flex-wrap items-start gap-4">
+            <ViolationDropLink href={ADMIN_VIOLATIONS_PATH} disabled={!isOnline} />
+            <ButtonLink variant="ghost" href={ADMIN_HOME_PATH}>
+              {ADMIN_HOME_PAGE_COPY.navLink}
+            </ButtonLink>
+          </div>
           {children}
         </DndContext>
       </div>
