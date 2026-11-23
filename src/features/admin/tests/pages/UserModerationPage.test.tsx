@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { requireSession } from "@/features/auth";
 
-import { AdminPage } from "../../pages/AdminPage/AdminPage";
-import { AdminPageContent } from "../../pages/AdminPageContent/AdminPageContent";
+import { UserModerationPage } from "../../pages/UserModerationPage/UserModerationPage";
+import { UserModerationPageContent } from "../../pages/UserModerationPage/UserModerationPageContent";
 import { checkIsAdmin } from "../../dal/admin-check";
 import { ADMIN_LIST_COPY } from "../../model/admin-messages";
 
@@ -38,28 +38,28 @@ const SIGNED_IN = {
 } as const;
 const QUERY = Promise.resolve({});
 
-describe("AdminPage", () => {
+describe("UserModerationPage", () => {
   // implements FR-2 of admin-moderation
   it("wraps the gate in its own Suspense whose fallback holds no title", () => {
-    const element = AdminPage({ query: QUERY }) as ReactElement<{
+    const element = UserModerationPage({ query: QUERY }) as ReactElement<{
       fallback: ReactElement;
       children: ReactElement;
     }>;
 
     expect(element.type).toBe(Suspense);
-    expect(isValidElement(element.props.children) && element.props.children.type).toBe(AdminPageContent);
+    expect(isValidElement(element.props.children) && element.props.children.type).toBe(UserModerationPageContent);
     const { container } = render(element.props.fallback);
     expect(container).not.toHaveTextContent(ADMIN_LIST_COPY.title);
   });
 });
 
-describe("AdminPageContent", () => {
+describe("UserModerationPageContent", () => {
   // implements FR-2 of admin-moderation
   it("shows the title and the list, inside the review-list area, to an admin", async () => {
     vi.mocked(requireSession).mockResolvedValue(SIGNED_IN);
     vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: true });
 
-    render(await AdminPageContent({ query: QUERY }));
+    render(await UserModerationPageContent({ query: QUERY }));
 
     expect(screen.getByRole("heading", { name: ADMIN_LIST_COPY.title })).toBeInTheDocument();
     expect(within(screen.getByRole("region", { name: "area" })).getByText("rows")).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe("AdminPageContent", () => {
     vi.mocked(requireSession).mockResolvedValue(SIGNED_IN);
     vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: true });
 
-    render(await AdminPageContent({ query: Promise.resolve({ email: "a@b.co" }) }));
+    render(await UserModerationPageContent({ query: Promise.resolve({ email: "a@b.co" }) }));
 
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Найти" })).not.toBeInTheDocument();
@@ -83,7 +83,7 @@ describe("AdminPageContent", () => {
     vi.mocked(requireSession).mockResolvedValue(SIGNED_IN);
     vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: false });
 
-    await expect(AdminPageContent({ query: QUERY })).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(UserModerationPageContent({ query: QUERY })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   // implements FR-2 of admin-moderation
@@ -93,12 +93,12 @@ describe("AdminPageContent", () => {
       ok: false,
       failure: "unavailable",
     });
-    render(await AdminPageContent({ query: QUERY }));
+    render(await UserModerationPageContent({ query: QUERY }));
     expect(screen.getByText("unavailable")).toBeInTheDocument();
     expect(screen.queryByText("rows")).not.toBeInTheDocument();
 
     vi.mocked(requireSession).mockResolvedValue({ state: "unknown" });
-    render(await AdminPageContent({ query: QUERY }));
+    render(await UserModerationPageContent({ query: QUERY }));
     expect(checkIsAdmin).toHaveBeenCalledTimes(1);
     expect(notFound).not.toHaveBeenCalled();
   });
@@ -107,7 +107,7 @@ describe("AdminPageContent", () => {
   it("lets requireSession's redirect through for a signed-out request", async () => {
     vi.mocked(requireSession).mockRejectedValue(new Error("NEXT_REDIRECT"));
 
-    await expect(AdminPageContent({ query: QUERY })).rejects.toThrow("NEXT_REDIRECT");
+    await expect(UserModerationPageContent({ query: QUERY })).rejects.toThrow("NEXT_REDIRECT");
     expect(checkIsAdmin).not.toHaveBeenCalled();
   });
 });

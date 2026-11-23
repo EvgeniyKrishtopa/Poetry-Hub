@@ -5,6 +5,7 @@ import { NEW_COLLECTION_PATH } from "@/features/collection-management";
 import { NEW_POEM_PATH } from "@/features/poem-management";
 import {
   ACCOUNT_PATH,
+  ADMIN_HOME_PATH,
   ADMIN_PATH,
   ADMIN_VIOLATIONS_PATH,
   POEM_MANAGEMENT_PATH,
@@ -113,6 +114,7 @@ describe("matchRoute", () => {
       PRIVACY_PATH,
       ADMIN_PATH,
       ADMIN_VIOLATIONS_PATH,
+      ADMIN_HOME_PATH,
     ]);
   });
 
@@ -123,6 +125,17 @@ describe("matchRoute", () => {
       items: [
         { kind: "link", label: "Админка", href: ADMIN_PATH },
         { kind: "current", label: "Список нарушителей" },
+      ],
+    });
+  });
+
+  // implements FR-9 of home-page-sections
+  it("maps /admin/home to «Админка» › «Главная страница», the first a link to /admin", () => {
+    expect(matchRoute(["admin", "home"])).toEqual({
+      kind: "static",
+      items: [
+        { kind: "link", label: "Админка", href: ADMIN_PATH },
+        { kind: "current", label: "Главная страница" },
       ],
     });
   });

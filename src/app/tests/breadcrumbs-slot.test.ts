@@ -76,6 +76,14 @@ describe("@breadcrumbs slot", () => {
     expect(source).toMatch(/<AdminOnly>[\s\S]*<Breadcrumbs[\s\S]*<\/AdminOnly>/);
   });
 
+  // implements FR-9 of home-page-sections: the trail of /admin/home is the admin's alone, like /admin's
+  it("wraps the /admin/home slot's trail in AdminOnly, imported from the admin feature", () => {
+    const source = readFileSync(join(SLOT_DIR, "admin", "home", PAGE_FILE), "utf8");
+
+    expect(source).toMatch(/import \{ AdminOnly \} from "@\/features\/admin";/);
+    expect(source).toMatch(/<AdminOnly>[\s\S]*<Breadcrumbs[\s\S]*<\/AdminOnly>/);
+  });
+
   // implements FR-2 of add-breadcrumbs
   it("passes each static slot page's own folder path as its segments", () => {
     for (const path of slotPages.filter((slotPath) => slotPath !== "" && !slotPath.includes("["))) {

@@ -33,7 +33,7 @@
 | FR-8 · guest sees no control | `AddToHomeControl` test: nothing for a guest and a non-admin, no extra admin check | unit |
 | FR-9 · reorder by dragging | list component test: a drop calls the move action with `from_position` and the new place, a drop at the same place calls nothing; pgTAP: the move function renumbers and clamps; recorded browser scenario with a real drag | unit, integration, end-to-end |
 | FR-9 · remove | pgTAP: remove compacts the positions; action test; browser scenario | integration, unit, end-to-end |
-| FR-9 · non-admin | `AdminHomePage` test: the same not-found screen as `/admin` for a non-admin and a guest | unit |
+| FR-9 · non-admin | `HomeCurationPage` test: the same not-found screen as `/admin` for a non-admin and a guest | unit |
 | FR-9 · stale drop | pgTAP: a wrong `from_position` answers `stale`, nothing written; list test: the order is restored and the page refreshes | integration, unit |
 | FR-9 · keyboard reorder | recorded browser scenario: pick up, move and drop with the keyboard saves the order | end-to-end |
 | FR-10 · non-admin cannot write | pgTAP: every `admin_*_home_*` function refuses a non-admin; `admin_functions.test.sql` count and the `unguarded_writers` exemptions updated | integration |

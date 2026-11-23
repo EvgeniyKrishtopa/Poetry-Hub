@@ -11,14 +11,14 @@ import { AdminListSkeleton } from "../../components/AdminListSkeleton/AdminListS
 import { AdminUserList } from "../../components/AdminUserList/AdminUserList";
 import { ViolationDndArea } from "../../components/ViolationDndArea/ViolationDndArea";
 
-import type { AdminPageContentProps } from "./AdminPageContent.types";
+import type { UserModerationPageContentProps } from "./UserModerationPageContent.types";
 
 /**
  * The `/admin` gate, then the page: signed out goes to `/login`, an unreadable session or admin check shows the
  * outage state, a non-admin gets the not-found screen (design D9, FR-2). The title and the review-list area appear
  * only after the gate, so a non-admin never sees them.
  */
-export async function AdminPageContent({ query }: AdminPageContentProps) {
+export async function UserModerationPageContent({ query }: UserModerationPageContentProps) {
   const session = await requireSession();
   const access = await readAdminAccess(session.state);
   if (access === "unavailable") return <SessionUnavailableAlert />;

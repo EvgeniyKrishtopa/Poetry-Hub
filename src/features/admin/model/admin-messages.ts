@@ -272,3 +272,27 @@ export const WARN_DIALOG_COPY = {
   // Not in the mockups: placeholder for a user with no address, to confirm.
   noAddress: "У пользователя нет адреса почты",
 } as const;
+
+/** The `/admin/home` page (artboards AdminHomeA, AdminHomeB and AdminHomeC), the lists' texts and the live announcements. */
+export const ADMIN_HOME_PAGE_COPY = {
+  title: "Главная страница",
+  navLink: "Главная на сайте",
+  headings: { poem: "Произведения", author: "Авторы" },
+  empty: {
+    poem: "Пока ничего не выбрано. Откройте страницу произведения и нажмите «Показать на главной».",
+    author: "Пока ничего не выбрано. Откройте страницу автора и нажмите «Показать на главной».",
+  },
+  notShown: "не показывается на главной",
+  removeButton: "Убрать",
+  removeLabel: (label: string): string => `Убрать «${label}» с главной`,
+  handleLabel: (label: string): string => `Переместить «${label}»`,
+  dragInstructions: "Пробел — взять строку, стрелки — изменить позицию, пробел — положить, Esc — отменить.",
+  moveFailed: "Не удалось сохранить порядок. Попробуйте ещё раз.",
+  stale: "Список изменился в другой вкладке. Мы обновили его — попробуйте ещё раз.",
+  loadFailed: "Не удалось загрузить главную страницу. Попробуйте позже.",
+  picked: (label: string, position: number, total: number): string =>
+    `Выбрано: «${label}», позиция ${position} из ${total}. Стрелками измените позицию, пробел — положить, Esc — отменить.`,
+  moved: (position: number, total: number): string => `Позиция ${position} из ${total}.`,
+  dropped: (position: number, total: number): string => `Положено на позицию ${position} из ${total}.`,
+  cancelled: "Перемещение отменено.",
+} as const;

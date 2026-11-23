@@ -90,6 +90,14 @@ describe("buildTrail", () => {
     });
   });
 
+  // implements FR-9 of home-page-sections
+  it("builds «Главная» › «Админка» › «Главная страница» for the home choice, only the middle one a link", () => {
+    expect(buildTrail(matchRoute(["admin", "home"]))).toEqual({
+      kind: "shown",
+      items: [HOME, { kind: "link", label: "Админка", href: "/admin" }, { kind: "current", label: "Главная страница" }],
+    });
+  });
+
   // implements FR-4 of add-breadcrumbs
   it("shows no trail for an author that doesn't exist", () => {
     expect(buildTrail(AUTHOR_MATCH, { ok: false, reason: "not-found" })).toEqual({ kind: "none" });

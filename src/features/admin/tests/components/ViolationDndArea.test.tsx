@@ -10,6 +10,7 @@ import { AdminUserRow } from "../../components/AdminUserRow/AdminUserRow";
 import { ViolationDndArea } from "../../components/ViolationDndArea/ViolationDndArea";
 import {
   ADD_CASE_RESULT_MESSAGES,
+  ADMIN_HOME_PAGE_COPY,
   ADMIN_VIOLATION_COPY,
   CASE_FAILURE_MESSAGES,
   GROUND_CHOICE_COPY,
@@ -109,6 +110,15 @@ describe("ViolationDndArea", () => {
 
     const link = screen.getByRole("link", { name: ADMIN_VIOLATION_COPY.listLink });
     expect(link).toHaveAttribute("href", "/admin/violations");
+    expect(link.compareDocumentPosition(screen.getByText(USER.email)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // implements FR-9 of home-page-sections: the way from /admin to the home page's chosen lists
+  it("shows a link to /admin/home beside the review-list link, above the user list", () => {
+    renderArea();
+
+    const link = screen.getByRole("link", { name: ADMIN_HOME_PAGE_COPY.navLink });
+    expect(link).toHaveAttribute("href", "/admin/home");
     expect(link.compareDocumentPosition(screen.getByText(USER.email)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 

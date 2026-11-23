@@ -20,3 +20,12 @@ export const HOME_ENTRY_OPERATION = {
   remove: "remove home entry",
   list: "list home entries",
 } as const;
+
+/** How far a mouse moves before a handle lifts, so a plain click on it never starts a drag. */
+export const HOME_DRAG_MOUSE_DISTANCE_PX = 4;
+
+/** How long a touch holds before a handle lifts, so a swipe still scrolls the page. */
+export const HOME_DRAG_TOUCH_HOLD_MS = 200;
+
+/** How far a held touch may drift before the hold is given up. */
+export const HOME_DRAG_TOUCH_TOLERANCE_PX = 5;

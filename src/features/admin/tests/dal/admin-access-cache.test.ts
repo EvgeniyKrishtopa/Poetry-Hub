@@ -28,8 +28,8 @@ describe("readAdminAccess and React's cache (structural guard)", () => {
   it("keeps the gate and the page gate reading the admin check only through that one function", () => {
     for (const file of [
       "components/AdminOnly/AdminOnlyContent.tsx",
-      "pages/AdminPageContent/AdminPageContent.tsx",
-      "pages/AdminViolationsPageContent/AdminViolationsPageContent.tsx",
+      "pages/UserModerationPage/UserModerationPageContent.tsx",
+      "pages/ViolationReviewPage/ViolationReviewPageContent.tsx",
     ]) {
       const source = readFileSync(join(ADMIN_DIR, file), "utf8");
 

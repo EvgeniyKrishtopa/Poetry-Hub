@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { ADD_TO_HOME_COPY } from "../../model/admin-messages";
-import { describeAddToHomeResult } from "../../model/home-entry-notices";
+import { ADD_TO_HOME_COPY, ADMIN_HOME_PAGE_COPY } from "../../model/admin-messages";
+import { describeAddToHomeResult, describeHomeListResult } from "../../model/home-entry-notices";
 
 describe("describeAddToHomeResult", () => {
   // implements FR-8 of home-page-sections
@@ -56,5 +56,37 @@ describe("describeAddToHomeResult", () => {
     expect(ended).toEqual({ tone: "danger", text: ADD_TO_HOME_COPY.unauthenticated });
     expect(outage).toEqual({ tone: "danger", text: ADD_TO_HOME_COPY.failed });
     expect(new Set([forbidden.text, ended.text, outage.text]).size).toBe(3);
+  });
+});
+
+describe("describeHomeListResult", () => {
+  // implements FR-9 of home-page-sections
+  it("says nothing for a move or a remove that was stored", () => {
+    expect(describeHomeListResult({ ok: true, status: "moved" })).toBeNull();
+    expect(describeHomeListResult({ ok: true, status: "removed" })).toBeNull();
+  });
+
+  // implements FR-9 of home-page-sections
+  it("tells a stale or missing entry the list changed, as a neutral line", () => {
+    const stale = { tone: "neutral", text: ADMIN_HOME_PAGE_COPY.stale };
+
+    expect(describeHomeListResult({ ok: true, status: "stale" })).toEqual(stale);
+    expect(describeHomeListResult({ ok: true, status: "not-found" })).toEqual(stale);
+  });
+
+  // implements FR-9 of home-page-sections
+  it("words a refused admin check, an ended session and an outage as danger lines", () => {
+    expect(describeHomeListResult({ ok: false, reason: "forbidden" })).toEqual({
+      tone: "danger",
+      text: ADD_TO_HOME_COPY.forbidden,
+    });
+    expect(describeHomeListResult({ ok: false, reason: "unauthenticated" })).toEqual({
+      tone: "danger",
+      text: ADD_TO_HOME_COPY.unauthenticated,
+    });
+    expect(describeHomeListResult({ ok: false, reason: "unavailable" })).toEqual({
+      tone: "danger",
+      text: ADMIN_HOME_PAGE_COPY.moveFailed,
+    });
   });
 });

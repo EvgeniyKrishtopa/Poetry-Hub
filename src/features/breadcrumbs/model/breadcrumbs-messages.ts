@@ -11,6 +11,7 @@ export const BREADCRUMB_LABELS = {
   privacyPolicy: "Политика конфиденциальности",
   admin: "Админка",
   adminViolations: "Список нарушителей",
+  adminHome: "Главная страница",
   authorFallback: "Автор",
 } as const;
 
