@@ -6,7 +6,7 @@ Accepted (2026-09-28)
 
 ## Context
 
-Until now tests were colocated as `*.test.ts(x)` files directly next to the code they test (`model/filter-poems.test.ts`, `components/PoemList/PoemList.test.tsx`). As features grew (the home feature alone has five test files), source and test files mixed in the same folders. On review of PR #3 the project owner decided tests must not sit alongside source files.
+Until now tests were colocated as `*.test.ts(x)` files directly next to the code they test (`model/filter-poems.test.ts`, `components/PoemTitleList/PoemTitleList.test.tsx`). As features grew (the home feature alone has five test files), source and test files mixed in the same folders. On review of PR #3 the project owner decided tests must not sit alongside source files.
 
 ## Decision
 
@@ -25,7 +25,7 @@ Until now tests were colocated as `*.test.ts(x)` files directly next to the code
 
 **Negative**
 
-- Longer relative imports in tests (`../../components/PoemList/PoemList`), and a moved or renamed source file needs its mirrored test path moved by hand.
+- Longer relative imports in tests (`../../components/PoemTitleList/PoemTitleList`), and a moved or renamed source file needs its mirrored test path moved by hand.
 
 ## Alternatives Considered
 

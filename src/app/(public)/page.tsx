@@ -1,24 +1,17 @@
-import { cacheLife, cacheTag } from "next/cache";
-
-import { HomeGreeting, getHomeGreeting, getHomePageMetadata, resolveGreeting } from "@/features/home";
-import { CONTENTFUL_CACHE_TAG } from "@/shared/lib/contentful";
+import { SignedOutOnly } from "@/features/auth";
+import { HomeJoinCta, HomeSections, getHomePageMetadata } from "@/features/home";
 
 export const metadata = getHomePageMetadata();
 
-export default async function HomePage() {
-  "use cache";
-  // Cache Components rejects the `revalidate` segment config, so the page body is its own cache
-  // scope. "minutes" revalidates every 60 s, matching the Contentful client's default.
-  cacheLife("minutes");
-  // Tag the page itself so the publish webhook's revalidateTag expires it directly, without relying
-  // on nested-tag propagation.
-  cacheTag(CONTENTFUL_CACHE_TAG);
-
-  const greetingResult = await getHomeGreeting();
-
+export default function HomePage() {
+  // The five shared sections are one cached scope inside `HomeSections`. The closing invitation is for visitors
+  // who are not signed in, so it is read on the server outside that cache, in `SignedOutOnly`'s own boundary.
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-16">
-      <HomeGreeting greeting={resolveGreeting(greetingResult)} />
+    <main className="flex w-full flex-1 flex-col">
+      <HomeSections />
+      <SignedOutOnly>
+        <HomeJoinCta />
+      </SignedOutOnly>
     </main>
   );
 }

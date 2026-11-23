@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Literata } from "next/font/google";
 import Link from "next/link";
 
 import { AdminNavLink } from "@/features/admin";
@@ -24,6 +24,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// The home sections' heading face: only the two weights the headings use, with Georgia as the fallback in `--font-serif`.
+const literata = Literata({
+  variable: "--font-literata",
+  subsets: ["latin", "cyrillic"],
+  weight: ["500", "600"],
+});
+
 // Only the base and the title template live here: a field set on the root is inherited by every page, the
 // signed-in ones included, so each public page sets its own description, canonical and card (seo-metadata D2).
 // A function, not an object, so the site address is read when the metadata is built, not at import (D10).
@@ -39,7 +46,7 @@ export default function RootLayout({ children, breadcrumbs }: LayoutProps<"/">) 
   return (
     <html
       lang={CONTENT_LANG}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${literata.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <HydrationMarker />

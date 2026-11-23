@@ -1,4 +1,4 @@
-import { AddToViolationsControl, AdminDeleteControl } from "@/features/admin";
+import { AddToHomeControl, AddToViolationsControl, AdminDeleteControl } from "@/features/admin";
 import { authorPagePath } from "@/features/authors";
 import { PoemPage, getPoemPageMetadata } from "@/features/poems";
 
@@ -27,6 +27,7 @@ export default function PoemRoutePage({ params }: PageProps<"/authors/[id]/poems
               authorId={target.authorId}
               redirectHref={authorPagePath(target.authorId)}
             />
+            <AddToHomeControl kind="poem" id={target.id} />
           </div>
         )}
       />

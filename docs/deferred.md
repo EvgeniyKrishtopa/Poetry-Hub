@@ -213,3 +213,27 @@ Archived at `openspec/changes/archive/2026-11-20-seo-metadata/`.
 - **Verified instead:** the nine crawler user agents (Googlebot, YandexBot, bingbot, `TelegramBot (like TwitterBot)`, vkShare, WhatsApp, facebookexternalhit, Twitterbot, `Slackbot-LinkExpanding`) against the final production build: eight have `og:title`, `og:description`, `og:image` and the canonical link inside `<head>`, and Googlebot streams them after `</head>`, which it reads (task 5.5).
 - **Decision:** none yet; the task's own text says to record the step here as blocked when no public address is available.
 - **Status:** open. To close it: after the first deploy (or with a production build behind a tunnel), paste a poem link into Telegram, VK and WhatsApp, record what each shows, and add a bot that shows the generic card to `htmlLimitedBots` in `next.config.ts` (the full default pattern from task 1.4 plus the addition, with a comment). Then remove the `blocked` marker, tick 6.5 in `tasks.md` and set this entry to `resolved`.
+
+## home-page-sections
+
+Archived at `openspec/changes/archive/2026-11-23-home-page-sections/`.
+
+### home-page-sections · 1.5 — «Все произведения» and «Все публикации» left out
+
+- **State:** skipped
+- **Requirement:** FR-2, FR-5
+- **What is missing:** the links «Все произведения» (under the featured poems) and «Все публикации» (under the latest publications). Both would lead to a page listing every poem.
+- **Why:** the site has no page that lists every poem, so there is nothing for the two links to open. A catalog page is a separate change, and the two links come with it.
+- **Verified instead:** nothing; the home page ships without the links, and the section tests assert there are none.
+- **Decision:** owner, 2026-11-21.
+- **Status:** open. To close it: add a catalog page in its own change, then add the two links to the featured and latest sections and set this entry to `resolved`.
+
+### home-page-sections · 7.3 — focus kept and removal announced on `/admin/home`
+
+- **State:** skipped
+- **Requirement:** FR-9
+- **What is missing:** on `/admin/home`, after a keyboard drop or a click on «Убрать», keyboard focus returns to the page start (`document.activeElement` is `BODY`) instead of staying on the moved row's handle (or the next row after a remove), and a remove makes no live-region announcement, so a screen-reader user is not told the entry is gone.
+- **Why:** Gate 3's Keyboard Pass found it. The change's spec and `ui-plan.md` do not ask for it, and the violation review list the page was copied from behaves the same way, so fixing it only here would make the two lists differ. Both lists should be fixed together in one change.
+- **Verified instead:** lifting, moving and dropping by keyboard work and the moved order persists to `/`; the lifted handle has a visible focus ring; the move announcements («Выбрано…», «Положено на позицию…») are read.
+- **Decision:** owner, 2026-11-23.
+- **Status:** open. To close it: in a change that covers both the home list and the violation list, restore focus to the row after a move, move it to the neighbouring row (or the list heading when empty) after a remove, announce the removal in the live region, and add a keyboard test for each; then set this entry to `resolved`.

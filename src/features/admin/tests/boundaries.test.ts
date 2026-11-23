@@ -16,13 +16,15 @@ const FEATURE_IMPORT = /from ["']@\/features\/([\w-]+)(?:\/[^"']*)?["']/g;
 
 /** The components `src/app/` composes (design D12, NFR-4). */
 const PUBLIC_API = [
+  "AddToHomeControl",
   "AddToViolationsControl",
   "AdminActionNotice",
   "AdminDeleteControl",
   "AdminNavLink",
   "AdminOnly",
-  "AdminPage",
-  "AdminViolationsPage",
+  "HomeCurationPage",
+  "UserModerationPage",
+  "ViolationReviewPage",
 ];
 
 const ESLINT_TIMEOUT_MS = 60_000;
@@ -160,7 +162,7 @@ describe("the lint boundary", () => {
   // implements NFR-4 of admin-moderation
   it("lets a route file compose the admin feature", { timeout: ESLINT_TIMEOUT_MS }, async () => {
     const messages = await restrictedImportMessages(
-      'import { AdminPage } from "@/features/admin";\nexport default AdminPage;\n',
+      'import { UserModerationPage } from "@/features/admin";\nexport default UserModerationPage;\n',
       "src/app/(authorized)/admin/page.tsx",
     );
 

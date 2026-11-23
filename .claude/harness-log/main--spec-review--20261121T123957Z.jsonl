@@ -1,0 +1,4 @@
+{"ts":"2026-11-21T12:39:57Z","change":"home-page-sections","group":"full","gate":"spec-review","verdict":"confirmed","skipReason":"","durationMs":98155,"tokensTotal":60990,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}
+{"ts":"2026-11-21T12:39:57Z","change":"home-page-sections","kind":"finding","gate":"spec-review","finding":"FR-9 asks for the poem's author name but admin_list_home_entries did not return it (SR-03)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-21T12:39:57Z","change":"home-page-sections","kind":"finding","gate":"spec-review","finding":"Proposal said one table, design builds two (SR-03)","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-21T12:39:57Z","change":"home-page-sections","kind":"finding","gate":"spec-review","finding":"Tasks 1.4 and 3.2 named FR-1 (hero) for work covered by FR-2 and FR-4 (SR-01)","outcome":"fixed","ruleNumber":""}

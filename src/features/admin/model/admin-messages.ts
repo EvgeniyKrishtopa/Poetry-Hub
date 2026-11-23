@@ -121,6 +121,28 @@ export const ADD_TO_VIOLATIONS_COPY = {
 } as const;
 
 /**
+ * The «show on the home page» control on the poem and author pages (artboards AdminHomeBtnPoem, AdminHomeBtnPoem2 and
+ * AdminHomeBtnAuthor). The limit line names the cap of four in the plural form that fits it.
+ */
+export const ADD_TO_HOME_COPY = {
+  button: "Показать на главной",
+  added: "Показано на главной.",
+  alreadyInList: "Уже показано на главной.",
+  limitReached: {
+    poem: "На главной уже 4 произведения. Уберите одно на странице /admin/home.",
+    author: "На главной уже 4 автора. Уберите одного на странице /admin/home.",
+  },
+  notFound: {
+    poem: "Не удалось найти это произведение.",
+    author: "Не удалось найти этого автора.",
+  },
+  failed: "Не удалось сохранить. Попробуйте ещё раз.",
+  // An expired session and a refused admin check keep the texts the rows already use: a retry would not help there.
+  forbidden: MODERATION_FAILURE_MESSAGES.forbidden,
+  unauthenticated: MODERATION_FAILURE_MESSAGES.unauthenticated,
+} as const;
+
+/**
  * The one-time line on the author page after an admin delete whose email did not go out (artboard 53), per kind of
  * what was deleted. `noAddress` follows it, for an author whose account holds no address.
  */
@@ -249,4 +271,28 @@ export const WARN_DIALOG_COPY = {
   unknownOutcome: "Не уверены, что письмо ушло. Текст зафиксирован, повторите отправку",
   // Not in the mockups: placeholder for a user with no address, to confirm.
   noAddress: "У пользователя нет адреса почты",
+} as const;
+
+/** The `/admin/home` page (artboards AdminHomeA, AdminHomeB and AdminHomeC), the lists' texts and the live announcements. */
+export const ADMIN_HOME_PAGE_COPY = {
+  title: "Главная страница",
+  navLink: "Главная на сайте",
+  headings: { poem: "Произведения", author: "Авторы" },
+  empty: {
+    poem: "Пока ничего не выбрано. Откройте страницу произведения и нажмите «Показать на главной».",
+    author: "Пока ничего не выбрано. Откройте страницу автора и нажмите «Показать на главной».",
+  },
+  notShown: "не показывается на главной",
+  removeButton: "Убрать",
+  removeLabel: (label: string): string => `Убрать «${label}» с главной`,
+  handleLabel: (label: string): string => `Переместить «${label}»`,
+  dragInstructions: "Пробел — взять строку, стрелки — изменить позицию, пробел — положить, Esc — отменить.",
+  moveFailed: "Не удалось сохранить порядок. Попробуйте ещё раз.",
+  stale: "Список изменился в другой вкладке. Мы обновили его — попробуйте ещё раз.",
+  loadFailed: "Не удалось загрузить главную страницу. Попробуйте позже.",
+  picked: (label: string, position: number, total: number): string =>
+    `Выбрано: «${label}», позиция ${position} из ${total}. Стрелками измените позицию, пробел — положить, Esc — отменить.`,
+  moved: (position: number, total: number): string => `Позиция ${position} из ${total}.`,
+  dropped: (position: number, total: number): string => `Положено на позицию ${position} из ${total}.`,
+  cancelled: "Перемещение отменено.",
 } as const;

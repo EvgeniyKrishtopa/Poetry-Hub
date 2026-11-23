@@ -1,4 +1,4 @@
-import { AddToViolationsControl, AdminActionNotice } from "@/features/admin";
+import { AddToHomeControl, AddToViolationsControl, AdminActionNotice } from "@/features/admin";
 import { AuthorPage, getAuthorPageMetadata } from "@/features/authors";
 import { PublicCollectionsSection } from "@/features/collections";
 import { AuthorPoemsEntry } from "@/features/poems";
@@ -25,6 +25,7 @@ export default function AuthorRoutePage({ params }: PageProps<"/authors/[id]">) 
           <>
             <AdminActionNotice />
             <AddToViolationsControl authorId={target.authorId} authorName={target.authorName} />
+            <AddToHomeControl kind="author" id={target.authorId} />
           </>
         )}
       />

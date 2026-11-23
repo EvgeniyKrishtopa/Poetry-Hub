@@ -1,0 +1,60 @@
+/* Hero type and rhythm from the mockups (HomeHero board). Breakpoints are the page's: tablet 768 px, desktop 1024 px. */
+.hero {
+  position: relative;
+  isolation: isolate;
+  padding-block: 4rem;
+  color: var(--color-on-hero);
+}
+
+.image {
+  object-fit: cover;
+  z-index: -2;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--hero-scrim);
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+
+.message {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  white-space: pre-line;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    padding-block: 6rem;
+  }
+
+  .title {
+    font-size: 3rem;
+    line-height: 3.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero {
+    padding-block: 8rem;
+  }
+
+  .title {
+    font-size: 4rem;
+    line-height: 4.25rem;
+  }
+
+  .message {
+    font-size: 1.25rem;
+    line-height: 1.875rem;
+  }
+}

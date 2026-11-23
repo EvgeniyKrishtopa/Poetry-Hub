@@ -124,6 +124,15 @@ git-ignored `PROGRESS.md`, so every clone sees them.
      (`docs/deferred.md`, `admin-violations-feedback` 6.4, if it is still open).
   4. Owner's own work, outside the code: paste the wording from `docs/about-rules-proposal.md` into the About
      page in Contentful, and review the privacy policy for the new email use of an account's address.
+- **Home featured migration** (`home-page-sections`): `npx supabase db push` applies
+  `20261121140000_home_featured.sql` (the `home_featured_poems` and `home_featured_authors` tables with no client
+  grant, the guarded `admin_add_home_poem` / `admin_add_home_author` / `admin_move_home_entry` /
+  `admin_remove_home_entry` / `admin_list_home_entries`, and `home_featured_ids()` for the public page). Apply it
+  after the admin moderation migrations and **before the app**: without it the featured sections and the
+  authors section stay hidden (the home page shows its other sections) and `/admin/home` shows its error alert.
+  No new variable. Rollback: revert the app first, then the down migration in the file's header (the chosen lists
+  are lost). After the first deploy, an admin picks the poems and authors on `/admin/home`; until then those two
+  sections are not shown.
 - **`poem-illustrations` bucket** (`add-poem-creation`): on the hosted project, confirm it exists,
   public, 5 MiB file size limit, MIME types `image/png` and `image/jpeg` — the same as
   `supabase/config.toml`, which configures the local stack only.
