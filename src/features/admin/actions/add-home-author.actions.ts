@@ -1,12 +1,14 @@
 "use server";
 
-import { addHomeAuthor } from "../dal/home-rpc";
 import { HOME_ENTRY_OPERATION } from "../model/home-entry.constants";
 import { addHomeAuthorSchema } from "../model/home-entry.schema";
-import type { HomeActionResult, HomeAddStatus } from "../model/home-entry.types";
+import type {
+  HomeActionResult,
+  HomeAddStatus,
+} from "../model/home-entry.types";
 
 import { adminActionClient } from "./action-client";
-import { HOME_ADD_EFFECTS, runHomeWrite } from "./run-home-write";
+import { runHomeWrite } from "./run-home-write";
 
 /**
  * Chooses an author for the home page by profile id: validate the id, check the session, call
@@ -15,5 +17,5 @@ import { HOME_ADD_EFFECTS, runHomeWrite } from "./run-home-write";
 export const addHomeAuthorAction = adminActionClient
   .inputSchema(addHomeAuthorSchema)
   .action(async ({ parsedInput }): Promise<HomeActionResult<HomeAddStatus>> => {
-    return runHomeWrite(HOME_ENTRY_OPERATION.addAuthor, () => addHomeAuthor(parsedInput), HOME_ADD_EFFECTS);
+    return runHomeWrite({ operation: HOME_ENTRY_OPERATION.addAuthor, input: parsedInput });
   });
