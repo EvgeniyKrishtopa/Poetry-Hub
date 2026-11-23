@@ -32,6 +32,9 @@ const VIEWPORT = { width: 1280, height: 1000 };
 const HOME_REFRESH_TIMEOUT_MS = 15_000;
 /** How long one keyboard lift may take to be announced before it is tried again. */
 const LIFT_ATTEMPT_TIMEOUT_MS = 2_000;
+const LIFT_TOTAL_TIMEOUT_MS = 15_000;
+/** The scenario signs in, adds six entries, moves one, removes two and waits on the guest's cached page after each. */
+const SCENARIO_TIMEOUT_MS = 120_000;
 
 test.use({ viewport: VIEWPORT });
 
@@ -49,7 +52,7 @@ async function clearLists(page: Page): Promise<void> {
   }
 }
 
-/** Presses «Показать на главной» on a public page and waits for the result line. */
+/** Presses the add-to-home button on a public page and waits for the result line. */
 async function addFrom(page: Page, path: string): Promise<void> {
   await page.goto(path);
   await waitForHydration(page);
@@ -82,7 +85,8 @@ async function expectHomeBand(guest: Page, heading: string, names: readonly stri
     .poll(
       async () => {
         await guest.goto("/");
-        return cardNames(sectionUnder(guest, heading), names);
+        const section = sectionUnder(guest, heading);
+        return cardNames(section, names);
       },
       { timeout: HOME_REFRESH_TIMEOUT_MS },
     )
@@ -96,6 +100,7 @@ test(
   "the home page lists the admin's chosen poems and authors in the chosen order and follows a move and a removal",
   { tag: ["@home-featured-order-on-page"] },
   async ({ page, browser, baseURL }) => {
+    test.setTimeout(SCENARIO_TIMEOUT_MS);
     await signIn(page, ADMIN_EMAIL);
     await clearLists(page);
     const guestContext = await browser.newContext({ baseURL, viewport: VIEWPORT });
@@ -127,7 +132,7 @@ test(
         await expect(page.getByText(`Выбрано: «${MORNING}», позиция 4 из 4.`)).toBeAttached({
           timeout: LIFT_ATTEMPT_TIMEOUT_MS,
         });
-      }).toPass({ timeout: HOME_REFRESH_TIMEOUT_MS });
+      }).toPass({ timeout: LIFT_TOTAL_TIMEOUT_MS });
       // The library measures the rows just after the lift, and an arrow pressed before that moves nothing.
       await page.waitForTimeout(KEYBOARD_MEASURE_PAUSE_MS);
       await page.keyboard.press("ArrowUp");
@@ -145,8 +150,12 @@ test(
       await expect(authors.getByRole("listitem")).toHaveCount(1);
       await expectHomeBand(guest, AUTHORS_HEADING, authorNames, [SECOND_AUTHOR.name]);
     } finally {
-      await clearLists(page);
-      await guestContext.close();
+      // The guest's window closes even when emptying the lists fails, and that failure must not hide the test's own.
+      try {
+        await clearLists(page);
+      } finally {
+        await guestContext.close();
+      }
     }
   },
 );
