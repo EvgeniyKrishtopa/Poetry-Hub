@@ -37,7 +37,7 @@ describe("getGreetingByKey", () => {
     expect(JSON.stringify(logSpy.mock.calls)).not.toContain(TOKEN);
   }
 
-  // implements FR-5 of home-greeting
+  // implements home-greeting FR-5 of home-contentful-content
   it.each<GreetingKey>([ABOUT_GREETING_KEY, JOIN_GREETING_KEY])(
     "queries the `%s` key with the client's cache defaults and returns the greeting",
     async (key) => {
@@ -55,7 +55,7 @@ describe("getGreetingByKey", () => {
     },
   );
 
-  // implements FR-5 of home-greeting
+  // implements home-greeting FR-5 of home-contentful-content
   it("returns not-found for a key with no published entry and logs the key", async () => {
     queryMock.mockResolvedValue(itemsResponse([]));
 
@@ -63,7 +63,7 @@ describe("getGreetingByKey", () => {
     expectSingleLog({ key: JOIN_GREETING_KEY, reason: "not-found" });
   });
 
-  // implements FR-4 of home-greeting
+  // implements home-greeting FR-4 of home-contentful-content
   it.each([
     ["an item without a title", itemsResponse([{ key: ABOUT_GREETING_KEY, message: TOKEN }])],
     ["a whitespace-only title", itemsResponse([{ key: ABOUT_GREETING_KEY, title: "   ", message: "Hello" }])],
@@ -78,7 +78,7 @@ describe("getGreetingByKey", () => {
     expectSingleLog({ key: ABOUT_GREETING_KEY, reason: "validation" });
   });
 
-  // implements FR-3 and FR-7 of home-greeting
+  // implements home-greeting FR-3 and FR-7 of home-contentful-content
   it.each<[ContentfulErrorKind, number | undefined, { reason: string; status?: number }]>([
     ["config", undefined, { reason: "config" }],
     ["network", undefined, { reason: "network" }],

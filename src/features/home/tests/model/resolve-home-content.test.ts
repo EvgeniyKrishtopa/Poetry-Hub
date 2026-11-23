@@ -36,7 +36,7 @@ describe("resolveBanner", () => {
 });
 
 describe("resolveSectionCopy", () => {
-  // implements FR-3 of home-sections
+  // implements home-sections FR-3 of home-contentful-content
   it("returns the CMS greeting's title and message on success", () => {
     const result = resolveSectionCopy(
       { ok: true, greeting: { key: "about_project_home", title: "About us", message: "Line one\n\nLine two" } },
@@ -46,7 +46,7 @@ describe("resolveSectionCopy", () => {
     expect(result).toEqual({ heading: "About us", text: "Line one\n\nLine two" });
   });
 
-  // implements FR-3 of home-sections
+  // implements home-sections FR-3 of home-contentful-content
   it.each<GreetingFailureReason>([...FAILURE_REASONS])(
     "falls back to the about section's own copy for a `%s` failure",
     (reason) => {
@@ -57,7 +57,7 @@ describe("resolveSectionCopy", () => {
     },
   );
 
-  // implements FR-6 of home-sections
+  // implements home-sections FR-6 of home-contentful-content
   it.each<GreetingFailureReason>([...FAILURE_REASONS])(
     "falls back to the closing invitation's own copy for a `%s` failure",
     (reason) => {
