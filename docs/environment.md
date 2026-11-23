@@ -6,7 +6,12 @@ Read before adding, renaming, or reading an environment variable.
 - Contentful: `CONTENTFUL_SPACE_ID`, `CONTENTFUL_ACCESS_TOKEN` (Content Delivery API token), optional `CONTENTFUL_ENVIRONMENT` (defaults to `master`). Server-only: never prefix them with `NEXT_PUBLIC_`.
 - They are validated lazily on each call; a missing or malformed value fails as a `config` error naming the variable, never its value.
 - `CONTENTFUL_REVALIDATE_SECRET` gates the publish webhook `POST /api/revalidate`, which expires every Contentful-cached fetch (the `contentful` tag) immediately. Unset or empty → the endpoint fails closed with 503. Generate one with `openssl rand -hex 32`, and set the same value in `.env.local`, on the hosting platform, and in the webhook.
-- Webhook setup (manual, Contentful → Settings → Webhooks; see design D10 in `openspec/changes/add-contentful-home-greeting/design.md`, or its archived copy): URL `https://<deployed-host>/api/revalidate`, method POST, triggers Entry → Publish and Unpublish, custom header `x-contentful-webhook-secret: <secret>`. Contentful can't reach `localhost`, so test locally with `curl`. To rotate, change the env var and the webhook header together.
+- Webhook setup (manual, Contentful → Settings → Webhooks; see design D10 in `openspec/changes/add-contentful-home-greeting/design.md`, or its archived copy): URL `https://<deployed-host>/api/revalidate`, method POST, triggers Entry → Publish and Unpublish **and Asset → Publish and Unpublish** (an editor who swaps the hero photo by publishing the asset alone would otherwise wait for the 60 s cache lifetime), custom header `x-contentful-webhook-secret: <secret>`. Contentful can't reach `localhost`, so test locally with `curl`. To rotate, change the env var and the webhook header together.
+- `CONTENTFUL_SPACE_ID` is also read **at build time**: `next.config.ts` derives one `images.remotePatterns` entry from it (`https://images.ctfassets.net/<space id>/**`, `src/shared/config/contentful-image-patterns.ts`), and the home banner accepts an image URL only when it matches the same rule at runtime. Set the same value in the hosting platform's build environment and at runtime. A build without it succeeds but allows no Contentful image; a runtime without it makes the banner read fail as `config`. Either way the hero shows the static photo.
+- Home page content in Contentful (`home-contentful-content`; until each is published the page shows its static copy):
+  - One **Home banner** entry (API ID `homeBanner`; fields `title` and `description`, a Long text shown as plain-text paragraphs, and `bannerImage`, an asset). If several are published, the most recently published one is used. The hero shows the entry only when the title, description and image are all valid; otherwise it shows the site name, the site description and the shipped photo.
+  - **Banner image** guidance: about 2000 px wide, and dark enough under the text. The hero has only a 10% black overlay, so the lightest pixel in the middle 60% of the photo's height may be `#838383` (the value in `docs/design-system.md`); a lighter photo makes the white text hard to read.
+  - Two **Greeting** entries, by key: `about_project_home` (the about section's heading and text) and `call_to_action_signup` (the closing invitation's heading and text, shown to signed-out visitors only). The old `home_greeting` entry is no longer read and can be deleted.
 - Supabase: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the `sb_publishable_…` key). The server client and the proxy's session refresh read them. They are public by design (the publishable key is meant to be exposed), carry the `NEXT_PUBLIC_` prefix, and are read as literal `process.env.NEXT_PUBLIC_…` accesses, since Next inlines only literal accesses.
   - Only the publishable key is ever used. Never add a secret or service-role key; nothing in `src/` may read one.
   - URL rule: `https://` with any host, or `http://` only for `localhost` / `127.0.0.1` (a local Supabase CLI instance).
@@ -139,6 +144,13 @@ git-ignored `PROGRESS.md`, so every clone sees them.
 - **Contentful `tag` content type** (`add-poem-creation`): in each Contentful environment, a content type
   with id `tag` and fields `name` and `slug` (both short text, required), plus one published entry per
   genre. Without it the add form shows the genres-unavailable alert and poem pages show no genre line.
+- **Home page content from Contentful** (`home-contentful-content`): no migration.
+  1. Set `CONTENTFUL_SPACE_ID` in the hosting platform's build environment as well as at runtime, with the same value.
+  2. In each Contentful environment, publish one Home banner entry and the Greeting entries `about_project_home` and
+     `call_to_action_signup` (see the Contentful notes at the top of this file). Until then `/` shows its static copy.
+  3. In Contentful → Settings → Webhooks add Asset → Publish and Unpublish to the existing triggers.
+  4. After the first deploy, look at `/` signed out, in both themes at 360, 768 and 1280 px: the hero text is
+     centred and reads clearly over the photo (`docs/deferred.md`, `home-contentful-content` 3.2, while it is open).
 - **Page metadata, `robots.txt` and the sitemap** (`seo-metadata`; ADR 0018): no migration.
   1. Before the deploy, check that `public/og-default.png` (the default share image, 1200×630) is in the
      repository. Every page without its own picture points at it, and a missing file shows a broken card.

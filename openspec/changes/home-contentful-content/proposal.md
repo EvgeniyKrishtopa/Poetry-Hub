@@ -37,9 +37,9 @@ Assumptions the owner confirms (Open Questions): the Field IDs `title`, `descrip
 
 ## Open Questions
 
-- Field IDs, API ID and entry count of Home banner (see assumptions). Owner, due 2026-11-27.
-- Is centring meant for the buttons too? Owner, due 2026-11-27.
-- Which photo goes into Contentful: with only a 10% overlay, white text needs a dark enough photo (see design, Risks). Owner, due 2026-11-30.
+- Field IDs and API ID of Home banner: answered 2026-11-23, the owner confirmed `homeBanner`, `title`, `description` (Long text) and `bannerImage` (tasks 1.1). Entry count: still unconfirmed; the code uses the most recently published entry, so more than one is harmless. Owner, due 2026-11-27.
+- Is centring meant for the buttons too? Answered by the approved Claude Design canvas (centred buttons), built that way. Closed.
+- Which photo goes into Contentful: with only a 10% overlay, white text needs a dark enough photo (see design, Risks). The rule is in `docs/design-system.md` and `docs/environment.md`; the owner's check of the shipped and the published photo is `docs/deferred.md` `home-contentful-content` 3.2. Owner, due 2026-11-30.
 
 ## Mockups
 
