@@ -2,7 +2,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { render, screen, within } from "@testing-library/react";
+import { cacheTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { CONTENTFUL_CACHE_TAG } from "@/shared/lib/contentful";
 
 import { getHomeBanner } from "../../dal/home-banner";
 import { getFeaturedAuthors, getFeaturedWorks, getLatestWorks } from "../../dal/home-sections";
@@ -74,6 +77,13 @@ describe("HomeSections", () => {
       AUTHORS_HEADING,
       LATEST_HEADING,
     ]);
+  });
+
+  // implements NFR-B1 of home-contentful-content
+  it("tags its cache scope with the Contentful tag the publish webhook expires", async () => {
+    await renderSections();
+
+    expect(cacheTag).toHaveBeenCalledWith(CONTENTFUL_CACHE_TAG, expect.any(String));
   });
 
   // implements FR-6 of home-page-sections: the invitation is not part of the cached sections
