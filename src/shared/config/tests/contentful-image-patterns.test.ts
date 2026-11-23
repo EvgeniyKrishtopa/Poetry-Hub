@@ -51,6 +51,8 @@ describe("isAllowedContentfulImageUrl", () => {
   it.each([
     ["unset", undefined],
     ["empty", ""],
+    ["malformed (upper-case letters)", "ABC123"],
+    ["malformed (a space)", "abc 123"],
   ])("refuses every address when the space id is %s", (_case, spaceId) => {
     expect(isAllowedContentfulImageUrl(imageUrl(SPACE_ID), spaceId)).toBe(false);
   });
