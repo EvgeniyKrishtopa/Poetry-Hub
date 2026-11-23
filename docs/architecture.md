@@ -19,7 +19,7 @@ src/
 │   ├── loading.tsx           # Neutral loading state for any segment (covers both groups)
 │   ├── (public)/             # Route group (no URL segment): pages anyone can read; each page file exports `metadata` or `generateMetadata` (app/tests/public-pages-metadata.test.ts fails for one that does not)
 │   │   ├── layout.tsx        # Pass-through
-│   │   ├── page.tsx          # / (home): home's six sections (HomeHero, HomeFeaturedWorks, HomeAbout, HomeAuthors, HomeLatestWorks, HomeJoinCta), the whole page cached ("use cache", cacheLife("minutes"), tagged CONTENTFUL_CACHE_TAG and HOME_FEATURED_TAG), no session read
+│   │   ├── page.tsx          # / (home): home's `HomeSections` (hero, featured poems, about, project authors, latest poems: one cache scope, "use cache", cacheLife("minutes"), tagged CONTENTFUL_CACHE_TAG and HOME_FEATURED_TAG, no session read) and `HomeJoinCta` inside auth's `SignedOutOnly` (its own Suspense boundary, session read outside the cache, shown to signed-out visitors only)
 │   │   ├── login/page.tsx    # /login (passes ?error= to auth's `SignInPanel`, which awaits it inside <Suspense>)
 │   │   ├── signup/page.tsx   # /signup
 │   │   ├── about/page.tsx    # /about: content-page's `ContentPage` with `CONTENT_PAGE_KEYS.about` (Contentful's `about_page` entry)

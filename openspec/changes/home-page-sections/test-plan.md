@@ -14,11 +14,12 @@
 | FR-5 · poem of a removed author | `listLatestPoems` test: a poem the public client does not return is absent; `home-sections` test: a poem whose author is missing from the public author list is dropped, so fewer than four may show | unit |
 | FR-5 · no poems at all | `HomeLatestWorks` test: nothing rendered | unit |
 | FR-6 · closing invitation | `HomeJoinCta` test: heading, text, button to `/signup` | unit |
+| FR-6 · no closing section for a signed-in reader or an admin | `SignedOutOnly` test: children for a signed-out session, nothing for a signed-in one (an admin is signed in) and for an unknown session; page test: the invitation sits inside `SignedOutOnly`; recorded browser scenario: absent for the signed-in admin, present for a guest | unit, end-to-end |
 | FR-7 · one read fails | `home-sections` test: one poem read down, the other poem section and the authors section still `ok`; page test: the other sections render and one log line holds the failure kind only | unit |
 | FR-7 · the author list fails | `home-sections` test: author list down, all three sections `ok: false` together; page test: hero, about and closing render | unit |
 | FR-7 · all reads fail | page test with every read failing: hero, about, closing render and the page is not the error screen | unit |
 | FR-12 · recovery after an outage | DAL tests assert the failed result sets `cacheLife("seconds")` and the success its longer profile (the cache tag and lifetime calls are mocked); spike 1.1 recorded that a nested short lifetime does not shorten the page, so recovery is bounded by the page's minute (decided 2026-11-21) | unit, integration |
-| NFR-1 · same page for a signed-in reader | page test: nothing in the page's scope imports or calls cookies, headers or the session; `npm run build` lists `/` as prerendered | unit, integration |
+| NFR-1 · same cached sections for a signed-in reader | `HomeSections` test or source check: nothing in the cache scope imports or calls cookies, headers or the session; `npm run build` lists `/` as prerendered | unit, integration |
 | NFR-2 · narrow viewport | recorded browser scenario at 360, 768 and 1280 px: document width equals the viewport and the cards reflow | end-to-end |
 | NFR-3 · images | `HomeHero` and card tests: `priority` and `sizes` props on the hero, a fixed aspect-ratio class on cover boxes | unit |
 | NFR-4 · tokens and serif headings | a style test over the home CSS modules: no raw colour values, headings use the display font token; lint stays green | unit |

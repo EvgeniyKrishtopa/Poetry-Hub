@@ -84,11 +84,22 @@ The page SHALL show the 4 newest poems of public authors, ordered by creation da
 - **THEN** the latest-publications section is absent
 
 ### Requirement: Closing invitation (FR-6)
-The page SHALL end with a section holding a heading, a short motivating text and one button «Присоединиться к проекту» leading to `/signup`.
+The page SHALL end, for a visitor who is not signed in, with a section holding a heading, a short motivating text and one button «Присоединиться к проекту» leading to `/signup`. A signed-in reader, an admin included, SHALL NOT see this section: it invites people to join, and they already have.
 
-#### Scenario: Closing section
-- **WHEN** a visitor opens `/`
+#### Scenario: Closing section for a guest
+- **GIVEN** a visitor who is not signed in
+- **WHEN** they open `/`
 - **THEN** the last section shows its heading and text, and its button leads to `/signup`
+
+#### Scenario: No closing section for a signed-in reader
+- **GIVEN** a signed-in reader
+- **WHEN** they open `/`
+- **THEN** the closing invitation and its button are absent and the other five sections render
+
+#### Scenario: No closing section for an admin
+- **GIVEN** a signed-in admin
+- **WHEN** they open `/`
+- **THEN** the closing invitation is absent
 
 ### Requirement: Sections fail independently (FR-7)
 Each data-backed section (featured poems, project authors, latest publications) SHALL read its data on its own. When one read fails, that section SHALL be left out and every other section SHALL render. A failed read SHALL be logged on the server by kind only, never with a title, a name or a row. The page SHALL NOT turn into the error screen for such a failure. The three sections share one source of author names (the public author list): when that read fails, all three SHALL be left out together, since a poem card without its author's name is not shown, and the hero, about and closing sections SHALL still render.
@@ -117,13 +128,13 @@ A failed section read SHALL NOT stay in the cache for the lifetime of a successf
 - **WHEN** the database is back and a visitor opens `/` after the page's lifetime of a minute has ended
 - **THEN** the latest section is shown again
 
-### Requirement: Cached, session-free page (NFR-1)
-The home page SHALL stay a cached page: nothing inside its cache scope SHALL read cookies, headers or the session, so the same page is served to every visitor and a signed-in reader sees the same sections.
+### Requirement: Cached, session-free sections (NFR-1)
+The home page's sections SHALL stay cached and prerenderable: nothing inside their cache scope SHALL read cookies, headers or the session, so the hero, featured, about, authors and latest sections are the same for every visitor. The one session-dependent part, the closing invitation (FR-6), SHALL be read on the server in its own boundary outside that cache scope, with an empty fallback, so it never enters the shared cache and a signed-in reader never receives it.
 
-#### Scenario: Same page for a signed-in reader
+#### Scenario: Same cached sections for a signed-in reader
 - **GIVEN** a signed-in reader
 - **WHEN** they open `/`
-- **THEN** the page is the one a guest sees, and no session read happens in its cache scope
+- **THEN** the five cached sections are the ones a guest sees, and no session read happens in their cache scope
 
 ### Requirement: Responsive layout (NFR-2)
 The page SHALL lay out on desktop, tablet and mobile widths without horizontal scrolling from a 360 px viewport upward, with cards reflowing to fewer columns on narrower screens.

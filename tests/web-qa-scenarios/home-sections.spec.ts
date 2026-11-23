@@ -17,13 +17,14 @@ const ADDED_NOTICE = "Показано на главной.";
 const PAGE_TITLE = "Главная страница";
 const REMOVE_BUTTON = /^Убрать/;
 
-const SECTION_HEADINGS = [
+const SHARED_HEADINGS = [
   "Избранные произведения",
   "О проекте",
   "Авторы проекта",
   "Последние публикации",
-  "Станьте частью Поэтического Хаба",
 ] as const;
+const INVITATION_HEADING = "Станьте частью Поэтического Хаба";
+const INVITATION_BUTTON = "Присоединиться к проекту";
 
 const VIEWPORT_HEIGHT = 900;
 const VIEWPORTS = [360, 768, 1280] as const;
@@ -57,21 +58,25 @@ async function documentWidth(page: Page): Promise<number> {
   return page.evaluate(() => document.documentElement.scrollWidth);
 }
 
-async function expectSixSections(page: Page): Promise<void> {
+/** The five shared sections, plus the closing invitation only for a visitor who is not signed in (FR-6). */
+async function expectSections(page: Page, { withInvitation }: { withInvitation: boolean }): Promise<void> {
   const main = page.getByRole("main");
   await expect(main.getByRole("heading", { level: 1 })).toHaveCount(1);
-  await expect(main.getByRole("heading", { level: 2 })).toHaveText([...SECTION_HEADINGS]);
+  const headings = withInvitation ? [...SHARED_HEADINGS, INVITATION_HEADING] : [...SHARED_HEADINGS];
+  await expect(main.getByRole("heading", { level: 2 })).toHaveText(headings);
   await expect(main.getByRole("link", { name: "Читать произведения" })).toHaveAttribute("href", "/authors");
   await expect(main.getByRole("link", { name: "Стать автором" })).toHaveAttribute("href", "/signup");
   await expect(main.getByRole("link", { name: "Подробнее о проекте" })).toHaveAttribute("href", "/about");
-  await expect(main.getByRole("link", { name: "Присоединиться к проекту" })).toHaveAttribute("href", "/signup");
+  const invitationButton = main.getByRole("link", { name: INVITATION_BUTTON });
+  if (withInvitation) await expect(invitationButton).toHaveAttribute("href", "/signup");
+  else await expect(invitationButton).toHaveCount(0);
 }
 
 // The chosen lists are shared, so this runs in the project that runs after the rest; it removes everything it
 // added through the app before it ends.
-// implements FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-13, NFR-2, NFR-5 of home-page-sections: the six sections for a guest and a signed-in reader.
+// implements FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-13, NFR-2, NFR-5 of home-page-sections: the sections for a guest and, without the closing invitation, a signed-in admin.
 test(
-  "the home page shows six sections to a guest and a signed-in reader without sideways scrolling",
+  "the home page shows six sections to a guest and five to a signed-in admin, without sideways scrolling",
   { tag: ["@home-page-sections"] },
   async ({ page, browser, baseURL }) => {
     await signIn(page, ADMIN_EMAIL);
@@ -87,7 +92,7 @@ test(
       await guest.setViewportSize({ width: VIEWPORTS[2], height: VIEWPORT_HEIGHT });
       await guest.goto("/");
       const guestMain = guest.getByRole("main");
-      await expectSixSections(guest);
+      await expectSections(guest, { withInvitation: true });
       await expect(guestMain.getByRole("link", { name: `${POEM_TITLE}, ${AUTHOR_NAME}` })).toHaveAttribute(
         "href",
         `/authors/${AUTHOR_ID}/poems/${POEM_ID}`,
@@ -103,9 +108,9 @@ test(
       }
       await guestContext.close();
 
-      // NFR-1: a signed-in reader sees the same sections.
+      // FR-6: the signed-in admin sees the same five sections and no closing invitation.
       await page.goto("/");
-      await expectSixSections(page);
+      await expectSections(page, { withInvitation: false });
     } finally {
       await clearLists(page);
     }
