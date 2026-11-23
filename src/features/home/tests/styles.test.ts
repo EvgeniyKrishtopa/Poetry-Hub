@@ -34,3 +34,49 @@ describe("home styles", () => {
     expect(heroCss).toMatch(/\.title\s*{[^}]*font-family:\s*var\(--font-serif\)/);
   });
 });
+
+describe("home hero layout and overlay", () => {
+  const heroCss = read(join(COMPONENTS_DIR, "HomeHero/HomeHero.module.css"));
+  const heroSource = read(join(COMPONENTS_DIR, "HomeHero/HomeHero.tsx"));
+
+  /** The declarations of the first rule for `selector`; `.image` must not match `.image-x`. */
+  function ruleBody(selector: string): string {
+    const match = heroCss.match(new RegExp(`${selector.replace(".", "\\.")}\\s*{([^}]*)}`));
+    if (!match) throw new Error(`HomeHero.module.css: no rule for ${selector}`);
+    return match[1];
+  }
+
+  // implements FR-B6 of home-contentful-content
+  it.each([".title", ".message"])("centres the hero's %s text", (selector) => {
+    expect(ruleBody(selector)).toMatch(/text-align:\s*center/);
+  });
+
+  // implements FR-B6 of home-contentful-content
+  it("centres the hero's content block and its button row", () => {
+    expect(heroSource).toMatch(/flex w-full max-w-measure-wide flex-col items-center/);
+    expect(heroSource).toMatch(/flex w-full flex-col justify-center[^"]*sm:flex-row/);
+  });
+
+  // implements FR-B7 of home-contentful-content
+  it("lays the scrim token over the whole hero box", () => {
+    const scrim = ruleBody(".scrim");
+    expect(scrim).toMatch(/position:\s*absolute/);
+    expect(scrim).toMatch(/inset:\s*0/);
+    expect(scrim).toMatch(/background:\s*var\(--hero-scrim\)/);
+  });
+
+  // implements FR-B7 of home-contentful-content: the order is photo, overlay, text
+  it("stacks the photo under the scrim and leaves the text above both", () => {
+    const zIndex = (selector: string) => Number(ruleBody(selector).match(/z-index:\s*(-?\d+)/)?.[1]);
+
+    expect(zIndex(".image")).toBeLessThan(zIndex(".scrim"));
+    expect(zIndex(".scrim")).toBeLessThan(0);
+    expect(ruleBody(".hero")).toMatch(/isolation:\s*isolate/);
+  });
+
+  // implements FR-B7 of home-contentful-content: the 10% layer is the only darkening of the photo
+  it("applies no other darkening to the photo", () => {
+    expect(heroCss).not.toMatch(/filter:|mix-blend-mode|opacity:|linear-gradient|radial-gradient/);
+    expect(heroSource).not.toMatch(/brightness|opacity|bg-black|bg-gradient/);
+  });
+});

@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { HomeHero } from "../../components/HomeHero/HomeHero";
+import type { HomeBannerContent } from "../../model/home-banner.types";
 import { HERO_IMAGE_PATH } from "../../model/home.constants";
 import { HERO_COPY } from "../../model/home-messages";
 
@@ -9,16 +10,18 @@ import { HERO_COPY } from "../../model/home-messages";
 vi.mock("@/features/authors", () => ({ AUTHORS_PATH: "/authors" }));
 
 const CMS_TITLE = "Welcome to Poetry Hub";
+const CMS_IMAGE = "https://images.ctfassets.net/abc123space/asset/token/hero.jpg";
 const FALLBACK_TITLE = "Поэтический Хаб";
 const FALLBACK_DESCRIPTION = "Discover, read, and collect poems.";
 
-function renderHero(message: string, title = CMS_TITLE) {
-  return render(<HomeHero greeting={{ title, message }} />);
+function renderHero(text: string, overrides: Partial<HomeBannerContent> = {}) {
+  const banner: HomeBannerContent = { title: CMS_TITLE, text, imageSrc: CMS_IMAGE, ...overrides };
+  return render(<HomeHero banner={banner} />);
 }
 
 describe("HomeHero", () => {
-  // implements FR-1, home-greeting FR-6 of home-page-sections
-  it("renders the greeting title as the one h1 with the message beneath it", () => {
+  // implements FR-B4 of home-contentful-content
+  it("renders the banner title as the one h1 with the text beneath it", () => {
     const { container } = renderHero("Hello, reader.");
 
     const heading = screen.getByRole("heading", { level: 1, name: CMS_TITLE });
@@ -28,7 +31,7 @@ describe("HomeHero", () => {
     expect(container.querySelectorAll("p")).toHaveLength(1);
   });
 
-  // implements FR-1 of home-page-sections
+  // implements FR-1 of home-contentful-content
   it("links «Читать произведения» to /authors and «Стать автором» to /signup", () => {
     renderHero("Hello, reader.");
 
@@ -36,17 +39,18 @@ describe("HomeHero", () => {
     expect(screen.getByRole("link", { name: HERO_COPY.becomeAuthor })).toHaveAttribute("href", "/signup");
   });
 
-  // implements FR-1, home-greeting FR-7 of home-page-sections
-  it("shows the static fallback title and description with both buttons", () => {
-    renderHero(FALLBACK_DESCRIPTION, FALLBACK_TITLE);
+  // implements FR-B5 of home-contentful-content
+  it("shows the static fallback title, description and photo with both buttons", () => {
+    const { container } = renderHero(FALLBACK_DESCRIPTION, { title: FALLBACK_TITLE, imageSrc: HERO_IMAGE_PATH });
 
     expect(screen.getByRole("heading", { level: 1, name: FALLBACK_TITLE })).toBeInTheDocument();
     expect(screen.getByText(FALLBACK_DESCRIPTION)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: HERO_COPY.readWorks })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: HERO_COPY.becomeAuthor })).toBeInTheDocument();
+    expect(decodeURIComponent(container.querySelector("img")?.getAttribute("src") ?? "")).toContain(HERO_IMAGE_PATH);
+    expect(screen.getByRole("link", { name: HERO_COPY.readWorks })).toHaveAttribute("href", "/authors");
+    expect(screen.getByRole("link", { name: HERO_COPY.becomeAuthor })).toHaveAttribute("href", "/signup");
   });
 
-  // implements home-greeting FR-6 of home-page-sections
+  // implements FR-B4 of home-contentful-content
   it("splits blank-line-separated blocks into paragraphs and keeps single line breaks", () => {
     const { container } = renderHero("Line one\nLine two\n\nSecond paragraph");
 
@@ -56,7 +60,7 @@ describe("HomeHero", () => {
     expect(paragraphs[1].textContent).toBe("Second paragraph");
   });
 
-  // implements home-greeting FR-6 of home-page-sections
+  // implements FR-B4 of home-contentful-content
   it("renders Markdown and HTML literally", () => {
     const { container } = renderHero("**Bold** <b>tag</b>");
 
@@ -64,8 +68,8 @@ describe("HomeHero", () => {
     expect(container.querySelector("b, strong")).toBeNull();
   });
 
-  // implements home-greeting FR-6 of home-page-sections
-  it("draws the greeting in a section over the photo, with no search box and no clear button", () => {
+  // implements FR-B4 of home-contentful-content
+  it("draws the banner in a section over the photo, with no search box and no clear button", () => {
     const { container } = renderHero("Hello, reader.");
 
     const heading = screen.getByRole("heading", { level: 1 });
@@ -76,8 +80,8 @@ describe("HomeHero", () => {
     expect(screen.queryByRole("button", { name: "Очистить" })).toBeNull();
   });
 
-  // implements NFR-3, NFR-5 of home-page-sections
-  it("serves the photo with the empty alt, a sizes hint and a preload link", () => {
+  // implements FR-B4, NFR-B2 of home-contentful-content: the photo is the banner's address
+  it("serves the banner's photo with the empty alt, a sizes hint and a preload link", () => {
     const { container } = renderHero("Hello, reader.");
 
     const image = container.querySelector("img");
@@ -85,6 +89,6 @@ describe("HomeHero", () => {
     expect(image).toHaveAttribute("sizes", "100vw");
     // next/image's `preload` adds a preload link to the head instead of marking the img itself.
     expect(document.head.querySelector("link[rel='preload'][as='image'][imagesizes='100vw']")).not.toBeNull();
-    expect(decodeURIComponent(image?.getAttribute("src") ?? "")).toContain(HERO_IMAGE_PATH);
+    expect(decodeURIComponent(image?.getAttribute("src") ?? "")).toContain(CMS_IMAGE);
   });
 });
