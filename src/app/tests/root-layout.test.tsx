@@ -15,6 +15,7 @@ import RootLayout, { generateMetadata } from "../layout";
 vi.mock("next/font/google", () => ({
   Geist: () => ({ variable: "font-sans" }),
   Geist_Mono: () => ({ variable: "font-mono" }),
+  Literata: () => ({ variable: "font-serif" }),
 }));
 // The real authors index loads here (server-only is stubbed in Vitest); only auth's session part is
 // replaced, since the authors loaders import their session accessors from it.

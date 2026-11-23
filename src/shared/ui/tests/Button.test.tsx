@@ -43,4 +43,37 @@ describe("Button", () => {
     expect(dangerRules).toContain("var(--color-on-danger)");
     expect(dangerRules).not.toMatch(COLOUR_LITERAL);
   });
+
+  // implements NFR-4 of home-page-sections: the lg size and the onImage variant
+  it("draws the lg size as 16/24 text with px-5 py-3 padding", () => {
+    render(<Button size="lg">Read</Button>);
+
+    expect(screen.getByRole("button", { name: "Read" })).toHaveClass("button", "primary", "lg");
+
+    const css = readFileSync(BUTTON_CSS_PATH, "utf8");
+    const largeRules = css.match(/\.lg\s*{([^}]*)}/)?.[1] ?? "";
+    expect(largeRules).toContain("padding: 0.75rem 1.25rem");
+    expect(largeRules).toContain("font-size: 1rem");
+    expect(largeRules).toContain("line-height: 1.5rem");
+  });
+
+  // implements NFR-4 of home-page-sections: no leftover size class on the default button
+  it("adds no size class to the default size", () => {
+    render(<Button>Save</Button>);
+
+    expect(screen.getByRole("button", { name: "Save" }).className).not.toContain("lg");
+  });
+
+  // implements NFR-4 of home-page-sections: a white outline from tokens only
+  it("styles the onImage variant as a transparent fill with an on-hero outline from tokens only", () => {
+    render(<Button variant="onImage">Join</Button>);
+
+    expect(screen.getByRole("button", { name: "Join" })).toHaveClass("button", "onImage");
+
+    const css = readFileSync(BUTTON_CSS_PATH, "utf8");
+    const onImageRules = [...css.matchAll(/\.onImage(?::hover)?\s*{([^}]*)}/g)].map((m) => m[1]).join("\n");
+    expect(onImageRules).toContain("transparent");
+    expect(onImageRules).toContain("var(--color-on-hero)");
+    expect(onImageRules).not.toMatch(COLOUR_LITERAL);
+  });
 });
