@@ -31,7 +31,7 @@ describe("HomeHero", () => {
     expect(container.querySelectorAll("p")).toHaveLength(1);
   });
 
-  // implements FR-1 of home-page-sections
+  // implements FR-1 of home-contentful-content
   it("links «Читать произведения» to /authors and «Стать автором» to /signup", () => {
     renderHero("Hello, reader.");
 

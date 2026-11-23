@@ -47,7 +47,7 @@ describe("home page", () => {
     expect(within(boundary).queryByText("shared sections")).toBeNull();
   });
 
-  // implements FR-6 of home-sections: a signed-in reader, or an admin, never triggers the closing read
+  // implements FR-6 of home-contentful-content: a signed-in reader, or an admin, never triggers the closing read
   it("does not render the closing invitation, so makes no CMS read, for a signed-in session", () => {
     session.signedIn = true;
 

@@ -88,7 +88,7 @@ describe("HomeSections", () => {
     ]);
   });
 
-  // implements FR-3 of home-sections: the about read asks for its own key and its copy reaches the section
+  // implements FR-3 of home-contentful-content: the about read asks for its own key and its copy reaches the section
   it("reads the about key and renders the CMS text in the about section", async () => {
     const { main } = await renderSections();
 
@@ -106,7 +106,7 @@ describe("HomeSections", () => {
     );
   });
 
-  // implements FR-3 of home-sections: any about failure gives the static copy
+  // implements FR-3 of home-contentful-content: any about failure gives the static copy
   it("shows the static about copy when the about read fails", async () => {
     vi.mocked(getGreetingByKey).mockResolvedValue({ ok: false, reason: "network" });
 

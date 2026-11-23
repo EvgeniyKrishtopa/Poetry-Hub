@@ -21,7 +21,7 @@ describe("HomeJoinCta", () => {
     vi.mocked(getGreetingByKey).mockResolvedValue({ ok: true, greeting: CMS_GREETING });
   });
 
-  // implements FR-6 of home-sections
+  // implements FR-6 of home-contentful-content
   it("reads the closing key and shows the CMS heading and text, and its button leads to /signup", async () => {
     await renderJoinCta();
 
@@ -31,7 +31,7 @@ describe("HomeJoinCta", () => {
     expect(screen.getByRole("link", { name: JOIN_COPY.button })).toHaveAttribute("href", "/signup");
   });
 
-  // implements FR-6 of home-sections
+  // implements FR-6 of home-contentful-content
   it("shows the static copy when the read fails", async () => {
     vi.mocked(getGreetingByKey).mockResolvedValue({ ok: false, reason: "network" });
 
@@ -42,7 +42,7 @@ describe("HomeJoinCta", () => {
     expect(screen.getByRole("link", { name: JOIN_COPY.button })).toHaveAttribute("href", "/signup");
   });
 
-  // implements FR-8 of home-greeting
+  // implements FR-8 of home-contentful-content
   it("splits blank-line-separated blocks into paragraphs and keeps single line breaks", async () => {
     vi.mocked(getGreetingByKey).mockResolvedValue({
       ok: true,
@@ -57,7 +57,7 @@ describe("HomeJoinCta", () => {
     expect(paragraphs[1].textContent).toBe("Second paragraph");
   });
 
-  // implements FR-8 of home-greeting
+  // implements FR-8 of home-contentful-content
   it("renders Markdown and HTML literally", async () => {
     vi.mocked(getGreetingByKey).mockResolvedValue({
       ok: true,
