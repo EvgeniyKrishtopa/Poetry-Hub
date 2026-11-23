@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getContentfulConfig } from "../config";
+import { getContentfulConfig, getContentfulSpaceId } from "../config";
 import { ContentfulError } from "../errors";
 
 const SPACE_ID = "abc123space";
@@ -105,5 +105,33 @@ describe("getContentfulConfig", () => {
     vi.stubEnv("CONTENTFUL_SPACE_ID", "otherspace");
 
     expect(getContentfulConfig().spaceId).toBe("otherspace");
+  });
+});
+
+describe("getContentfulSpaceId", () => {
+  beforeEach(() => {
+    vi.stubEnv("CONTENTFUL_SPACE_ID", SPACE_ID);
+    vi.stubEnv("CONTENTFUL_ACCESS_TOKEN", TOKEN);
+    vi.stubEnv("CONTENTFUL_ENVIRONMENT", undefined);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  // implements FR-B2 of home-contentful-content
+  it("returns the space id from the client's validated configuration", () => {
+    expect(getContentfulSpaceId()).toBe(SPACE_ID);
+  });
+
+  // implements FR-B2 of home-contentful-content
+  it.each([
+    ["unset", undefined],
+    ["malformed", "abc 123"],
+  ])("throws a config failure, not the value, for a %s space id", (_label, value) => {
+    vi.stubEnv("CONTENTFUL_SPACE_ID", value);
+
+    expect(() => getContentfulSpaceId()).toThrow(ContentfulError);
+    expect(() => getContentfulSpaceId()).toThrow(/CONTENTFUL_SPACE_ID/);
   });
 });

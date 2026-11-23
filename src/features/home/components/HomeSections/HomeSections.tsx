@@ -3,9 +3,9 @@ import { cacheLife, cacheTag } from "next/cache";
 import { HOME_FEATURED_TAG } from "@/shared/config/cache-tags";
 import { CONTENTFUL_CACHE_TAG } from "@/shared/lib/contentful";
 
-import { getHomeGreeting } from "../../dal/home-greeting";
+import { getHomeBanner } from "../../dal/home-banner";
 import { getFeaturedAuthors, getFeaturedWorks, getLatestWorks } from "../../dal/home-sections";
-import { resolveGreeting } from "../../model/resolve-greeting";
+import { resolveBanner } from "../../model/resolve-home-content";
 import { HomeAbout } from "../HomeAbout/HomeAbout";
 import { HomeAuthors } from "../HomeAuthors/HomeAuthors";
 import { HomeFeaturedWorks } from "../HomeFeaturedWorks/HomeFeaturedWorks";
@@ -29,17 +29,18 @@ export async function HomeSections() {
 
   // Nothing here reads cookies, headers or the session. Each data read answers with a value, never a throw, so a
   // failed section is left out and the others still render.
-  const [greetingResult, featuredWorks, featuredAuthors, latestWorks] = await Promise.all([
-    getHomeGreeting(),
+  const [bannerResult, featuredWorks, featuredAuthors, latestWorks] = await Promise.all([
+    getHomeBanner(),
     getFeaturedWorks(),
     getFeaturedAuthors(),
     getLatestWorks(),
   ]);
-  const greeting = resolveGreeting(greetingResult);
+  const banner = resolveBanner(bannerResult);
 
+  // Until the hero takes the banner's image too (group 3), only its title and text reach it.
   return (
     <>
-      <HomeHero greeting={greeting} />
+      <HomeHero greeting={{ title: banner.title, message: banner.text }} />
       <HomeFeaturedWorks result={featuredWorks} />
       <HomeAbout />
       <HomeAuthors result={featuredAuthors} />
