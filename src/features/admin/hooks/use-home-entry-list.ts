@@ -46,11 +46,15 @@ export function useHomeEntryList(kind: HomeEntryKind, entries: readonly HomeEntr
     sendingRef.current = true;
     setNotice(null);
     startTransition(async () => {
-      if (optimisticMove !== null) applyOptimistic(optimisticMove);
-      const answer = await callCaseAction(run);
-      const answerNotice = describeHomeListResult(answer);
-      startTransition(() => setNotice(answerNotice));
-      sendingRef.current = false;
+      try {
+        if (optimisticMove !== null) applyOptimistic(optimisticMove);
+        const answer = await callCaseAction(run);
+        const answerNotice = describeHomeListResult(answer);
+        startTransition(() => setNotice(answerNotice));
+      } finally {
+        // Always released: a step that threw must not leave every later drop and remove ignored.
+        sendingRef.current = false;
+      }
     });
   }
 
