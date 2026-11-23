@@ -12,6 +12,7 @@ import { getGreetingByKey } from "../../dal/home-greeting";
 import { getFeaturedAuthors, getFeaturedWorks, getLatestWorks } from "../../dal/home-sections";
 import { HomeSections } from "../../components/HomeSections/HomeSections";
 import { ABOUT_GREETING_KEY } from "../../model/home.constants";
+import { ABOUT_COPY } from "../../model/home-messages";
 
 vi.mock("next/cache", () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
 // The real authors index pulls in the whole feature; the hero needs only the path of the authors list.
@@ -113,6 +114,7 @@ describe("HomeSections", () => {
     const { main } = await renderSections();
 
     expect(within(main).getByRole("heading", { name: ABOUT_HEADING })).toBeInTheDocument();
+    expect(within(main).getByText(ABOUT_COPY.text)).toBeInTheDocument();
   });
 
   // implements NFR-B1 of home-contentful-content
