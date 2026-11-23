@@ -5,12 +5,10 @@ import Link from "next/link";
 import { IMAGE_QUALITY } from "@/shared/config/constants";
 import { isUnoptimizableImage } from "@/shared/lib/image-file/is-unoptimizable-image";
 
-import { AUTHOR_PHOTO_SIZE } from "../../model/home.constants";
+import { AUTHOR_PHOTO_SIZE, PLACEHOLDER_ICON_SIZE } from "../../model/home.constants";
 
 import type { AuthorCardProps } from "./AuthorCard.types";
 
-/** The avatar placeholder's icon, in CSS pixels. */
-const PLACEHOLDER_ICON_SIZE = 40;
 
 /**
  * One project author: a single link with the round photo (or the muted user icon), the name and, when there is

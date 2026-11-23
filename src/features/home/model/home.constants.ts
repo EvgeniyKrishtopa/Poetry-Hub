@@ -15,3 +15,6 @@ export const WORK_COVER_SIZES = "(min-width: 1024px) 25vw, (min-width: 768px) 50
 
 /** The author card's round photo, in CSS pixels (96 px in the mockups); also its `sizes` hint. */
 export const AUTHOR_PHOTO_SIZE = 96;
+
+/** The icon of a missing cover or photo, in CSS pixels. */
+export const PLACEHOLDER_ICON_SIZE = 40;

@@ -5,13 +5,11 @@ import Link from "next/link";
 import { IMAGE_QUALITY } from "@/shared/config/constants";
 import { isUnoptimizableImage } from "@/shared/lib/image-file/is-unoptimizable-image";
 
-import { WORK_COVER_SIZES } from "../../model/home.constants";
+import { PLACEHOLDER_ICON_SIZE, WORK_COVER_SIZES } from "../../model/home.constants";
 import { formatWorkLinkName } from "../../model/home-messages";
 
 import type { WorkCardProps } from "./WorkCard.types";
 
-/** The placeholder cover's icon, in CSS pixels. */
-const PLACEHOLDER_ICON_SIZE = 40;
 
 /**
  * One featured poem: a single link with the 16:9 cover (or the placeholder), the title and the author's name,
