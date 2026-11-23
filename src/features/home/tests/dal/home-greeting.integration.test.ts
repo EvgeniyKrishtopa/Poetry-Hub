@@ -1,10 +1,11 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getHomeGreeting } from "../../dal/home-greeting";
+import { getGreetingByKey } from "../../dal/home-greeting";
+import { ABOUT_GREETING_KEY } from "../../model/home.constants";
 
 // Real config loader and client (no module mocks): only `fetch` and the env are stubbed.
-describe("getHomeGreeting with the real Contentful client", () => {
+describe("getGreetingByKey with the real Contentful client", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
@@ -19,8 +20,11 @@ describe("getHomeGreeting with the real Contentful client", () => {
     vi.stubGlobal("fetch", fetchSpy);
     const logSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await expect(getHomeGreeting()).resolves.toEqual({ ok: false, reason: "config" });
+    await expect(getGreetingByKey(ABOUT_GREETING_KEY)).resolves.toEqual({ ok: false, reason: "config" });
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(logSpy).toHaveBeenCalledWith("[contentful] home greeting failed", { reason: "config" });
+    expect(logSpy).toHaveBeenCalledWith("[contentful] home greeting failed", {
+      key: ABOUT_GREETING_KEY,
+      reason: "config",
+    });
   });
 });

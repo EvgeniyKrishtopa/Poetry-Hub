@@ -2,16 +2,19 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { render, screen, within } from "@testing-library/react";
+import { cacheTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getHomeGreeting } from "../../dal/home-greeting";
+import { CONTENTFUL_CACHE_TAG } from "@/shared/lib/contentful";
+
+import { getHomeBanner } from "../../dal/home-banner";
 import { getFeaturedAuthors, getFeaturedWorks, getLatestWorks } from "../../dal/home-sections";
 import { HomeSections } from "../../components/HomeSections/HomeSections";
 
 vi.mock("next/cache", () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
 // The real authors index pulls in the whole feature; the hero needs only the path of the authors list.
 vi.mock("@/features/authors", () => ({ AUTHORS_PATH: "/authors" }));
-vi.mock("../../dal/home-greeting", () => ({ getHomeGreeting: vi.fn() }));
+vi.mock("../../dal/home-banner", () => ({ getHomeBanner: vi.fn() }));
 vi.mock("../../dal/home-sections", () => ({
   getFeaturedWorks: vi.fn(),
   getFeaturedAuthors: vi.fn(),
@@ -36,9 +39,13 @@ const FEATURED_AUTHORS = [
 const LATEST_WORKS = [{ id: "p3", title: "Весна", authorName: "Анна Ахматова", href: "/authors/a1/poems/p3" }];
 
 function allSectionsUp() {
-  vi.mocked(getHomeGreeting).mockResolvedValue({
+  vi.mocked(getHomeBanner).mockResolvedValue({
     ok: true,
-    greeting: { key: "home", title: "Welcome to Poetry Hub", message: "Hello, reader." },
+    banner: {
+      title: "Welcome to Poetry Hub",
+      description: "Hello, reader.",
+      bannerImage: "https://images.ctfassets.net/abc123space/asset/token/hero.jpg",
+    },
   });
   vi.mocked(getFeaturedWorks).mockResolvedValue({ ok: true, items: FEATURED_WORKS });
   vi.mocked(getFeaturedAuthors).mockResolvedValue({ ok: true, items: FEATURED_AUTHORS });
@@ -70,6 +77,13 @@ describe("HomeSections", () => {
       AUTHORS_HEADING,
       LATEST_HEADING,
     ]);
+  });
+
+  // implements NFR-B1 of home-contentful-content
+  it("tags its cache scope with the Contentful tag the publish webhook expires", async () => {
+    await renderSections();
+
+    expect(cacheTag).toHaveBeenCalledWith(CONTENTFUL_CACHE_TAG, expect.any(String));
   });
 
   // implements FR-6 of home-page-sections: the invitation is not part of the cached sections
@@ -117,7 +131,7 @@ describe("HomeSections", () => {
 
   // implements FR-7, home-greeting FR-7 of home-page-sections
   it("renders the hero with the fallback and no error screen when every read fails", async () => {
-    vi.mocked(getHomeGreeting).mockResolvedValue({ ok: false, reason: "network" });
+    vi.mocked(getHomeBanner).mockResolvedValue({ ok: false, reason: "network" });
     vi.mocked(getFeaturedWorks).mockResolvedValue({ ok: false });
     vi.mocked(getFeaturedAuthors).mockResolvedValue({ ok: false });
     vi.mocked(getLatestWorks).mockResolvedValue({ ok: false });
