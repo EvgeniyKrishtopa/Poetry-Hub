@@ -5,10 +5,17 @@ const SCENARIOS_DIR = "./tests/web-qa-scenarios";
 const RESTRICTING_SCENARIOS = [
   "**/admin-warns-and-blocks-from-review-list.spec.ts",
   "**/admin-add-control-on-collection-and-narrow-screens.spec.ts",
+];
+// Each of these fills and empties the home page's two chosen lists, which every visitor and every other scenario
+// shares: two of them at the same time wipe each other's entries. Playwright runs the files of one project in
+// parallel, so each gets a project of its own, chained one after the other.
+const HOME_LIST_SCENARIOS = [
   "**/admin-chooses-reorders-removes-home-entries.spec.ts",
   "**/home-sections.spec.ts",
   "**/home-featured-order-on-page.spec.ts",
 ];
+const HOME_LIST_PROJECT_PREFIX = "home-lists-";
+const ALL_RESTRICTED_SCENARIOS = [...RESTRICTING_SCENARIOS, ...HOME_LIST_SCENARIOS];
 const BASE_URL = "http://localhost:3000";
 const DEV_SERVER_STARTUP_TIMEOUT_MS = 120_000;
 
@@ -16,16 +23,23 @@ export default defineConfig({
   testDir: SCENARIOS_DIR,
   use: { baseURL: BASE_URL },
   projects: [
-    { name: "chromium", testIgnore: RESTRICTING_SCENARIOS, use: { ...devices["Desktop Chrome"] } },
+    { name: "chromium", testIgnore: ALL_RESTRICTED_SCENARIOS, use: { ...devices["Desktop Chrome"] } },
     // Scenarios that block a seeded user for a moment (which would sign other scenarios out of that account) or add
-    // a collection to an author whose lists others read, or fill the home page's chosen lists, run after the rest, so
-    // nothing else is using those accounts or reading those lists.
+    // a collection to an author whose lists others read run after the rest, so nothing else is using those accounts
+    // or reading those lists.
     {
       name: "restricting",
       testMatch: RESTRICTING_SCENARIOS,
       dependencies: ["chromium"],
       use: { ...devices["Desktop Chrome"] },
     },
+    // The scenarios that fill the home page's chosen lists run last, one at a time.
+    ...HOME_LIST_SCENARIOS.map((testMatch, index) => ({
+      name: `${HOME_LIST_PROJECT_PREFIX}${index + 1}`,
+      testMatch,
+      dependencies: [index === 0 ? "restricting" : `${HOME_LIST_PROJECT_PREFIX}${index}`],
+      use: { ...devices["Desktop Chrome"] },
+    })),
   ],
   webServer: {
     command: "npm run dev",
