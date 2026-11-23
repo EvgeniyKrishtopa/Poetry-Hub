@@ -55,12 +55,27 @@ describe("isAllowedContentfulImageUrl", () => {
     expect(isAllowedContentfulImageUrl(imageUrl(SPACE_ID), spaceId)).toBe(false);
   });
 
-  it("agrees with the pattern: the only URL shape the pattern allows passes the check", () => {
+  // The optimizer applies protocol, host, path prefix and query rules; the check must reach the same answer.
+  function patternAllows(url: string): boolean {
     const [pattern] = buildContentfulImagePatterns(SPACE_ID);
-    const sample = imageUrl(SPACE_ID);
+    const parsed = new URL(url);
+    const pathPrefix = pattern.pathname.replace("**", "");
+    return (
+      parsed.protocol === pattern.protocol &&
+      parsed.host === pattern.host &&
+      parsed.pathname.startsWith(pathPrefix) &&
+      parsed.search === pattern.search
+    );
+  }
 
-    expect(new URL(sample).host).toBe(pattern.host);
-    expect(new URL(sample).pathname.startsWith(pattern.pathname.replace("**", ""))).toBe(true);
-    expect(isAllowedContentfulImageUrl(sample, SPACE_ID)).toBe(true);
+  it.each([
+    ["the project's space", imageUrl(SPACE_ID)],
+    ["another space", imageUrl(OTHER_SPACE_ID)],
+    ["another host", `https://example.com/${SPACE_ID}/asset-id/token/hero.jpg`],
+    ["a subdomain of the image host", `https://cdn.${CONTENTFUL_IMAGE_HOST}/${SPACE_ID}/asset-id/token/hero.jpg`],
+    ["plain http", `http://${CONTENTFUL_IMAGE_HOST}/${SPACE_ID}/asset-id/token/hero.jpg`],
+    ["a query string", `${imageUrl(SPACE_ID)}?w=100`],
+  ])("agrees with the pattern for an address on %s", (_case, url) => {
+    expect(isAllowedContentfulImageUrl(url, SPACE_ID)).toBe(patternAllows(url));
   });
 });
