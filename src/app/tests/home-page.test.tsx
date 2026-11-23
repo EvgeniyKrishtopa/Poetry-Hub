@@ -1,20 +1,33 @@
 import { render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import HomePage from "../(public)/page";
 
-// The two boundaries are stood in for by marked wrappers, so the test can see what sits inside which.
+const { session, homeJoinCta } = vi.hoisted(() => ({
+  session: { signedIn: false },
+  homeJoinCta: vi.fn(),
+}));
+
+// The two boundaries are stood in for by marked wrappers, so the test can see what sits inside which. Like the
+// real boundary, the stand-in renders its children (so reads the closing copy) only for a signed-out visitor.
 vi.mock("@/features/auth", () => ({
-  SignedOutOnly: ({ children }: { children: ReactNode }) => <div data-testid="signed-out-only">{children}</div>,
+  SignedOutOnly: ({ children }: { children: ReactNode }) =>
+    session.signedIn ? null : <div data-testid="signed-out-only">{children}</div>,
 }));
 vi.mock("@/features/home", () => ({
   HomeSections: () => <p>shared sections</p>,
-  HomeJoinCta: () => <h2>closing invitation</h2>,
+  HomeJoinCta: homeJoinCta,
   getHomePageMetadata: () => ({}),
 }));
 
 describe("home page", () => {
+  beforeEach(() => {
+    session.signedIn = false;
+    homeJoinCta.mockReset();
+    homeJoinCta.mockReturnValue(<h2>closing invitation</h2>);
+  });
+
   // implements FR-1, FR-2, FR-3, FR-4, FR-5, FR-6 of home-page-sections
   it("renders the shared sections first and the closing invitation after them", () => {
     render(<HomePage />);
@@ -32,5 +45,16 @@ describe("home page", () => {
     const boundary = screen.getByTestId("signed-out-only");
     expect(within(boundary).getByRole("heading", { name: "closing invitation" })).toBeInTheDocument();
     expect(within(boundary).queryByText("shared sections")).toBeNull();
+  });
+
+  // implements FR-6 of home-sections: a signed-in reader, or an admin, never triggers the closing read
+  it("does not render the closing invitation, so makes no CMS read, for a signed-in session", () => {
+    session.signedIn = true;
+
+    render(<HomePage />);
+
+    expect(screen.queryByRole("heading", { name: "closing invitation" })).toBeNull();
+    expect(homeJoinCta).not.toHaveBeenCalled();
+    expect(screen.getByText("shared sections")).toBeInTheDocument();
   });
 });
