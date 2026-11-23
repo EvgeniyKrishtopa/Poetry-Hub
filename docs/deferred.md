@@ -216,6 +216,8 @@ Archived at `openspec/changes/archive/2026-11-20-seo-metadata/`.
 
 ## home-page-sections
 
+Archived at `openspec/changes/archive/2026-11-23-home-page-sections/`.
+
 ### home-page-sections · 1.5 — «Все произведения» and «Все публикации» left out
 
 - **State:** skipped
