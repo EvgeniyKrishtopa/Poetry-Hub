@@ -134,6 +134,35 @@ describe("HomeEntryList", () => {
   });
 
   // implements FR-9 of home-page-sections
+  it("sends one move at a time: a second drop that lands before the first answers is ignored", async () => {
+    let finish: (response: MoveResponse) => void = () => undefined;
+    vi.mocked(moveHomeEntryAction).mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    renderPoems();
+
+    act(() => {
+      dnd.onDragEnd?.({ active: { id: "poem-3" }, over: { id: "poem-2" } });
+      dnd.onDragEnd?.({ active: { id: "poem-1" }, over: { id: "poem-3" } });
+    });
+
+    expect(moveHomeEntryAction).toHaveBeenCalledTimes(1);
+    expect(moveHomeEntryAction).toHaveBeenCalledWith({ kind: "poem", id: "poem-3", fromPosition: 3, toPosition: 2 });
+    await act(async () => finish(moved("moved")));
+  });
+
+  // implements FR-9 of home-page-sections
+  it("takes the next drop once the first has answered", async () => {
+    vi.mocked(moveHomeEntryAction).mockResolvedValue(moved("moved"));
+    renderPoems();
+
+    drop("poem-3", "poem-2");
+    await waitFor(() => expect(moveHomeEntryAction).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByRole("button", { name: ADMIN_HOME_PAGE_COPY.handleLabel("Осень") })).toBeEnabled());
+    drop("poem-1", "poem-2");
+
+    await waitFor(() => expect(moveHomeEntryAction).toHaveBeenCalledTimes(2));
+  });
+
+  // implements FR-9 of home-page-sections
   it("calls nothing for a drop on the same place or on nothing", () => {
     renderPoems();
 
