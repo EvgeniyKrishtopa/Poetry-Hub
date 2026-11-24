@@ -74,7 +74,7 @@ describe("home hero layout and overlay", () => {
     expect(ruleBody(".hero")).toMatch(/isolation:\s*isolate/);
   });
 
-  // implements FR-B7 of home-contentful-content: the 10% layer is the only darkening of the photo
+  // implements FR-B7 of home-contentful-content: the 50% layer is the only darkening of the photo
   it("applies no other darkening to the photo", () => {
     expect(heroCss).not.toMatch(/filter:|mix-blend-mode|opacity:|linear-gradient|radial-gradient/);
     expect(heroSource).not.toMatch(/brightness|opacity|bg-black|bg-gradient/);

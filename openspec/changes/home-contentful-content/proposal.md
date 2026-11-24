@@ -9,19 +9,19 @@ The home page's hero text comes from one Contentful Greeting entry and its photo
 - The closing invitation reads its heading and text from the Greeting entry with key `call_to_action_signup`; the «Присоединиться к проекту» button stays in code.
 - Both sections keep today's constant copy as their fallback and stay always shown (the closing one still only for a signed-out visitor).
 - The hero's title, text and two buttons are centred horizontally.
-- The hero's photo gets a uniform black overlay at 10% opacity (the current scrim is 60%).
+- The hero's photo gets a uniform black overlay at 50% opacity (the current scrim is 60%; the owner first chose 10% and raised it to 50% on 2026-11-23).
 - The Greeting entry with key `home_greeting` is no longer read.
 - `next/image` is allowed to load from the Contentful image host of the project's space.
 - The Contentful publish webhook gains Asset publish and unpublish triggers (a setting plus docs, no code).
-- The photo shipped with the site stays as the hero's fallback; it is replaced or darkened only if it is too light for the 10% overlay (a contrast check decides).
+- The photo shipped with the site stays as the hero's fallback; it is replaced or darkened only if it is too light for the 50% overlay (a contrast check decides).
 
-Assumptions the owner confirms (Open Questions): the Field IDs `title`, `description` and `bannerImage` and the API ID `homeBanner` (Contentful derives them from the names; the first task checks them); there is one Home banner entry; centring covers the buttons as well as the text; 10% replaces the current 60% scrim in both themes.
+Assumptions the owner confirms (Open Questions): the Field IDs `title`, `description` and `bannerImage` and the API ID `homeBanner` (Contentful derives them from the names; the first task checks them); there is one Home banner entry; centring covers the buttons as well as the text; 50% replaces the current 60% scrim in both themes.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `home-banner`: loading, validating and showing the Home banner from Contentful as the hero's content, with its static fallback, the centred layout and the 10% overlay.
+- `home-banner`: loading, validating and showing the Home banner from Contentful as the hero's content, with its static fallback, the centred layout and the 50% overlay.
 
 ### Modified Capabilities
 
@@ -39,7 +39,7 @@ Assumptions the owner confirms (Open Questions): the Field IDs `title`, `descrip
 
 - Field IDs and API ID of Home banner: answered 2026-11-23, the owner confirmed `homeBanner`, `title`, `description` (Long text) and `bannerImage` (tasks 1.1). Entry count: still unconfirmed; the code uses the most recently published entry, so more than one is harmless. Owner, due 2026-11-27.
 - Is centring meant for the buttons too? Answered by the approved Claude Design canvas (centred buttons), built that way. Closed.
-- Which photo goes into Contentful: with only a 10% overlay, white text needs a dark enough photo (see design, Risks). The rule is in `docs/design-system.md` and `docs/environment.md`; the owner's check of the shipped and the published photo is `docs/deferred.md` `home-contentful-content` 3.2. Owner, due 2026-11-30.
+- Which photo goes into Contentful: with a 50% overlay, white text still needs a dark enough photo (see design, Risks). The rule is in `docs/design-system.md` and `docs/environment.md`; the owner's check of the shipped and the published photo is `docs/deferred.md` `home-contentful-content` 3.2. Owner, due 2026-11-30.
 
 ## Mockups
 
@@ -47,7 +47,7 @@ Approved Claude Design canvas (received 2026-11-23): https://claude.ai/artifact/
 
 | Screen | Artboard |
 | --- | --- |
-| Home, hero (centred text and buttons, 10% overlay, short and long text, fallback) | `HomeHero`: https://claude.ai/artifact/GCN2BZQF5eG454fA1PZG8z#artboard-HomeHero |
+| Home, hero (centred text and buttons, 50% overlay, short and long text, fallback) | `HomeHero`: https://claude.ai/artifact/GCN2BZQF5eG454fA1PZG8z#artboard-HomeHero |
 | Home, about section (layout unchanged) | `HomeAuthors`: https://claude.ai/artifact/GCN2BZQF5eG454fA1PZG8z#artboard-HomeAuthors |
 | Home, closing invitation (layout unchanged) | `HomeLatest`: https://claude.ai/artifact/GCN2BZQF5eG454fA1PZG8z#artboard-HomeLatest |
 | Whole page and its states | `HomePage`, `HomePageStates`: https://claude.ai/artifact/GCN2BZQF5eG454fA1PZG8z#artboard-HomePage |

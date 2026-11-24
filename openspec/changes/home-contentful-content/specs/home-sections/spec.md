@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Hero (FR-1)
-The home page SHALL open with a hero: a background image that spans the full width of the viewport, edge to edge (wider than the page's text column, as the owner's brief says «на всю ширину экрана»), a title as the page's only `h1`, a text beneath it, and two links styled as buttons: «Читать произведения» to `/authors` and «Стать автором» to `/signup`. The title, text and image come from the Contentful Home banner (`home-banner` FR-B4); when it cannot be loaded, the hero SHALL show the site name as the `h1`, the static site description and the photo shipped with the site, and both buttons SHALL still work (`home-banner` FR-B5). The centred layout and the 10% overlay are owned by `home-banner` (FR-B6, FR-B7).
+The home page SHALL open with a hero: a background image that spans the full width of the viewport, edge to edge (wider than the page's text column, as the owner's brief says «на всю ширину экрана»), a title as the page's only `h1`, a text beneath it, and two links styled as buttons: «Читать произведения» to `/authors` and «Стать автором» to `/signup`. The title, text and image come from the Contentful Home banner (`home-banner` FR-B4); when it cannot be loaded, the hero SHALL show the site name as the `h1`, the static site description and the photo shipped with the site, and both buttons SHALL still work (`home-banner` FR-B5). The centred layout and the 50% overlay are owned by `home-banner` (FR-B6, FR-B7).
 
 #### Scenario: Hero with the CMS greeting
 - **GIVEN** the Home banner loads with title "Welcome", a description and an image

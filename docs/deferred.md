@@ -244,8 +244,8 @@ Archived at `openspec/changes/archive/2026-11-23-home-page-sections/`.
 
 - **State:** skipped
 - **Requirement:** NFR-B2
-- **What is missing:** the test that measures `public/home-hero.jpg` (99th-percentile luminance of its central band, the middle 60% of its height, full width) against the lightest-photo constant `#838383` in `feedback-contrast.test.ts`.
+- **What is missing:** the test that measures `public/home-hero.jpg` (99th-percentile luminance of its central band, the middle 60% of its height, full width) against the lightest-photo constant `#ececec` in `feedback-contrast.test.ts`.
 - **Why:** the project has no JPEG decoder, and adding `sharp` as a devDependency only for this one test was judged excessive.
-- **Verified instead:** the contrast test proves white text over the 10% scrim and `#838383` meets 4.5:1 body and 3:1 large text in both themes; the style tests prove the scrim value and the stacking order. The photo itself and the overlay are checked by hand.
+- **Verified instead:** the contrast test proves white text over the 50% scrim and `#ececec` meets 4.5:1 body and 3:1 large text in both themes; the style tests prove the scrim value and the stacking order. The photo itself and the overlay are checked by hand.
 - **Decision:** owner, 2026-11-23.
 - **Status:** open. To close it: the owner looks at the hero on `/` in both themes and at 360, 768 and 1280 px and confirms the text reads clearly; replace or darken the photo if not. Record the result here and set this entry to `resolved`. A measuring test can be added later if the project gets an image decoder.
