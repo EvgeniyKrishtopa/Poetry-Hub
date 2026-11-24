@@ -24,4 +24,26 @@ describe("ConnectionNotice", () => {
 
     expect(container).toBeEmptyDOMElement();
   });
+
+  // implements FR-G2 of google-sign-in: a caller that does not save passes its own texts
+  it.each([
+    ["offline", "custom offline text"],
+    ["slow", "custom slow text"],
+  ] as const)("shows the passed %s text instead of the default", (status, text) => {
+    const messages = { offline: "custom offline text", slow: "custom slow text" };
+
+    render(<ConnectionNotice status={status} messages={messages} />);
+
+    expect(screen.getByRole("status")).toHaveTextContent(text);
+    expect(screen.queryByText(OFFLINE_TEXT)).not.toBeInTheDocument();
+    expect(screen.queryByText(SLOW_TEXT)).not.toBeInTheDocument();
+  });
+
+  it("renders nothing while online even with passed texts", () => {
+    const messages = { offline: "custom offline text", slow: "custom slow text" };
+
+    const { container } = render(<ConnectionNotice status="online" messages={messages} />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
 });

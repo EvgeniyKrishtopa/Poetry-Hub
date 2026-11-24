@@ -1,11 +1,13 @@
-import type { GoogleSignInButtonState } from "../../model/auth.types";
+import { startGoogleSignInAction } from "../../actions/auth.actions";
+import type { GoogleFlow, GoogleSignInButtonState } from "../../model/auth.types";
 
-/** `useActionState`'s action for the Google button: success never returns, the action redirects to Google. */
-export async function submitGoogleSignIn(
-  previous: GoogleSignInButtonState,
-  formData: FormData,
-): Promise<GoogleSignInButtonState> {
-  void previous;
-  void formData;
-  throw new Error("not implemented");
+const FAILED_START: GoogleSignInButtonState = { status: "failed" };
+
+/**
+ * `useActionState`'s action for the Google button. Success never returns: the action redirects to Google, so any
+ * response that comes back, a validation or server error included, is a failed start (google-sign-in design D7).
+ */
+export async function submitGoogleSignIn(from: GoogleFlow): Promise<GoogleSignInButtonState> {
+  await startGoogleSignInAction({ from });
+  return FAILED_START;
 }

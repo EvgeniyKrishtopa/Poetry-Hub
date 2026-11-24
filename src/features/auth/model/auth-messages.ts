@@ -1,3 +1,5 @@
+import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
+
 import { CONFIRM_FAILED_ERROR, GOOGLE_ERROR, GOOGLE_FLOW } from "./auth.constants";
 import type { AuthFailure, AuthFlow, GoogleFlow } from "./auth.types";
 
@@ -41,6 +43,13 @@ export const GOOGLE_FAILED_MESSAGE = "Не удалось войти через 
 export const GOOGLE_BLOCKED_MESSAGE = "Вход с этим адресом невозможен.";
 
 export const GOOGLE_CANCELLED_MESSAGE = "Вы отменили вход через Google. Попробуйте ещё раз.";
+
+/** `ConnectionNotice`'s texts above the Google button: it signs in, it does not save (google-sign-in FR-G2). */
+export const GOOGLE_CONNECTION_MESSAGES = {
+  [CONNECTION_STATUS.offline]:
+    "Нет подключения к интернету. Вход через Google станет доступен, когда связь восстановится.",
+  [CONNECTION_STATUS.slow]: "Медленное подключение к интернету. Вход через Google станет доступен, когда связь улучшится.",
+} as const;
 
 /** The `/` notice after a Google sign-up into an existing account (google-sign-in FR-G6). */
 export const ACCOUNT_EXISTS_NOTICE = "Аккаунт с этой почтой уже есть — вы вошли в него.";
