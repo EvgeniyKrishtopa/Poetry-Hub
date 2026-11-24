@@ -127,6 +127,25 @@ describe("GoogleSignInButton", () => {
     expect(getButton()).toHaveAttribute("aria-busy", "false");
   });
 
+  // implements FR-G1 of google-sign-in: a retry clears the earlier failure until its own result arrives
+  it("hides the earlier failure while a retry runs", async () => {
+    vi.mocked(startGoogleSignInAction).mockResolvedValueOnce(FAILED_RESPONSE);
+    render(<GoogleSignInButton from="sign-in" />);
+    await press();
+    expect(screen.getByRole("alert")).toHaveTextContent(GOOGLE_FAILED_MESSAGE);
+
+    let finish: (response: StartResponse) => void = () => {};
+    vi.mocked(startGoogleSignInAction).mockReturnValueOnce(new Promise<StartResponse>((resolve) => (finish = resolve)));
+    await press();
+
+    expect(getButton()).toHaveAttribute("aria-busy", "true");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    await act(async () => finish(FAILED_RESPONSE));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(GOOGLE_FAILED_MESSAGE);
+  });
+
   // implements FR-G2 of google-sign-in
   it.each([
     ["offline", GOOGLE_CONNECTION_MESSAGES.offline],
