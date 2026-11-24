@@ -25,6 +25,12 @@ export function getLoginErrorMessage(error: string | string[] | undefined): stri
   return error === CONFIRM_FAILED_ERROR ? CONFIRM_FAILED_MESSAGE : undefined;
 }
 
+/** The Google notice for a `google-*` `error` search param, or none for any other value (google-sign-in design D6). */
+export function getGoogleErrorMessage(error: string | string[] | undefined): string | undefined {
+  void error;
+  throw new Error("not implemented");
+}
+
 const RATE_LIMITED_MESSAGE = "Слишком много попыток. Попробуйте через несколько минут.";
 
 export const FIELD_MESSAGES = {
