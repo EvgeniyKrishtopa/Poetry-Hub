@@ -69,10 +69,11 @@ describe("feedback tone contrast", () => {
 });
 
 // The home hero's text sits on a photo, so its floor is the scrim over the lightest pixel a hero photo may
-// have, not over a flat token. A mid grey: the 10% scrim barely darkens, so this is the lightest photo under
-// the text that still gives white text 4.5:1 (one step lighter gives 4.48:1). `docs/design-system.md` states
-// the same value as the editors' rule.
-const LIGHTEST_PHOTO = "#838383";
+// have, not over a flat token. A very light grey: the 50% scrim halves the photo's brightness, so this is the
+// lightest photo under the text that still gives white text 4.5:1 (one step lighter fails it).
+// `docs/design-system.md` states the same value as the editors' rule.
+const LIGHTEST_PHOTO = "#ececec";
+const HERO_SCRIM_ALPHA = 0.5;
 // Body text is the hero message (under 24 px, regular weight); large text is the h1.
 const HERO_BODY_MIN_RATIO = TEXT_MIN_RATIO;
 const HERO_LARGE_MIN_RATIO = NON_TEXT_MIN_RATIO;
@@ -99,7 +100,7 @@ function compositeOver(scrim: { rgb: readonly number[]; alpha: number }, backdro
 describe("home hero text contrast", () => {
   const css = readFileSync(CSS_PATH, "utf8");
 
-  // implements NFR-B2 of home-contentful-content: white text on the 10% scrim over the lightest allowed photo.
+  // implements NFR-B2 of home-contentful-content: white text on the 50% scrim over the lightest allowed photo.
   // This retires home-page-sections NFR-4's higher floors (5.7:1 light, 7:1 dark) on purpose.
   describe.each(["light", "dark"] as const)("%s theme", (theme) => {
     const floorColour = () => {
@@ -119,9 +120,9 @@ describe("home hero text contrast", () => {
     });
   });
 
-  // implements FR-B7 of home-contentful-content: one uniform black layer at 10% in both themes
-  it.each(["light", "dark"] as const)("the %s scrim is black at 10%", (theme) => {
-    expect(readScrim(css, theme)).toEqual({ rgb: [0, 0, 0], alpha: 0.1 });
+  // implements FR-B7 of home-contentful-content: one uniform black layer at 50% in both themes
+  it.each(["light", "dark"] as const)("the %s scrim is black at 50%", (theme) => {
+    expect(readScrim(css, theme)).toEqual({ rgb: [0, 0, 0], alpha: HERO_SCRIM_ALPHA });
   });
 });
 
