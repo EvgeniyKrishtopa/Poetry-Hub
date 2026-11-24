@@ -240,6 +240,8 @@ Archived at `openspec/changes/archive/2026-11-23-home-page-sections/`.
 
 ## home-contentful-content
 
+Archived at `openspec/changes/archive/2026-11-24-home-contentful-content/`.
+
 ### home-contentful-content · 3.2 — shipped hero photo not measured by a test
 
 - **State:** skipped
