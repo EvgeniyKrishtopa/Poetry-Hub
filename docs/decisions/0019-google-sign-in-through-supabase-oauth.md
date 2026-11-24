@@ -30,7 +30,7 @@ Until `google-sign-in` the only way in was email and password (ADR 0003). The ch
 **Negative**
 
 - The code exchange runs from the server's IP, so it shares Supabase's per-IP `/auth/v1/token` budget with password sign-ins and session refreshes (ADR 0003). The Deploy checklist raises that limit.
-- A Redirect URLs list without `<site>/auth/callback**` makes Supabase silently fall back to the Site URL root, so the visitor lands on `/` signed out with no notice. Only configuration prevents it, and the Deploy checklist says so.
+- A Redirect URLs list without the two exact callback addresses (`<site>/auth/callback?from=sign-in` and `?from=sign-up`; a wider `**` pattern is ruled out because it would accept almost any return address on the site) makes Supabase silently fall back to the Site URL root, so the visitor lands on `/` signed out with no notice. Only configuration prevents it, and the Deploy checklist says so.
 - `redirectTo` is built from `getSiteUrl()`, so a preview deployment's Google sign-in returns to the production address.
 - The account-exists notice can misfire for a password account created less than 60 s before the same address signs in with Google. It is a notice only, and accepted.
 
