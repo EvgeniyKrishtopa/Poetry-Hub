@@ -9,21 +9,8 @@
     "src/features/collections/**",
     // Temporary, drag-and-drop-ordering scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new feature's files. The last group that wires the board into the route removes this entry.
-    "src/features/work-ordering/**",
-    // Temporary, google-sign-in scaffold: the new stubs have no importer until their tasks wire or test them.
-    // Only the new files, so knip still sees the rest of the auth feature. Task 5.3 removes these entries.
-    "src/features/auth/components/GoogleSignInButton/**",
-    "src/features/auth/components/GoogleSignInPanel/**",
-    "src/features/auth/components/AuthNotice/**"
+    "src/features/work-ordering/**"
   ],
-  // Temporary, google-sign-in scaffold: the constants, types, message helper and action added to existing auth files
-  // for the new stubs have no importer yet. Task 5.3 removes these entries.
-  "ignoreIssues": {
-    "src/features/auth/model/auth.constants.ts": ["exports"],
-    "src/features/auth/model/auth.types.ts": ["types"],
-    "src/features/auth/model/auth-messages.ts": ["exports"],
-    "src/features/auth/actions/auth.actions.ts": ["exports"]
-  },
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
     "@fission-ai/openspec",
