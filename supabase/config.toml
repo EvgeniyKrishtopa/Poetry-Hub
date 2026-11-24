@@ -348,6 +348,19 @@ skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
 
+# Google sign-in (google-sign-in design D9). The client id and secret come from the Supabase CLI's own
+# environment, never from the repo or the app's .env files. The Google Cloud OAuth client must list
+# http://127.0.0.1:54321/auth/v1/callback as an authorised redirect URI for the local stack.
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+redirect_uri = ""
+url = ""
+# The redirect flow checks no ID-token nonce; only a One Tap / ID-token sign-in would need this.
+skip_nonce_check = false
+email_optional = false
+
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.
 # You can configure "web3" rate limit in the [auth.rate_limit] section and set up [auth.captcha] if self-hosting.
 [auth.web3.solana]

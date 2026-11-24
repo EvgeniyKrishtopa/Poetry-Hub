@@ -35,7 +35,7 @@ Out of scope: importing the Google name or photo into the author profile; other 
 ## Open Questions
 
 - The Google Cloud OAuth client (client id, secret, consent screen with the site's name) is created by the owner, who also enters it in the hosted Supabase dashboard. Owner, due 2026-12-05.
-- The exact parameters Supabase hands back to `/auth/callback` for a cancel, a hook refusal and a blocked account are not documented; task 1.2 records them on the local stack before the mapping is written. Owner of the check: the implementer, group 1.
+- The exact parameters Supabase hands back to `/auth/callback` for a cancel, a hook refusal and a blocked account are not documented; task 1.2 records them on the local stack before the mapping is written. Owner of the check: the implementer, group 1. Answered 2026-11-24: recorded under task 1.2 in tasks.md and named in `GOOGLE_CALLBACK_ERROR`.
 
 ## Mockups
 
