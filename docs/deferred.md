@@ -237,3 +237,17 @@ Archived at `openspec/changes/archive/2026-11-23-home-page-sections/`.
 - **Verified instead:** lifting, moving and dropping by keyboard work and the moved order persists to `/`; the lifted handle has a visible focus ring; the move announcements («Выбрано…», «Положено на позицию…») are read.
 - **Decision:** owner, 2026-11-23.
 - **Status:** open. To close it: in a change that covers both the home list and the violation list, restore focus to the row after a move, move it to the neighbouring row (or the list heading when empty) after a remove, announce the removal in the live region, and add a keyboard test for each; then set this entry to `resolved`.
+
+## home-contentful-content
+
+Archived at `openspec/changes/archive/2026-11-24-home-contentful-content/`.
+
+### home-contentful-content · 3.2 — shipped hero photo not measured by a test
+
+- **State:** skipped
+- **Requirement:** NFR-B2
+- **What is missing:** the test that measures `public/home-hero.jpg` (99th-percentile luminance of its central band, the middle 60% of its height, full width) against the lightest-photo constant `#ececec` in `feedback-contrast.test.ts`.
+- **Why:** the project has no JPEG decoder, and adding `sharp` as a devDependency only for this one test was judged excessive.
+- **Verified instead:** the contrast test proves white text over the 50% scrim and `#ececec` meets 4.5:1 body and 3:1 large text in both themes; the style tests prove the scrim value and the stacking order. The photo itself and the overlay are checked by hand.
+- **Decision:** owner, 2026-11-23.
+- **Status:** open. To close it: the owner looks at the hero on `/` in both themes and at 360, 768 and 1280 px and confirms the text reads clearly; replace or darken the photo if not. Record the result here and set this entry to `resolved`. A measuring test can be added later if the project gets an image decoder.

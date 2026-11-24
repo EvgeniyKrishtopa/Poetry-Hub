@@ -1,0 +1,2 @@
+no
+# new module: no (all inside the existing home feature); new boundary crossing: no (reuses the existing Contentful client; no new route, endpoint or client)

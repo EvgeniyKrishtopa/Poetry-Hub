@@ -19,8 +19,8 @@
   --on-danger: #ffffff;
   /* Behind a modal dialog: dims the page, never lightens it */
   --backdrop: color-mix(in srgb, var(--foreground) 40%, transparent);
-  /* Home page (home-page-sections): the hero's dimming layer and the text on it, AA over the lightest photo */
-  --hero-scrim: rgb(10 10 10 / 0.6);
+  /* Home page (home-contentful-content): the hero's dimming layer and the text on it, AA over the lightest photo */
+  --hero-scrim: rgb(0 0 0 / 0.5);
   --on-hero: #ffffff;
   /* Cards: the same border, fill and hover fill the page already uses, under their own names */
   --card-radius: 16px;
@@ -61,7 +61,7 @@
     --on-danger: #0a0a0a;
     /* A light foreground mix would lighten the page here, so mix towards the near-black background. */
     --backdrop: color-mix(in srgb, var(--background) 70%, transparent);
-    --hero-scrim: rgb(0 0 0 / 0.65);
+    --hero-scrim: rgb(0 0 0 / 0.5);
     --on-hero: #ffffff;
   }
 }

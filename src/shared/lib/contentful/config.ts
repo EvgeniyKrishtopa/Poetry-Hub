@@ -47,3 +47,13 @@ export function getContentfulConfig(): ContentfulConfig {
     environment: parsed.data.CONTENTFUL_ENVIRONMENT,
   };
 }
+
+/**
+ * The project's space id from the same validated configuration the client uses, so a feature that checks an
+ * asset address against it never makes a second read of the environment. Throws `ContentfulError` with
+ * `kind: "config"` exactly like `getContentfulConfig`.
+ */
+export function getContentfulSpaceId(): string {
+  const config = getContentfulConfig();
+  return config.spaceId;
+}

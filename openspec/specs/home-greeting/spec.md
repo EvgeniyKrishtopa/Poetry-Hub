@@ -4,34 +4,39 @@
 TBD - created by archiving change add-contentful-home-greeting. Update Purpose after archive.
 ## Requirements
 ### Requirement: Greeting retrieval (FR-5)
-The system SHALL load the greeting entry whose `key` is `home_greeting`, and SHALL report a not-found outcome when no such published entry exists.
+The system SHALL load the greeting entry whose `key` the caller names, and SHALL report a not-found outcome when no such published entry exists. The home page names two keys: `about_project_home` for the about section and `call_to_action_signup` for the closing invitation. The key `home_greeting` is no longer read.
 
 #### Scenario: Home greeting exists
-- **GIVEN** a published greeting with key `home_greeting`, title "Welcome to Poetry Hub", and a message
-- **WHEN** the home greeting is requested
+- **GIVEN** a published greeting with key `about_project_home`, title "About us", and a message
+- **WHEN** the greeting for that key is requested
 - **THEN** the result contains that title and message
 
 #### Scenario: Home greeting missing
-- **GIVEN** Contentful returns no greeting with key `home_greeting`
-- **WHEN** the home greeting is requested
+- **GIVEN** Contentful returns no greeting with key `call_to_action_signup`
+- **WHEN** the greeting for that key is requested
 - **THEN** the result is a not-found failure
+
+#### Scenario: Old hero key unused
+- **GIVEN** the home page's sections read their greetings
+- **WHEN** the home page is rendered
+- **THEN** no request names the key `home_greeting`
 
 ### Requirement: Response validation (FR-4)
 Every greeting response SHALL be validated against the expected shape (`key`, `title`, `message`, all strings that are non-empty after trimming leading and trailing whitespace; the trimmed values are what the page receives) before use. A response that doesn't match SHALL produce a validation failure, and no part of it SHALL reach the page.
 
 #### Scenario: Required field missing
-- **GIVEN** Contentful returns a `home_greeting` greeting without a `title`
-- **WHEN** the home greeting is requested
+- **GIVEN** Contentful returns a greeting without a `title`
+- **WHEN** the greeting is requested
 - **THEN** the result is a validation failure and contains no greeting
 
 #### Scenario: Whitespace-only title
-- **GIVEN** Contentful returns a `home_greeting` greeting whose `title` is `"   "`
-- **WHEN** the home greeting is requested
-- **THEN** the result is a validation failure, and the page shows the static fallback
+- **GIVEN** Contentful returns a greeting whose `title` is `"   "`
+- **WHEN** the greeting is requested
+- **THEN** the result is a validation failure, and the section shows its static copy
 
 #### Scenario: Unexpected response shape
 - **GIVEN** Contentful returns a `data` object without the greeting collection
-- **WHEN** the home greeting is requested
+- **WHEN** the greeting is requested
 - **THEN** the result is a validation failure
 
 ### Requirement: Failures are results, not exceptions (FR-3, FR-7)
@@ -39,24 +44,15 @@ Retrieval SHALL return a typed failure — one of configuration, network, authen
 
 #### Scenario: Missing configuration becomes a failure result
 - **GIVEN** `CONTENTFUL_ACCESS_TOKEN` is unset
-- **WHEN** the home greeting is requested
+- **WHEN** a greeting is requested
 - **THEN** the result is a configuration failure and nothing is thrown
 - **AND** a server log entry records the `config` failure kind
 
 #### Scenario: Authentication failure becomes a failure result
 - **GIVEN** Contentful rejects the token with HTTP 401
-- **WHEN** the home greeting is requested
+- **WHEN** a greeting is requested
 - **THEN** the result is an authentication failure
 - **AND** the server log entry contains neither the token nor the response body
-
-### Requirement: Static fallback (FR-7)
-When the home greeting can't be loaded for any reason, the home page SHALL render the site's static name as the heading and its static description beneath it, inside the hero.
-
-#### Scenario: CMS unavailable
-- **GIVEN** the home greeting request fails with any failure kind
-- **WHEN** a visitor opens `/`
-- **THEN** the page's main heading reads "Поэтический Хаб"
-- **AND** the static site description is shown beneath it, inside the hero
 
 ### Requirement: Content freshness (NFR-2)
 **Hard deadline.** 60 seconds is a hard deadline measured from the moment an entry is published (or unpublished) in Contentful. The first request for the home page made more than 60 seconds after publishing SHALL show the new content, never a stale copy.
@@ -85,29 +81,16 @@ Nothing in `src/` or `docs/` SHALL render, reference, or describe the former hom
 - **WHEN** `src/`, `docs/`, and `tests/web-qa-scenarios/` are searched for `PoemSearch`, `PoemList`, `PoemCard`, `usePoemsUiStore`, `poemsListQueryOptions`, «Загрузка стихов…», «Не удалось загрузить стихи.», «По вашему запросу стихов не найдено.», and `The Road Not Taken`
 - **THEN** there are no matches
 
-### Requirement: Home page renders the CMS greeting as the hero text (FR-6)
-The home page SHALL render the greeting as the hero's text (home-page-sections FR-1): the greeting's title as the page's main heading and its message as the text beneath it, over the hero's background image. The hero is the first section of the page's main region, followed by the other home sections. The message is plain text with its line structure preserved: each block separated by one or more blank lines SHALL render as its own paragraph, and a single line break within a block SHALL render as a line break. Markdown or HTML syntax in the message SHALL NOT be interpreted; it SHALL appear literally, as typed.
-
-#### Scenario: Greeting shown on the home page
-- **GIVEN** the home greeting loads successfully with title "Welcome to Poetry Hub"
-- **WHEN** a visitor opens `/`
-- **THEN** the page's main heading reads "Welcome to Poetry Hub"
-- **AND** the greeting's message is shown beneath the heading
-
-#### Scenario: Greeting drawn in the hero
-- **GIVEN** the home greeting loads successfully
-- **WHEN** a visitor opens `/`
-- **THEN** the heading and message sit in the hero, the first section of the main region, over the background image
-- **AND** the main region holds no search box and no «Очистить» button
+### Requirement: Greeting text is plain text (FR-8)
+Wherever a greeting's message is shown (the about section and the closing invitation), it SHALL render as plain text with its line structure preserved: blocks separated by blank lines are paragraphs and a single line break stays a line break. Markdown or HTML syntax SHALL appear literally, as typed.
 
 #### Scenario: Multi-paragraph message
 - **GIVEN** the message is "Line one\nLine two\n\nSecond paragraph"
-- **WHEN** a visitor opens `/`
-- **THEN** two paragraphs are shown beneath the heading
-- **AND** the first paragraph shows "Line one" and "Line two" on separate lines
+- **WHEN** the section is shown
+- **THEN** two paragraphs are rendered, the first showing "Line one" and "Line two" on separate lines
 
 #### Scenario: Markup is not interpreted
 - **GIVEN** the message is "**Bold** <b>tag</b>"
-- **WHEN** a visitor opens `/`
-- **THEN** the text "**Bold** <b>tag</b>" appears literally and no bold element is rendered
+- **WHEN** the section is shown
+- **THEN** the text appears literally and no bold element is rendered
 

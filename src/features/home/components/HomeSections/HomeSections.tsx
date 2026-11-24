@@ -3,9 +3,12 @@ import { cacheLife, cacheTag } from "next/cache";
 import { HOME_FEATURED_TAG } from "@/shared/config/cache-tags";
 import { CONTENTFUL_CACHE_TAG } from "@/shared/lib/contentful";
 
-import { getHomeGreeting } from "../../dal/home-greeting";
+import { getHomeBanner } from "../../dal/home-banner";
+import { getGreetingByKey } from "../../dal/home-greeting";
 import { getFeaturedAuthors, getFeaturedWorks, getLatestWorks } from "../../dal/home-sections";
-import { resolveGreeting } from "../../model/resolve-greeting";
+import { ABOUT_GREETING_KEY } from "../../model/home.constants";
+import { ABOUT_COPY } from "../../model/home-messages";
+import { resolveBanner, resolveSectionCopy } from "../../model/resolve-home-content";
 import { HomeAbout } from "../HomeAbout/HomeAbout";
 import { HomeAuthors } from "../HomeAuthors/HomeAuthors";
 import { HomeFeaturedWorks } from "../HomeFeaturedWorks/HomeFeaturedWorks";
@@ -29,19 +32,21 @@ export async function HomeSections() {
 
   // Nothing here reads cookies, headers or the session. Each data read answers with a value, never a throw, so a
   // failed section is left out and the others still render.
-  const [greetingResult, featuredWorks, featuredAuthors, latestWorks] = await Promise.all([
-    getHomeGreeting(),
+  const [bannerResult, aboutResult, featuredWorks, featuredAuthors, latestWorks] = await Promise.all([
+    getHomeBanner(),
+    getGreetingByKey(ABOUT_GREETING_KEY),
     getFeaturedWorks(),
     getFeaturedAuthors(),
     getLatestWorks(),
   ]);
-  const greeting = resolveGreeting(greetingResult);
+  const banner = resolveBanner(bannerResult);
+  const aboutCopy = resolveSectionCopy(aboutResult, ABOUT_COPY);
 
   return (
     <>
-      <HomeHero greeting={greeting} />
+      <HomeHero banner={banner} />
       <HomeFeaturedWorks result={featuredWorks} />
-      <HomeAbout />
+      <HomeAbout copy={aboutCopy} />
       <HomeAuthors result={featuredAuthors} />
       <HomeLatestWorks result={latestWorks} />
     </>
