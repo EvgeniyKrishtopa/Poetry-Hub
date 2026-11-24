@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ACCOUNT_EXISTS_NOTICE,
   CONFIRM_FAILED_MESSAGE,
   GENERIC_SERVER_ERROR,
   getFailureMessage,
+  getGoogleErrorMessage,
   getLoginErrorMessage,
+  GOOGLE_BUTTON_LABEL,
+  GOOGLE_SEPARATOR_LABEL,
   SIGN_OUT_FAILED_MESSAGE,
 } from "../../model/auth-messages";
 import type { AuthFailure, AuthFlow } from "../../model/auth.types";
@@ -61,4 +65,44 @@ describe("getLoginErrorMessage", () => {
       expect(getLoginErrorMessage(error)).toBeUndefined();
     },
   );
+
+  it("gives no text for a google-* value", () => {
+    expect(getLoginErrorMessage("google-failed")).toBeUndefined();
+  });
+});
+
+describe("Google texts", () => {
+  // implements FR-G1 of google-sign-in
+  it("match the spec's labels", () => {
+    expect(GOOGLE_BUTTON_LABEL["sign-in"]).toBe("Войти через Google");
+    expect(GOOGLE_BUTTON_LABEL["sign-up"]).toBe("Зарегистрироваться через Google");
+    expect(GOOGLE_SEPARATOR_LABEL).toBe("или");
+  });
+
+  // implements FR-G6 of google-sign-in
+  it("match the spec's account-exists notice", () => {
+    expect(ACCOUNT_EXISTS_NOTICE).toBe("Аккаунт с этой почтой уже есть — вы вошли в него.");
+  });
+});
+
+describe("getGoogleErrorMessage", () => {
+  // implements FR-G4, FR-G5 of google-sign-in
+  it.each([
+    ["google-cancelled", "Вы отменили вход через Google. Попробуйте ещё раз."],
+    ["google-failed", "Не удалось войти через Google. Попробуйте ещё раз."],
+    ["google-blocked", "Вход с этим адресом невозможен."],
+  ])("maps %s to its text", (error, expected) => {
+    expect(getGoogleErrorMessage(error)).toBe(expected);
+  });
+
+  // implements FR-5 of google-sign-in
+  it.each([
+    ["missing", undefined],
+    ["another value", "anything-else"],
+    ["confirm-failed", "confirm-failed"],
+    ["a prefix of a Google value", "google"],
+    ["a repeated param", ["google-failed", "google-blocked"]],
+  ])("gives no text for %s", (_label, error) => {
+    expect(getGoogleErrorMessage(error)).toBeUndefined();
+  });
 });

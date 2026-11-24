@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
-import { signInAction, signOutAction, signUpAction } from "../../actions/auth.actions";
+import { signInAction, signOutAction, signUpAction, startGoogleSignInAction } from "../../actions/auth.actions";
 import { GENERIC_SERVER_ERROR } from "../../model/auth-messages";
 import type { AuthActionResult, SignInResult, SignOutResult, SignUpResult } from "../../model/auth.types";
 
@@ -34,6 +34,7 @@ const auth = {
   signInWithPassword: vi.fn(),
   signUp: vi.fn(),
   signOut: vi.fn(),
+  signInWithOAuth: vi.fn(),
 };
 
 function authError(code: string, status: number, message: string = code) {
@@ -209,6 +210,90 @@ describe("auth actions", () => {
 
       expect(result.serverError).toBe(GENERIC_SERVER_ERROR);
       expect(JSON.stringify(result)).not.toContain(PASSWORD);
+    });
+  });
+
+  describe("startGoogleSignInAction", () => {
+    const SITE_URL = "https://poetry.example";
+    const AUTHORIZE_URL = "https://project.supabase.co/auth/v1/authorize?provider=google&code_challenge=abc";
+
+    beforeEach(() => {
+      vi.stubEnv("SITE_URL", SITE_URL);
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    // implements FR-G1 of google-sign-in
+    it.each([
+      ["sign-in", `${SITE_URL}/auth/callback?from=sign-in`],
+      ["sign-up", `${SITE_URL}/auth/callback?from=sign-up`],
+    ] as const)("starts the Google flow from %s and redirects to the authorize URL", async (from, redirectTo) => {
+      auth.signInWithOAuth.mockResolvedValue({ data: { provider: "google", url: AUTHORIZE_URL }, error: null });
+
+      await expect(startGoogleSignInAction({ from })).rejects.toMatchObject({ digest: REDIRECT_DIGEST });
+      expect(auth.signInWithOAuth).toHaveBeenCalledExactlyOnceWith({ provider: "google", options: { redirectTo } });
+      expect(redirect).toHaveBeenCalledExactlyOnceWith(AUTHORIZE_URL);
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    // implements FR-G1 of google-sign-in
+    it.each(["login", "", "https://evil.example"])("rejects from=%j before any Supabase call", async (from) => {
+      const result = await startGoogleSignInAction({ from: from as "sign-in" });
+
+      expect(result.validationErrors?.fieldErrors.from).toHaveLength(1);
+      expect(result.data).toBeUndefined();
+      expect(createSupabaseServerClient).not.toHaveBeenCalled();
+      expect(auth.signInWithOAuth).not.toHaveBeenCalled();
+    });
+
+    // implements FR-G1, NFR-G1 of google-sign-in
+    it("returns the failed result for an Auth error, logging the code and nothing personal", async () => {
+      auth.signInWithOAuth.mockResolvedValue({
+        data: { provider: "google", url: null },
+        error: authError("validation_failed", 400, `Unsupported provider for ${EMAIL}`),
+      });
+
+      const result = await startGoogleSignInAction({ from: "sign-in" });
+
+      expect(result.data).toEqual({ status: "failed" });
+      expect(redirect).not.toHaveBeenCalled();
+      expect(console.error).toHaveBeenCalledExactlyOnceWith("[auth] google sign-in start failed: validation_failed");
+      expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain(EMAIL);
+    });
+
+    // implements FR-G1, NFR-G1 of google-sign-in
+    it("returns the failed result when Supabase gives no URL", async () => {
+      auth.signInWithOAuth.mockResolvedValue({ data: { provider: "google", url: null }, error: null });
+
+      const result = await startGoogleSignInAction({ from: "sign-up" });
+
+      expect(result.data).toEqual({ status: "failed" });
+      expect(redirect).not.toHaveBeenCalled();
+      expect(console.error).toHaveBeenCalledExactlyOnceWith("[auth] google sign-in start failed");
+    });
+
+    // implements FR-G1, NFR-G1 of google-sign-in
+    it("returns the failed result for a missing config, logging one line", async () => {
+      vi.mocked(createSupabaseServerClient).mockRejectedValue(
+        new SupabaseConfigError(["NEXT_PUBLIC_SUPABASE_URL"]),
+      );
+
+      const result = await startGoogleSignInAction({ from: "sign-in" });
+
+      expect(result.data).toEqual({ status: "failed" });
+      expect(auth.signInWithOAuth).not.toHaveBeenCalled();
+      expect(console.error).toHaveBeenCalledExactlyOnceWith("[auth] google sign-in start failed: unavailable");
+    });
+
+    it("turns a throwing call into the generic serverError", async () => {
+      auth.signInWithOAuth.mockRejectedValue(new TypeError("fetch failed"));
+
+      const result = await startGoogleSignInAction({ from: "sign-in" });
+
+      expect(result.serverError).toBe(GENERIC_SERVER_ERROR);
+      expect(redirect).not.toHaveBeenCalled();
     });
   });
 

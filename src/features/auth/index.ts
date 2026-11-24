@@ -6,6 +6,8 @@ export { SignedOutOnly } from "./components/SignedOutOnly/SignedOutOnly";
 export { SignInPanel } from "./components/SignInPanel/SignInPanel";
 export { SignUpForm } from "./components/SignUpForm/SignUpForm";
 export { confirmSignUp } from "./dal/confirm-sign-up";
+export { finishGoogleSignIn } from "./dal/finish-google-sign-in";
+export { getGoogleCallbackTarget } from "./model/google-callback-target";
 export { getLoginPageMetadata, getSignupPageMetadata } from "./metadata/auth-pages-metadata";
 export { CONFIRM_FAILED_ERROR } from "./model/auth.constants";
 export { getCurrentUserId, getSessionState, requireSession } from "./dal/current-user";
