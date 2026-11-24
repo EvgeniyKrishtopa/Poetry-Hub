@@ -7,7 +7,7 @@ import { expect, test } from "@playwright/test";
 // generic text), and each run spends one sign-in from the rate-limit budget.
 test(
   "signing in with a wrong password shows the wrong-credentials alert and keeps the email",
-  { tag: ["@add-contact-form"] },
+  { tag: ["@add-contact-form", "@google-sign-in"] },
   async ({ page }) => {
     const email = "nobody-qa@example.com";
     // Wait for hydration: a submit before it hits the form's inert placeholder action.
@@ -15,11 +15,13 @@ test(
     // Scoped to main: the footer's contact dialog holds a form of its own on every page,
     // with an email field under the same label.
     const main = page.getByRole("main");
-    await expect(main.locator("form")).toHaveCount(1);
+    // One password form, never a doubled one; the Google button is a form of its own beside it.
+    await expect(main.locator("form").filter({ has: page.getByLabel("Пароль") })).toHaveCount(1);
 
     await main.getByLabel("Электронная почта").fill(email);
     await main.getByLabel("Пароль").fill("wrong-password-123");
-    await main.getByRole("button", { name: "Войти" }).click();
+    // Exact: the Google button's name also contains the word.
+    await main.getByRole("button", { name: "Войти", exact: true }).click();
 
     await expect(main.getByRole("alert")).toHaveText("Неверный адрес электронной почты или пароль.");
     await expect(main.getByLabel("Электронная почта")).toHaveValue(email);

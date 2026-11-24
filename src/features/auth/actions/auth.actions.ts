@@ -31,6 +31,13 @@ const GOOGLE_PROVIDER = "google";
 /** Where Supabase Auth returns a Google sign-in: the `/auth/callback` route handler (google-sign-in design D2). */
 const GOOGLE_CALLBACK_PATH = "/auth/callback";
 
+/**
+ * Google always shows its account chooser, even when the browser is still signed in to Google: after "sign out"
+ * the next person on a shared device must not get the last account in one press, and the visitor can pick
+ * another account or cancel (google-sign-in design D1, owner 2026-11-24).
+ */
+const GOOGLE_QUERY_PARAMS = { prompt: "select_account" } as const;
+
 function failed(failure: AuthFailure): AuthFailedResult {
   return { status: "failed", failure };
 }
@@ -115,7 +122,7 @@ export const startGoogleSignInAction = authActionClient
     // The server client's setAll writes the PKCE code-verifier cookie, so the redirect below carries it.
     const { data, error } = await client.supabase.auth.signInWithOAuth({
       provider: GOOGLE_PROVIDER,
-      options: { redirectTo },
+      options: { redirectTo, queryParams: GOOGLE_QUERY_PARAMS },
     });
     if (error) return failedGoogleStart(error.code);
     if (!data.url) return failedGoogleStart(null);

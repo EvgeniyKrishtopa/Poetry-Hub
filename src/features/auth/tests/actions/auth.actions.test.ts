@@ -233,7 +233,11 @@ describe("auth actions", () => {
       auth.signInWithOAuth.mockResolvedValue({ data: { provider: "google", url: AUTHORIZE_URL }, error: null });
 
       await expect(startGoogleSignInAction({ from })).rejects.toMatchObject({ digest: REDIRECT_DIGEST });
-      expect(auth.signInWithOAuth).toHaveBeenCalledExactlyOnceWith({ provider: "google", options: { redirectTo } });
+      // prompt=select_account: Google shows its account chooser even when the browser is signed in to Google.
+      expect(auth.signInWithOAuth).toHaveBeenCalledExactlyOnceWith({
+        provider: "google",
+        options: { redirectTo, queryParams: { prompt: "select_account" } },
+      });
       expect(redirect).toHaveBeenCalledExactlyOnceWith(AUTHORIZE_URL);
       expect(console.error).not.toHaveBeenCalled();
     });
