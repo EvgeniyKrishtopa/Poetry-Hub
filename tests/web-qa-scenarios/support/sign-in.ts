@@ -20,7 +20,8 @@ export async function signIn(page: Page, email: string): Promise<void> {
   await expect(async () => {
     await main.getByLabel("Электронная почта").fill(email);
     await main.getByLabel("Пароль").fill(SEED_PASSWORD);
-    await main.getByRole("button", { name: "Войти" }).click();
+    // Exact: the Google button's name also contains the word.
+    await main.getByRole("button", { name: "Войти", exact: true }).click();
     await expect(page).not.toHaveURL(/\/login/, { timeout: SIGN_IN_ATTEMPT_TIMEOUT_MS });
   }).toPass({ timeout: SIGN_IN_TIMEOUT_MS });
 }

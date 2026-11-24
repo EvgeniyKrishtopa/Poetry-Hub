@@ -1,3 +1,4 @@
+// pages: /login, /signup, /
 import { expect, test } from "@playwright/test";
 
 import { waitForHydration } from "./support/hydration";
@@ -10,7 +11,7 @@ const BLOCKED_TEXT = "Вход с этим адресом невозможен."
 const ACCOUNT_EXISTS_TEXT = "Аккаунт с этой почтой уже есть — вы вошли в него.";
 
 // None of these needs a Google account: they never press the button while online.
-test.describe("Google sign-in buttons and notices", () => {
+test.describe("Google sign-in buttons and notices", { tag: ["@google-sign-in"] }, () => {
   // implements FR-G1 of google-sign-in
   test("shows the Google button with its separator on /login and /signup", async ({ page }) => {
     await page.goto("/login");

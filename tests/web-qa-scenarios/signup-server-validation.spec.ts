@@ -5,18 +5,20 @@ import { expect, test } from "@playwright/test";
 // Supabase is called, and each field error is wired to its input.
 test(
   "sign-up shows server-side field errors for an invalid email and a short password",
-  { tag: ["@add-contact-form"] },
+  { tag: ["@add-contact-form", "@google-sign-in"] },
   async ({ page }) => {
     // Wait for hydration: a submit before it hits the form's inert placeholder action.
     await page.goto("/signup", { waitUntil: "networkidle" });
     // Scoped to main: the footer's contact dialog holds a form of its own on every page,
     // with an email field under the same label.
     const main = page.getByRole("main");
-    await expect(main.locator("form")).toHaveCount(1);
+    // One password form, never a doubled one; the Google button is a form of its own beside it.
+    await expect(main.locator("form").filter({ has: page.getByLabel("Пароль") })).toHaveCount(1);
 
     await main.getByLabel("Электронная почта").fill("not-an-email");
     await main.getByLabel("Пароль").fill("1234567");
-    await main.getByRole("button", { name: "Зарегистрироваться" }).click();
+    // Exact: the Google button's name also contains the word.
+    await main.getByRole("button", { name: "Зарегистрироваться", exact: true }).click();
 
     const email = main.getByLabel("Электронная почта");
     const password = main.getByLabel("Пароль");
