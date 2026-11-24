@@ -1,0 +1,3 @@
+yes
+# new module (folder at the level of existing modules): no (everything lives in features/auth and app/auth)
+# new boundary crossing: yes (route handler app/auth/callback and a new client call to Google through Supabase OAuth)

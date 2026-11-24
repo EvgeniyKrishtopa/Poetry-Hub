@@ -1,0 +1,4 @@
+full
+# more than one module: yes (features/auth, app/(public)/login and signup, app/auth/callback, shared notices)
+# data schema change: no (no table, column or migration; Supabase stores the Google identity itself)
+# contract change: yes (new route handler /auth/callback; new auth server action exported to pages)

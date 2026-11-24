@@ -1,0 +1,5 @@
+{"ts":"2026-11-24T12:02:44Z","kind":"finding","change":"google-sign-in","group":"-","gate":"spec-clarify","finding":"access_denied with an unrecognised error_code: cancelled or failed","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-24T12:02:44Z","kind":"finding","change":"google-sign-in","group":"-","gate":"spec-clarify","finding":"where the Google error notice renders relative to the button","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-24T12:02:44Z","kind":"finding","change":"google-sign-in","group":"-","gate":"spec-clarify","finding":"URL notice and start-failure alert shown together","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-24T12:02:44Z","kind":"finding","change":"google-sign-in","group":"-","gate":"spec-clarify","finding":"unconfirmed password account counts as existing for the account-exists notice","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-24T12:02:44Z","kind":"finding","change":"google-sign-in","group":"-","gate":"spec-clarify","finding":"which callback outcomes are logged","outcome":"fixed","ruleNumber":""}
