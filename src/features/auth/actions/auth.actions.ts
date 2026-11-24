@@ -7,9 +7,17 @@ import { redirect } from "next/navigation";
 import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
-import type { AuthFailedResult, AuthFailure, SignInResult, SignOutResult, SignUpResult } from "../model/auth.types";
+import type {
+  AuthFailedResult,
+  AuthFailure,
+  SignInResult,
+  SignOutResult,
+  SignUpResult,
+  StartGoogleSignInResult,
+} from "../model/auth.types";
 import { classifyAuthError, isBannedSignUpRejection } from "../model/classify-auth-error";
 import { signInSchema, signUpSchema } from "../model/credentials.schema";
+import { startGoogleSignInSchema } from "../model/google-sign-in.schema";
 
 import { authActionClient } from "./action-client";
 
@@ -76,3 +84,13 @@ export const signOutAction = authActionClient.action(async (): Promise<SignOutRe
   refresh();
   return { ok: true };
 });
+
+/**
+ * Starts a Google sign-in (google-sign-in design D1): on success it redirects to Google's account chooser
+ * and never returns; any failure to start returns the failed result.
+ */
+export const startGoogleSignInAction = authActionClient
+  .inputSchema(startGoogleSignInSchema)
+  .action(async (): Promise<StartGoogleSignInResult> => {
+    throw new Error("not implemented");
+  });

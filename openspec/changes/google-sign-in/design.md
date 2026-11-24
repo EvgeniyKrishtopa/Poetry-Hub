@@ -128,3 +128,26 @@ sequenceDiagram
 ## Open Questions
 
 - The Google Cloud OAuth client and the consent screen text are the owner's (proposal.md, Open Questions); they do not change the code.
+
+## Scaffold map
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/app/auth/callback/route.ts` | Thin route handler where Supabase Auth returns a Google sign-in; GET only, 303 to a fixed target | `GET` |
+| `src/features/auth/actions/auth.actions.ts` (changed) | Starts the Google sign-in on the server and redirects to Google (D1) | `startGoogleSignInAction` |
+| `src/features/auth/dal/finish-google-sign-in.ts` | Server-only: exchanges the code or classifies the error, never throws (D3) | `finishGoogleSignIn` |
+| `src/features/auth/model/classify-google-callback-error.ts` | Pure: cancelled / blocked / failed from Supabase's parameters (D3) | `classifyGoogleCallbackError` |
+| `src/features/auth/model/did-account-exist.ts` | Pure: whether the account existed, from two timestamps (D4) | `didAccountExist` |
+| `src/features/auth/model/google-callback-target.ts` | Pure: parses `from` and picks the redirect target (D5) | `getGoogleCallbackTarget` |
+| `src/features/auth/model/google-sign-in.schema.ts` | The action's input, `from` as a closed set (D2) | `startGoogleSignInSchema` |
+| `src/features/auth/model/auth.constants.ts` (changed) | Named origins, error and notice values, the new-account window | `GOOGLE_FLOW`, `GOOGLE_ERROR`, `AUTH_NOTICE`, `NEW_ACCOUNT_WINDOW_MS` |
+| `src/features/auth/model/auth.types.ts` (changed) | Types moved between layers | `GoogleFlow`, `GoogleFailureReason`, `GoogleSignInResult`, `GoogleCallbackParams`, `GoogleCallbackUser`, `StartGoogleSignInResult`, `GoogleSignInButtonState` |
+| `src/features/auth/model/auth-messages.ts` (changed) | The Google notice text for a `google-*` error value (D6) | `getGoogleErrorMessage` |
+| `src/features/auth/components/GoogleSignInButton/GoogleSignInButton.tsx` | Client button: alert slot, connection notice, pending state (D6, D7) | `GoogleSignInButton` |
+| `src/features/auth/components/GoogleSignInButton/GoogleSignInButton.types.ts` | The button's props | `GoogleSignInButtonProps` |
+| `src/features/auth/components/GoogleSignInButton/submit-google-sign-in.ts` | `useActionState`'s action calling `startGoogleSignInAction` | `submitGoogleSignIn` |
+| `src/features/auth/components/GoogleSignInPanel/GoogleSignInPanel.tsx` | Awaits `error` inside Suspense and passes the notice as `initialError` (D6) | `GoogleSignInPanel` |
+| `src/features/auth/components/GoogleSignInPanel/GoogleSignInPanel.types.ts` | The panel's props | `GoogleSignInPanelProps` |
+| `src/features/auth/components/AuthNotice/AuthNotice.tsx` | The home page's account-exists notice (D6) | `AuthNotice` |
+| `src/features/auth/components/AuthNotice/AuthNotice.types.ts` | The notice's props | `AuthNoticeProps` |
+| `src/shared/ui/ConnectionNotice/ConnectionNotice.types.ts` (changed) | Optional `messages` prop for the offline and slow texts (D7) | `ConnectionNoticeProps` |
