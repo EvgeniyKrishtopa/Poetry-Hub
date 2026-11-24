@@ -101,7 +101,29 @@ describe("GET /auth/callback", () => {
 
     const response = await GET(get(`code=${CODE}&from=sign-in`));
 
+    expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(`${ORIGIN}/login?error=google-blocked`);
+  });
+
+  // implements FR-G4 of google-sign-in
+  it("redirects with 303 to the failed notice when the exchange returns an error that is not a block", async () => {
+    exchangeFails("bad_code_verifier");
+
+    const response = await GET(get(`code=${CODE}&from=sign-in`));
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(`${ORIGIN}/login?error=google-failed`);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+  });
+
+  // implements FR-G4 of google-sign-in
+  it("redirects with 303 to the failed notice when the exchange throws", async () => {
+    exchangeCodeForSession.mockRejectedValue(new Error("network down"));
+
+    const response = await GET(get(`code=${CODE}&from=sign-up`));
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(`${ORIGIN}/signup?error=google-failed`);
   });
 
   // implements FR-G3 of google-sign-in
@@ -118,6 +140,7 @@ describe("GET /auth/callback", () => {
     ["a success", `code=${CODE}&from=sign-in`],
     ["a cancel", `${CANCEL}&from=sign-in`],
     ["a failure", "from=sign-in"],
+    ["a blocked account", `${BLOCKED_ACCOUNT}&from=sign-in`],
   ])("marks the redirect after %s private, no-store", async (_label, query) => {
     exchangeSucceeds(DAYS_LATER);
 
