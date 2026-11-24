@@ -14,9 +14,9 @@ export const BANNED_SIGNUP_REJECTION = { status: 403, message: "signup not allow
  * What Supabase Auth puts on `/auth/callback` when it refuses a Google sign-in, recorded on the local stack
  * (google-sign-in task 1.2). Every refusal carries `error=access_denied`, so the other two fields tell them apart:
  * - a cancel: no `error_code` at all and an empty `error_description`;
- * - a blocked account: `error_code` is `userBanned`;
- * - the Before User Created hook's refusal: `error_code` present but empty, `error_description` is
- *   `bannedSignUpDescription`.
+ * - a blocked account: `error_code=user_banned` (`userBanned`);
+ * - the Before User Created hook's refusal: `error_code` present but empty, `error_description=signup not allowed`
+ *   (`bannedSignUpDescription`).
  */
 export const GOOGLE_CALLBACK_ERROR = {
   accessDenied: "access_denied",
