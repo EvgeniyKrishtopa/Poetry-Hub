@@ -79,6 +79,17 @@ describe("GoogleSignInButton", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(GOOGLE_FAILED_MESSAGE);
   });
 
+  // implements FR-G1 of google-sign-in: the connection drops between the press and the call
+  it("shows the try-again alert when the call itself fails", async () => {
+    vi.mocked(startGoogleSignInAction).mockRejectedValue(new TypeError("fetch failed"));
+    render(<GoogleSignInButton from="sign-in" />);
+
+    await press();
+
+    expect(screen.getByRole("alert")).toHaveTextContent(GOOGLE_FAILED_MESSAGE);
+    expect(getButton()).toBeEnabled();
+  });
+
   // implements FR-G1, FR-G4 of google-sign-in
   it("shows the page's notice before the button is pressed", () => {
     render(<GoogleSignInButton from="sign-in" initialError={GOOGLE_CANCELLED_MESSAGE} />);
