@@ -27,6 +27,9 @@ export const GOOGLE_CALLBACK_ERROR = {
 /** Where a Google sign-in started, carried as `from` on the callback address (google-sign-in design D2). */
 export const GOOGLE_FLOW = { signIn: "sign-in", signUp: "sign-up" } as const;
 
+/** The search parameter on the callback address that carries a `GOOGLE_FLOW` value. */
+export const GOOGLE_FLOW_PARAM = "from";
+
 /** The `error` values `/auth/callback` puts on `/login` and `/signup` (google-sign-in design D5). */
 export const GOOGLE_ERROR = {
   cancelled: "google-cancelled",
@@ -36,6 +39,9 @@ export const GOOGLE_ERROR = {
 
 /** The `auth-notice` value `/auth/callback` puts on `/` after a Google sign-up into an existing account (design D5). */
 export const AUTH_NOTICE = { accountExists: "account-exists" } as const;
+
+/** The search parameter on `/` that carries an `AUTH_NOTICE` value. */
+export const AUTH_NOTICE_PARAM = "auth-notice";
 
 /** The longest gap between an account's creation and this sign-in that still reads as a new account (design D4). */
 export const NEW_ACCOUNT_WINDOW_MS = 60_000;

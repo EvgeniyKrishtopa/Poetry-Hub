@@ -12,10 +12,6 @@
     "src/features/work-ordering/**",
     // Temporary, google-sign-in scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new files, so knip still sees the rest of the auth feature. Task 5.3 removes these entries.
-    "src/features/auth/model/classify-google-callback-error.ts",
-    "src/features/auth/model/did-account-exist.ts",
-    "src/features/auth/model/google-callback-target.ts",
-    "src/features/auth/dal/finish-google-sign-in.ts",
     "src/features/auth/components/GoogleSignInButton/**",
     "src/features/auth/components/GoogleSignInPanel/**",
     "src/features/auth/components/AuthNotice/**"
@@ -26,7 +22,9 @@
     "src/features/auth/model/auth.constants.ts": ["exports"],
     "src/features/auth/model/auth.types.ts": ["types"],
     "src/features/auth/model/auth-messages.ts": ["exports"],
-    "src/features/auth/actions/auth.actions.ts": ["exports"]
+    "src/features/auth/actions/auth.actions.ts": ["exports"],
+    // Temporary, google-sign-in group 2: the callback's two exports wait for the route in group 3, which removes this entry.
+    "src/features/auth/index.ts": ["exports"]
   },
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
