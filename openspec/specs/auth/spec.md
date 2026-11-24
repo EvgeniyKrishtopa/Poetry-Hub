@@ -4,12 +4,17 @@
 TBD - created by archiving change add-supabase-auth. Update Purpose after archive.
 ## Requirements
 ### Requirement: Sign-in page (FR-1)
-`/login` SHALL render a sign-in form with a labelled email field, a labelled password field, a "Войти" submit button, and a link to `/signup`.
+`/login` SHALL render a sign-in form with a labelled email field, a labelled password field, a "Войти" submit button, and a link to `/signup`. Below the form it SHALL render a "Войти через Google" button (google-sign-in FR-G1), shown to every visitor, separated from the form by the word "или".
 
 #### Scenario: Sign-in page renders
 - **GIVEN** the app is running
 - **WHEN** a browser requests `/login`
 - **THEN** the page shows a textbox labelled "Электронная почта", a password input labelled "Пароль", a button "Войти", and a link with `href` `/signup`
+
+#### Scenario: Google button on the sign-in page
+- **GIVEN** the app is running and no session exists
+- **WHEN** a browser requests `/login`, including after signing out of an account made through Google
+- **THEN** the page shows an enabled button "Войти через Google" below the sign-in form's "Войти" button
 
 ### Requirement: Sign-in submission (FR-2)
 The sign-in form SHALL call `signInAction`. The action SHALL validate input on the server against `signInSchema` (a valid email and a non-empty password) before any Supabase call. Invalid input SHALL return field errors, which the form shows. Valid input SHALL call Supabase `signInWithPassword`. On success the action SHALL set the session cookies and redirect to `/`. On failure the form SHALL show one form-level message chosen by failure kind. The wrong-credentials message SHALL be the same whether or not the email is registered.
@@ -52,12 +57,22 @@ The sign-in form SHALL call `signInAction`. The action SHALL validate input on t
 - **THEN** the alert reads "Что-то пошло не так. Попробуйте ещё раз."
 
 ### Requirement: Sign-up page (FR-3)
-`/signup` SHALL render a sign-up form with a labelled email field, a labelled password field, a "Зарегистрироваться" submit button, and a link to `/login`.
+`/signup` SHALL render a sign-up form with a labelled email field, a labelled password field, a "Зарегистрироваться" submit button, and a link to `/login`. Below the form it SHALL render a "Зарегистрироваться через Google" button (google-sign-in FR-G1), separated from the form by the word "или". `/signup` SHALL show the google-sign-in notice above the Google button for its `error` parameter (`google-cancelled`, `google-failed`, `google-blocked`) and no alert for any other value.
 
 #### Scenario: Sign-up page renders
 - **GIVEN** the app is running
 - **WHEN** a browser requests `/signup`
 - **THEN** the page shows labelled "Электронная почта" and "Пароль" inputs, a button "Зарегистрироваться", and a link with `href` `/login`
+
+#### Scenario: Google button on the sign-up page
+- **GIVEN** the app is running
+- **WHEN** a browser requests `/signup`
+- **THEN** the page shows an enabled button "Зарегистрироваться через Google" below the sign-up form's "Зарегистрироваться" button
+
+#### Scenario: Unknown error value
+- **GIVEN** the app is running
+- **WHEN** a browser requests `/signup?error=anything-else`
+- **THEN** no alert is shown
 
 ### Requirement: Sign-up submission (FR-4)
 The sign-up form SHALL call `signUpAction`. The action SHALL validate on the server against `signUpSchema` (a valid email and a password of at least 8 characters, `MIN_PASSWORD_LENGTH`). Valid input SHALL call Supabase `signUp`. Success SHALL replace the form with a "Проверьте почту" message naming the address, and the message SHALL be identical whether or not the address was already registered. A `weak_password` error SHALL show on the password field. Rate limit, missing config, other failures, and server errors SHALL show form-level messages.
@@ -100,7 +115,7 @@ The sign-up form SHALL call `signUpAction`. The action SHALL validate on the ser
 - A missing hash, any other `type`, a failed verification, or missing config SHALL redirect with 303 to `/login?error=confirm-failed`.
 - The handler SHALL read no redirect-target parameter.
 
-`/login` SHALL show "Ссылка для подтверждения недействительна или устарела. Войдите или зарегистрируйтесь снова, чтобы получить новую ссылку." when `error=confirm-failed` is present.
+`/login` SHALL show "Ссылка для подтверждения недействительна или устарела. Войдите или зарегистрируйтесь снова, чтобы получить новую ссылку." when `error=confirm-failed` is present (inside the sign-in form, as before), the google-sign-in notice above the Google button for `google-cancelled`, `google-failed` and `google-blocked`, and no alert for any other value.
 
 #### Scenario: Valid link
 - **GIVEN** `verifyOtp` succeeds
@@ -126,6 +141,11 @@ The sign-up form SHALL call `signUpAction`. The action SHALL validate on the ser
 - **GIVEN** the app is running
 - **WHEN** a browser requests `/login?error=confirm-failed`
 - **THEN** the confirm-failed message is shown in a `role="alert"` element
+
+#### Scenario: Google notice on the sign-in page
+- **GIVEN** the app is running
+- **WHEN** a browser requests `/login?error=google-failed`
+- **THEN** "Не удалось войти через Google. Попробуйте ещё раз." is shown in a `role="alert"` element
 
 ### Requirement: Session refresh in the proxy (FR-6)
 The proxy SHALL refresh the Supabase session on every request its matcher lets through. It SHALL call `getClaims()` through a server client that writes refreshed cookies to the forwarded request and the response. Every response the proxy returns SHALL carry the four security headers. A response that sets at least one session cookie SHALL carry `Cache-Control: private, no-store`. The refresh SHALL also report whether that same `getClaims()` call found a valid session, or that it couldn't tell (missing config, a retryable network or outage error, returned or thrown), using the same reading of the result as the page gate, so the proxy can gate routes (add-author-profiles FR-19) with no additional Supabase call.
