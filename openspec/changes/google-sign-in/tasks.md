@@ -22,7 +22,8 @@
 
 ## 3. The callback route <!-- judgement-heavy -->
 
-- [ ] 3.1 (FR-G3, FR-G4, FR-G5, FR-G6, FR-G7) `src/app/auth/callback/route.ts`: GET only; reads the search parameters, calls `finishGoogleSignIn` and `getGoogleCallbackTarget`, answers 303 to that target with `Cache-Control: private, no-store`. Tests in `src/app/auth/callback/tests/` (like `/auth/confirm`'s): each outcome's target and status, the header on every outcome, `next=https://evil.example` ignored, no exchange without a code, and the route module exporting only `GET` (Next answers 405 to any other method). Verify `npm run build` lists `/auth/callback` as a dynamic route.
+- [x] 3.1 (FR-G3, FR-G4, FR-G5, FR-G6, FR-G7) `src/app/auth/callback/route.ts`: GET only; reads the search parameters, calls `finishGoogleSignIn` and `getGoogleCallbackTarget`, answers 303 to that target with `Cache-Control: private, no-store`. Tests in `src/app/auth/callback/tests/` (like `/auth/confirm`'s): each outcome's target and status, the header on every outcome, `next=https://evil.example` ignored, no exchange without a code, and the route module exporting only `GET` (Next answers 405 to any other method). Verify `npm run build` lists `/auth/callback` as a dynamic route.
+  - Done 2026-11-24: the route reads Supabase's four parameter names as its own named constants, like `/auth/confirm` (owner); `from` comes from `GOOGLE_FLOW_PARAM`, now in the feature's index, so the action and the route share one name. The tests mock only the Supabase server client, so the real DAL, classifier and target run through the route. `npm run build` lists `/auth/callback` as `ƒ`. The group 2 knip ignore for `src/features/auth/index.ts` is removed.
 
 ## 4. Buttons and notices <!-- judgement-heavy -->
 

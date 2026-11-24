@@ -22,9 +22,7 @@
     "src/features/auth/model/auth.constants.ts": ["exports"],
     "src/features/auth/model/auth.types.ts": ["types"],
     "src/features/auth/model/auth-messages.ts": ["exports"],
-    "src/features/auth/actions/auth.actions.ts": ["exports"],
-    // Temporary, google-sign-in group 2: the callback's two exports wait for the route in group 3, which removes this entry.
-    "src/features/auth/index.ts": ["exports"]
+    "src/features/auth/actions/auth.actions.ts": ["exports"]
   },
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
