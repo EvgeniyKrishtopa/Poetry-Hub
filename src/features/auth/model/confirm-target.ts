@@ -1,4 +1,13 @@
+import { RESET_PASSWORD_PATH, SIGN_IN_PATH } from "@/shared/config/account-paths";
+import { HOME_PATH } from "@/shared/config/constants";
+
+import { CONFIRM_FAILED_ERROR, RECOVERY_FAILED_ERROR } from "./auth.constants";
 import type { ConfirmOutcome } from "./auth.types";
+
+const CONFIRM_TYPE = { signUp: "email", recovery: "recovery" } as const;
+
+const CONFIRM_FAILED_TARGET = `${SIGN_IN_PATH}?error=${CONFIRM_FAILED_ERROR}`;
+const RECOVERY_FAILED_TARGET = `${SIGN_IN_PATH}?error=${RECOVERY_FAILED_ERROR}`;
 
 /**
  * Where `/auth/confirm` sends the browser: always one of a few fixed paths, never a request parameter.
@@ -6,7 +15,9 @@ import type { ConfirmOutcome } from "./auth.types";
  * failed sign-up link (password-recovery design D1, auth FR-5).
  */
 export function getConfirmTarget(type: string | null, outcome: ConfirmOutcome): string {
-  void type;
-  void outcome;
-  throw new Error("not implemented");
+  if (type === CONFIRM_TYPE.recovery) {
+    return outcome === "verified" ? RESET_PASSWORD_PATH : RECOVERY_FAILED_TARGET;
+  }
+  if (type === CONFIRM_TYPE.signUp && outcome === "verified") return HOME_PATH;
+  return CONFIRM_FAILED_TARGET;
 }

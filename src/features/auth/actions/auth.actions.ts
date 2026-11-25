@@ -4,11 +4,16 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { RESET_PASSWORD_PATH } from "@/shared/config/account-paths";
+import { SESSION_STATE } from "@/shared/config/constants";
 import { getSiteUrl } from "@/shared/lib/seo";
 import { SupabaseConfigError } from "@/shared/lib/supabase";
+import { describeAuthError } from "@/shared/lib/supabase/claims";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
-import { GOOGLE_FLOW_PARAM } from "../model/auth.constants";
+import { getSessionState } from "../dal/current-user";
+import { consumePasswordResetAllowance } from "../dal/password-reset-allowance";
+import { GOOGLE_FLOW_PARAM, RESET_STATUS, RESET_STATUS_PARAM } from "../model/auth.constants";
 import type {
   AuthFailedResult,
   AuthFailure,
@@ -17,9 +22,12 @@ import type {
   RecoveryRequestResult,
   SignUpResult,
   StartGoogleSignInResult,
+  UpdatePasswordFailure,
   UpdatePasswordResult,
 } from "../model/auth.types";
 import { classifyAuthError, isBannedSignUpRejection } from "../model/classify-auth-error";
+import { classifyRecoveryRequestError } from "../model/classify-recovery-request-error";
+import { classifyUpdatePasswordError } from "../model/classify-update-password-error";
 import { newPasswordSchema, recoveryRequestSchema, signInSchema, signUpSchema } from "../model/credentials.schema";
 import { getGoogleLogLine } from "../model/google-log-line";
 import { startGoogleSignInSchema } from "../model/google-sign-in.schema";
@@ -109,24 +117,78 @@ export const signOutAction = authActionClient.action(async (): Promise<SignOutRe
   return { ok: true };
 });
 
+const RECOVERY_SENT: RecoveryRequestResult = { status: "sent" };
+
 /**
  * Asks Supabase to send a recovery letter (password-recovery design D3). Receives the email only and answers `sent`
- * for every outcome that depends on the address.
+ * for every outcome that depends on the address. The letter has no counter of the app's own: Supabase limits it.
  */
 export const requestRecoveryAction = authActionClient
   .inputSchema(recoveryRequestSchema)
-  .action(async (): Promise<RecoveryRequestResult> => {
-    throw new Error("not implemented");
+  .action(async ({ parsedInput }): Promise<RecoveryRequestResult> => {
+    const client = await createClientOrFailure();
+    // The only failure `createClientOrFailure` returns is a missing config.
+    if ("failure" in client) return { status: "failed", failure: "unavailable" };
+
+    const { error } = await client.supabase.auth.resetPasswordForEmail(parsedInput.email);
+    if (!error) return RECOVERY_SENT;
+
+    const answer = classifyRecoveryRequestError(error);
+    if (answer !== "sent") return { status: "failed", failure: answer };
+
+    // Answered `sent` so the answer never depends on the address; the operator still sees one line, no address.
+    console.warn("[auth] recovery letter refused: email send limit");
+    return RECOVERY_SENT;
   });
+
+function updatePasswordFailed(failure: UpdatePasswordFailure): UpdatePasswordResult {
+  return { status: "failed", failure };
+}
+
+/** Ends the account's sessions on every device. A throw counts as a failure: the password is already changed. */
+async function endAllSessions(supabase: SupabaseClient): Promise<SignOutResult> {
+  try {
+    const { error } = await supabase.auth.signOut({ scope: "global" });
+    if (!error) return { ok: true };
+
+    console.warn(`[auth] sign-out after a password change failed: ${describeAuthError(error)}`);
+    return { ok: false };
+  } catch (error) {
+    console.warn(`[auth] sign-out after a password change failed: ${describeAuthError(error)}`);
+    return { ok: false };
+  }
+}
+
+const RESET_UPDATED_TARGET = `${RESET_PASSWORD_PATH}?${RESET_STATUS_PARAM}=${RESET_STATUS.updated}`;
+const RESET_SIGN_OUT_FAILED_TARGET = `${RESET_PASSWORD_PATH}?${RESET_STATUS_PARAM}=${RESET_STATUS.updatedSignOutFailed}`;
 
 /**
  * Sets the recovery session's new password (password-recovery design D5): schema, session, allowance, update,
  * global sign-out, then a redirect to `/reset-password?status=…`. Success never returns; failures are values.
+ * No `refresh()`: the page after the change must not need the session the sign-out just ended.
  */
 export const updatePasswordAction = authActionClient
   .inputSchema(newPasswordSchema)
-  .action(async (): Promise<UpdatePasswordResult> => {
-    throw new Error("not implemented");
+  .action(async ({ parsedInput }): Promise<UpdatePasswordResult> => {
+    const session = await getSessionState();
+    if (session.state === SESSION_STATE.signedOut) return updatePasswordFailed("link-expired");
+    if (session.state === SESSION_STATE.unknown) return updatePasswordFailed("unavailable");
+
+    const allowance = await consumePasswordResetAllowance();
+    if (allowance === "refused") return updatePasswordFailed("rate-limited");
+    // Fails closed: a check that could not tell never lets the update through.
+    if (allowance === "failed") return updatePasswordFailed("unknown");
+
+    const client = await createClientOrFailure();
+    if ("failure" in client) return updatePasswordFailed("unavailable");
+
+    const { error } = await client.supabase.auth.updateUser({ password: parsedInput.password });
+    if (error) return updatePasswordFailed(classifyUpdatePasswordError(error));
+
+    const signOut = await endAllSessions(client.supabase);
+    const target = signOut.ok ? RESET_UPDATED_TARGET : RESET_SIGN_OUT_FAILED_TARGET;
+    // Outside every try: `redirect` throws NEXT_REDIRECT, which a catch would swallow (Gate 1 P1).
+    redirect(target);
   });
 
 /**

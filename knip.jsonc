@@ -12,10 +12,6 @@
     "src/features/work-ordering/**",
     // Temporary, password-recovery scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new files, so knip still sees the rest of the auth feature. Task 6.3 removes these entries.
-    "src/features/auth/model/confirm-target.ts",
-    "src/features/auth/model/classify-recovery-request-error.ts",
-    "src/features/auth/dal/confirm-recovery.ts",
-    "src/features/auth/dal/password-reset-allowance.ts",
     "src/features/auth/components/RecoveryOffer/**",
     "src/features/auth/components/ResetPasswordForm/**",
     "src/features/auth/components/ResetPasswordPage/**",
