@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 
 import { SIGN_IN_PATH } from "@/shared/config/account-paths";
 import { useConnection } from "@/shared/lib/network/use-connection";
@@ -13,10 +13,13 @@ import {
   NEW_PASSWORD_SUBMIT_LABEL,
 } from "../../model/auth-messages";
 import type { ResetPasswordFormState } from "../../model/auth.types";
+import { focusFormField } from "../focus-form-field";
 
 import { submitNewPassword } from "./submit-new-password";
 
 const INITIAL_STATE: ResetPasswordFormState = { status: "idle" };
+/** The password input's name; the field below and the focus after a failed save use the same one. */
+const PASSWORD_FIELD_NAME = "password";
 
 /**
  * The new-password form: one field, a submit button, field and form errors, and the connection guard. When the
@@ -27,6 +30,13 @@ const INITIAL_STATE: ResetPasswordFormState = { status: "idle" };
 export function ResetPasswordForm() {
   const [state, formAction, pending] = useActionState(submitNewPassword, INITIAL_STATE);
   const { status, isOnline } = useConnection();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // The field is disabled while the save is pending, which drops its focus; after a failed save it is enabled
+  // again in the same commit, so the focus goes back to it (a keyboard or screen-reader user stays in place).
+  useEffect(() => {
+    if (state.status !== "idle") focusFormField(formRef.current, PASSWORD_FIELD_NAME);
+  }, [state]);
 
   if (state.status === "failed" && state.failure === "link-expired") {
     return (
@@ -45,12 +55,12 @@ export function ResetPasswordForm() {
 
   return (
     // noValidate: the server-side schema is the only validation, so its errors are what the reader sees.
-    <form action={formAction} noValidate aria-busy={pending} className="flex w-full flex-col gap-4">
+    <form ref={formRef} action={formAction} noValidate aria-busy={pending} className="flex w-full flex-col gap-4">
       {formError && <Alert tone="danger">{formError}</Alert>}
       <ConnectionNotice status={status} />
       <TextField
         label={NEW_PASSWORD_LABEL}
-        name="password"
+        name={PASSWORD_FIELD_NAME}
         type="password"
         autoComplete="new-password"
         disabled={disabled}

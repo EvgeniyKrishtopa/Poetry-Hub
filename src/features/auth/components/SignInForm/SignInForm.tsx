@@ -8,15 +8,17 @@ import { Alert, Button, TextField } from "@/shared/ui";
 
 import { RECOVERY_SENT_MESSAGE } from "../../model/auth-messages";
 import type { RecoveryOfferResult, RecoveryOfferState, SignInFormState } from "../../model/auth.types";
+import { focusFormField } from "../focus-form-field";
 import { RecoveryOffer } from "../RecoveryOffer/RecoveryOffer";
 
-import { focusEmailField } from "./focus-email-field";
 import { getRecoveryView } from "./get-recovery-view";
 import type { SignInFormProps } from "./SignInForm.types";
 import { submitRecoveryRequest } from "./submit-recovery-request";
 import { submitSignIn } from "./submit-sign-in";
 
 const INITIAL_STATE: SignInFormState = { status: "idle", email: "" };
+/** The email input's name; the field below and the focus after an invalid address use the same one. */
+const EMAIL_FIELD_NAME = "email";
 const IDLE_RECOVERY: RecoveryOfferResult = { status: "idle" };
 const INITIAL_RECOVERY: RecoveryOfferState = { attempt: 0, result: IDLE_RECOVERY };
 
@@ -40,7 +42,7 @@ export function SignInForm({ initialError, offerOnLoad = false }: SignInFormProp
 
   async function requestRecovery(): Promise<RecoveryOfferState> {
     const result = await submitRecoveryRequest(email);
-    if (result.status === "invalid") focusEmailField(formRef.current);
+    if (result.status === "invalid") focusFormField(formRef.current, EMAIL_FIELD_NAME);
     return { attempt, result };
   }
   const [recoveryState, recoveryAction, recoveryPending] = useActionState(requestRecovery, INITIAL_RECOVERY);
@@ -68,7 +70,7 @@ export function SignInForm({ initialError, offerOnLoad = false }: SignInFormProp
       {view.offerVisible && <RecoveryOffer showText={!view.sentNotice} busy={busy} onRequest={requestLetter} />}
       <TextField
         label="Электронная почта"
-        name="email"
+        name={EMAIL_FIELD_NAME}
         type="email"
         autoComplete="email"
         value={email}

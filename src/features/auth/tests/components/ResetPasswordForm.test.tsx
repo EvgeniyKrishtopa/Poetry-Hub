@@ -173,3 +173,18 @@ describe("ResetPasswordForm", () => {
     expect(screen.queryByText(CONNECTION_NOTICE_MESSAGES.offline)).not.toBeInTheDocument();
   });
 });
+
+describe("ResetPasswordForm focus after a failed save", () => {
+  // implements NFR-2 of password-recovery
+  it.each<[string, Response]>([
+    ["a field error", { data: { status: "failed", failure: "weak-password" } }],
+    ["a form failure", { data: { status: "failed", failure: "unknown" } }],
+  ])("returns the focus to the password field after %s", async (_label, response) => {
+    answer(response);
+    render(<ResetPasswordForm />);
+
+    await submit();
+
+    await waitFor(() => expect(field()).toHaveFocus());
+  });
+});
