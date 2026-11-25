@@ -151,12 +151,15 @@ async function endAllSessions(supabase: SupabaseClient): Promise<SignOutResult> 
     const { error } = await supabase.auth.signOut({ scope: "global" });
     if (!error) return { ok: true };
 
-    console.warn(`[auth] sign-out after a password change failed: ${describeAuthError(error)}`);
-    return { ok: false };
+    return logSignOutFailure(error);
   } catch (error) {
-    console.warn(`[auth] sign-out after a password change failed: ${describeAuthError(error)}`);
-    return { ok: false };
+    return logSignOutFailure(error);
   }
+}
+
+function logSignOutFailure(error: unknown): SignOutResult {
+  console.warn(`[auth] sign-out after a password change failed: ${describeAuthError(error)}`);
+  return { ok: false };
 }
 
 const RESET_UPDATED_TARGET = `${RESET_PASSWORD_PATH}?${RESET_STATUS_PARAM}=${RESET_STATUS.updated}`;
