@@ -15,6 +15,7 @@ import {
   ADMIN_PATH,
   ADMIN_VIOLATIONS_PATH,
   POEM_MANAGEMENT_PATH,
+  RESET_PASSWORD_PATH,
   SIGN_IN_PATH,
   SIGN_UP_PATH,
 } from "@/shared/config/account-paths";
@@ -41,6 +42,7 @@ export const STATIC_ROUTES: readonly RouteRow[] = [
   { path: NEW_COLLECTION_PATH, label: COLLECTION_TRAIL_LABELS.newCollection },
   { path: SIGN_IN_PATH, label: BREADCRUMB_LABELS.signIn },
   { path: SIGN_UP_PATH, label: BREADCRUMB_LABELS.signUp },
+  { path: RESET_PASSWORD_PATH, label: BREADCRUMB_LABELS.resetPassword },
   { path: ABOUT_PATH, label: BREADCRUMB_LABELS.about },
   { path: PRIVACY_PATH, label: BREADCRUMB_LABELS.privacyPolicy },
   // The slot page shows this trail to an admin only (admin-moderation design D14).

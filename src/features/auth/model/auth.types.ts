@@ -1,4 +1,4 @@
-import type { GOOGLE_FLOW, SIGN_OUT_STATUS } from "./auth.constants";
+import type { GOOGLE_FLOW, RESET_STATUS, SIGN_OUT_STATUS } from "./auth.constants";
 
 /** Why an auth call failed, in the terms the forms show (design D7). */
 export type AuthFailure =
@@ -7,10 +7,12 @@ export type AuthFailure =
   | "rate-limited"
   | "restricted"
   | "weak-password"
+  | "same-password"
   | "unavailable"
   | "unknown";
 
-export type AuthFlow = "sign-in" | "sign-up";
+/** The forms and actions that own their own failure texts; a flow never borrows another's wording (design D7). */
+export type AuthFlow = "sign-in" | "sign-up" | "recovery-request" | "update-password";
 
 type CredentialField = "email" | "password";
 
@@ -103,3 +105,54 @@ export interface StartGoogleSignInResult {
 
 /** `GoogleSignInButton`'s action state: nothing pressed yet, or a failed start (design D6, D7). */
 export type GoogleSignInButtonState = { readonly status: "idle" } | StartGoogleSignInResult;
+
+/** Why a letter request failed: the only failures the request flow can produce (password-recovery design D3). */
+export type RecoveryRequestFailure = "rate-limited" | "unavailable" | "unknown";
+
+/** Why a password change failed: the request failures plus the ones only the update flow has (design D5). */
+export type UpdatePasswordFailure = RecoveryRequestFailure | "link-expired" | "same-password" | "weak-password";
+
+/** `requestRecoveryAction`'s answer: `sent` whatever the address holds, never a hint about it (design D3). */
+export type RecoveryRequestResult =
+  | { readonly status: "sent" }
+  | { readonly status: "invalid" }
+  | { readonly status: "failed"; readonly failure: RecoveryRequestFailure };
+
+/** The recovery request's outcome as the sign-in form holds it: nothing asked yet, or the action's answer (design D2). */
+export type RecoveryOfferResult = { readonly status: "idle" } | RecoveryRequestResult;
+
+/** A recovery result tagged with the sign-in attempt it was asked in; an older attempt's result is ignored (design D2). */
+export interface RecoveryOfferState {
+  readonly attempt: number;
+  readonly result: RecoveryOfferResult;
+}
+
+/** Changing the password never returns on success: the action redirects to `/reset-password?status=…` (design D5). */
+export interface UpdatePasswordResult {
+  readonly status: "failed";
+  readonly failure: UpdatePasswordFailure;
+}
+
+/**
+ * The new-password form's state: nothing sent yet, a message under the field (short, weak or repeated password), or
+ * a failure shown as an alert above it (design D5, D7). It never holds the password.
+ */
+export type ResetPasswordFormState =
+  | { readonly status: "idle" }
+  | { readonly status: "invalid"; readonly fieldError: string }
+  | { readonly status: "failed"; readonly failure: UpdatePasswordFailure };
+
+/** How a link's `verifyOtp` ended; `/auth/confirm` turns it into a redirect target (design D1). */
+export type ConfirmOutcome = "verified" | "failed";
+
+/** A `RESET_STATUS` value: what `/reset-password` shows after a successful change (design D4, D5). */
+export type ResetStatus = (typeof RESET_STATUS)[keyof typeof RESET_STATUS];
+
+/** `consume_write_allowance("password_reset")`'s answer; a refusal is a value, a failed check never allows (design D5). */
+export type PasswordResetAllowance = "allowed" | "refused" | "failed";
+
+/**
+ * The caller's own `is_restricted()` answer for `/reset-password` (design D4, D8). `unauthenticated` is a token that
+ * expired since the session read; `unknown` is any other failure and fails closed.
+ */
+export type RestrictionCheck = "restricted" | "allowed" | "unauthenticated" | "unknown";

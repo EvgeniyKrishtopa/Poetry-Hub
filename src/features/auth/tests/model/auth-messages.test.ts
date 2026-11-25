@@ -8,10 +8,21 @@ import {
   getGoogleErrorMessage,
   getLoginErrorMessage,
   GOOGLE_BUTTON_LABEL,
+  GOOGLE_HINT,
   GOOGLE_SEPARATOR_LABEL,
+  BACK_TO_SIGN_IN_LABEL,
+  NEW_PASSWORD_LABEL,
+  NEW_PASSWORD_SUBMIT_LABEL,
+  PASSWORD_RESET_DONE_MESSAGE,
+  PASSWORD_RESET_DONE_MESSAGES,
+  PASSWORD_RESET_SIGN_OUT_FAILED_MESSAGE,
+  RECOVERY_FAILED_MESSAGE,
+  RECOVERY_OFFER_BUTTON_LABEL,
+  RECOVERY_OFFER_TEXT,
+  RECOVERY_SENT_MESSAGE,
   SIGN_OUT_FAILED_MESSAGE,
 } from "../../model/auth-messages";
-import type { AuthFailure, AuthFlow } from "../../model/auth.types";
+import type { AuthFailure, AuthFlow, UpdatePasswordFailure } from "../../model/auth.types";
 
 const GENERIC = "Что-то пошло не так. Попробуйте ещё раз.";
 
@@ -104,5 +115,111 @@ describe("getGoogleErrorMessage", () => {
     ["a repeated param", ["google-failed", "google-blocked"]],
   ])("gives no text for %s", (_label, error) => {
     expect(getGoogleErrorMessage(error)).toBeUndefined();
+  });
+});
+
+describe("recovery flows' failure texts", () => {
+  const RATE_LIMITED = "Слишком много попыток. Попробуйте через несколько минут.";
+  const RECOVERY_UNAVAILABLE = "Восстановление пароля сейчас недоступно.";
+
+  // implements FR-2, FR-8, FR-9 of password-recovery
+  it.each<[AuthFlow, AuthFailure | UpdatePasswordFailure, string]>([
+    ["recovery-request", "rate-limited", RATE_LIMITED],
+    ["recovery-request", "unavailable", RECOVERY_UNAVAILABLE],
+    ["recovery-request", "unknown", GENERIC],
+    ["update-password", "rate-limited", RATE_LIMITED],
+    ["update-password", "unavailable", RECOVERY_UNAVAILABLE],
+    ["update-password", "link-expired", "Ссылка для восстановления устарела. Запросите новое письмо."],
+    ["update-password", "same-password", "Новый пароль должен отличаться от прежнего."],
+    ["update-password", "weak-password", "Придумайте пароль надёжнее."],
+    ["update-password", "unknown", GENERIC],
+  ])("%s × %s → its text", (flow, failure, expected) => {
+    expect(getFailureMessage(flow, failure)).toBe(expected);
+  });
+
+  // implements FR-10 of password-recovery
+  it.each<[AuthFlow, AuthFailure | UpdatePasswordFailure]>([
+    ["recovery-request", "restricted"],
+    ["recovery-request", "invalid-credentials"],
+    ["recovery-request", "link-expired"],
+    ["update-password", "restricted"],
+    ["update-password", "invalid-credentials"],
+    ["update-password", "email-not-confirmed"],
+  ])("unlisted pair %s × %s → the generic text, never a block wording", (flow, failure) => {
+    expect(getFailureMessage(flow, failure)).toBe(GENERIC);
+  });
+
+  // implements FR-5 of password-recovery
+  it("leaves the sign-in and sign-up flows without the recovery-only kinds", () => {
+    expect(getFailureMessage("sign-in", "same-password")).toBe(GENERIC);
+    expect(getFailureMessage("sign-up", "same-password")).toBe(GENERIC);
+    expect(getFailureMessage("sign-in", "link-expired")).toBe(GENERIC);
+  });
+
+  // implements FR-5 of password-recovery
+  it("repeats the sign-up text for a weak password in the update flow", () => {
+    expect(getFailureMessage("update-password", "weak-password")).toBe(getFailureMessage("sign-up", "weak-password"));
+  });
+
+  // implements FR-10 of password-recovery
+  it("never says that an address or account is blocked", () => {
+    const texts = [
+      RECOVERY_FAILED_MESSAGE,
+      RECOVERY_SENT_MESSAGE,
+      PASSWORD_RESET_DONE_MESSAGE,
+      PASSWORD_RESET_SIGN_OUT_FAILED_MESSAGE,
+      ...(["rate-limited", "unavailable", "link-expired", "same-password", "weak-password", "unknown"] as const).map(
+        (failure) => getFailureMessage("update-password", failure),
+      ),
+      ...(["rate-limited", "unavailable", "unknown"] as const).map((failure) =>
+        getFailureMessage("recovery-request", failure),
+      ),
+    ];
+
+    for (const text of texts) expect(text).not.toMatch(/заблокирован|блокиров/i);
+  });
+});
+
+describe("recovery standalone texts", () => {
+  // implements FR-1, FR-2, FR-3, FR-4, FR-6 of password-recovery
+  it("match the spec's exact texts", () => {
+    expect(RECOVERY_FAILED_MESSAGE).toBe(
+      "Ссылка для восстановления недействительна или устарела. Введите адрес электронной почты и запросите новое письмо.",
+    );
+    expect(RECOVERY_OFFER_TEXT).toBe(
+      "Забыли пароль? Мы можем отправить на этот адрес письмо со ссылкой для восстановления.",
+    );
+    expect(RECOVERY_OFFER_BUTTON_LABEL).toBe("Отправить письмо");
+    expect(RECOVERY_SENT_MESSAGE).toBe(
+      "Если для этого адреса есть аккаунт, мы отправили письмо со ссылкой для восстановления пароля. Ссылка действует 1 час.",
+    );
+    expect(NEW_PASSWORD_LABEL).toBe("Новый пароль");
+    expect(NEW_PASSWORD_SUBMIT_LABEL).toBe("Сохранить пароль");
+    expect(BACK_TO_SIGN_IN_LABEL).toBe("Перейти ко входу");
+    expect(PASSWORD_RESET_DONE_MESSAGE).toBe("Пароль изменён. Войдите с новым паролем.");
+    expect(PASSWORD_RESET_SIGN_OUT_FAILED_MESSAGE).toBe(
+      "Пароль изменён, но завершить прежние сессии не удалось. Если пароль знал кто-то ещё, смените его ещё раз позже.",
+    );
+  });
+});
+
+describe("recovery-failed login alert and the Google hints", () => {
+  // implements FR-3 of password-recovery
+  it("maps recovery-failed to the recovery-failed text", () => {
+    expect(getLoginErrorMessage("recovery-failed")).toBe(RECOVERY_FAILED_MESSAGE);
+  });
+
+  // implements FR-14 of password-recovery
+  it("words the two Google hints as the spec says, one per page", () => {
+    expect(GOOGLE_HINT["sign-in"]).toBe("Регистрировались через Google? Войдите кнопкой «Войти через Google».");
+    expect(GOOGLE_HINT["sign-up"]).toBe(
+      "Уже регистрировались через Google? Нажмите «Зарегистрироваться через Google»: вы войдёте в тот же аккаунт.",
+    );
+  });
+
+  // implements FR-6 of password-recovery
+  it("has one done notice per status value", () => {
+    expect(PASSWORD_RESET_DONE_MESSAGES.updated).toBe(PASSWORD_RESET_DONE_MESSAGE);
+    expect(PASSWORD_RESET_DONE_MESSAGES["updated-sign-out-failed"]).toBe(PASSWORD_RESET_SIGN_OUT_FAILED_MESSAGE);
   });
 });

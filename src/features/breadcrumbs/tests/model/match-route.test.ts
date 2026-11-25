@@ -9,6 +9,7 @@ import {
   ADMIN_PATH,
   ADMIN_VIOLATIONS_PATH,
   POEM_MANAGEMENT_PATH,
+  RESET_PASSWORD_PATH,
   SIGN_IN_PATH,
   SIGN_UP_PATH,
 } from "@/shared/config/account-paths";
@@ -37,6 +38,8 @@ describe("matchRoute", () => {
     ],
     [["login"], [{ kind: "current", label: "Вход" }]],
     [["signup"], [{ kind: "current", label: "Регистрация" }]],
+    // implements FR-11 of password-recovery
+    [["reset-password"], [{ kind: "current", label: "Новый пароль" }]],
     [["admin"], [{ kind: "current", label: "Админка" }]],
   ])("maps %j to its items without «Главная», parents as links and the last as current", (segments, items) => {
     expect(matchRoute(segments)).toEqual({ kind: "static", items });
@@ -110,6 +113,7 @@ describe("matchRoute", () => {
       NEW_COLLECTION_PATH,
       SIGN_IN_PATH,
       SIGN_UP_PATH,
+      RESET_PASSWORD_PATH,
       ABOUT_PATH,
       PRIVACY_PATH,
       ADMIN_PATH,

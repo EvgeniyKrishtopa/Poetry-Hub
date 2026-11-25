@@ -7,13 +7,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
-import { signInAction, signOutAction, signUpAction, startGoogleSignInAction } from "../../actions/auth.actions";
+import {
+  requestRecoveryAction,
+  signInAction,
+  signOutAction,
+  signUpAction,
+  startGoogleSignInAction,
+  updatePasswordAction,
+} from "../../actions/auth.actions";
+import { getSessionState } from "../../dal/current-user";
+import { consumePasswordResetAllowance } from "../../dal/password-reset-allowance";
 import { GENERIC_SERVER_ERROR } from "../../model/auth-messages";
 import type { AuthActionResult, SignInResult, SignOutResult, SignUpResult } from "../../model/auth.types";
 
 vi.mock("@/shared/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(),
 }));
+
+vi.mock("../../dal/current-user", () => ({ getSessionState: vi.fn() }));
+
+vi.mock("../../dal/password-reset-allowance", () => ({ consumePasswordResetAllowance: vi.fn() }));
 
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
@@ -35,7 +48,10 @@ const auth = {
   signUp: vi.fn(),
   signOut: vi.fn(),
   signInWithOAuth: vi.fn(),
+  resetPasswordForEmail: vi.fn(),
+  updateUser: vi.fn(),
 };
+const rpc = vi.fn();
 
 function authError(code: string, status: number, message: string = code) {
   return { code, status, name: "AuthApiError", message };
@@ -43,7 +59,7 @@ function authError(code: string, status: number, message: string = code) {
 
 describe("auth actions", () => {
   beforeEach(() => {
-    vi.mocked(createSupabaseServerClient).mockResolvedValue({ auth } as unknown as SupabaseClient);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue({ auth, rpc } as unknown as SupabaseClient);
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
@@ -210,6 +226,304 @@ describe("auth actions", () => {
 
       expect(result.serverError).toBe(GENERIC_SERVER_ERROR);
       expect(JSON.stringify(result)).not.toContain(PASSWORD);
+    });
+  });
+
+  describe("requestRecoveryAction", () => {
+    const SENT = { status: "sent" };
+
+    // implements FR-2 of password-recovery
+    it("returns validationErrors for an invalid address without calling Supabase", async () => {
+      const result = await requestRecoveryAction({ email: "not-an-email" });
+
+      expect(result.validationErrors?.fieldErrors.email).toHaveLength(1);
+      expect(createSupabaseServerClient).not.toHaveBeenCalled();
+      expect(auth.resetPasswordForEmail).not.toHaveBeenCalled();
+    });
+
+    // implements FR-2 of password-recovery
+    it("receives the address only and sends it to resetPasswordForEmail", async () => {
+      auth.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
+
+      const input = { email: EMAIL, password: PASSWORD } as { email: string };
+      const result = await requestRecoveryAction(input);
+
+      expect(auth.resetPasswordForEmail).toHaveBeenCalledExactlyOnceWith(EMAIL);
+      expect(result.data).toEqual(SENT);
+    });
+
+    // implements FR-2, FR-10 of password-recovery
+    it("answers the same sent for an address with an account, one without, and a blocked one", async () => {
+      auth.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
+
+      const known = await requestRecoveryAction({ email: "known@example.com" });
+      const unknown = await requestRecoveryAction({ email: "stranger@example.com" });
+      const blocked = await requestRecoveryAction({ email: "blocked@example.com" });
+
+      expect(known).toEqual({ data: SENT });
+      expect(unknown).toEqual(known);
+      expect(blocked).toEqual(known);
+    });
+
+    // implements FR-2 of password-recovery
+    it("answers sent again when the reader asks again", async () => {
+      auth.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
+
+      await requestRecoveryAction({ email: EMAIL });
+      const again = await requestRecoveryAction({ email: EMAIL });
+
+      expect(auth.resetPasswordForEmail).toHaveBeenCalledTimes(2);
+      expect(again.data).toEqual(SENT);
+    });
+
+    // implements FR-2 of password-recovery
+    it("answers sent for the per-address refusal (code over_email_send_rate_limit, status 429), logging one line without the address", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      auth.resetPasswordForEmail.mockResolvedValue({
+        data: null,
+        error: authError("over_email_send_rate_limit", 429, `email rate limit exceeded for ${EMAIL}`),
+      });
+
+      const result = await requestRecoveryAction({ email: EMAIL });
+
+      expect(result.data).toEqual(SENT);
+      expect(warn).toHaveBeenCalledExactlyOnceWith("[auth] recovery letter refused: email send limit");
+    });
+
+    // implements FR-2 of password-recovery
+    it.each([
+      ["over_request_rate_limit with 429", authError("over_request_rate_limit", 429), "rate-limited"],
+      ["a bare 429 with no code", { status: 429, name: "AuthApiError", message: "slow down" }, "rate-limited"],
+      ["an unlisted code with 429", authError("something_new", 429), "unknown"],
+      ["any other error", authError("unexpected_failure", 500), "unknown"],
+    ])("answers failed for %s", async (_label, error, failure) => {
+      auth.resetPasswordForEmail.mockResolvedValue({ data: null, error });
+
+      const result = await requestRecoveryAction({ email: EMAIL });
+
+      expect(result.data).toEqual({ status: "failed", failure });
+    });
+
+    // implements FR-2 of password-recovery
+    it("answers unavailable when the config is invalid", async () => {
+      vi.mocked(createSupabaseServerClient).mockRejectedValue(new SupabaseConfigError(["NEXT_PUBLIC_SUPABASE_URL"]));
+
+      const result = await requestRecoveryAction({ email: EMAIL });
+
+      expect(result.data).toEqual({ status: "failed", failure: "unavailable" });
+    });
+
+    // implements FR-2 of password-recovery
+    it("turns a throwing body into the generic serverError", async () => {
+      auth.resetPasswordForEmail.mockRejectedValue(new TypeError(`fetch failed for ${EMAIL}`));
+
+      const result = await requestRecoveryAction({ email: EMAIL });
+
+      expect(result.serverError).toBe(GENERIC_SERVER_ERROR);
+      expect(result.data).toBeUndefined();
+    });
+
+    // implements FR-9 of password-recovery
+    it("never counts an attempt of its own: the letter is limited by Supabase alone", async () => {
+      auth.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
+
+      await requestRecoveryAction({ email: EMAIL });
+
+      expect(consumePasswordResetAllowance).not.toHaveBeenCalled();
+      expect(rpc).not.toHaveBeenCalled();
+    });
+
+    // implements NFR-1 of password-recovery
+    it.each([
+      ["a swallowed refusal", authError("over_email_send_rate_limit", 429, EMAIL)],
+      ["a failure", authError("unexpected_failure", 500, EMAIL)],
+    ])("logs nothing that holds the address after %s", async (_label, error) => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      auth.resetPasswordForEmail.mockResolvedValue({ data: null, error });
+
+      await requestRecoveryAction({ email: EMAIL });
+
+      const logged = JSON.stringify([...vi.mocked(console.error).mock.calls, ...warn.mock.calls]);
+      expect(logged).not.toContain(EMAIL);
+    });
+  });
+
+  describe("updatePasswordAction", () => {
+    const NEW_PASSWORD = "correct-horse-battery";
+    const SIGNED_IN = { state: "signed-in", userId: "3f8a1c52-0000-4000-8000-000000000001" } as const;
+    const UPDATED_TARGET = "/reset-password?status=updated";
+    const SIGN_OUT_FAILED_TARGET = "/reset-password?status=updated-sign-out-failed";
+
+    beforeEach(() => {
+      vi.mocked(getSessionState).mockResolvedValue(SIGNED_IN);
+      vi.mocked(consumePasswordResetAllowance).mockResolvedValue("allowed");
+      auth.updateUser.mockResolvedValue({ data: {}, error: null });
+      auth.signOut.mockResolvedValue({ error: null });
+    });
+
+    // implements FR-5 of password-recovery
+    it("returns validationErrors for a short password before the session, the allowance or Supabase", async () => {
+      const result = await updatePasswordAction({ password: "abc" });
+
+      expect(result.validationErrors?.fieldErrors.password?.[0]).toContain("8");
+      expect(getSessionState).not.toHaveBeenCalled();
+      expect(consumePasswordResetAllowance).not.toHaveBeenCalled();
+      expect(auth.updateUser).not.toHaveBeenCalled();
+    });
+
+    // implements FR-5, FR-6 of password-recovery
+    it("runs session, allowance, update and global sign-out in that order, then redirects", async () => {
+      const order: string[] = [];
+      vi.mocked(getSessionState).mockImplementation(async () => {
+        order.push("session");
+        return SIGNED_IN;
+      });
+      vi.mocked(consumePasswordResetAllowance).mockImplementation(async () => {
+        order.push("allowance");
+        return "allowed";
+      });
+      auth.updateUser.mockImplementation(async () => {
+        order.push("updateUser");
+        return { data: {}, error: null };
+      });
+      auth.signOut.mockImplementation(async () => {
+        order.push("signOut");
+        return { error: null };
+      });
+
+      await expect(updatePasswordAction({ password: NEW_PASSWORD })).rejects.toMatchObject({ digest: REDIRECT_DIGEST });
+
+      expect(order).toEqual(["session", "allowance", "updateUser", "signOut"]);
+      expect(auth.updateUser).toHaveBeenCalledExactlyOnceWith({ password: NEW_PASSWORD });
+      expect(auth.signOut).toHaveBeenCalledExactlyOnceWith({ scope: "global" });
+      expect(redirect).toHaveBeenCalledExactlyOnceWith(UPDATED_TARGET);
+    });
+
+    // implements FR-6 of password-recovery
+    it("never calls refresh", async () => {
+      await expect(updatePasswordAction({ password: NEW_PASSWORD })).rejects.toMatchObject({ digest: REDIRECT_DIGEST });
+
+      expect(refresh).not.toHaveBeenCalled();
+    });
+
+    // implements FR-6, NFR-1 of password-recovery
+    it.each([
+      ["an error", { error: authError("unexpected_failure", 500, NEW_PASSWORD) }],
+      ["a throw", new TypeError(`fetch failed for ${NEW_PASSWORD}`)],
+    ])("still redirects, to the sign-out-failed target, when the sign-out ends in %s, with one line without the password", async (_label, outcome) => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      if (outcome instanceof Error) auth.signOut.mockRejectedValue(outcome);
+      else auth.signOut.mockResolvedValue(outcome);
+
+      await expect(updatePasswordAction({ password: NEW_PASSWORD })).rejects.toMatchObject({ digest: REDIRECT_DIGEST });
+
+      expect(redirect).toHaveBeenCalledExactlyOnceWith(SIGN_OUT_FAILED_TARGET);
+      expect(warn).toHaveBeenCalledOnce();
+      const logged = JSON.stringify([...warn.mock.calls, ...vi.mocked(console.error).mock.calls]);
+      expect(logged).toContain("sign-out after a password change failed");
+      expect(logged).not.toContain(NEW_PASSWORD);
+    });
+
+    // implements FR-4, FR-8 of password-recovery
+    it("returns link-expired for a signed-out request with no allowance and no update", async () => {
+      vi.mocked(getSessionState).mockResolvedValue({ state: "signed-out" });
+
+      const result = await updatePasswordAction({ password: NEW_PASSWORD });
+
+      expect(result.data).toEqual({ status: "failed", failure: "link-expired" });
+      expect(consumePasswordResetAllowance).not.toHaveBeenCalled();
+      expect(auth.updateUser).not.toHaveBeenCalled();
+      expect(redirect).not.toHaveBeenCalled();
+    });
+
+    // implements FR-8 of password-recovery
+    it("returns unavailable when the session check cannot tell, with no allowance and no update", async () => {
+      vi.mocked(getSessionState).mockResolvedValue({ state: "unknown" });
+
+      const result = await updatePasswordAction({ password: NEW_PASSWORD });
+
+      expect(result.data).toEqual({ status: "failed", failure: "unavailable" });
+      expect(consumePasswordResetAllowance).not.toHaveBeenCalled();
+      expect(auth.updateUser).not.toHaveBeenCalled();
+    });
+
+    // implements FR-9 of password-recovery
+    it("returns rate-limited over the limit and does not call updateUser", async () => {
+      vi.mocked(consumePasswordResetAllowance).mockResolvedValue("refused");
+
+      const result = await updatePasswordAction({ password: NEW_PASSWORD });
+
+      expect(result.data).toEqual({ status: "failed", failure: "rate-limited" });
+      expect(auth.updateUser).not.toHaveBeenCalled();
+      expect(auth.signOut).not.toHaveBeenCalled();
+    });
+
+    // implements FR-9, FR-10 of password-recovery
+    it("fails closed with unknown when the allowance check fails (a restricted caller included)", async () => {
+      vi.mocked(consumePasswordResetAllowance).mockResolvedValue("failed");
+
+      const result = await updatePasswordAction({ password: NEW_PASSWORD });
+
+      expect(result.data).toEqual({ status: "failed", failure: "unknown" });
+      expect(auth.updateUser).not.toHaveBeenCalled();
+      expect(JSON.stringify(result)).not.toMatch(/заблокирован|blocked|banned/i);
+    });
+
+    // implements FR-5, FR-8 of password-recovery
+    it.each([
+      ["same_password", 422, "same-password"],
+      ["weak_password", 422, "weak-password"],
+      ["over_request_rate_limit", 429, "rate-limited"],
+      ["unexpected_failure", 500, "unknown"],
+      // implements FR-10 of password-recovery
+      ["user_banned", 403, "unknown"],
+    ])("returns data.failure for the updateUser error %s", async (code, status, failure) => {
+      auth.updateUser.mockResolvedValue({ data: { user: null }, error: authError(code, status) });
+
+      const result = await updatePasswordAction({ password: NEW_PASSWORD });
+
+      expect(result.data).toEqual({ status: "failed", failure });
+      expect(auth.signOut).not.toHaveBeenCalled();
+      expect(redirect).not.toHaveBeenCalled();
+    });
+
+    // implements FR-8 of password-recovery
+    it("returns unavailable when the config is invalid", async () => {
+      vi.mocked(createSupabaseServerClient).mockRejectedValue(new SupabaseConfigError(["NEXT_PUBLIC_SUPABASE_URL"]));
+
+      const result = await updatePasswordAction({ password: NEW_PASSWORD });
+
+      expect(result.data).toEqual({ status: "failed", failure: "unavailable" });
+      expect(auth.updateUser).not.toHaveBeenCalled();
+    });
+
+    // implements FR-8, NFR-1 of password-recovery
+    it("turns a throwing updateUser into the generic serverError without echoing or logging the password", async () => {
+      auth.updateUser.mockRejectedValue(new TypeError(`fetch failed for ${NEW_PASSWORD}`));
+
+      const result = await updatePasswordAction({ password: NEW_PASSWORD });
+
+      expect(result.serverError).toBe(GENERIC_SERVER_ERROR);
+      expect(JSON.stringify(result)).not.toContain(NEW_PASSWORD);
+      expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain(NEW_PASSWORD);
+    });
+
+    // implements NFR-1 of password-recovery
+    it.each([
+      ["a refused allowance", () => vi.mocked(consumePasswordResetAllowance).mockResolvedValue("refused")],
+      [
+        "an updateUser error",
+        () => auth.updateUser.mockResolvedValue({ data: null, error: authError("unexpected_failure", 500, NEW_PASSWORD) }),
+      ],
+      ["a signed-out request", () => vi.mocked(getSessionState).mockResolvedValue({ state: "signed-out" })],
+    ])("logs nothing that holds the password after %s", async (_label, arrange) => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      arrange();
+
+      await updatePasswordAction({ password: NEW_PASSWORD });
+
+      const logged = JSON.stringify([...vi.mocked(console.error).mock.calls, ...warn.mock.calls]);
+      expect(logged).not.toContain(NEW_PASSWORD);
     });
   });
 

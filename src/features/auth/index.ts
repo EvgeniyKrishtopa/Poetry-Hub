@@ -7,9 +7,20 @@ export { AuthNotice } from "./components/AuthNotice/AuthNotice";
 export { GoogleSignInPanel } from "./components/GoogleSignInPanel/GoogleSignInPanel";
 export { SignInPanel } from "./components/SignInPanel/SignInPanel";
 export { SignUpForm } from "./components/SignUpForm/SignUpForm";
+export { ResetPasswordPage } from "./components/ResetPasswordPage/ResetPasswordPage";
+export { confirmRecovery } from "./dal/confirm-recovery";
 export { confirmSignUp } from "./dal/confirm-sign-up";
+export { CONFIRM_TYPE, getConfirmTarget } from "./model/confirm-target";
 export { finishGoogleSignIn } from "./dal/finish-google-sign-in";
 export { getGoogleCallbackTarget } from "./model/google-callback-target";
-export { getLoginPageMetadata, getSignupPageMetadata } from "./metadata/auth-pages-metadata";
-export { AUTH_NOTICE_PARAM, CONFIRM_FAILED_ERROR, GOOGLE_FLOW_PARAM } from "./model/auth.constants";
+export {
+  getLoginPageMetadata,
+  getResetPasswordPageMetadata,
+  getSignupPageMetadata,
+} from "./metadata/auth-pages-metadata";
+export {
+  AUTH_NOTICE_PARAM,
+  GOOGLE_FLOW_PARAM,
+  RESET_STATUS_PARAM,
+} from "./model/auth.constants";
 export { getCurrentUserId, getSessionState, requireSession } from "./dal/current-user";

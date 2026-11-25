@@ -23,6 +23,12 @@ Scope added by `drag-and-drop-ordering` (2026-11-11): `order_move`, 30 per minut
 a poem or a collection on the board (`20261111160000_work_ordering.sql`; ADR 0014). A move changes existing
 rows, so it follows this ADR, not 0009.
 
+Scope added by `password-recovery` (2026-11-25): `password_reset`, 5 per minute, one attempt per save of a
+new password on `/reset-password` (`20261125150000_password_reset_limit.sql`; that change's design D6). The
+limit bounds only the attempts made through this app. A holder of the session (its cookies are readable by
+script) can call Supabase Auth's own endpoint directly and skip it, so it is a guard on the app's path and
+defence in depth, not a security boundary; Supabase's own limits and the single-use link bound the rest.
+
 ## Context
 
 ADR 0005 made every reader write a Server Action that, on success, expires the public pages'
