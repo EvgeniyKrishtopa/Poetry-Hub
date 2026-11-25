@@ -64,7 +64,7 @@ describe("GET /auth/confirm", () => {
   });
 
   describe("a recovery link", () => {
-    // implements FR-5 of auth (password-recovery)
+    // implements FR-3 of password-recovery, FR-5 of auth
     it("redirects with 303 to /reset-password for a valid link", async () => {
       vi.mocked(confirmRecovery).mockResolvedValue("verified");
 
