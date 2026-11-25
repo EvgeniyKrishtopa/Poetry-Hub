@@ -256,6 +256,13 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# The password recovery letter (password-recovery, design D9): the link goes to the app's own /auth/confirm
+# route with the token hash, and carries no address. The link lives for otp_expiry (1 hour). The Russian
+# wording is a placeholder for the owner to confirm.
+[auth.email.template.recovery]
+subject = "Восстановление пароля"
+content_path = "./supabase/templates/recovery.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
