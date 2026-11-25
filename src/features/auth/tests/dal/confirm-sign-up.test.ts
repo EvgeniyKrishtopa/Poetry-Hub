@@ -26,10 +26,10 @@ describe("confirmSignUp", () => {
   });
 
   // implements FR-5 of add-supabase-auth
-  it("verifies an email link and returns confirmed", async () => {
+  it("verifies an email link and returns verified", async () => {
     verifyOtp.mockResolvedValue({ data: {}, error: null });
 
-    await expect(confirmSignUp(TOKEN_HASH, "email")).resolves.toBe("confirmed");
+    await expect(confirmSignUp(TOKEN_HASH, "email")).resolves.toBe("verified");
     expect(verifyOtp).toHaveBeenCalledWith({ token_hash: TOKEN_HASH, type: "email" });
   });
 

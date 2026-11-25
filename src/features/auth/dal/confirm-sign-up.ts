@@ -3,6 +3,7 @@ import "server-only";
 import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
+import type { ConfirmOutcome } from "../model/auth.types";
 import { confirmParamsSchema } from "../model/confirm-params.schema";
 
 /**
@@ -11,17 +12,14 @@ import { confirmParamsSchema } from "../model/confirm-params.schema";
  * lands on `/login` with a next step (design D3). Stays in `dal/`, never `actions/`: a
  * `"use server"` export would be a publicly callable endpoint.
  */
-export async function confirmSignUp(
-  tokenHash: string | null,
-  type: string | null,
-): Promise<"confirmed" | "failed"> {
+export async function confirmSignUp(tokenHash: string | null, type: string | null): Promise<ConfirmOutcome> {
   const params = confirmParamsSchema.safeParse({ token_hash: tokenHash, type });
   if (!params.success) return "failed";
 
   try {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.verifyOtp(params.data);
-    return error ? "failed" : "confirmed";
+    return error ? "failed" : "verified";
   } catch (error) {
     // The proxy already logs a missing config on every request. Anything else is an outage,
     // logged by name only so it stays distinguishable from a bad link without leaking the token.

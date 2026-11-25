@@ -35,7 +35,7 @@
 
 ## 4. The confirmation route <!-- judgement-heavy -->
 
-- [ ] 4.1 (auth FR-5) `src/app/auth/confirm/route.ts`: parse `type`, call `confirmSignUp` or `confirmRecovery`, redirect 303 to `getConfirmTarget(type, outcome)` with the `private, no-store` header on every outcome; no decision table in the route. Update the route's tests (the old «type=recovery fails» case now expects `/reset-password`): each outcome of the spec's scenarios, `next=https://evil.example` ignored for both types, no `verifyOtp` without a hash, and the module exporting only `GET`.
+- [x] 4.1 (auth FR-5) `src/app/auth/confirm/route.ts`: parse `type`, call `confirmSignUp` or `confirmRecovery`, redirect 303 to `getConfirmTarget(type, outcome)` with the `private, no-store` header on every outcome; no decision table in the route. Update the route's tests (the old «type=recovery fails» case now expects `/reset-password`): each outcome of the spec's scenarios, `next=https://evil.example` ignored for both types, no `verifyOtp` without a hash, and the module exporting only `GET`.
 
 ## 5. Screens <!-- judgement-heavy -->
 
