@@ -7,10 +7,12 @@ export type AuthFailure =
   | "rate-limited"
   | "restricted"
   | "weak-password"
+  | "same-password"
   | "unavailable"
   | "unknown";
 
-export type AuthFlow = "sign-in" | "sign-up";
+/** The forms and actions that own their own failure texts; a flow never borrows another's wording (design D7). */
+export type AuthFlow = "sign-in" | "sign-up" | "recovery-request" | "update-password";
 
 type CredentialField = "email" | "password";
 
@@ -130,3 +132,9 @@ export type ResetStatus = (typeof RESET_STATUS)[keyof typeof RESET_STATUS];
 
 /** `consume_write_allowance("password_reset")`'s answer; a refusal is a value, a failed check never allows (design D5). */
 export type PasswordResetAllowance = "allowed" | "refused" | "failed";
+
+/**
+ * The caller's own `is_restricted()` answer for `/reset-password` (design D4, D8). `unauthenticated` is a token that
+ * expired since the session read; `unknown` is any other failure and fails closed.
+ */
+export type RestrictionCheck = "restricted" | "allowed" | "unauthenticated" | "unknown";

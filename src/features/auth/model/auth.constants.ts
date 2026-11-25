@@ -13,6 +13,23 @@ export const RESET_STATUS = { updated: "updated", updatedSignOutFailed: "updated
 export const MIN_PASSWORD_LENGTH = 8;
 
 /**
+ * The `code` values of Supabase Auth errors the forms and the recovery flow tell apart, recorded on the local stack
+ * (password-recovery task 1.1). `overEmailSendRateLimit` is the per-address refusal of a repeat letter and arrives with
+ * HTTP 429, like `overRequestRateLimit`, the IP-wide one: only the code tells them apart.
+ */
+export const AUTH_ERROR_CODE = {
+  invalidCredentials: "invalid_credentials",
+  userBanned: "user_banned",
+  emailNotConfirmed: "email_not_confirmed",
+  overRequestRateLimit: "over_request_rate_limit",
+  overEmailSendRateLimit: "over_email_send_rate_limit",
+  weakPassword: "weak_password",
+  samePassword: "same_password",
+} as const;
+
+export const HTTP_TOO_MANY_REQUESTS = 429;
+
+/**
  * What the Before User Created hook `reject_banned_signup` answers for a banned address. Auth reports its
  * `code` as `unknown`, which any unrelated failure can carry, so only the status and the message together
  * identify the rejection (admin-moderation design D6).

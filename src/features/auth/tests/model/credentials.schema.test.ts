@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { FIELD_MESSAGES } from "../../model/auth-messages";
-import { confirmParamsSchema } from "../../model/confirm-params.schema";
+import { confirmParamsSchema, recoveryParamsSchema } from "../../model/confirm-params.schema";
 import { MIN_PASSWORD_LENGTH } from "../../model/auth.constants";
-import { signInSchema, signUpSchema } from "../../model/credentials.schema";
+import {
+  newPasswordSchema,
+  recoveryRequestSchema,
+  signInSchema,
+  signUpSchema,
+} from "../../model/credentials.schema";
 
 const VALID_EMAIL = "reader@example.com";
 
@@ -75,5 +80,63 @@ describe("confirmParamsSchema", () => {
     ["a missing type", { token_hash: "abc" }],
   ])("rejects %s", (_label, input) => {
     expect(confirmParamsSchema.safeParse(input).success).toBe(false);
+  });
+});
+
+describe("recoveryRequestSchema", () => {
+  // implements FR-2 of password-recovery
+  it("accepts a valid email and keeps only it", () => {
+    const result = recoveryRequestSchema.safeParse({ email: VALID_EMAIL, password: "typed-but-ignored" });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ email: VALID_EMAIL });
+  });
+
+  it.each([
+    ["an invalid address", { email: "not-an-email" }],
+    ["an empty address", { email: "" }],
+    ["a missing address", {}],
+  ])("rejects %s with the email field message", (_label, input) => {
+    const result = recoveryRequestSchema.safeParse(input);
+
+    expect(result.success).toBe(false);
+    expect(fieldErrors(result)).toEqual({ email: FIELD_MESSAGES.emailInvalid });
+  });
+});
+
+describe("newPasswordSchema", () => {
+  const tooShort = "a".repeat(MIN_PASSWORD_LENGTH - 1);
+  const longEnough = "a".repeat(MIN_PASSWORD_LENGTH);
+
+  // implements FR-5 of password-recovery
+  it(`accepts a password of exactly ${MIN_PASSWORD_LENGTH} characters`, () => {
+    expect(newPasswordSchema.safeParse({ password: longEnough }).success).toBe(true);
+  });
+
+  it.each([
+    ["a short password", { password: tooShort }],
+    ["an empty password", { password: "" }],
+    ["a missing password", {}],
+  ])("rejects %s with the sign-up rule's message", (_label, input) => {
+    const result = newPasswordSchema.safeParse(input);
+
+    expect(result.success).toBe(false);
+    expect(fieldErrors(result)).toEqual({ password: FIELD_MESSAGES.passwordTooShort(MIN_PASSWORD_LENGTH) });
+  });
+});
+
+describe("recoveryParamsSchema", () => {
+  // implements FR-3 of password-recovery
+  it("accepts a non-empty hash with type recovery", () => {
+    expect(recoveryParamsSchema.safeParse({ token_hash: "abc", type: "recovery" }).success).toBe(true);
+  });
+
+  it.each([
+    ["a missing hash", { type: "recovery" }],
+    ["an empty hash", { token_hash: "", type: "recovery" }],
+    ["type=email", { token_hash: "abc", type: "email" }],
+    ["a missing type", { token_hash: "abc" }],
+  ])("rejects %s", (_label, input) => {
+    expect(recoveryParamsSchema.safeParse(input).success).toBe(false);
   });
 });

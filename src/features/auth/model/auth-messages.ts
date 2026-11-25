@@ -1,9 +1,35 @@
 import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
 
 import { CONFIRM_FAILED_ERROR, GOOGLE_ERROR, GOOGLE_FLOW } from "./auth.constants";
-import type { AuthFailure, AuthFlow, GoogleFlow } from "./auth.types";
+import type { AuthFailure, AuthFlow, GoogleFlow, UpdatePasswordFailure } from "./auth.types";
 
 export const GENERIC_SERVER_ERROR = "Что-то пошло не так. Попробуйте ещё раз.";
+
+/** The `/login` alert for `error=recovery-failed`: the same for an expired, used, blocked or broken link (password-recovery FR-3). */
+export const RECOVERY_FAILED_MESSAGE =
+  "Ссылка для восстановления недействительна или устарела. Введите адрес электронной почты и запросите новое письмо.";
+
+/** The recovery offer under a wrong-credentials alert, and its button (password-recovery FR-1). */
+export const RECOVERY_OFFER_TEXT = "Забыли пароль? Мы можем отправить на этот адрес письмо со ссылкой для восстановления.";
+export const RECOVERY_OFFER_BUTTON_LABEL = "Отправить письмо";
+
+/** The neutral notice after `sent`, whatever the address holds; names the link's 1 hour (password-recovery FR-2). */
+export const RECOVERY_SENT_MESSAGE =
+  "Если для этого адреса есть аккаунт, мы отправили письмо со ссылкой для восстановления пароля. Ссылка действует 1 час.";
+
+/** The `/reset-password` form's field and button (password-recovery FR-4). */
+export const NEW_PASSWORD_LABEL = "Новый пароль";
+export const NEW_PASSWORD_SUBMIT_LABEL = "Сохранить пароль";
+
+/** The link under the done notices and the link-expired alert (password-recovery FR-6, FR-8). */
+export const BACK_TO_SIGN_IN_LABEL = "Перейти ко входу";
+
+/** The done notice of `?status=updated` (password-recovery FR-6). */
+export const PASSWORD_RESET_DONE_MESSAGE = "Пароль изменён. Войдите с новым паролем.";
+
+/** The done notice of `?status=updated-sign-out-failed`: says honestly that the old sessions may live on (FR-6). */
+export const PASSWORD_RESET_SIGN_OUT_FAILED_MESSAGE =
+  "Пароль изменён, но завершить прежние сессии не удалось. Если пароль знал кто-то ещё, смените его ещё раз позже.";
 
 export const CONFIRM_FAILED_MESSAGE =
   "Ссылка для подтверждения недействительна или устарела. Войдите или зарегистрируйтесь снова, чтобы получить новую ссылку.";
@@ -67,6 +93,10 @@ export function getGoogleErrorMessage(error: string | string[] | undefined): str
 
 const RATE_LIMITED_MESSAGE = "Слишком много попыток. Попробуйте через несколько минут.";
 
+const WEAK_PASSWORD_MESSAGE = "Придумайте пароль надёжнее.";
+
+const RECOVERY_UNAVAILABLE_MESSAGE = "Восстановление пароля сейчас недоступно.";
+
 export const FIELD_MESSAGES = {
   emailInvalid: "Введите корректный адрес электронной почты.",
   passwordRequired: "Введите пароль.",
@@ -78,7 +108,9 @@ export const FIELD_MESSAGES = {
  * Each flow lists only the texts its FR defines; an unlisted pair falls back to the generic
  * text and never borrows the other flow's wording (design D7).
  */
-const FAILURE_MESSAGES: Readonly<Record<AuthFlow, Readonly<Partial<Record<AuthFailure, string>>>>> = {
+const FAILURE_MESSAGES: Readonly<
+  Record<AuthFlow, Readonly<Partial<Record<AuthFailure | UpdatePasswordFailure, string>>>>
+> = {
   "sign-in": {
     "invalid-credentials": "Неверный адрес электронной почты или пароль.",
     "email-not-confirmed": "Сначала подтвердите адрес электронной почты: ссылка в письме, которое мы отправили.",
@@ -89,11 +121,22 @@ const FAILURE_MESSAGES: Readonly<Record<AuthFlow, Readonly<Partial<Record<AuthFa
   },
   "sign-up": {
     "rate-limited": RATE_LIMITED_MESSAGE,
-    "weak-password": "Придумайте пароль надёжнее.",
+    "weak-password": WEAK_PASSWORD_MESSAGE,
     unavailable: "Регистрация сейчас недоступна.",
+  },
+  "recovery-request": {
+    "rate-limited": RATE_LIMITED_MESSAGE,
+    unavailable: RECOVERY_UNAVAILABLE_MESSAGE,
+  },
+  "update-password": {
+    "rate-limited": RATE_LIMITED_MESSAGE,
+    "link-expired": "Ссылка для восстановления устарела. Запросите новое письмо.",
+    "same-password": "Новый пароль должен отличаться от прежнего.",
+    "weak-password": WEAK_PASSWORD_MESSAGE,
+    unavailable: RECOVERY_UNAVAILABLE_MESSAGE,
   },
 };
 
-export function getFailureMessage(flow: AuthFlow, failure: AuthFailure): string {
+export function getFailureMessage(flow: AuthFlow, failure: AuthFailure | UpdatePasswordFailure): string {
   return FAILURE_MESSAGES[flow][failure] ?? GENERIC_SERVER_ERROR;
 }

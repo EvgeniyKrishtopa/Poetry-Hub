@@ -14,6 +14,8 @@ describe("classifyAuthError", () => {
     ["over_request_rate_limit", { code: "over_request_rate_limit", status: 429 }, "rate-limited"],
     ["over_email_send_rate_limit", { code: "over_email_send_rate_limit", status: 429 }, "rate-limited"],
     ["weak_password", { code: "weak_password", status: 422 }, "weak-password"],
+    // implements FR-5 of password-recovery
+    ["same_password", { code: "same_password", status: 422 }, "same-password"],
     ["status 429 with no known code", { code: "something_new", status: 429 }, "rate-limited"],
     ["status 429 with no code", { status: 429 }, "rate-limited"],
     ["a config error", new SupabaseConfigError(["NEXT_PUBLIC_SUPABASE_URL"]), "unavailable"],
