@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { ACCOUNT_PATH, ADMIN_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/shared/config/account-paths";
+import {
+  ACCOUNT_PATH,
+  ADMIN_PATH,
+  RESET_PASSWORD_PATH,
+  SIGN_IN_PATH,
+  SIGN_UP_PATH,
+} from "@/shared/config/account-paths";
 import { ABOUT_PATH, HOME_PATH, PRIVACY_PATH } from "@/shared/config/constants";
 import { AUTH_PATH } from "@/shared/lib/seo";
 
@@ -19,7 +25,7 @@ const UNLISTED_POEM = "30000000-0000-4000-8000-000000000056";
 const COLLECTION_C = "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a";
 const UNLISTED_COLLECTION = "6e5d4c3b-2a1f-4e0d-9c8b-7a6f5e4d3c2b";
 
-const PRIVATE_PATHS = [ACCOUNT_PATH, ADMIN_PATH, SIGN_IN_PATH, SIGN_UP_PATH, AUTH_PATH];
+const PRIVATE_PATHS = [ACCOUNT_PATH, ADMIN_PATH, SIGN_IN_PATH, SIGN_UP_PATH, RESET_PASSWORD_PATH, AUTH_PATH];
 
 function sourceOf(overrides: Partial<SitemapSource>): SitemapSource {
   return { siteUrl: SITE_URL, authorIds: [], poemRefs: [], ...overrides };
@@ -99,7 +105,8 @@ describe("buildSitemapEntries", () => {
   });
 
   // implements FR-9 of seo-metadata
-  it("never lists an account, admin, sign-in, sign-up or auth page", () => {
+  // implements FR-13 of password-recovery
+  it("never lists an account, admin, sign-in, sign-up, reset-password or auth page", () => {
     const source = sourceOf({
       authorIds: [AUTHOR_A, AUTHOR_B],
       poemRefs: [

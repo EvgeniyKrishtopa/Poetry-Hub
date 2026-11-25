@@ -1,9 +1,8 @@
-import type { RecoveryRequestResult } from "../../model/auth.types";
-
-/** `RecoveryOffer`'s action state: nothing asked yet, or the request's answer (design D2, D3). */
-export type RecoveryOfferState = { readonly status: "idle" } | RecoveryRequestResult;
-
 export interface RecoveryOfferProps {
-  /** The sign-in form's current email; the offer sends this and nothing else. */
-  readonly email: string;
+  /** False after a letter was sent: the notice above takes the offer's place and only the button stays. */
+  readonly showText: boolean;
+  /** A sign-in or a recovery request is pending: the button waits for it. */
+  readonly busy: boolean;
+  /** Asks for a letter for the form's current email; the form owns the action and its result. */
+  readonly onRequest: () => void;
 }

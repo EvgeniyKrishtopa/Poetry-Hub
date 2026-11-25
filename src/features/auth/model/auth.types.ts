@@ -118,11 +118,29 @@ export type RecoveryRequestResult =
   | { readonly status: "invalid" }
   | { readonly status: "failed"; readonly failure: RecoveryRequestFailure };
 
+/** The recovery request's outcome as the sign-in form holds it: nothing asked yet, or the action's answer (design D2). */
+export type RecoveryOfferResult = { readonly status: "idle" } | RecoveryRequestResult;
+
+/** A recovery result tagged with the sign-in attempt it was asked in; an older attempt's result is ignored (design D2). */
+export interface RecoveryOfferState {
+  readonly attempt: number;
+  readonly result: RecoveryOfferResult;
+}
+
 /** Changing the password never returns on success: the action redirects to `/reset-password?status=…` (design D5). */
 export interface UpdatePasswordResult {
   readonly status: "failed";
   readonly failure: UpdatePasswordFailure;
 }
+
+/**
+ * The new-password form's state: nothing sent yet, a message under the field (short, weak or repeated password), or
+ * a failure shown as an alert above it (design D5, D7). It never holds the password.
+ */
+export type ResetPasswordFormState =
+  | { readonly status: "idle" }
+  | { readonly status: "invalid"; readonly fieldError: string }
+  | { readonly status: "failed"; readonly failure: UpdatePasswordFailure };
 
 /** How a link's `verifyOtp` ended; `/auth/confirm` turns it into a redirect target (design D1). */
 export type ConfirmOutcome = "verified" | "failed";

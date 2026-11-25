@@ -7,6 +7,7 @@ export const BREADCRUMB_LABELS = {
   home: "Главная",
   signIn: "Вход",
   signUp: "Регистрация",
+  resetPassword: "Новый пароль",
   about: "О проекте",
   privacyPolicy: "Политика конфиденциальности",
   admin: "Админка",

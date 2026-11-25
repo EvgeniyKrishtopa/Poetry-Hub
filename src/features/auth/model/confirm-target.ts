@@ -8,7 +8,8 @@ import type { ConfirmOutcome } from "./auth.types";
 export const CONFIRM_TYPE = { signUp: "email", recovery: "recovery" } as const;
 
 const CONFIRM_FAILED_TARGET = `${SIGN_IN_PATH}?error=${CONFIRM_FAILED_ERROR}`;
-const RECOVERY_FAILED_TARGET = `${SIGN_IN_PATH}?error=${RECOVERY_FAILED_ERROR}`;
+/** Where a dead recovery link, and a `/reset-password` request without a usable session, send the browser. */
+export const RECOVERY_FAILED_TARGET =`${SIGN_IN_PATH}?error=${RECOVERY_FAILED_ERROR}`;
 
 /**
  * Where `/auth/confirm` sends the browser: always one of a few fixed paths, never a request parameter.

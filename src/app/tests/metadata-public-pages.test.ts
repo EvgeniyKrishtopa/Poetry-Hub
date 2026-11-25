@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getLoginPageMetadata, getSignupPageMetadata } from "@/features/auth";
+import { getLoginPageMetadata, getResetPasswordPageMetadata, getSignupPageMetadata } from "@/features/auth";
 import { getAuthorsPageMetadata } from "@/features/authors";
 import { CONTENT_PAGE_KEYS, getContentPageMetadata } from "@/features/content-page";
 import { getHomePageMetadata } from "@/features/home";
@@ -77,8 +77,10 @@ describe("the authors directory's metadata", () => {
 describe.each([
   ["/login", getLoginPageMetadata],
   ["/signup", getSignupPageMetadata],
+  ["/reset-password", getResetPasswordPageMetadata],
 ])("the metadata of %s", (path, getMetadata) => {
   // implements FR-7 of seo-metadata
+  // implements FR-12 of password-recovery
   it("is noindex, follow with a title", () => {
     const metadata = getMetadata();
 
@@ -101,6 +103,13 @@ describe.each([
     expect(metadata.description).toBeUndefined();
     expect(metadata.openGraph).toBeUndefined();
     expect(metadata.twitter).toBeUndefined();
+  });
+});
+
+describe("the reset-password page's metadata", () => {
+  // implements FR-12 of password-recovery
+  it("has the plain title «Новый пароль»", () => {
+    expect(getResetPasswordPageMetadata().title).toBe("Новый пароль");
   });
 });
 

@@ -8,11 +8,13 @@ import {
   getGoogleErrorMessage,
   getLoginErrorMessage,
   GOOGLE_BUTTON_LABEL,
+  GOOGLE_HINT,
   GOOGLE_SEPARATOR_LABEL,
   BACK_TO_SIGN_IN_LABEL,
   NEW_PASSWORD_LABEL,
   NEW_PASSWORD_SUBMIT_LABEL,
   PASSWORD_RESET_DONE_MESSAGE,
+  PASSWORD_RESET_DONE_MESSAGES,
   PASSWORD_RESET_SIGN_OUT_FAILED_MESSAGE,
   RECOVERY_FAILED_MESSAGE,
   RECOVERY_OFFER_BUTTON_LABEL,
@@ -198,5 +200,26 @@ describe("recovery standalone texts", () => {
     expect(PASSWORD_RESET_SIGN_OUT_FAILED_MESSAGE).toBe(
       "Пароль изменён, но завершить прежние сессии не удалось. Если пароль знал кто-то ещё, смените его ещё раз позже.",
     );
+  });
+});
+
+describe("recovery-failed login alert and the Google hints", () => {
+  // implements FR-3 of password-recovery
+  it("maps recovery-failed to the recovery-failed text", () => {
+    expect(getLoginErrorMessage("recovery-failed")).toBe(RECOVERY_FAILED_MESSAGE);
+  });
+
+  // implements FR-14 of password-recovery
+  it("words the two Google hints as the spec says, one per page", () => {
+    expect(GOOGLE_HINT["sign-in"]).toBe("Регистрировались через Google? Войдите кнопкой «Войти через Google».");
+    expect(GOOGLE_HINT["sign-up"]).toBe(
+      "Уже регистрировались через Google? Нажмите «Зарегистрироваться через Google»: вы войдёте в тот же аккаунт.",
+    );
+  });
+
+  // implements FR-6 of password-recovery
+  it("has one done notice per status value", () => {
+    expect(PASSWORD_RESET_DONE_MESSAGES.updated).toBe(PASSWORD_RESET_DONE_MESSAGE);
+    expect(PASSWORD_RESET_DONE_MESSAGES["updated-sign-out-failed"]).toBe(PASSWORD_RESET_SIGN_OUT_FAILED_MESSAGE);
   });
 });

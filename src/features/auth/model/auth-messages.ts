@@ -1,7 +1,7 @@
 import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
 
-import { CONFIRM_FAILED_ERROR, GOOGLE_ERROR, GOOGLE_FLOW } from "./auth.constants";
-import type { AuthFailure, AuthFlow, GoogleFlow, UpdatePasswordFailure } from "./auth.types";
+import { CONFIRM_FAILED_ERROR, GOOGLE_ERROR, GOOGLE_FLOW, RECOVERY_FAILED_ERROR, RESET_STATUS } from "./auth.constants";
+import type { AuthFailure, AuthFlow, GoogleFlow, ResetStatus, UpdatePasswordFailure } from "./auth.types";
 
 export const GENERIC_SERVER_ERROR = "Что-то пошло не так. Попробуйте ещё раз.";
 
@@ -17,6 +17,9 @@ export const RECOVERY_OFFER_BUTTON_LABEL = "Отправить письмо";
 export const RECOVERY_SENT_MESSAGE =
   "Если для этого адреса есть аккаунт, мы отправили письмо со ссылкой для восстановления пароля. Ссылка действует 1 час.";
 
+/** The document title, the trail's last item and the heading of `/reset-password` (FR-11, FR-12). */
+export const RESET_PASSWORD_PAGE_TITLE = "Новый пароль";
+
 /** The `/reset-password` form's field and button (password-recovery FR-4). */
 export const NEW_PASSWORD_LABEL = "Новый пароль";
 export const NEW_PASSWORD_SUBMIT_LABEL = "Сохранить пароль";
@@ -30,6 +33,12 @@ export const PASSWORD_RESET_DONE_MESSAGE = "Пароль изменён. Вой�
 /** The done notice of `?status=updated-sign-out-failed`: says honestly that the old sessions may live on (FR-6). */
 export const PASSWORD_RESET_SIGN_OUT_FAILED_MESSAGE =
   "Пароль изменён, но завершить прежние сессии не удалось. Если пароль знал кто-то ещё, смените его ещё раз позже.";
+
+/** The done notice of each `status` value (FR-6). */
+export const PASSWORD_RESET_DONE_MESSAGES: Readonly<Record<ResetStatus, string>> = {
+  [RESET_STATUS.updated]: PASSWORD_RESET_DONE_MESSAGE,
+  [RESET_STATUS.updatedSignOutFailed]: PASSWORD_RESET_SIGN_OUT_FAILED_MESSAGE,
+};
 
 export const CONFIRM_FAILED_MESSAGE =
   "Ссылка для подтверждения недействительна или устарела. Войдите или зарегистрируйтесь снова, чтобы получить новую ссылку.";
@@ -50,8 +59,17 @@ export const SESSION_EXPIRED_NOTICE = "Сессия истекла. Войдит
 
 /** The `/login` alert for its `error` search param, or none for any other value. */
 export function getLoginErrorMessage(error: string | string[] | undefined): string | undefined {
-  return error === CONFIRM_FAILED_ERROR ? CONFIRM_FAILED_MESSAGE : undefined;
+  if (error === CONFIRM_FAILED_ERROR) return CONFIRM_FAILED_MESSAGE;
+  if (error === RECOVERY_FAILED_ERROR) return RECOVERY_FAILED_MESSAGE;
+  return undefined;
 }
+
+/** The static line under the Google button on each page; it never depends on the address or a failure (FR-14). */
+export const GOOGLE_HINT: Readonly<Record<GoogleFlow, string>> = {
+  [GOOGLE_FLOW.signIn]: "Регистрировались через Google? Войдите кнопкой «Войти через Google».",
+  [GOOGLE_FLOW.signUp]:
+    "Уже регистрировались через Google? Нажмите «Зарегистрироваться через Google»: вы войдёте в тот же аккаунт.",
+};
 
 /** The Google button's label on each page (google-sign-in FR-G1). */
 export const GOOGLE_BUTTON_LABEL: Readonly<Record<GoogleFlow, string>> = {
