@@ -25,7 +25,7 @@ The reader who forgot the password is signed out, so two steps differ: asking fo
 
 The recovery email links to the existing `/auth/confirm` with `type=recovery`; the template already works that way for the sign-up letter. The route reads `type` and calls `confirmSignUp` (type `email`) or the new `confirmRecovery` (type `recovery`). Both stay in `dal/`, so neither becomes a public endpoint. The two functions repeat about fifteen lines and each keeps its own literal-`type` schema: the outcomes differ and a shared function would hide that.
 
-The decision table (type and outcome to the redirect target) is a pure function `getConfirmTarget(type, outcome)` in `auth/model/`, as `getGoogleCallbackTarget` is for `/auth/callback` (ADR 0019 Decision 2), so the route stays parse, call, redirect. Targets: `email` verified `/`, `email` failed `/login?error=confirm-failed`, `recovery` verified `/reset-password`, `recovery` failed `/login?error=recovery-failed`, any other type `/login?error=confirm-failed`. The target is a fixed path, never a parameter, so there is no open redirect (auth FR-5). The feature's index exports `confirmRecovery`, `getConfirmTarget` and `RECOVERY_FAILED_ERROR`.
+The decision table (type and outcome to the redirect target) is a pure function `getConfirmTarget(type, outcome)` in `auth/model/`, as `getGoogleCallbackTarget` is for `/auth/callback` (ADR 0019 Decision 2), so the route stays parse, call, redirect. Targets: `email` verified `/`, `email` failed `/login?error=confirm-failed`, `recovery` verified `/reset-password`, `recovery` failed `/login?error=recovery-failed`, any other type `/login?error=confirm-failed`. The target is a fixed path, never a parameter, so there is no open redirect (auth FR-5). The feature's index exports `confirmRecovery` and `getConfirmTarget`; `RECOVERY_FAILED_ERROR` stays inside `auth/model/`, because no file outside the feature reads it (knip, task 6.3).
 
 Alternative: a new route `/auth/recovery`. Rejected: one more handler, a second copy of the no-store header and the cookie-writing path, and a template that no longer matches the sign-up one.
 
@@ -294,7 +294,7 @@ Typed stubs at their final paths; every body is `throw new Error("not implemente
 | `src/features/auth/components/ResetPasswordForm/` | the one-field new-password form | `ResetPasswordForm` |
 | `src/features/auth/components/PasswordResetDone/` | the done notice with the link to `/login` | `PasswordResetDone`, `PasswordResetDoneProps` |
 | `src/features/auth/metadata/auth-pages-metadata.ts` | the page head (returns `{}` in the scaffold: the page module calls it at import) | `getResetPasswordPageMetadata` |
-| `src/features/auth/index.ts` | the public API additions | `confirmRecovery`, `getConfirmTarget`, `RECOVERY_FAILED_ERROR`, `ResetPasswordPage`, `getResetPasswordPageMetadata` |
+| `src/features/auth/index.ts` | the public API additions | `confirmRecovery`, `getConfirmTarget`, `ResetPasswordPage`, `getResetPasswordPageMetadata` |
 | `src/app/(public)/reset-password/page.tsx` | thin route (renders `null` in the scaffold) | default export, `metadata` |
 | `src/app/@breadcrumbs/reset-password/page.tsx` | breadcrumbs slot page, the same static markup as every slot | default export |
 | `knip.jsonc` | temporary ignores for stubs with no importer yet; task 6.3 removes them | none |
