@@ -9,13 +9,7 @@
     "src/features/collections/**",
     // Temporary, drag-and-drop-ordering scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new feature's files. The last group that wires the board into the route removes this entry.
-    "src/features/work-ordering/**",
-    // Temporary, password-recovery scaffold: the new stubs have no importer until their tasks wire or test them.
-    // Only the new files, so knip still sees the rest of the auth feature. Task 6.3 removes these entries.
-    "src/features/auth/components/RecoveryOffer/**",
-    "src/features/auth/components/ResetPasswordForm/**",
-    "src/features/auth/components/ResetPasswordPage/**",
-    "src/features/auth/components/PasswordResetDone/**"
+    "src/features/work-ordering/**"
   ],
   // Temporary, password-recovery scaffold: the constants, types, schemas, actions and metadata function added to
   // existing files for the new stubs have no importer yet. Task 6.3 removes these entries.

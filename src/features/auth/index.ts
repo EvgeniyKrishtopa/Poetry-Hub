@@ -23,5 +23,6 @@ export {
   CONFIRM_FAILED_ERROR,
   GOOGLE_FLOW_PARAM,
   RECOVERY_FAILED_ERROR,
+  RESET_STATUS_PARAM,
 } from "./model/auth.constants";
 export { getCurrentUserId, getSessionState, requireSession } from "./dal/current-user";

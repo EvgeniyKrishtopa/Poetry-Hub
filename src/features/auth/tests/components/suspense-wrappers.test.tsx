@@ -54,11 +54,14 @@ describe("SignInPanel", () => {
 });
 
 describe("GoogleSignInPanel", () => {
+  // The panel is the separator and a stack holding the Suspense boundary and the static hint under the button.
   function googlePanelParts(error: Promise<string | undefined>): [ReactElement, ReactElement] {
     const panel = GoogleSignInPanel({ from: "sign-up", error }) as ReactElement<{
-      children: [ReactElement, ReactElement];
+      children: [ReactElement, ReactElement<{ children: [ReactElement, ReactElement] }>];
     }>;
-    return panel.props.children;
+    const [separator, stack] = panel.props.children;
+    const [boundary] = stack.props.children;
+    return [separator, boundary];
   }
 
   // implements FR-1, FR-3 of add-supabase-auth: the "or" separator comes before the Google button
@@ -82,6 +85,30 @@ describe("GoogleSignInPanel", () => {
     render(fallback);
     expect(screen.getByRole("button", { name: GOOGLE_BUTTON_LABEL["sign-up"] })).toBeEnabled();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+});
+
+describe("GoogleSignInPanel hint", () => {
+  function hintOf(from: "sign-in" | "sign-up", error: Promise<string | undefined>): ReactElement {
+    const panel = GoogleSignInPanel({ from, error }) as ReactElement<{
+      children: [ReactElement, ReactElement<{ children: [ReactElement, ReactElement] }>];
+    }>;
+    const [, stack] = panel.props.children;
+    return stack.props.children[1];
+  }
+
+  // implements FR-14 of password-recovery
+  it.each([
+    ["sign-in", "Регистрировались через Google? Войдите кнопкой «Войти через Google»."],
+    ["sign-up", "Уже регистрировались через Google? Нажмите «Зарегистрироваться через Google»: вы войдёте в тот же аккаунт."],
+  ] as const)("shows the static %s hint under the button, the same after any error", (from, text) => {
+    const fresh = hintOf(from, Promise.resolve(undefined));
+    const afterFailure = hintOf(from, Promise.resolve("google-failed"));
+
+    expect(fresh.type).not.toBe(Suspense);
+    render(fresh);
+    expect(screen.getByText(text)).toBeInTheDocument();
+    expect(afterFailure.props).toEqual(fresh.props);
   });
 });
 

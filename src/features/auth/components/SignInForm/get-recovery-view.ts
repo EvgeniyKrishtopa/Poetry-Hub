@@ -1,0 +1,49 @@
+import { FIELD_MESSAGES, getFailureMessage } from "../../model/auth-messages";
+import type { RecoveryOfferResult, SignInFormState } from "../../model/auth.types";
+
+import { getFormError } from "./get-form-error";
+
+interface RecoveryViewInput {
+  readonly signIn: SignInFormState;
+  readonly initialError: string | undefined;
+  /** `/login` was opened with `error=recovery-failed`: the offer shows until the first sign-in submit. */
+  readonly offerOnLoad: boolean;
+  /** The recovery result of the current sign-in attempt only; an older attempt's is already dropped. */
+  readonly recovery: RecoveryOfferResult;
+}
+
+export interface RecoveryView {
+  /** The danger text of the form's one alert slot: the recovery failure, else the sign-in failure. */
+  readonly alert: string | undefined;
+  /** The neutral «sent» notice, which takes the alert slot in place of the danger alert. */
+  readonly sentNotice: boolean;
+  readonly offerVisible: boolean;
+  /** The text under the email field, for an invalid address in the recovery request. */
+  readonly emailError: string | undefined;
+}
+
+/**
+ * Wrong credentials make the offer appear, whatever the address (FR-1); any other sign-in result hides it, and so
+ * does the first sign-in submit after a dead recovery link. Only the offer's own results count while it is shown.
+ */
+function isOfferVisible(signIn: SignInFormState, offerOnLoad: boolean): boolean {
+  if (signIn.status === "idle") return offerOnLoad;
+  return signIn.status === "failed" && signIn.failure === "invalid-credentials";
+}
+
+/** What the sign-in form shows for its two actions' results (password-recovery design D2). */
+export function getRecoveryView({ signIn, initialError, offerOnLoad, recovery }: RecoveryViewInput): RecoveryView {
+  const offerVisible = isOfferVisible(signIn, offerOnLoad);
+  const signInAlert = getFormError(signIn, initialError);
+  const result = offerVisible ? recovery : ({ status: "idle" } as const);
+
+  if (result.status === "sent") return { alert: undefined, sentNotice: true, offerVisible, emailError: undefined };
+  if (result.status === "invalid") {
+    return { alert: undefined, sentNotice: false, offerVisible, emailError: FIELD_MESSAGES.emailInvalid };
+  }
+  if (result.status === "failed") {
+    const alert = getFailureMessage("recovery-request", result.failure);
+    return { alert, sentNotice: false, offerVisible, emailError: undefined };
+  }
+  return { alert: signInAlert, sentNotice: false, offerVisible, emailError: undefined };
+}
