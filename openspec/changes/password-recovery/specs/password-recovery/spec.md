@@ -119,7 +119,7 @@ The recovery letter's link SHALL be `/auth/confirm?token_hash=<hash>&type=recove
 - **THEN** `requestRecoveryAction` runs for that address and the sent notice is shown
 
 ### Requirement: The new-password page needs a session (FR-4)
-`/reset-password` SHALL be rendered per request. With the search parameter `status` equal to `updated` or `updated-sign-out-failed` it SHALL show the done notice of FR-6 and read no session. Otherwise it SHALL show the new-password form only to a request with a valid session, and a signed-out request SHALL be redirected to `/login?error=recovery-failed`. When the session check cannot tell (Supabase unreachable or not configured), the page SHALL show «Восстановление пароля сейчас недоступно.» in an alert and no form. The form SHALL have one field, «Новый пароль» (`type="password"`, `autocomplete="new-password"`), and a submit button «Сохранить пароль».
+`/reset-password` SHALL be rendered per request. With the search parameter `status` equal to `updated` or `updated-sign-out-failed` it SHALL show the done notice of FR-6 and read no session. Otherwise it SHALL show the new-password form only to a request with a valid session, and a signed-out request SHALL be redirected to `/login?error=recovery-failed`. A request whose session belongs to a blocked or banned account (the caller's own `is_restricted()` answer is true) SHALL be treated as signed out: the same redirect, no form, no wording about a block (FR-10). When the session check or the restriction check cannot tell (Supabase unreachable or not configured, or the restriction check fails), the page SHALL show «Восстановление пароля сейчас недоступно.» in an alert and no form. The form SHALL have one field, «Новый пароль» (`type="password"`, `autocomplete="new-password"`), and a submit button «Сохранить пароль».
 
 #### Scenario: Signed in by the recovery link
 - **GIVEN** the reader followed a valid recovery link
@@ -130,6 +130,16 @@ The recovery letter's link SHALL be `/auth/confirm?token_hash=<hash>&type=recove
 - **GIVEN** the request carries no session
 - **WHEN** `/reset-password` is requested
 - **THEN** the response redirects to `/login?error=recovery-failed`
+
+#### Scenario: A blocked account holds a session
+- **GIVEN** the request carries a valid session whose caller is restricted (`is_restricted()` is true)
+- **WHEN** `/reset-password` is requested
+- **THEN** the response redirects to `/login?error=recovery-failed`, exactly as for a signed-out request, and no form is shown
+
+#### Scenario: Restriction check unavailable
+- **GIVEN** the request carries a valid session and the restriction check fails (an RPC error or a non-boolean answer)
+- **WHEN** `/reset-password` is requested
+- **THEN** an alert reads «Восстановление пароля сейчас недоступно.» and no form is shown
 
 #### Scenario: Session check unavailable
 - **GIVEN** the session check returns `unknown`
@@ -263,13 +273,18 @@ The letter request SHALL be limited by Supabase alone (one letter per address pe
 - **WHEN** a row with the scope `anything_else` is inserted into `write_rate_limits`
 - **THEN** the constraint rejects it
 
-### Requirement: A blocked account is not revealed (FR-10)
-No step of the recovery flow SHALL show wording that says an address or account is blocked or banned. The letter request answers as for any address (FR-2); a link of a blocked account reads as an invalid link (FR-3); an attempt to save a password from an existing restricted session SHALL fail closed through `assert_not_restricted()` and show the generic failure notice.
+### Requirement: A blocked account gets no access and is not revealed (FR-10)
+A blocked or banned account SHALL NOT reach the new-password form or change its password, by any path: not through a recovery link (including a link issued before the account was blocked: a letter is still sent to a blocked address, see FR-2, but its link opens no session), and not from a session it already holds: `/reset-password` treats a restricted session as signed out (FR-4), and a save from a page that was already open SHALL fail with a notice that never mentions a block, the password staying unchanged. No step of the recovery flow SHALL show wording that says an address or account is blocked or banned. The letter request answers as for any address (FR-2); a link of a blocked account reads as an invalid link (FR-3); an attempt to save a password from an existing restricted session SHALL fail closed and show either the link-expired notice (the session check already refuses the token) or the generic failure notice (`assert_not_restricted()` refuses it), never wording about a block; which of the two appears depends on which check refuses first, and both are accepted. The app SHALL NOT look up an address's block state before asking for a letter, because the lookup would reveal it.
 
 #### Scenario: Blocked address asks for a letter
 - **GIVEN** the address belongs to a blocked account
 - **WHEN** the reader presses «Отправить письмо»
 - **THEN** the sent notice is shown, with the same text as for any address
+
+#### Scenario: A link issued before the block
+- **GIVEN** a recovery letter was sent to an account, and the account is blocked afterwards
+- **WHEN** the reader follows the letter's link
+- **THEN** `verifyOtp` fails with `user_banned`, no session is opened, and they land on the `/login?error=recovery-failed` notice, with no form shown and no wording that says the account is blocked
 
 #### Scenario: Restricted session tries to save
 - **GIVEN** `consume_write_allowance` raises because the caller is restricted
