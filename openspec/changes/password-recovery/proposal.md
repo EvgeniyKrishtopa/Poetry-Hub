@@ -32,7 +32,7 @@ Out of scope: a standalone «forgot password» page reachable without a failed s
 
 ## Impact
 
-- Code: `src/features/auth/` (two Server Actions: request a recovery letter and set the new password; a DAL function that verifies the recovery link; the new-password form, its success notice and the offer in `SignInForm`; schemas, messages, failure classification), `src/app/auth/confirm/route.ts` (recovery branch), `src/app/(public)/reset-password/page.tsx` and `src/app/@breadcrumbs/reset-password/page.tsx` (new), `src/shared/config/account-paths.ts` (the new path), `src/features/breadcrumbs` (one route row).
+- Code: `src/features/auth/` (two Server Actions: request a recovery letter and set the new password; a DAL function that verifies the recovery link, and one that reads the caller's own restriction so `/reset-password` never opens for a blocked or banned account (owner, 2026-11-25); the new-password form, its success notice and the offer in `SignInForm`; schemas, messages, failure classification), `src/app/auth/confirm/route.ts` (recovery branch), `src/app/(public)/reset-password/page.tsx` and `src/app/@breadcrumbs/reset-password/page.tsx` (new), `src/shared/config/account-paths.ts` (the new path), `src/features/breadcrumbs` (one route row).
 - Database: one migration that adds the `password_reset` scope (5 per 1 minute) to `consume_write_allowance`, using the same function body as the latest migration that touched it.
 - Configuration: the recovery email template (local and hosted Supabase), and the hosted letter cap (the default of a project without custom SMTP is very low; the sign-up letter already depends on it).
 - No new npm dependency and no new environment variable.
