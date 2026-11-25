@@ -19,8 +19,8 @@
 
 ## 2. The `password_reset` scope <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-9) One migration `supabase/migrations/<timestamp>_password_reset_limit.sql`: `create or replace function public.consume_write_allowance(scope text)` with the body of `20261113170000_admin_moderation.sql` plus `('password_reset', 5, interval '1 minute')` in the limits list, and `write_rate_limits_scope_check` dropped and re-added with the new scope (the commented rollback statements in the same style as the earlier migrations). Add a «Scope added by `password-recovery`» paragraph to ADR 0007 that says the limit bounds only the attempts made through this app (design D6). Verify `npx supabase db reset` applies it.
-- [ ] 2.2 (FR-9) Extend `supabase/tests/write_rate_limits.test.sql`: five `consume_write_allowance('password_reset')` calls return `true` and the sixth `false`; the window restarts after it passed; another scope's counter is untouched; a row with an unknown scope is rejected by the constraint. Verify `npx supabase test db` passes.
+- [x] 2.1 (FR-9) One migration `supabase/migrations/<timestamp>_password_reset_limit.sql`: `create or replace function public.consume_write_allowance(scope text)` with the body of `20261113170000_admin_moderation.sql` plus `('password_reset', 5, interval '1 minute')` in the limits list, and `write_rate_limits_scope_check` dropped and re-added with the new scope (the commented rollback statements in the same style as the earlier migrations). Add a «Scope added by `password-recovery`» paragraph to ADR 0007 that says the limit bounds only the attempts made through this app (design D6). Verify `npx supabase db reset` applies it.
+- [x] 2.2 (FR-9) Extend `supabase/tests/write_rate_limits.test.sql`: five `consume_write_allowance('password_reset')` calls return `true` and the sixth `false`; the window restarts after it passed; another scope's counter is untouched; a row with an unknown scope is rejected by the constraint. Verify `npx supabase test db` passes.
 
 ## 3. Server logic in `features/auth` <!-- judgement-heavy -->
 

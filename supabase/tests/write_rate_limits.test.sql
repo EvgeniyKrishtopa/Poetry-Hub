@@ -1,23 +1,25 @@
 -- Per-user write limits: consume_write_allowance() and the counter table's privileges
 -- (add-author-profiles, design D13), the poem_edit scope (edit-poem, design D2, D13), the collection_edit
 -- scope (add-poem-collections, design D2, D13), and the collection_poems_save scope (add-poems-to-collections,
--- design D2, D13).
+-- design D2, D13), and the password_reset scope (password-recovery, design D6).
 -- implements FR-21, NFR-2 of add-author-profiles
 -- implements FR-7 of edit-poem
 -- implements FR-10 of add-poem-collections
 -- implements FR-7 of add-poems-to-collections
+-- implements FR-9 of password-recovery
 -- Run against the local stack: npx supabase test db
 begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(30);
+select plan(37);
 
 -- Fixtures, written as the superuser.
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'a@example.test'),
   ('22222222-2222-4222-8222-222222222222', 'b@example.test'),
-  ('33333333-3333-4333-8333-333333333333', 'c@example.test');
+  ('33333333-3333-4333-8333-333333333333', 'c@example.test'),
+  ('44444444-4444-4444-8444-444444444444', 'd@example.test');
 
 -- ---------- anon ----------
 set local role anon;
@@ -232,6 +234,66 @@ select is(
    where user_id = '11111111-1111-4111-8111-111111111111' and scope = 'profile_write'),
   1,
   'the restarted window counts from 1'
+);
+
+-- ---------- signed in as D: the password_reset scope (password-recovery, FR-9, design D6) ----------
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"44444444-4444-4444-8444-444444444444","role":"authenticated"}', true);
+
+select ok(
+  (select bool_and(public.consume_write_allowance('password_reset')) from generate_series(1, 5)),
+  'password_reset: calls 1-5 are allowed'
+);
+
+select is(
+  public.consume_write_allowance('password_reset'),
+  false,
+  'password_reset: the 6th call in the window is refused'
+);
+
+select is(
+  public.consume_write_allowance('profile_write'),
+  true,
+  'a spent password_reset limit leaves profile_write allowed'
+);
+
+reset role;
+
+-- As the superuser: move D's password_reset window back 61 seconds, past the minute.
+update public.write_rate_limits
+set window_start = window_start - interval '61 seconds'
+where user_id = '44444444-4444-4444-8444-444444444444' and scope = 'password_reset';
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"44444444-4444-4444-8444-444444444444","role":"authenticated"}', true);
+
+select is(
+  public.consume_write_allowance('password_reset'),
+  true,
+  'password_reset: an attempt after the minute window is allowed again'
+);
+
+reset role;
+
+select is(
+  (select hits from public.write_rate_limits
+   where user_id = '44444444-4444-4444-8444-444444444444' and scope = 'password_reset'),
+  1,
+  'password_reset: the restarted window counts from 1'
+);
+
+select is(
+  (select hits from public.write_rate_limits
+   where user_id = '44444444-4444-4444-8444-444444444444' and scope = 'profile_write'),
+  1,
+  'password_reset: another scope''s counter was not touched by it'
+);
+
+select throws_ok(
+  $$insert into public.write_rate_limits (user_id, scope, window_start, hits)
+    values ('44444444-4444-4444-8444-444444444444', 'password_resett', now(), 1)$$,
+  '23514', null,
+  'a counter row with an unknown scope is rejected by the constraint'
 );
 
 select * from finish();
