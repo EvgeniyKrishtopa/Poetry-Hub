@@ -249,3 +249,29 @@ sequenceDiagram
 ## Open Questions
 
 - The assumptions in the proposal's Open Questions: what «unique» and «complexity» mean, global versus local sign-out, the wording of the sign-out-failed notice, and whether to keep the `password_reset` limit given that it bounds only the app's path. Owner, due 2026-11-27.
+
+## Scaffold map
+
+Typed stubs at their final paths; every body is `throw new Error("not implemented")` or `null`, except where noted.
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/shared/config/account-paths.ts` | the new-password page path, shared with `breadcrumbs` | `RESET_PASSWORD_PATH` |
+| `src/features/auth/model/auth.constants.ts` | the dead-link `error` value, the `status` parameter and its two values | `RECOVERY_FAILED_ERROR`, `RESET_STATUS_PARAM`, `RESET_STATUS` |
+| `src/features/auth/model/auth.types.ts` | failure kinds per flow, request and update results, link outcome, allowance answer | `RecoveryRequestFailure`, `UpdatePasswordFailure`, `RecoveryRequestResult`, `UpdatePasswordResult`, `ConfirmOutcome`, `ResetStatus`, `PasswordResetAllowance` |
+| `src/features/auth/model/credentials.schema.ts` | the request and new-password schemas, `pick`s of the sign-in and sign-up schemas | `recoveryRequestSchema`, `newPasswordSchema` |
+| `src/features/auth/model/confirm-params.schema.ts` | the literal-`recovery` link parameters | `recoveryParamsSchema` |
+| `src/features/auth/model/confirm-target.ts` | D1's table: link type and outcome to a fixed path, parsing `type` itself | `getConfirmTarget` |
+| `src/features/auth/model/classify-recovery-request-error.ts` | D3's mapping of a letter-request error (code first, status only without a code) | `classifyRecoveryRequestError` |
+| `src/features/auth/dal/confirm-recovery.ts` | server-only `verifyOtp` for a recovery link, never throws | `confirmRecovery` |
+| `src/features/auth/dal/password-reset-allowance.ts` | server-only one-scope copy of the write-allowance helper, fails closed | `consumePasswordResetAllowance` |
+| `src/features/auth/actions/auth.actions.ts` | the two new Server Actions | `requestRecoveryAction`, `updatePasswordAction` |
+| `src/features/auth/components/RecoveryOffer/` | the recovery offer inside the sign-in form, with its own action state | `RecoveryOffer`, `RecoveryOfferState`, `RecoveryOfferProps` |
+| `src/features/auth/components/ResetPasswordPage/` | the page content: `status` first, then the session | `ResetPasswordPage`, `ResetPasswordPageProps` |
+| `src/features/auth/components/ResetPasswordForm/` | the one-field new-password form | `ResetPasswordForm` |
+| `src/features/auth/components/PasswordResetDone/` | the done notice with the link to `/login` | `PasswordResetDone`, `PasswordResetDoneProps` |
+| `src/features/auth/metadata/auth-pages-metadata.ts` | the page head (returns `{}` in the scaffold: the page module calls it at import) | `getResetPasswordPageMetadata` |
+| `src/features/auth/index.ts` | the public API additions | `confirmRecovery`, `getConfirmTarget`, `RECOVERY_FAILED_ERROR`, `ResetPasswordPage`, `getResetPasswordPageMetadata` |
+| `src/app/(public)/reset-password/page.tsx` | thin route (renders `null` in the scaffold) | default export, `metadata` |
+| `src/app/@breadcrumbs/reset-password/page.tsx` | breadcrumbs slot page, the same static markup as every slot | default export |
+| `knip.jsonc` | temporary ignores for stubs with no importer yet; task 6.3 removes them | none |

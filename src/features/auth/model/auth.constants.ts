@@ -1,6 +1,15 @@
 /** The `error` value `/auth/confirm` puts on `/login` when a link fails. */
 export const CONFIRM_FAILED_ERROR = "confirm-failed";
 
+/** The `error` value `/auth/confirm` puts on `/login` when a recovery link fails (password-recovery design D1). */
+export const RECOVERY_FAILED_ERROR = "recovery-failed";
+
+/** The search parameter on `/reset-password` that carries a `RESET_STATUS` value (password-recovery design D4). */
+export const RESET_STATUS_PARAM = "status";
+
+/** What `updatePasswordAction` tells `/reset-password` after a change: the old sessions ended, or not (design D5). */
+export const RESET_STATUS = { updated: "updated", updatedSignOutFailed: "updated-sign-out-failed" } as const;
+
 export const MIN_PASSWORD_LENGTH = 8;
 
 /**

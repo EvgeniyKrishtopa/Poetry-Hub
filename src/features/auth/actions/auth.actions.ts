@@ -14,11 +14,13 @@ import type {
   AuthFailure,
   SignInResult,
   SignOutResult,
+  RecoveryRequestResult,
   SignUpResult,
   StartGoogleSignInResult,
+  UpdatePasswordResult,
 } from "../model/auth.types";
 import { classifyAuthError, isBannedSignUpRejection } from "../model/classify-auth-error";
-import { signInSchema, signUpSchema } from "../model/credentials.schema";
+import { newPasswordSchema, recoveryRequestSchema, signInSchema, signUpSchema } from "../model/credentials.schema";
 import { getGoogleLogLine } from "../model/google-log-line";
 import { startGoogleSignInSchema } from "../model/google-sign-in.schema";
 
@@ -106,6 +108,26 @@ export const signOutAction = authActionClient.action(async (): Promise<SignOutRe
   refresh();
   return { ok: true };
 });
+
+/**
+ * Asks Supabase to send a recovery letter (password-recovery design D3). Receives the email only and answers `sent`
+ * for every outcome that depends on the address.
+ */
+export const requestRecoveryAction = authActionClient
+  .inputSchema(recoveryRequestSchema)
+  .action(async (): Promise<RecoveryRequestResult> => {
+    throw new Error("not implemented");
+  });
+
+/**
+ * Sets the recovery session's new password (password-recovery design D5): schema, session, allowance, update,
+ * global sign-out, then a redirect to `/reset-password?status=…`. Success never returns; failures are values.
+ */
+export const updatePasswordAction = authActionClient
+  .inputSchema(newPasswordSchema)
+  .action(async (): Promise<UpdatePasswordResult> => {
+    throw new Error("not implemented");
+  });
 
 /**
  * Starts a Google sign-in (google-sign-in design D1): on success it redirects to Google's account chooser

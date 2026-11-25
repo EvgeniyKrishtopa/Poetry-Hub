@@ -1,4 +1,4 @@
-import type { GOOGLE_FLOW, SIGN_OUT_STATUS } from "./auth.constants";
+import type { GOOGLE_FLOW, RESET_STATUS, SIGN_OUT_STATUS } from "./auth.constants";
 
 /** Why an auth call failed, in the terms the forms show (design D7). */
 export type AuthFailure =
@@ -103,3 +103,30 @@ export interface StartGoogleSignInResult {
 
 /** `GoogleSignInButton`'s action state: nothing pressed yet, or a failed start (design D6, D7). */
 export type GoogleSignInButtonState = { readonly status: "idle" } | StartGoogleSignInResult;
+
+/** Why a letter request failed: the only failures the request flow can produce (password-recovery design D3). */
+export type RecoveryRequestFailure = "rate-limited" | "unavailable" | "unknown";
+
+/** Why a password change failed: the request failures plus the ones only the update flow has (design D5). */
+export type UpdatePasswordFailure = RecoveryRequestFailure | "link-expired" | "same-password" | "weak-password";
+
+/** `requestRecoveryAction`'s answer: `sent` whatever the address holds, never a hint about it (design D3). */
+export type RecoveryRequestResult =
+  | { readonly status: "sent" }
+  | { readonly status: "invalid" }
+  | { readonly status: "failed"; readonly failure: RecoveryRequestFailure };
+
+/** Changing the password never returns on success: the action redirects to `/reset-password?status=…` (design D5). */
+export interface UpdatePasswordResult {
+  readonly status: "failed";
+  readonly failure: UpdatePasswordFailure;
+}
+
+/** How a link's `verifyOtp` ended; `/auth/confirm` turns it into a redirect target (design D1). */
+export type ConfirmOutcome = "verified" | "failed";
+
+/** A `RESET_STATUS` value: what `/reset-password` shows after a successful change (design D4, D5). */
+export type ResetStatus = (typeof RESET_STATUS)[keyof typeof RESET_STATUS];
+
+/** `consume_write_allowance("password_reset")`'s answer; a refusal is a value, a failed check never allows (design D5). */
+export type PasswordResetAllowance = "allowed" | "refused" | "failed";

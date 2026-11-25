@@ -16,3 +16,9 @@ export const signUpSchema = z.object({
     .string({ error: FIELD_MESSAGES.passwordTooShort(MIN_PASSWORD_LENGTH) })
     .min(MIN_PASSWORD_LENGTH, FIELD_MESSAGES.passwordTooShort(MIN_PASSWORD_LENGTH)),
 });
+
+/** `requestRecoveryAction`'s input: the sign-in email field, nothing else (password-recovery FR-2). */
+export const recoveryRequestSchema = signInSchema.pick({ email: true });
+
+/** `updatePasswordAction`'s input: the sign-up password rule (password-recovery FR-5). */
+export const newPasswordSchema = signUpSchema.pick({ password: true });
