@@ -10,7 +10,7 @@ export { SignUpForm } from "./components/SignUpForm/SignUpForm";
 export { ResetPasswordPage } from "./components/ResetPasswordPage/ResetPasswordPage";
 export { confirmRecovery } from "./dal/confirm-recovery";
 export { confirmSignUp } from "./dal/confirm-sign-up";
-export { getConfirmTarget } from "./model/confirm-target";
+export { CONFIRM_TYPE, getConfirmTarget } from "./model/confirm-target";
 export { finishGoogleSignIn } from "./dal/finish-google-sign-in";
 export { getGoogleCallbackTarget } from "./model/google-callback-target";
 export {

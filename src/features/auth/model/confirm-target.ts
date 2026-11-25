@@ -4,7 +4,8 @@ import { HOME_PATH } from "@/shared/config/constants";
 import { CONFIRM_FAILED_ERROR, RECOVERY_FAILED_ERROR } from "./auth.constants";
 import type { ConfirmOutcome } from "./auth.types";
 
-const CONFIRM_TYPE = { signUp: "email", recovery: "recovery" } as const;
+/** The `type` values of a confirmation link: the sign-up letter's and the recovery letter's. */
+export const CONFIRM_TYPE = { signUp: "email", recovery: "recovery" } as const;
 
 const CONFIRM_FAILED_TARGET = `${SIGN_IN_PATH}?error=${CONFIRM_FAILED_ERROR}`;
 const RECOVERY_FAILED_TARGET = `${SIGN_IN_PATH}?error=${RECOVERY_FAILED_ERROR}`;
