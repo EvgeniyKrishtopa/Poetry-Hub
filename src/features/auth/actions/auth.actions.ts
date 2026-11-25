@@ -190,7 +190,7 @@ export const updatePasswordAction = authActionClient
 
     const signOut = await endAllSessions(client.supabase);
     const target = signOut.ok ? RESET_UPDATED_TARGET : RESET_SIGN_OUT_FAILED_TARGET;
-    // Outside every try: `redirect` throws NEXT_REDIRECT, which a catch would swallow (Gate 1 P1).
+    // Outside every try: `redirect` throws NEXT_REDIRECT, which a catch would swallow.
     redirect(target);
   });
 
