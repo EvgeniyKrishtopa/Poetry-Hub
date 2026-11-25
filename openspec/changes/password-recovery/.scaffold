@@ -1,0 +1,2 @@
+yes
+# new module: no (inside the auth feature); new boundary crossing: yes (two new Server Actions, which are public endpoints, and a new page route for the new-password form)

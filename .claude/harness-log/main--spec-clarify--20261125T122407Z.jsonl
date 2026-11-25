@@ -1,0 +1,7 @@
+{"ts":"2026-11-25T12:24:07Z","kind":"finding","change":"password-recovery","gate":"spec-clarify","finding":"design.md:34 the recovery offer after a recovery-failed URL and a later sign-in failure","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-25T12:24:07Z","kind":"finding","change":"password-recovery","gate":"spec-clarify","finding":"design.md:48 unlisted error code with HTTP 429 on the recovery request","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-25T12:24:07Z","kind":"finding","change":"password-recovery","gate":"spec-clarify","finding":"spec.md:28 the sent notice replaces the offer text or the whole offer","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-25T12:24:07Z","kind":"finding","change":"password-recovery","gate":"spec-clarify","finding":"spec.md:176 a pending request disables one or both sign-in buttons","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-25T12:24:07Z","kind":"finding","change":"password-recovery","gate":"spec-clarify","finding":"spec.md:176 which connection notice and how many above the recovery button","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-25T12:24:07Z","kind":"finding","change":"password-recovery","gate":"spec-clarify","finding":"spec.md:287 how the success notice is announced","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-25T12:24:07Z","kind":"finding","change":"password-recovery","gate":"spec-clarify","finding":"auth/spec.md:49 missing hash or config on a recovery link: confirm-failed or recovery-failed","outcome":"fixed","ruleNumber":""}

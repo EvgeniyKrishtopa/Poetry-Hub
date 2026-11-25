@@ -1,0 +1,2 @@
+full
+# more than one module: yes (auth, shared/config, breadcrumbs, app routes); data schema: yes (a new write-allowance scope); contract: yes (consume_write_allowance, the sign-in form's failure shape)
