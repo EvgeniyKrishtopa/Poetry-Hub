@@ -112,12 +112,17 @@ Every page under `/account` and `/admin` SHALL declare `robots` `noindex, nofoll
 - **THEN** the HTML has `noindex, nofollow` and no `description`, `og:` or `twitter:` tag
 
 ### Requirement: Auth pages are not indexed (FR-7)
-`/login` and `/signup` SHALL declare `robots` `noindex, follow`, a plain title and their canonical URL (FR-3), and SHALL NOT carry a description, an Open Graph tag or a Twitter card; they are the two exceptions to FR-2, FR-4 and FR-5.
+`/login`, `/signup` and `/reset-password` SHALL declare `robots` `noindex, follow`, a plain title and their canonical URL (FR-3), and SHALL NOT carry a description, an Open Graph tag or a Twitter card; they are the three exceptions to FR-2, FR-4 and FR-5.
 
 #### Scenario: Login page head
 - **GIVEN** the application is running
 - **WHEN** a crawler requests `/login`
 - **THEN** the HTML has `<meta name="robots" content="noindex, follow">`, a canonical link `<SITE_URL>/login`, and no `description`, `og:` or `twitter:` tag
+
+#### Scenario: Reset-password page head
+- **GIVEN** the application is running
+- **WHEN** a crawler requests `/reset-password`
+- **THEN** the HTML has `<meta name="robots" content="noindex, follow">`, the title «Новый пароль», a canonical link `<SITE_URL>/reset-password`, and no `description`, `og:` or `twitter:` tag
 
 ### Requirement: Missing content is marked noindex for a crawler (FR-10)
 A request for a poem, author or collection page that does not exist, is not public, or was removed, or for `/about` or `/privacy` whose Contentful entry does not exist, SHALL carry `<meta name="robots" content="noindex">` and show the not-found screen, because the metadata step calls `notFound()` for it. The HTTP status stays 200: spike 1.2 measured 200 for every crawler, in and out of `htmlLimitedBots`, since these pages' prerendered shell commits the status before the metadata resolves (Cache Components). A real 404 status is a recorded follow-up (proposal). A failed read (`unavailable`) SHALL NOT be reported as not found: the metadata step returns the site's fallback metadata and the page body throws to its error screen as it does today. An unexpected exception in the metadata code itself SHALL NOT break the page (FR-1).
