@@ -1,4 +1,4 @@
-import type { SIGN_OUT_STATUS } from "./auth.constants";
+import type { GOOGLE_FLOW, SIGN_OUT_STATUS } from "./auth.constants";
 
 /** Why an auth call failed, in the terms the forms show (design D7). */
 export type AuthFailure =
@@ -70,3 +70,36 @@ export type SignInFormState = IdleFormState | InvalidFormState | FailedFormState
 export type SignUpFormState =
   | SignInFormState
   | { readonly status: "check-email"; readonly email: string };
+
+/** The page a Google sign-in started on: one of `GOOGLE_FLOW` (google-sign-in design D2). */
+export type GoogleFlow = (typeof GOOGLE_FLOW)[keyof typeof GOOGLE_FLOW];
+
+/** Why a Google sign-in ended without a session (google-sign-in design D3). */
+export type GoogleFailureReason = "cancelled" | "blocked" | "failed";
+
+/** How `/auth/callback` finished: success is explicit, never "no error" (design D3). */
+export type GoogleSignInResult =
+  | { readonly ok: true; readonly accountExisted: boolean }
+  | { readonly ok: false; readonly reason: GoogleFailureReason };
+
+/** The search parameters Supabase Auth sends to `/auth/callback`; any of them may be missing. */
+export interface GoogleCallbackParams {
+  readonly code: string | null;
+  readonly error: string | null;
+  readonly errorCode: string | null;
+  readonly errorDescription: string | null;
+}
+
+/** The two timestamps of the signed-in user that tell a new account from an existing one (design D4). */
+export interface GoogleCallbackUser {
+  readonly created_at: string;
+  readonly last_sign_in_at?: string;
+}
+
+/** Starting a Google sign-in never returns on success: the action redirects to Google (design D1). */
+export interface StartGoogleSignInResult {
+  readonly status: "failed";
+}
+
+/** `GoogleSignInButton`'s action state: nothing pressed yet, or a failed start (design D6, D7). */
+export type GoogleSignInButtonState = { readonly status: "idle" } | StartGoogleSignInResult;

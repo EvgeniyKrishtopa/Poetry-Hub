@@ -4,19 +4,49 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { getSiteUrl } from "@/shared/lib/seo";
 import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
-import type { AuthFailedResult, AuthFailure, SignInResult, SignOutResult, SignUpResult } from "../model/auth.types";
+import { GOOGLE_FLOW_PARAM } from "../model/auth.constants";
+import type {
+  AuthFailedResult,
+  AuthFailure,
+  SignInResult,
+  SignOutResult,
+  SignUpResult,
+  StartGoogleSignInResult,
+} from "../model/auth.types";
 import { classifyAuthError, isBannedSignUpRejection } from "../model/classify-auth-error";
 import { signInSchema, signUpSchema } from "../model/credentials.schema";
+import { getGoogleLogLine } from "../model/google-log-line";
+import { startGoogleSignInSchema } from "../model/google-sign-in.schema";
 
 import { authActionClient } from "./action-client";
 
 const HOME_PATH = "/";
 
+const GOOGLE_PROVIDER = "google";
+
+/** Where Supabase Auth returns a Google sign-in: the `/auth/callback` route handler (google-sign-in design D2). */
+const GOOGLE_CALLBACK_PATH = "/auth/callback";
+
+/**
+ * Google always shows its account chooser, even when the browser is still signed in to Google: after "sign out"
+ * the next person on a shared device must not get the last account in one press, and the visitor can pick
+ * another account or cancel (google-sign-in design D1, owner 2026-11-24).
+ */
+const GOOGLE_QUERY_PARAMS = { prompt: "select_account" } as const;
+
 function failed(failure: AuthFailure): AuthFailedResult {
   return { status: "failed", failure };
+}
+
+/** One log line with the reason and the error code only, never the address or the authorize URL (NFR-G1). */
+function failedGoogleStart(errorCode: string | null | undefined): StartGoogleSignInResult {
+  const line = getGoogleLogLine("start failed", errorCode);
+  console.error(line);
+  return { status: "failed" };
 }
 
 /**
@@ -76,3 +106,27 @@ export const signOutAction = authActionClient.action(async (): Promise<SignOutRe
   refresh();
   return { ok: true };
 });
+
+/**
+ * Starts a Google sign-in (google-sign-in design D1): on success it redirects to Google's account chooser
+ * and never returns; any failure to start returns the failed result.
+ */
+export const startGoogleSignInAction = authActionClient
+  .inputSchema(startGoogleSignInSchema)
+  .action(async ({ parsedInput }): Promise<StartGoogleSignInResult> => {
+    const client = await createClientOrFailure();
+    if ("failure" in client) return failedGoogleStart(client.failure);
+
+    const siteUrl = getSiteUrl();
+    const redirectTo = `${siteUrl}${GOOGLE_CALLBACK_PATH}?${GOOGLE_FLOW_PARAM}=${parsedInput.from}`;
+    // The server client's setAll writes the PKCE code-verifier cookie, so the redirect below carries it.
+    const { data, error } = await client.supabase.auth.signInWithOAuth({
+      provider: GOOGLE_PROVIDER,
+      options: { redirectTo, queryParams: GOOGLE_QUERY_PARAMS },
+    });
+    if (error) return failedGoogleStart(error.code);
+    if (!data.url) return failedGoogleStart(null);
+
+    // Outside every try: `redirect` throws NEXT_REDIRECT, which a catch would swallow (Gate 1 P1).
+    redirect(data.url);
+  });

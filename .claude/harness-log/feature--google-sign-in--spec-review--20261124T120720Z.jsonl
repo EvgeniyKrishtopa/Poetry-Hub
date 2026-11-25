@@ -1,0 +1,2 @@
+{"ts":"2026-11-24T12:07:20Z","kind":"finding","change":"google-sign-in","group":"-","gate":"spec-review","finding":"SR-01 task 5.2 names no requirement ID","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-24T12:07:20Z","change":"google-sign-in","group":"full","gate":"spec-review","verdict":"confirmed","skipReason":"","durationMs":83427,"tokensTotal":57979,"tokensNote":"","model":"opus","reviewConfidence":"high","fixIterations":0,"escalatedToHuman":false}

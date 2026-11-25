@@ -1,5 +1,7 @@
-import { CONFIRM_FAILED_ERROR } from "./auth.constants";
-import type { AuthFailure, AuthFlow } from "./auth.types";
+import { CONNECTION_STATUS } from "@/shared/lib/network/network.constants";
+
+import { CONFIRM_FAILED_ERROR, GOOGLE_ERROR, GOOGLE_FLOW } from "./auth.constants";
+import type { AuthFailure, AuthFlow, GoogleFlow } from "./auth.types";
 
 export const GENERIC_SERVER_ERROR = "Что-то пошло не так. Попробуйте ещё раз.";
 
@@ -23,6 +25,44 @@ export const SESSION_EXPIRED_NOTICE = "Сессия истекла. Войдит
 /** The `/login` alert for its `error` search param, or none for any other value. */
 export function getLoginErrorMessage(error: string | string[] | undefined): string | undefined {
   return error === CONFIRM_FAILED_ERROR ? CONFIRM_FAILED_MESSAGE : undefined;
+}
+
+/** The Google button's label on each page (google-sign-in FR-G1). */
+export const GOOGLE_BUTTON_LABEL: Readonly<Record<GoogleFlow, string>> = {
+  [GOOGLE_FLOW.signIn]: "Войти через Google",
+  [GOOGLE_FLOW.signUp]: "Зарегистрироваться через Google",
+};
+
+/** The separator between the password form and the Google button (google-sign-in design D6). */
+export const GOOGLE_SEPARATOR_LABEL = "или";
+
+/** Also the text of a failed start (google-sign-in FR-G1, FR-G4). */
+export const GOOGLE_FAILED_MESSAGE = "Не удалось войти через Google. Попробуйте ещё раз.";
+
+/** Says that the address cannot be used, never why (google-sign-in FR-G5). */
+export const GOOGLE_BLOCKED_MESSAGE = "Вход с этим адресом невозможен.";
+
+export const GOOGLE_CANCELLED_MESSAGE = "Вы отменили вход через Google. Попробуйте ещё раз.";
+
+/** `ConnectionNotice`'s texts above the Google button: it signs in, it does not save (google-sign-in FR-G2). */
+export const GOOGLE_CONNECTION_MESSAGES = {
+  [CONNECTION_STATUS.offline]:
+    "Нет подключения к интернету. Вход через Google станет доступен, когда связь восстановится.",
+  [CONNECTION_STATUS.slow]: "Медленное подключение к интернету. Вход через Google станет доступен, когда связь улучшится.",
+} as const;
+
+/** The `/` notice after a Google sign-up into an existing account (google-sign-in FR-G6). */
+export const ACCOUNT_EXISTS_NOTICE = "Аккаунт с этой почтой уже есть — вы вошли в него.";
+
+const GOOGLE_ERROR_MESSAGES: ReadonlyMap<string, string> = new Map([
+  [GOOGLE_ERROR.cancelled, GOOGLE_CANCELLED_MESSAGE],
+  [GOOGLE_ERROR.failed, GOOGLE_FAILED_MESSAGE],
+  [GOOGLE_ERROR.blocked, GOOGLE_BLOCKED_MESSAGE],
+]);
+
+/** The Google notice for a `google-*` `error` search param, or none for any other value (google-sign-in design D6). */
+export function getGoogleErrorMessage(error: string | string[] | undefined): string | undefined {
+  return typeof error === "string" ? GOOGLE_ERROR_MESSAGES.get(error) : undefined;
 }
 
 const RATE_LIMITED_MESSAGE = "Слишком много попыток. Попробуйте через несколько минут.";

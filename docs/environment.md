@@ -25,6 +25,12 @@ Read before adding, renaming, or reading an environment variable.
   2. Authentication → Emails → "Confirm sign up": the link `href` becomes `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`.
   3. Authentication → Providers → Email: "Confirm email" on; minimum password length 8.
   4. Authentication → Rate Limits: raise "sign-ups and sign-ins" above the default 30 per 5 minutes. Every sign-in and sign-up runs in a Server Action, so they all reach Supabase from the server's IP and share one per-IP budget; forwarding each reader's IP would need a secret key, which this project does not use.
+- Google sign-in (`google-sign-in`; ADR 0019): Supabase Auth's Google provider, configured outside the app. The app reads no new variable: it starts the flow with `signInWithOAuth` (`redirectTo` = `getSiteUrl()` + `/auth/callback?from=sign-in|sign-up`, `GOOGLE_CALLBACK_PATH` and `GOOGLE_FLOW_PARAM` in the auth feature) and finishes it at the route `/auth/callback`.
+  - Google Cloud (owner, manual): APIs & Services → OAuth consent screen with the site's name, then Credentials → Create credentials → OAuth client ID, type "Web application". Its **Authorized redirect URI** is the Supabase project's own callback, `https://<project-ref>.supabase.co/auth/v1/callback`, not the site's `/auth/callback`: Google returns to Supabase, and Supabase returns to the site. For the local stack add `http://127.0.0.1:54321/auth/v1/callback` to the same client or a second one.
+  - Hosted Supabase: Authentication → Providers → Google, enabled, with that client's id and secret. Authentication → URL Configuration: the Site URL equals what `getSiteUrl()` returns (the Site address section below), and Redirect URLs contain exactly the two addresses the app sends, `<site>/auth/callback?from=sign-in` and `<site>/auth/callback?from=sign-up` (in Supabase's glob a `?` matches any one character, so each still matches itself). Never a `<site>/auth/callback**` pattern: `**` matches any characters, `/` included, so it would accept almost any return address on the site, and a code sent there could leak (Supabase recommends exact redirect URLs in production).
+  - A `redirectTo` that matches no Redirect URL is **not an error**: Supabase silently sends the visitor to the Site URL root with `?code=`, so they land on `/` signed out with no notice. If a Google sign-in ends that way, check the Redirect URLs pattern first.
+  - Rate limit: the code exchange at `/auth/callback` calls `/auth/v1/token` (PKCE grant) from the app server. It counts against Authentication → Rate Limits → "token refreshes" (`token_refresh` in `supabase/config.toml`), the same per-IP budget as password sign-ins and session refreshes, all from the server's one IP (ADR 0003). Starting the flow counts against nothing in the app's budget: the browser goes to `/auth/v1/authorize` itself.
+  - Local stack: `[auth.external.google]` in `supabase/config.toml` reads `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` through `env(...)`. They belong to the Supabase CLI's environment (`supabase/.env`, git-ignored, or the shell that runs `npx supabase start`), never to the app's `.env*` files, and never in the repository. Restart the stack (`npx supabase stop && npx supabase start`) after changing them.
 - Telegram (the contact form's delivery): `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`. Server-only: never prefix them with `NEXT_PUBLIC_`. Only `src/shared/lib/telegram/` reads them (every module there starts with `import "server-only"`), and no log line, error, or action result holds either value or the request URL, which carries the token.
   - Token: in Telegram, message [@BotFather](https://t.me/BotFather), send `/newbot`, and copy the token it returns (`<bot id>:<secret>`).
   - Chat id: send any message to the new bot (or add it to the group that should receive requests), then open `https://api.telegram.org/bot<token>/getUpdates` and copy `result[].message.chat.id`. A private chat has a positive id; a group or channel has a negative one.
@@ -173,5 +179,16 @@ git-ignored `PROGRESS.md`, so every clone sees them.
   5. Run the preview check with a real poem link in Telegram, VK and WhatsApp (`docs/deferred.md`,
      `seo-metadata` 6.5, while it is open). A messenger that shows the generic site card is a finding for
      `htmlLimitedBots` in `next.config.ts`.
+- **Google sign-in** (`google-sign-in`; ADR 0019): no migration and no app variable.
+  1. In Google Cloud, create the OAuth consent screen and a "Web application" OAuth client whose authorized redirect
+     URI is `https://<project-ref>.supabase.co/auth/v1/callback` (the Google sign-in section above).
+  2. In Supabase, Authentication → Providers → Google: enable it with that client's id and secret.
+  3. In Supabase, Authentication → URL Configuration: the Site URL equals the site's address (`getSiteUrl()`), and
+     Redirect URLs contain exactly `<site>/auth/callback?from=sign-in` and `<site>/auth/callback?from=sign-up`, not a
+     `**` pattern. Without them the sign-in silently lands on `/` signed out.
+  4. In Supabase, Authentication → Rate Limits: "token refreshes" now also counts every Google code exchange, on top
+     of password sign-ins and session refreshes from the server's IP; raise it with the sign-up and sign-in limit.
+  5. After the deploy, sign in with Google from `/login` and sign up from `/signup` with a real account, and check
+     that both land on `/` signed in.
 - Also before a first deploy: the Supabase dashboard setup and the Contentful webhook above, and the
   hosting-layer per-IP rate rule (Telegram section).
