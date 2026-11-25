@@ -30,7 +30,7 @@ When a sign-in fails with the wrong-credentials failure, the sign-in form SHALL 
 - **THEN** the offer and the button are not shown
 
 ### Requirement: Recovery request and its uniform answer (FR-2)
-`requestRecoveryAction` SHALL validate the address on the server against the sign-in email schema before any Supabase call; an invalid address SHALL return a field error and call nothing. A valid address SHALL call Supabase `resetPasswordForEmail`. The action SHALL answer `sent` for every outcome except an invalid address, the IP-wide rate limit (`over_request_rate_limit`, or HTTP 429 on an error that carries no code at all, answered `rate-limited`), a missing config (`unavailable`) and any other failure (`unknown`). In particular the answer SHALL be the same for an address with an account, an address without one, a blocked address, and an address Supabase refuses a repeat letter for (`over_email_send_rate_limit`). On `sent` the form SHALL show, in a neutral notice and in place of the offer's text, «Если для этого адреса есть аккаунт, мы отправили письмо со ссылкой для восстановления пароля. Ссылка действует 1 час.» The button «Отправить письмо» SHALL stay after `sent`, under the same offline, slow and pending rules (FR-7), so the reader can ask for another letter. The link's lifetime SHALL be 1 hour (Supabase `otp_expiry` 3600 s, locally and hosted). The submit wrapper SHALL pass only the `email` entry of the form data to the action, so the password entry never reaches it, and the action SHALL NOT log the address. When the error carries a code, the code alone SHALL decide: `over_email_send_rate_limit` (which also arrives as 429) is answered `sent`, and a code the action does not list is answered `unknown`, even with HTTP 429, so that a renamed per-address code can never show the rate-limited answer for an address that has an account. The HTTP status decides only when the error carries no code.
+`requestRecoveryAction` SHALL validate the address on the server against the sign-in email schema before any Supabase call; an invalid address SHALL return a field error and call nothing. A valid address SHALL call Supabase `resetPasswordForEmail`. The action SHALL answer `sent` for every outcome except an invalid address, the IP-wide rate limit (`over_request_rate_limit`, or HTTP 429 on an error that carries no code at all, answered `rate-limited`), a missing config (`unavailable`) and any other failure (`unknown`). In particular the answer SHALL be the same for an address with an account, an address without one, a blocked address, and an address Supabase refuses a repeat letter for (`over_email_send_rate_limit`). On `sent` the form SHALL show, in a neutral notice and in place of the offer's text, «Если для этого адреса есть аккаунт, мы отправили письмо со ссылкой для восстановления пароля. Ссылка действует 1 час.» The button «Отправить письмо» SHALL stay after `sent`, under the same offline, slow and pending rules (FR-7), so the reader can ask for another letter. A browser drops the focus of a button that becomes disabled while its request is pending, so when the request ends and the focus is on nothing (the page body), the offer's button SHALL take it back; focus already on another element, such as the email field after an invalid address, SHALL stay where it is. The link's lifetime SHALL be 1 hour (Supabase `otp_expiry` 3600 s, locally and hosted). The submit wrapper SHALL pass only the `email` entry of the form data to the action, so the password entry never reaches it, and the action SHALL NOT log the address. When the error carries a code, the code alone SHALL decide: `over_email_send_rate_limit` (which also arrives as 429) is answered `sent`, and a code the action does not list is answered `unknown`, even with HTTP 429, so that a renamed per-address code can never show the rate-limited answer for an address that has an account. The HTTP status decides only when the error carries no code.
 
 #### Scenario: Invalid address
 - **GIVEN** the form holds the email "not-an-email"
@@ -42,6 +42,12 @@ When a sign-in fails with the wrong-credentials failure, the sign-in form SHALL 
 - **GIVEN** `resetPasswordForEmail` resolves without error
 - **WHEN** the reader presses «Отправить письмо»
 - **THEN** the sent notice is shown
+
+#### Scenario: Focus after a pressed offer
+- **GIVEN** the reader pressed «Отправить письмо» from the keyboard and the browser dropped the focus while the button was disabled
+- **WHEN** the request ends with the sent notice
+- **THEN** the focus is on «Отправить письмо» again
+- **AND** after an invalid address the focus stays on the email field
 
 #### Scenario: Asking again after a sent letter
 - **GIVEN** the sent notice is shown
@@ -355,9 +361,14 @@ The new components SHALL use design tokens and existing `shared/ui` primitives o
 - **THEN** no dependency was added and no color literal appears
 
 ### Requirement: The new-password page is rendered per request (NFR-4)
-`/reset-password` SHALL never be served from a shared cache: it reads the session on every request.
+`/reset-password` SHALL read the session or the `status` search parameter on every request and never serve its form or its done notice from a shared cache. Like every page that reads the session, the build lists it as partially prerendered (◐): the heading is static HTML and the content is streamed per request inside the page's own `<Suspense>`.
 
 #### Scenario: Build route table
 - **GIVEN** `npm run build` has run
 - **WHEN** the route table is read
-- **THEN** `/reset-password` is not a static or cached route
+- **THEN** `/reset-password` is listed as partially prerendered (◐), as `/login` and `/signup` are, and is not listed as a static (○) route
+
+#### Scenario: No cached content
+- **GIVEN** the page content reads the session and the search parameter
+- **WHEN** the code of `ResetPasswordPage` is inspected
+- **THEN** it holds no `"use cache"` scope

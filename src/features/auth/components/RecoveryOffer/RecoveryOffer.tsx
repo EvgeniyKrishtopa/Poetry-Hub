@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 import { useConnection } from "@/shared/lib/network/use-connection";
 import { Button, ConnectionNotice } from "@/shared/ui";
 
@@ -15,12 +17,27 @@ import type { RecoveryOfferProps } from "./RecoveryOffer.types";
 // implements NFR-3 of password-recovery: token utilities only, no color literals
 export function RecoveryOffer({ showText, busy, onRequest }: RecoveryOfferProps) {
   const { status, isOnline } = useConnection();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const requestedRef = useRef(false);
+
+  // A browser drops the focus of a button that is disabled while its request is pending; take it back when the
+  // request ends, unless it moved on purpose (the email field after an invalid address).
+  useEffect(() => {
+    if (busy || !requestedRef.current) return;
+    requestedRef.current = false;
+    if (document.activeElement === document.body) buttonRef.current?.focus();
+  }, [busy]);
+
+  function requestLetter(): void {
+    requestedRef.current = true;
+    onRequest();
+  }
 
   return (
     <div className="flex flex-col items-start gap-3 self-stretch">
       {showText && <p className="text-sm text-muted">{RECOVERY_OFFER_TEXT}</p>}
       <ConnectionNotice status={status} />
-      <Button type="button" variant="ghost" disabled={busy || !isOnline} onClick={onRequest}>
+      <Button ref={buttonRef} type="button" variant="ghost" disabled={busy || !isOnline} onClick={requestLetter}>
         {RECOVERY_OFFER_BUTTON_LABEL}
       </Button>
     </div>

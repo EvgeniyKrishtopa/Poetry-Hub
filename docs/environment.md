@@ -31,6 +31,13 @@ Read before adding, renaming, or reading an environment variable.
   - A `redirectTo` that matches no Redirect URL is **not an error**: Supabase silently sends the visitor to the Site URL root with `?code=`, so they land on `/` signed out with no notice. If a Google sign-in ends that way, check the Redirect URLs pattern first.
   - Rate limit: the code exchange at `/auth/callback` calls `/auth/v1/token` (PKCE grant) from the app server. It counts against Authentication → Rate Limits → "token refreshes" (`token_refresh` in `supabase/config.toml`), the same per-IP budget as password sign-ins and session refreshes, all from the server's one IP (ADR 0003). Starting the flow counts against nothing in the app's budget: the browser goes to `/auth/v1/authorize` itself.
   - Local stack: `[auth.external.google]` in `supabase/config.toml` reads `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` through `env(...)`. They belong to the Supabase CLI's environment (`supabase/.env`, git-ignored, or the shell that runs `npx supabase start`), never to the app's `.env*` files, and never in the repository. `supabase/.env.example` lists their names without values: copy it to `supabase/.env` and fill them in. Restart the stack (`npx supabase stop && npx supabase start`) after changing them.
+- Password recovery (`password-recovery`; ADR 0021, ADR 0022): Supabase Auth sends the letter, the app reads no new variable. The app asks for it with `resetPasswordForEmail` (`requestRecoveryAction`), opens its link at `/auth/confirm?type=recovery` (`confirmRecovery`), and sets the password on `/reset-password` (`updatePasswordAction`).
+  - Letter template: the local stack reads `[auth.email.template.recovery]` in `supabase/config.toml` (subject and `content_path = "./supabase/templates/recovery.html"`). The hosted project does not: paste the same subject and body into Authentication → Emails → "Reset password". The link must be exactly `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`: the app's own route, the token hash and no address. The Russian wording is a placeholder until the owner confirms it.
+  - Link lifetime: `otp_expiry = 3600` (1 hour) in `[auth.email]`. The letter and the app's «sent» notice say «1 час», so change all three together, and set the same value on the hosted project (Authentication → Providers → Email, or the Auth settings that hold the email OTP expiry).
+  - Pause between letters: `max_frequency` in `[auth.email]` is `1s` locally (so a manual run is not slowed) and `60s` by default on the hosted project. A second request for the same address inside that pause is refused with `over_email_send_rate_limit`; the app answers it as «sent» on purpose (design D3), so a reader sees no difference between a known and an unknown address. The refusal is logged by name only (`[auth] recovery letter refused: email send limit`).
+  - Letter cap and sender: the hosted project's built-in sender is limited to a few letters per hour and is meant for testing. Before launch set a custom SMTP sender (Authentication → Emails → SMTP Settings) and raise the email rate limit (Authentication → Rate Limits), or recovery letters stop arriving once the hour's cap is hit while the app still says «sent». The `[auth.email.smtp]` block in `supabase/config.toml` is commented out and stays local-only.
+  - New-password limit: `consume_write_allowance('password_reset')`, 5 attempts per minute per account (`20261125150000_password_reset_limit.sql`, ADR 0007). It bounds the app's own path only.
+  - A blocked or banned account: the letter is still sent, and its link opens no session (`verifyOtp` answers `user_banned`). Every other way in is closed too; the hosted checks are step 4 of the Deploy checklist item below.
 - Telegram (the contact form's delivery): `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`. Server-only: never prefix them with `NEXT_PUBLIC_`. Only `src/shared/lib/telegram/` reads them (every module there starts with `import "server-only"`), and no log line, error, or action result holds either value or the request URL, which carries the token.
   - Token: in Telegram, message [@BotFather](https://t.me/BotFather), send `/newbot`, and copy the token it returns (`<bot id>:<secret>`).
   - Chat id: send any message to the new bot (or add it to the group that should receive requests), then open `https://api.telegram.org/bot<token>/getUpdates` and copy `result[].message.chat.id`. A private chat has a positive id; a group or channel has a negative one.
@@ -190,5 +197,27 @@ git-ignored `PROGRESS.md`, so every clone sees them.
      of password sign-ins and session refreshes from the server's IP; raise it with the sign-up and sign-in limit.
   5. After the deploy, sign in with Google from `/login` and sign up from `/signup` with a real account, and check
      that both land on `/` signed in.
+- **Password recovery** (`password-recovery`; ADR 0021, ADR 0022): one migration and dashboard settings, no app variable.
+  1. `npx supabase db push` applies `20261125150000_password_reset_limit.sql` (the `password_reset` scope, 5 per
+     minute, in `write_rate_limits` and `consume_write_allowance`). Push it **before the app**: without it
+     the new-password save fails closed with the generic failure notice. Rollback: revert the app first, then the
+     down migration in the file's header.
+  2. In Supabase, Authentication → Emails → "Reset password": the subject and body of
+     `supabase/templates/recovery.html`, with the link `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`
+     (the Password recovery section above). The owner confirms the Russian wording first.
+  3. Check the hosted `otp_expiry` is 3600 s, the pause between letters (`max_frequency`, 60 s by default) is
+     what you want, and that a custom SMTP sender is set and the email rate limit raised (Authentication →
+     Rate Limits): the app answers «sent» even when the hour's cap refuses the letter.
+  4. A blocked account gets nothing out of its letter (design D8). Run both checks on the hosted project:
+     - The in-app run, task 6.4 of `password-recovery`: ask for a letter for a throwaway address, block that
+       account on `/admin`, and follow the link: it lands on `/login?error=recovery-failed` with no form and no
+       blocked wording; with a session opened before the block, `/reset-password` redirects to the same page;
+       a save from a page opened before the block shows the link-expired or the generic failure notice, never
+       a block wording, and the password stays unchanged. Unblock the account afterwards.
+     - A direct call: with an access token from before the block, `PUT <project url>/auth/v1/user` must answer
+       `403 user_banned`. Note the project's JWT signing mode (Project Settings → JWT Keys: a shared secret or
+       asymmetric keys): it decides which save-time check catches a held session (design D8).
+  5. After the deploy, run one real recovery on the production address: a wrong password, the offer, the letter,
+     the link, a new password, then sign in with it.
 - Also before a first deploy: the Supabase dashboard setup and the Contentful webhook above, and the
   hosting-layer per-IP rate rule (Telegram section).

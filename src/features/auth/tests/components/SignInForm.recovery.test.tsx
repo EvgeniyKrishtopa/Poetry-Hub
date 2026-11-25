@@ -171,6 +171,26 @@ describe("SignInForm: asking for a letter", () => {
   });
 
   // implements FR-2 of password-recovery
+  it("gives the focus back to the button when the browser dropped it while the request was pending", async () => {
+    let settle: (answer: RecoveryResponse) => void = () => {};
+    vi.mocked(requestRecoveryAction).mockReturnValue(new Promise((resolve) => (settle = resolve)));
+    await renderWithOffer();
+
+    await userEvent.click(offerButton());
+    await waitFor(() => expect(offerButton()).toBeDisabled());
+    // What a browser does to a button that becomes disabled: the focus goes to the page body. jsdom cannot blur a
+    // disabled button, so the body is focused directly.
+    document.body.tabIndex = -1;
+    document.body.focus();
+    document.body.removeAttribute("tabindex");
+    // Settled before any assertion, so a failure cannot leave the action pending for the next test.
+    settle({ data: { status: "sent" } });
+    await screen.findByRole("status");
+
+    await waitFor(() => expect(offerButton()).toHaveFocus());
+  });
+
+  // implements FR-2 of password-recovery
   it("sends the address typed after the offer appeared", async () => {
     recoveryAnswer({ data: { status: "sent" } });
     await renderWithOffer();
