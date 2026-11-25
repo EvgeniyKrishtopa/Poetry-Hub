@@ -3,8 +3,8 @@
 -- A new scope of ADR 0007's counter, password_reset: 5 attempts per 1 minute per account, one attempt per
 -- save on the new-password page, counted by the app after the session check and before updateUser. The limit
 -- bounds only the attempts made through this app: a holder of the session can call Supabase Auth's own
--- endpoint directly and skip it, so it is defence in depth, not a security boundary (design D6). Keep the
--- number in step with the password-reset limit constant in the auth feature.
+-- endpoint directly and skip it, so it is defence in depth, not a security boundary (design D6). The number
+-- lives only here: the app maps a refusal to a message and never reads it.
 --
 -- Same function body as 20261113170000_admin_moderation.sql (the restriction check first, one atomic upsert),
 -- with the one new row in the limits list; the constraint list is the one from 20261111160000_work_ordering.sql
