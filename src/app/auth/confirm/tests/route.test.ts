@@ -118,6 +118,18 @@ describe("GET /auth/confirm", () => {
     expect(response.headers.get("location")).toBe(`${ORIGIN}${successPath}`);
   });
 
+  it.each([
+    ["email", "/login?error=confirm-failed"],
+    ["recovery", "/login?error=recovery-failed"],
+  ] as const)("ignores a redirect-target parameter on a failed %s link", async (type, failurePath) => {
+    vi.mocked(confirmSignUp).mockResolvedValue("failed");
+    vi.mocked(confirmRecovery).mockResolvedValue("failed");
+
+    const response = await GET(get(`?token_hash=abc&type=${type}&next=https://evil.example`));
+
+    expect(response.headers.get("location")).toBe(`${ORIGIN}${failurePath}`);
+  });
+
   it("exports only GET, so every other method answers 405", () => {
     expect(Object.keys(routeModule)).toEqual(["GET"]);
   });
