@@ -5,6 +5,12 @@ export const SIGN_IN_PATH = "/login";
 
 export const SIGN_UP_PATH = "/signup";
 
+/**
+ * The new-password page a recovery link opens (password-recovery design D4). It lives here, not in `features/auth`,
+ * because `breadcrumbs` needs it for the page's trail without importing `auth`.
+ */
+export const RESET_PASSWORD_PATH = "/reset-password";
+
 /** Whether the proxy gates this path: the account page and anything under it, never `/accounts`. */
 export function isAccountPath(pathname: string): boolean {
   return pathname === ACCOUNT_PATH || pathname.startsWith(`${ACCOUNT_PATH}/`);
