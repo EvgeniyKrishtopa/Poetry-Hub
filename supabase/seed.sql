@@ -1,7 +1,8 @@
 -- Local test data (refine-author-page-and-contact, design D5). Loaded by `npx supabase db reset` after the
 -- migrations ([db.seed] in config.toml). A plain `db push` doesn't run it, but `db push --include-seed`,
 -- `supabase bootstrap`, and Supabase Branching preview branches do: never use those against a hosted
--- project while this file holds sign-in accounts (docs/environment.md).
+-- project while this file holds sign-in accounts (docs/environment.md). Never run `db reset` against a hosted
+-- database either (`--linked`, `--db-url`): it wipes the accounts first, so the guard below cannot see them.
 --
 -- LOCAL ONLY. Every reader below signs in with the same placeholder password: local-seed-password
 -- It is a throwaway value for the local stack, not a secret; never reuse it or seed a hosted project.
@@ -19,6 +20,19 @@
 --
 -- The seed runs as the database owner: RLS and the column grants don't apply. No about_align value is
 -- written, so the seed works before and after the migration that drops that column.
+--
+-- The guard below stops the seed on a database that holds a real account. The explicit transaction keeps a
+-- runner that goes on past an error (plain psql) from running the inserts after the guard fails.
+
+begin;
+
+do $$
+begin
+  if exists (select 1 from auth.users where lower(coalesce(email, '')) not like '%@example.test') then
+    raise exception 'seed refused: auth.users holds an account outside example.test';
+  end if;
+end
+$$;
 
 create temporary table seed_readers (
   email      text primary key,
@@ -155,3 +169,5 @@ select user_id from seed_readers where email = 'draft-author@example.test';
 drop table seed_author_poems;
 drop table seed_poems;
 drop table seed_readers;
+
+commit;
