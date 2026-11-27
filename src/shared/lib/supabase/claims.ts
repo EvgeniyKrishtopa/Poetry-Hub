@@ -10,6 +10,12 @@ const TOO_MANY_REQUESTS_STATUS = 429;
 
 export type SessionState = (typeof SESSION_STATE)[keyof typeof SESSION_STATE];
 
+/** One entry of a session's `amr` claim: how it was authenticated, and when (seconds since the epoch). */
+export interface AmrEntry {
+  readonly method: string;
+  readonly timestamp: number;
+}
+
 export type ClaimsState =
   | { readonly state: typeof SESSION_STATE.signedIn; readonly userId: string }
   | { readonly state: typeof SESSION_STATE.signedOut }
