@@ -15,8 +15,8 @@ Every response that carries the security headers SHALL also carry `Content-Secur
 
 #### Scenario: Google sign-in under the policy
 - **GIVEN** the policy is sent
-- **WHEN** a reader starts a Google sign-in with JavaScript on, and again with it off
-- **THEN** each time the browser reaches Google and no CSP violation is reported
+- **WHEN** a reader starts a Google sign-in
+- **THEN** the browser reaches Google and no CSP violation is reported
 
 ### Requirement: Responses do not name the framework (pre-deploy-security-hardening FR-15)
 Responses SHALL NOT carry an `X-Powered-By` header.

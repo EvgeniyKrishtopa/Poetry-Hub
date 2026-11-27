@@ -41,6 +41,52 @@ describe("applySecurityHeaders", () => {
   });
 });
 
+// implements FR-2 of pre-deploy-security-hardening
+describe("content security policy", () => {
+  const SUPABASE_URL = "https://abc.supabase.co/some/path";
+  const BASE_DIRECTIVES = ["object-src 'none'", "base-uri 'none'", "frame-ancestors 'none'"];
+
+  function readDirectives(response: NextResponse): string[] {
+    const policy = response.headers.get("Content-Security-Policy") ?? "";
+    return policy.split("; ");
+  }
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("sends exactly the four directives, with the configured Supabase origin", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", SUPABASE_URL);
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "sb_publishable_known-key");
+    vi.mocked(refreshSession).mockResolvedValue({ response: NextResponse.next(), session: "signed-out" });
+
+    const response = await proxy(new NextRequest(REQUEST_URL));
+
+    const formAction = "form-action 'self' https://abc.supabase.co https://accounts.google.com";
+    expect(readDirectives(response)).toEqual([...BASE_DIRECTIVES, formAction]);
+  });
+
+  it("omits only the Supabase origin on an invalid configuration, and still answers", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", undefined);
+    vi.mocked(refreshSession).mockResolvedValue({ response: NextResponse.next(), session: "unknown" });
+
+    const response = await proxy(new NextRequest(REQUEST_URL));
+
+    const formAction = "form-action 'self' https://accounts.google.com";
+    expect(readDirectives(response)).toEqual([...BASE_DIRECTIVES, formAction]);
+  });
+
+  it("is on the sign-in redirect too", async () => {
+    vi.mocked(refreshSession).mockResolvedValue({ response: NextResponse.next(), session: "signed-out" });
+    const accountRequest = new NextRequest(`${REQUEST_URL}account`);
+
+    const response = await proxy(accountRequest);
+
+    expect(response.status).toBe(307);
+    expect(readDirectives(response)).toEqual(expect.arrayContaining(BASE_DIRECTIVES));
+  });
+});
+
 // implements FR-6 of add-supabase-auth
 describe("proxy", () => {
   it("refreshes the session for the incoming request", async () => {
