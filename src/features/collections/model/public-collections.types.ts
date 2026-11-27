@@ -1,7 +1,7 @@
 import type { Poem } from "@/features/poems";
 
 /** One poem as a public collection lists it: its title links to the poem's public page. */
-export type PublicCollectionPoem = Pick<Poem, "id" | "title">;
+type PublicCollectionPoem = Pick<Poem, "id" | "title">;
 
 /** One visible collection as stored, before its poems are nested in (public-collections D5). */
 export interface PublicCollectionEntry {

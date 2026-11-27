@@ -8,7 +8,7 @@ const LIST_ID_PREFIX = "list:";
 const FREE_LIST_KEY = "free";
 
 /** What each registered item or list carries in its droppable/draggable `data`. */
-export type BoardData =
+type BoardData =
   | { readonly kind: "poem" | "collection"; readonly id: string }
   | { readonly kind: "list"; readonly container: PoemContainer };
 

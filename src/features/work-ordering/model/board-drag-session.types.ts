@@ -15,7 +15,7 @@ export interface DragState {
 }
 
 /** One phrase for the board's live region: `before` is the previous step's arrangement, `after` the current one. */
-export interface ScreenReaderAnnouncementRequest {
+interface ScreenReaderAnnouncementRequest {
   readonly event: ScreenReaderAnnouncementEvent;
   readonly before: Arrangement;
   readonly after: Arrangement;
