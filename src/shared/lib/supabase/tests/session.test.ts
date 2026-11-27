@@ -92,6 +92,23 @@ describe("refreshSession", () => {
     expect(options?.cookieOptions).toMatchObject({ httpOnly: true, sameSite: "lax" });
   });
 
+  // implements FR-1 of pre-deploy-security-hardening
+  it("keeps the attributes on the refreshed cookie it puts on the response", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const options = { ...getSessionCookieOptions(), path: "/" };
+    mockClient(async (cookies) => {
+      cookies.setAll([{ name: COOKIE_NAME, value: "fresh", options }], {});
+      return { data: { claims: {} }, error: null };
+    });
+
+    const { response } = await refreshSession(makeRequest(`${COOKIE_NAME}=stale`));
+
+    const setCookie = response.headers.get("set-cookie") ?? "";
+    expect(setCookie).toContain("HttpOnly");
+    expect(setCookie).toContain("Secure");
+    expect(setCookie).toMatch(/SameSite=lax/i);
+  });
+
   it("keeps the library's cache headers across a second write", async () => {
     mockClient(async (cookies) => {
       cookies.setAll([{ name: COOKIE_NAME, value: "one", options: {} }], LIBRARY_CACHE_HEADERS);
