@@ -1,4 +1,11 @@
-/** Moves allowed per minute per account (NFR-2); the migration's `order_move` scope uses the same number: keep the two in step. */
+/**
+ * Moves allowed per minute per account (NFR-2); the migration's `order_move` scope uses the same number: keep the two in step.
+ *
+ * `@public` keeps knip quiet: no code imports it, because the database enforces the limit and the migration's comment
+ * points here.
+ *
+ * @public
+ */
 export const MOVE_LIMIT_PER_MINUTE = 30;
 
 /** The limit's scope in `write_rate_limits` (design D2). */

@@ -13,7 +13,7 @@ import { MOVE_FAILURE_REASON } from "../../model/work-ordering.constants";
 import type { Arrangement, Drop, MoveFailureReason, MoveResult } from "../../model/work-ordering.types";
 
 /** A new object per failure, so the same failure twice moves focus to the alert twice. */
-export interface MoveAlert {
+interface MoveAlert {
   readonly reason: Exclude<MoveFailureReason, typeof MOVE_FAILURE_REASON.unauthenticated>;
 }
 
