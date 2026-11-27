@@ -1,0 +1,2 @@
+yes
+# new module: yes (shared/lib/turnstile, shared/lib/security-log); new boundary crossing: yes (/admin/verify route, Turnstile siteverify, error tracker, Management API script)

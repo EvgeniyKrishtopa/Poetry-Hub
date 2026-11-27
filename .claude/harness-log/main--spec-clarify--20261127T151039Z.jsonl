@@ -1,0 +1,15 @@
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"missing or malformed amr/aal","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"hosted check password policy","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"hosted check redirect URLs","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"require current password condition","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"firewall threshold scope","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"which auth rate limits to raise","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"which sign-ins count as failed","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"which rate-limit refusals are logged","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"what Sentry sends besides errors","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"expired captcha token","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"no captcha token obtainable","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"pixel limit number","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"honeypot vs required token","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"illustration cap off-by-one","outcome":"fixed","ruleNumber":""}
+{"ts":"2026-11-27T15:10:39Z","kind":"finding","change":"pre-deploy-security-hardening","group":"full","gate":"spec-clarify","finding":"hosted migration comparison","outcome":"fixed","ruleNumber":""}

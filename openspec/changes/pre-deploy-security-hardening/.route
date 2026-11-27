@@ -1,0 +1,2 @@
+full
+# multi-module: yes; data schema: yes (RLS policies and SQL functions); shared contracts: yes (action inputs, AdminAccess, SECURITY_HEADERS)
