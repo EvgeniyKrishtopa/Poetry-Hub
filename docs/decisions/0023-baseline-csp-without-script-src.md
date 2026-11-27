@@ -25,7 +25,7 @@ The OWASP review before the first deploy found no `Content-Security-Policy` and 
 **Negative**
 
 - The policy does not stop an injected script from running.
-- Chrome applies `form-action` to the redirects after a form post. A new sign-in provider, or a provider that redirects through another origin, must be added to the list, or the redirect is blocked.
+- The app's forms are submitted by client functions, so `form-action` does not govern today's sign-in: the Supabase and Google origins are listed (FR-2) for a start that posts natively. Chrome applies `form-action` to the redirects after such a post, so any origin of that chain would have to be listed, or the redirect is blocked.
 - Requests the proxy's matcher skips (static assets and paths with a dot) carry no policy.
 
 ## Alternatives Considered

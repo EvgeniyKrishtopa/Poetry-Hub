@@ -15,7 +15,7 @@ export const SECURITY_HEADERS = {
 
 const CONTENT_SECURITY_POLICY_HEADER = "Content-Security-Policy";
 
-/** Where the Google sign-in form post ends up, through Supabase's authorize address. */
+/** Google sign-in's destination, allowed (with Supabase) should its start ever become a native form post. */
 const GOOGLE_ACCOUNTS_ORIGIN = "https://accounts.google.com";
 
 /** `null` on an invalid configuration, which `refreshSession` already logs. */
@@ -30,8 +30,8 @@ function readSupabaseOrigin(): string | null {
 }
 
 /**
- * The baseline policy: only the directives that need no nonce (docs/decisions/0023). Chrome applies
- * `form-action` to the redirects after a form post too, so every origin of that chain is listed.
+ * The baseline policy: only the directives that need no nonce (docs/decisions/0023). Today's forms are
+ * submitted by client functions, so `form-action` governs only a native post, an injected form included.
  */
 function buildContentSecurityPolicy(): string {
   const supabaseOrigin = readSupabaseOrigin();
