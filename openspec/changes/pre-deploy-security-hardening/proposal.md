@@ -114,4 +114,5 @@ The owner delegated the technical forks on 2026-11-27: the safest option is take
 
 ## Open Questions
 
+- A wrong password on a banned account shows that the account is blocked (task 1.4, confirmed on the local stack 2026-11-27): whether to show the generic wrong-credentials message instead. Owner, with item 9 of `docs/security-post-deploy.md`; no wording change in this change.
 - Whether the audience in Russia makes the 152-FZ cross-border transfer rules apply to Sentry and Turnstile, and what they require beyond the privacy policy. Owner, due 2026-12-04.

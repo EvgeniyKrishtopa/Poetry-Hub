@@ -19,6 +19,19 @@
 --
 -- The seed runs as the database owner: RLS and the column grants don't apply. No about_align value is
 -- written, so the seed works before and after the migration that drops that column.
+--
+-- The guard below stops the seed on a database that holds a real account. The explicit transaction keeps a
+-- runner that goes on past an error (plain psql) from running the inserts after the guard fails.
+
+begin;
+
+do $$
+begin
+  if exists (select 1 from auth.users where lower(coalesce(email, '')) not like '%@example.test') then
+    raise exception 'seed refused: auth.users holds an account outside example.test';
+  end if;
+end
+$$;
 
 create temporary table seed_readers (
   email      text primary key,
@@ -155,3 +168,5 @@ select user_id from seed_readers where email = 'draft-author@example.test';
 drop table seed_author_poems;
 drop table seed_poems;
 drop table seed_readers;
+
+commit;

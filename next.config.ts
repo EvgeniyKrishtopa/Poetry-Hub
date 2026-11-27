@@ -7,6 +7,8 @@ import { buildSupabaseImagePatterns } from "./src/shared/config/supabase-image-p
 // implements NFR-1 of migrate-to-cache-components
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Responses don't name the framework.
+  poweredByHeader: false,
   cacheComponents: true,
   reactCompiler: true,
   experimental: {

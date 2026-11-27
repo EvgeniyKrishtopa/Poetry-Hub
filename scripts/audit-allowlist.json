@@ -1,8 +1,1 @@
-[
-  {
-    "id": "GHSA-fc5q-39xc-vjpf",
-    "package": "picomatch",
-    "reason": "No patched version exists: the advisory covers every picomatch release, 4.0.7 included, and npm's only fix is a breaking knip downgrade. Reached only through dev tooling (vite, knip, lint-staged, vitest, openspec), never the runtime bundle.",
-    "expires": "2026-12-01"
-  }
-]
+[]

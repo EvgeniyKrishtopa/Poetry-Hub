@@ -4,10 +4,11 @@ Groups 4 and 5 have user-facing screens: they start only with an approved Claude
 
 ## 1. Quick fixes <!-- judgement-heavy -->
 
-- [ ] 1.1 (NFR-1) Remove the `GHSA-fc5q-39xc-vjpf` entry from `scripts/audit-allowlist.json`. Verify `npm run deps:audit` passes with no unused-entry message.
-- [ ] 1.2 (FR-15) `poweredByHeader: false` in `next.config.ts`. Test the config value; verify on a production build that `/` has no `X-Powered-By`.
-- [ ] 1.3 (FR-16) A guard at the top of `supabase/seed.sql` that raises when `auth.users` holds an address outside `example.test`. Verify `npx supabase db reset` loads the seed, and that running the seed again after adding a throwaway outside account fails and inserts nothing.
-- [ ] 1.4 (NFR-9) With the owner's go-ahead, on the local stack, ban a throwaway account and sign in with a wrong password. Record the error code and the message shown under this task and as an Open Question of `proposal.md`. No wording change (post-deploy item 9).
+- [x] 1.1 (NFR-1) Remove the `GHSA-fc5q-39xc-vjpf` entry from `scripts/audit-allowlist.json`. Verify `npm run deps:audit` passes with no unused-entry message.
+- [x] 1.2 (FR-15) `poweredByHeader: false` in `next.config.ts`. Test the config value; verify on a production build that `/` has no `X-Powered-By`.
+- [x] 1.3 (FR-16) A guard at the top of `supabase/seed.sql` that raises when `auth.users` holds an address outside `example.test`. Verify `npx supabase db reset` loads the seed, and that running the seed again after adding a throwaway outside account fails and inserts nothing.
+- [x] 1.4 (NFR-9) With the owner's go-ahead, on the local stack, ban a throwaway account and sign in with a wrong password. Record the error code and the message shown under this task and as an Open Question of `proposal.md`. No wording change (post-deploy item 9).
+  - Result (2026-11-27, local stack, throwaway account banned through the admin API, then deleted): the password grant answers HTTP 400 `error_code: user_banned` ("User is banned") for a wrong password and for the right one alike; an unknown address answers `invalid_credentials`. The app maps `user_banned` to `restricted` (`classify-auth-error.ts`), whose message is «Аккаунт заблокирован.» (read from the code, not rendered in a browser). So anyone who knows a banned address learns that it is registered and blocked.
 
 ## 2. HttpOnly session cookies and the baseline CSP <!-- judgement-heavy -->
 
