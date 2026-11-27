@@ -6,9 +6,16 @@ import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 import { NextRequest, NextResponse } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { getSupabaseConfig } from "@/shared/lib/supabase/config";
 import { refreshSession } from "@/shared/lib/supabase/session";
 
 import { applySecurityHeaders, config, proxy, SECURITY_HEADERS } from "../proxy";
+
+// The real config by default; a single test swaps in an unexpected (non-config) failure.
+vi.mock("@/shared/lib/supabase/config", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/shared/lib/supabase/config")>();
+  return { getSupabaseConfig: vi.fn(actual.getSupabaseConfig) };
+});
 
 vi.mock("@/shared/lib/supabase/session", () => ({ refreshSession: vi.fn(), SESSION_CACHE_CONTROL: "private, no-store" }));
 
@@ -74,6 +81,15 @@ describe("content security policy", () => {
 
     const formAction = "form-action 'self' https://accounts.google.com";
     expect(readDirectives(response)).toEqual([...BASE_DIRECTIVES, formAction]);
+  });
+
+  it("lets a failure that is not a config error surface", () => {
+    const failure = new TypeError("unexpected");
+    vi.mocked(getSupabaseConfig).mockImplementationOnce(() => {
+      throw failure;
+    });
+
+    expect(() => applySecurityHeaders(NextResponse.next())).toThrow(failure);
   });
 
   it("is on the sign-in redirect too", async () => {
