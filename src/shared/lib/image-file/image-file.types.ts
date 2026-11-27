@@ -11,3 +11,8 @@ export interface ImageDraft {
   readonly file: File;
   readonly previewUrl: string;
 }
+
+/** A server-side re-encode: the clean bytes, or why nothing may be stored. */
+export type ReencodeResult =
+  | { readonly ok: true; readonly body: Buffer }
+  | { readonly ok: false; readonly reason: "undecodable" | "too-many-pixels" | "output-too-large" };

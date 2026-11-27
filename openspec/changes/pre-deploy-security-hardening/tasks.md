@@ -65,7 +65,7 @@ Groups 4 and 5 have user-facing screens: they start only with an approved Claude
 - [ ] 8.1 (FR-14, design D10) Confirm the Management API field names with context7 and record them under this task. The comparison module with tests: each mismatch, all correct, a missing field, an unparseable migration list, a different linked project, an `example.test` account, no secret in the output. Module and tests under `scripts/`; add `scripts/tests/**` to `vitest.config.mts`.
 - [ ] 8.2 (FR-14, NFR-3) `scripts/check-hosted-config.mjs` and its npm script. Verify it fails without a token and prints no response body; keep `knip` and lint green.
 - [ ] 8.3 (FR-14, NFR-5) Deploy checklist boxes for what no API covers: bucket limits, asymmetric JWT signing keys, Firewall rules; how to run the script. The owner runs it against the hosted project.
-- [ ] 8.4 (NFR-2, NFR-5) Check the whole change: every manual step is in the Deploy checklist, the ADRs exist, no log or output carries personal data.
+- [ ] 8.4 (NFR-2, NFR-5) Check the whole change: every manual step is in the Deploy checklist, the ADRs exist, no log or output carries personal data, and `knip.jsonc` holds no entry of this change (the scaffold added temporary ones; each group removes those of the files it wires).
 
 ## 9. Static analysis <!-- judgement-heavy -->
 

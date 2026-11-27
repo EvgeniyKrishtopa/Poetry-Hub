@@ -9,8 +9,30 @@
     "src/features/collections/**",
     // Temporary, drag-and-drop-ordering scaffold: the new stubs have no importer until their tasks wire or test them.
     // Only the new feature's files. The last group that wires the board into the route removes this entry.
-    "src/features/work-ordering/**"
+    "src/features/work-ordering/**",
+    // Temporary, pre-deploy-security-hardening scaffold: the new stubs have no importer until their tasks wire or test
+    // them. The group that wires or tests a path removes its entry; task 8.4 checks none is left.
+    "src/shared/lib/supabase/cookie-options.ts",
+    "src/features/auth/model/recovery-session.ts",
+    "src/features/auth/dal/recovery-check.ts",
+    "src/shared/lib/turnstile/**",
+    "src/shared/ui/TurnstileField/**",
+    "src/features/admin/model/totp.types.ts",
+    "src/features/admin/dal/totp.ts",
+    "src/features/admin/dal/totp-verify-allowance.ts",
+    "src/features/admin/pages/AdminVerifyPage/**",
+    "src/features/admin/components/TotpEnrolment/**",
+    "src/features/admin/components/TotpCodeForm/**",
+    "src/shared/lib/image-file/reencode-image.ts",
+    "src/shared/lib/security-log/**",
+    "src/shared/lib/error-reporting/**"
   ],
+  // Temporary, pre-deploy-security-hardening scaffold: these two types are used only by the ignored stubs above.
+  // The groups of tasks 3.2 and 6.2 remove their entries.
+  "ignoreIssues": {
+    "src/shared/lib/image-file/image-file.types.ts": ["types"],
+    "src/shared/lib/supabase/claims.ts": ["types"]
+  },
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.
     "@fission-ai/openspec",

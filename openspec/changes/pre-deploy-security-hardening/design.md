@@ -265,3 +265,24 @@ sequenceDiagram
 ## Migration Plan
 
 Nothing is deployed, so there is no compatibility window. At the first deploy, in order: `supabase db push` (all migrations); hosted Auth settings (hook, URLs, captcha, TOTP, password settings); app variables; deploy; insert the owner into `public.admins`; the owner enrols; Firewall rules; raise Auth rate limits only after the captcha works; run the check script. Rollback of a migration: revert the app, then the down migration in its header. Turning a hosted setting off is the rollback for captcha.
+
+## Scaffold map
+
+| File | Responsibility | Exports |
+| --- | --- | --- |
+| `src/shared/lib/supabase/cookie-options.ts` | auth cookie options (D1) | `getSessionCookieOptions` |
+| `src/features/auth/model/recovery-session.ts` | recent recovery session predicate (D3) | `isRecentRecoverySession` |
+| `src/features/auth/dal/recovery-check.ts` | the session's recovery answer (D3) | `checkRecoverySession`, `RecoveryCheckResult` |
+| `src/shared/lib/turnstile/{index,config,client,turnstile.types}.ts` | server-side captcha verification (D5) | `verifyTurnstileToken`, `readTurnstileConfig`, result types |
+| `src/shared/ui/TurnstileField/` | the captcha widget (D5) | `TurnstileField`, `TurnstileFieldProps`, `TurnstileFieldHandle` |
+| `src/features/admin/model/totp.types.ts` | second factor result types (D6) | `TotpFactorResult`, `TotpEnrolmentResult`, `TotpVerifyResult`, `TotpVerifyAllowance` |
+| `src/features/admin/dal/totp.ts` | factor read, enrolment, code check (D6) | `readTotpFactor`, `startTotpEnrolment`, `verifyTotpCode` |
+| `src/features/admin/dal/totp-verify-allowance.ts` | the `totp_verify` limit (D6) | `consumeTotpVerifyAllowance` |
+| `src/features/admin/pages/AdminVerifyPage/` | `/admin/verify` page and its gate (D6) | `AdminVerifyPage`, `AdminVerifyPageContent` |
+| `src/features/admin/components/TotpEnrolment/` | enrolment screen (D6) | `TotpEnrolment` |
+| `src/features/admin/components/TotpCodeForm/` | code form (D6) | `TotpCodeForm`, `TotpCodeFormProps` |
+| `src/shared/lib/image-file/reencode-image.ts` | server re-encode (D7) | `reencodeImage` |
+| `src/shared/lib/security-log/` | security event lines (D9) | `logSecurityEvent`, `SecurityEvent`, `SecurityEventSource` |
+| `src/shared/lib/error-reporting/` | server error reporter (D9) | `reportServerError` |
+
+Also added: `AmrEntry` in `shared/lib/supabase/claims.ts` and `ReencodeResult` in `shared/lib/image-file/image-file.types.ts`. Written with their tasks, not stubbed: the `/admin/verify` route and breadcrumb files and the Server Actions, the instrumentation files, `global-error.tsx`, the scrubbing function, the hosted check script and the migrations.
