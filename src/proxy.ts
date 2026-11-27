@@ -2,8 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { isAccountPath, SIGN_IN_PATH } from "@/shared/config/account-paths";
 import { SESSION_STATE } from "@/shared/config/constants";
+import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { getSupabaseConfig } from "@/shared/lib/supabase/config";
-import { SupabaseConfigError } from "@/shared/lib/supabase/errors";
 import { refreshSession, SESSION_CACHE_CONTROL } from "@/shared/lib/supabase/session";
 
 export const SECURITY_HEADERS = {
