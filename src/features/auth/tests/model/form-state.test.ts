@@ -95,6 +95,15 @@ describe("toSignUpFormState", () => {
   });
 });
 
+// implements FR-5 of pre-deploy-security-hardening
+describe("a rejected captcha token at sign-in", () => {
+  it("is the captcha failure, not an invalid field", () => {
+    const result = { validationErrors: { formErrors: [], fieldErrors: { captchaToken: ["x"] } } };
+
+    expect(toSignInFormState(result, EMAIL)).toEqual({ status: "failed", email: EMAIL, failure: "captcha" });
+  });
+});
+
 describe("readCredentials", () => {
   // implements NFR-1 of add-supabase-auth
   it("reads email and password from the form data", () => {
@@ -119,6 +128,17 @@ describe("toRecoveryRequestResult", () => {
     ["sent", { data: { status: "sent" } }, { status: "sent" }],
     ["a failure", { data: { status: "failed", failure: "rate-limited" } }, { status: "failed", failure: "rate-limited" }],
     ["a rejected address", { validationErrors: { formErrors: [], fieldErrors: { email: ["x"] } } }, { status: "invalid" }],
+    // implements FR-5 of pre-deploy-security-hardening
+    [
+      "a rejected token alone",
+      { validationErrors: { formErrors: [], fieldErrors: { captchaToken: ["x"] } } },
+      { status: "failed", failure: "captcha" },
+    ],
+    [
+      "a rejected token and address",
+      { validationErrors: { formErrors: [], fieldErrors: { captchaToken: ["x"], email: ["x"] } } },
+      { status: "invalid" },
+    ],
     ["a serverError", { serverError: "boom" }, { status: "failed", failure: "unknown" }],
     ["an empty result", {}, { status: "failed", failure: "unknown" }],
   ])("reads %s", (_label, result, expected) => {

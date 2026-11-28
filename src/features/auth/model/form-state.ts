@@ -28,10 +28,15 @@ export function readNewPassword(formData: FormData): { readonly password: string
   return { password: readField(formData, "password") };
 }
 
-function firstFieldErrors(
-  fieldErrors: NonNullable<AuthActionResult<unknown>["validationErrors"]>["fieldErrors"],
-): FieldErrors {
+type ActionFieldErrors = NonNullable<AuthActionResult<unknown>["validationErrors"]>["fieldErrors"];
+
+function firstFieldErrors(fieldErrors: ActionFieldErrors): FieldErrors {
   return { email: fieldErrors.email?.[0], password: fieldErrors.password?.[0] };
+}
+
+/** Whether the captcha token is the only input the schema rejected. */
+function isCaptchaTokenOnly(fieldErrors: ActionFieldErrors): boolean {
+  return fieldErrors.captchaToken !== undefined && fieldErrors.email === undefined && fieldErrors.password === undefined;
 }
 
 /** The branches both forms share; `fromData` handles the action's own result (design D7). */
@@ -41,7 +46,10 @@ function toFormState<Data, State>(
   fromData: (data: Data) => State,
 ): SharedFormState | State {
   if (result.validationErrors) {
-    return { status: "invalid", email, fieldErrors: firstFieldErrors(result.validationErrors.fieldErrors) };
+    const { fieldErrors } = result.validationErrors;
+    // A rejected token has no field of its own: with nothing else wrong it is the captcha failure.
+    if (isCaptchaTokenOnly(fieldErrors)) return { status: "failed", email, failure: "captcha" };
+    return { status: "invalid", email, fieldErrors: firstFieldErrors(fieldErrors) };
   }
   if (result.serverError !== undefined || result.data === undefined) {
     return { status: "failed", email, failure: "unknown" };
@@ -55,7 +63,10 @@ export function toSignInFormState(result: AuthActionResult<SignInResult>, email:
 
 /** The recovery action's answer; an unreadable result is the generic failure, never `sent` (design D3). */
 export function toRecoveryRequestResult(result: AuthActionResult<RecoveryRequestResult>): RecoveryRequestResult {
-  if (result.validationErrors) return { status: "invalid" };
+  if (result.validationErrors) {
+    const captchaOnly = isCaptchaTokenOnly(result.validationErrors.fieldErrors);
+    return captchaOnly ? { status: "failed", failure: "captcha" } : { status: "invalid" };
+  }
   if (result.serverError !== undefined || result.data === undefined) return { status: "failed", failure: "unknown" };
   return result.data;
 }

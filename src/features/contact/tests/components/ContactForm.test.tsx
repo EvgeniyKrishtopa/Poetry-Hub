@@ -2,6 +2,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { installFakeTurnstile } from "@/shared/ui/tests/fake-turnstile";
+import { TURNSTILE_GROUP_LABEL } from "@/shared/ui/ui-messages";
+
 import { sendContactMessageAction } from "../../actions/contact.actions";
 import { ContactForm } from "../../components/ContactForm/ContactForm";
 import { HONEYPOT_FIELD, MESSAGE_MAX_LENGTH, NAME_MAX_LENGTH } from "../../model/contact.constants";
@@ -11,7 +14,9 @@ vi.mock("../../actions/contact.actions", () => ({
   sendContactMessageAction: vi.fn(),
 }));
 
-type ActionResult = Awaited<ReturnType<typeof sendContactMessageAction>>;
+const turnstile = installFakeTurnstile();
+
+type ActionResult =Awaited<ReturnType<typeof sendContactMessageAction>>;
 
 const NAME = "Анна";
 const EMAIL = "anna@example.com";
@@ -30,6 +35,12 @@ async function fill(user: UserEvent, values: { name?: string; email?: string; me
   if (values.message) await user.type(messageInput(), values.message);
 }
 
+/** Presses «Отправить» once the check has passed; before that the button is disabled. */
+async function submit(user: UserEvent) {
+  await waitFor(() => expect(submitButton()).toBeEnabled());
+  await user.click(submitButton());
+}
+
 /** An action call that stays pending until the returned `resolve` is called. */
 function holdAction() {
   let resolve: (result: ActionResult) => void = () => {};
@@ -40,7 +51,7 @@ function holdAction() {
 function renderForm() {
   const onClose = vi.fn();
   const onSent = vi.fn();
-  render(<ContactForm onClose={onClose} onSent={onSent} />);
+  render(<ContactForm isDialogOpen onClose={onClose} onSent={onSent} />);
   return { onClose, onSent, user: userEvent.setup() };
 }
 
@@ -57,7 +68,7 @@ describe("ContactForm", () => {
   });
 
   // implements FR-3 of add-contact-form
-  it("renders the labelled fields in order, a submit button, and no alert", () => {
+  it("renders the labelled fields in order, a submit button, and no alert", async () => {
     renderForm();
 
     expect(nameInput()).toHaveAttribute("type", "text");
@@ -66,8 +77,33 @@ describe("ContactForm", () => {
     expect(emailInput()).toHaveAttribute("autocomplete", "email");
     expect(messageInput().tagName).toBe("TEXTAREA");
     expect(nameInput().closest("form")).toHaveAttribute("novalidate");
-    expect(submitButton()).toBeEnabled();
+    await waitFor(() => expect(submitButton()).toBeEnabled());
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  // implements FR-6 of pre-deploy-security-hardening
+  it("disables «Отправить» until the check passes, and loads no check while the dialog is closed", () => {
+    render(<ContactForm isDialogOpen={false} onClose={vi.fn()} onSent={vi.fn()} />);
+
+    expect(submitButton()).toBeDisabled();
+    expect(screen.queryByRole("group", { name: TURNSTILE_GROUP_LABEL })).not.toBeInTheDocument();
+    expect(turnstile.render).not.toHaveBeenCalled();
+  });
+
+  // implements FR-6 of pre-deploy-security-hardening
+  it("resets the check after a failed send and sends a new token next time, keeping the typed values", async () => {
+    vi.mocked(sendContactMessageAction).mockResolvedValue({ data: { status: "failed" } });
+    const { user } = renderForm();
+    await fill(user, { name: NAME, email: EMAIL });
+
+    await submit(user);
+    await screen.findByRole("alert");
+    await submit(user);
+
+    await waitFor(() => expect(sendContactMessageAction).toHaveBeenCalledTimes(2));
+    expect(sendContactMessageAction).toHaveBeenNthCalledWith(1, expect.objectContaining({ captchaToken: "token-1" }));
+    expect(sendContactMessageAction).toHaveBeenNthCalledWith(2, expect.objectContaining({ captchaToken: "token-2" }));
+    expect(nameInput()).toHaveValue(NAME);
   });
 
   // implements FR-5 of add-contact-form
@@ -75,7 +111,7 @@ describe("ContactForm", () => {
     const { user } = renderForm();
 
     await fill(user, { name: "   ", email: "not-an-email" });
-    await user.click(submitButton());
+    await submit(user);
 
     // The errors appear once the form's action resolves, which `click` does not wait for.
     await waitFor(() => expect(nameInput()).toHaveAccessibleDescription(CONTACT_FIELD_ERRORS.nameRequired));
@@ -90,7 +126,7 @@ describe("ContactForm", () => {
     const { user } = renderForm();
 
     await fill(user, { name: NAME });
-    await user.click(submitButton());
+    await submit(user);
 
     await waitFor(() => expect(emailInput()).toHaveFocus());
   });
@@ -102,7 +138,7 @@ describe("ContactForm", () => {
     await fill(user, { name: NAME, email: EMAIL });
     await user.click(messageInput());
     await user.paste("б".repeat(MESSAGE_MAX_LENGTH + 1));
-    await user.click(submitButton());
+    await submit(user);
 
     await waitFor(() => expect(messageInput()).toHaveFocus());
     expect(sendContactMessageAction).not.toHaveBeenCalled();
@@ -115,7 +151,7 @@ describe("ContactForm", () => {
     await fill(user, { name: "а".repeat(NAME_MAX_LENGTH + 1), email: EMAIL });
     await user.click(messageInput());
     await user.paste("б".repeat(MESSAGE_MAX_LENGTH + 1));
-    await user.click(submitButton());
+    await submit(user);
 
     await waitFor(() => expect(nameInput()).toHaveAccessibleDescription(CONTACT_FIELD_ERRORS.nameTooLong));
     expect(messageInput()).toHaveAttribute("aria-invalid", "true");
@@ -129,9 +165,15 @@ describe("ContactForm", () => {
     const { user } = renderForm();
 
     await fill(user, { name: NAME, email: EMAIL });
-    await user.click(submitButton());
+    await submit(user);
 
-    expect(sendContactMessageAction).toHaveBeenCalledWith({ name: NAME, email: EMAIL, message: "", [HONEYPOT_FIELD]: "" });
+    expect(sendContactMessageAction).toHaveBeenCalledWith({
+      name: NAME,
+      email: EMAIL,
+      message: "",
+      [HONEYPOT_FIELD]: "",
+      captchaToken: "token-1",
+    });
   });
 
   it("shows the action's own field errors", async () => {
@@ -141,7 +183,7 @@ describe("ContactForm", () => {
     const { user } = renderForm();
 
     await fill(user, { name: NAME, email: EMAIL });
-    await user.click(submitButton());
+    await submit(user);
 
     expect(await screen.findByText(CONTACT_FIELD_ERRORS.emailInvalid)).toBeInTheDocument();
     await waitFor(() => expect(emailInput()).toHaveFocus());
@@ -152,11 +194,11 @@ describe("ContactForm", () => {
     vi.mocked(sendContactMessageAction).mockResolvedValueOnce({ data: { status: "failed" } });
     const { user } = renderForm();
     await fill(user, { name: NAME, email: EMAIL, message: MESSAGE });
-    await user.click(submitButton());
+    await submit(user);
     expect(await screen.findByRole("alert")).toBeInTheDocument();
 
     const resolve = holdAction();
-    await user.click(submitButton());
+    await submit(user);
 
     const pendingButton = await screen.findByRole("button", { name: CONTACT_COPY.submitting });
     expect(pendingButton).toBeDisabled();
@@ -178,11 +220,11 @@ describe("ContactForm", () => {
     const { user } = renderForm();
 
     await fill(user, { email: EMAIL });
-    await user.click(submitButton());
+    await submit(user);
     expect(screen.getByText(CONTACT_FIELD_ERRORS.nameRequired)).toBeInTheDocument();
 
     await fill(user, { name: NAME });
-    await user.click(submitButton());
+    await submit(user);
 
     await screen.findByRole("button", { name: CONTACT_COPY.submitting });
     expect(screen.queryByText(CONTACT_FIELD_ERRORS.nameRequired)).not.toBeInTheDocument();
@@ -196,7 +238,7 @@ describe("ContactForm", () => {
     const { user, onSent, onClose } = renderForm();
 
     await fill(user, { name: NAME, email: EMAIL });
-    await user.click(submitButton());
+    await submit(user);
 
     expect(await screen.findByRole("status")).toHaveTextContent(CONTACT_COPY.sent);
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
@@ -214,7 +256,7 @@ describe("ContactForm", () => {
     const { user } = renderForm();
 
     await fill(user, { name: NAME, email: EMAIL, message: MESSAGE });
-    await user.click(submitButton());
+    await submit(user);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(CONTACT_COPY.sendFailed);
     expect(nameInput()).toHaveValue(NAME);
@@ -223,7 +265,7 @@ describe("ContactForm", () => {
     await waitFor(() => expect(submitButton()).toHaveFocus());
 
     const resolve = holdAction();
-    await user.click(submitButton());
+    await submit(user);
     await screen.findByRole("button", { name: CONTACT_COPY.submitting });
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     resolve({ data: { status: "sent" } });
@@ -235,7 +277,7 @@ describe("ContactForm", () => {
     const { user } = renderForm();
 
     await fill(user, { name: NAME, email: EMAIL });
-    await user.click(submitButton());
+    await submit(user);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(CONTACT_COPY.sendFailed);
   });
@@ -249,7 +291,7 @@ describe("ContactForm", () => {
     await fill(user, { name: NAME, email: EMAIL, message: MESSAGE });
     // jsdom is always online: the flag is set to false so the log is seen to read it (edit-poem CR-08).
     const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
-    await user.click(submitButton());
+    await submit(user);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(CONTACT_COPY.sendFailed);
     onLine.mockRestore();
@@ -269,7 +311,7 @@ describe("ContactForm", () => {
     const { user } = renderForm();
 
     await fill(user, { name: NAME, email: EMAIL });
-    await user.click(submitButton());
+    await submit(user);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(CONTACT_COPY.sendFailed);
     const logged = consoleError.mock.calls.flat().join(" ");
@@ -279,7 +321,7 @@ describe("ContactForm", () => {
 
   // implements FR-10 of add-contact-form
   it("hides the honeypot from people and assistive tech", () => {
-    const { container } = render(<ContactForm onClose={vi.fn()} onSent={vi.fn()} />);
+    const { container } = render(<ContactForm isDialogOpen onClose={vi.fn()} onSent={vi.fn()} />);
 
     const honeypot = container.querySelector(`input[name="${HONEYPOT_FIELD}"]`);
     expect(honeypot).toHaveAttribute("tabindex", "-1");
@@ -297,13 +339,14 @@ describe("ContactForm", () => {
 
     fireEvent.change(honeypot, { target: { value: HONEYPOT_VALUE } });
     await fill(user, { name: NAME, email: EMAIL });
-    await user.click(submitButton());
+    await submit(user);
 
     expect(sendContactMessageAction).toHaveBeenCalledWith({
       name: NAME,
       email: EMAIL,
       message: "",
       [HONEYPOT_FIELD]: HONEYPOT_VALUE,
+      captchaToken: "token-1",
     });
   });
 });

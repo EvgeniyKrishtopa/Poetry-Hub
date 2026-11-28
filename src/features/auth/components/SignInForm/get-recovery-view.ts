@@ -13,8 +13,10 @@ interface RecoveryViewInput {
 }
 
 export interface RecoveryView {
-  /** The danger text of the form's one alert slot: the recovery failure, else the sign-in failure. */
+  /** The danger text of the form's top alert slot: the recovery failure, else the sign-in failure. */
   readonly alert: string | undefined;
+  /** A rejected captcha at sign-in: shown above the check block instead of the top slot. */
+  readonly captchaAlert: string | undefined;
   /** The neutral «sent» notice, which takes the alert slot in place of the danger alert. */
   readonly sentNotice: boolean;
   readonly offerVisible: boolean;
@@ -34,16 +36,24 @@ function isOfferVisible(signIn: SignInFormState, offerOnLoad: boolean): boolean 
 /** What the sign-in form shows for its two actions' results (password-recovery design D2). */
 export function getRecoveryView({ signIn, initialError, offerOnLoad, recovery }: RecoveryViewInput): RecoveryView {
   const offerVisible = isOfferVisible(signIn, offerOnLoad);
-  const signInAlert = getFormError(signIn, initialError);
   const result = offerVisible ? recovery : ({ status: "idle" } as const);
+  const view: RecoveryView = {
+    alert: undefined,
+    captchaAlert: undefined,
+    sentNotice: false,
+    offerVisible,
+    emailError: undefined,
+  };
 
-  if (result.status === "sent") return { alert: undefined, sentNotice: true, offerVisible, emailError: undefined };
-  if (result.status === "invalid") {
-    return { alert: undefined, sentNotice: false, offerVisible, emailError: FIELD_MESSAGES.emailInvalid };
-  }
+  if (result.status === "sent") return { ...view, sentNotice: true };
+  if (result.status === "invalid") return { ...view, emailError: FIELD_MESSAGES.emailInvalid };
   if (result.status === "failed") {
     const alert = getFailureMessage("recovery-request", result.failure);
-    return { alert, sentNotice: false, offerVisible, emailError: undefined };
+    return { ...view, alert };
   }
-  return { alert: signInAlert, sentNotice: false, offerVisible, emailError: undefined };
+
+  const signInError = getFormError(signIn, initialError);
+  const captchaRejected = signIn.status === "failed" && signIn.failure === "captcha";
+  if (captchaRejected) return { ...view, captchaAlert: signInError };
+  return { ...view, alert: signInError };
 }

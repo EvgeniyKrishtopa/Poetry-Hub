@@ -12,8 +12,6 @@
     "src/features/work-ordering/**",
     // Temporary, pre-deploy-security-hardening scaffold: the new stubs have no importer until their tasks wire or test
     // them. The group that wires or tests a path removes its entry; task 8.4 checks none is left.
-    "src/shared/lib/turnstile/**",
-    "src/shared/ui/TurnstileField/**",
     "src/features/admin/model/totp.types.ts",
     "src/features/admin/dal/totp.ts",
     "src/features/admin/dal/totp-verify-allowance.ts",

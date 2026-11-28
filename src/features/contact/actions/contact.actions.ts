@@ -2,6 +2,7 @@
 
 import { siteConfig } from "@/shared/config/site";
 import { sendTelegramMessage } from "@/shared/lib/telegram";
+import { verifyTurnstileToken } from "@/shared/lib/turnstile";
 
 import { CONTACT_STATUS, HONEYPOT_FIELD } from "../model/contact.constants";
 import { contactMessageSchema } from "../model/contact.schema";
@@ -16,6 +17,14 @@ export const sendContactMessageAction = contactActionClient
   .action(async ({ parsedInput }): Promise<ContactSendResult> => {
     // A bot filled the hidden field: answer as on success so it learns nothing, and send nothing.
     if (parsedInput[HONEYPOT_FIELD]) return { status: CONTACT_STATUS.sent };
+
+    // Nothing is sent without an accepted check: a missing secret or an unreachable verifier refuses too.
+    const captcha = await verifyTurnstileToken(parsedInput.captchaToken ?? "");
+    if (!captcha.ok) {
+      // The reason only: the token and the submitted values never reach a log.
+      console.error("[contact] captcha refused", { reason: captcha.reason });
+      return { status: CONTACT_STATUS.failed };
+    }
 
     const result = await sendTelegramMessage(formatContactMessage(parsedInput, siteConfig.name));
     if (!result.ok) {

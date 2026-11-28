@@ -8,6 +8,8 @@ const ANSWER_BY_CODE: ReadonlyMap<string, "sent" | RecoveryRequestFailure> = new
   // Supabase refuses a repeat letter only for an address that has an account, so showing it would reveal the account.
   [AUTH_ERROR_CODE.overEmailSendRateLimit, "sent"],
   [AUTH_ERROR_CODE.overRequestRateLimit, "rate-limited"],
+  // Auth checks the captcha before it looks up any address, so saying so reveals no account.
+  [AUTH_ERROR_CODE.captchaFailed, "captcha"],
 ]);
 
 /**

@@ -24,7 +24,12 @@ Read before adding, renaming, or reading an environment variable.
   1. Authentication → URL Configuration: Site URL `http://localhost:3000` for dev (the deployed URL at deploy time); add both to Redirect URLs.
   2. Authentication → Emails → "Confirm sign up": the link `href` becomes `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`.
   3. Authentication → Providers → Email: "Confirm email" on; minimum password length 12 and required characters "lowercase, uppercase letters, digits and symbols" (ADR 0028).
-  4. Authentication → Rate Limits: raise "sign-ups and sign-ins" above the default 30 per 5 minutes. Every sign-in and sign-up runs in a Server Action, so they all reach Supabase from the server's IP and share one per-IP budget; forwarding each reader's IP would need a secret key, which this project does not use.
+  4. Authentication → Rate Limits: raise "sign-ups and sign-ins" above the default 30 per 5 minutes, and only after the captcha works (the Bot protection item of the Deploy checklist has the values). Every sign-in and sign-up runs in a Server Action, so they all reach Supabase from the server's IP and share one per-IP budget; forwarding each reader's IP would need a secret key, which this project does not use.
+- Bot protection (`pre-deploy-security-hardening`; ADR 0024): Cloudflare Turnstile on sign-in, sign-up, the recovery request and the contact form. **All of these need JavaScript**, and they stay disabled when Cloudflare's script cannot load.
+  - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`: the widget's public site key, read in the browser as a literal `process.env.NEXT_PUBLIC_…` access, so Next inlines it **at build time**: set it in the hosting platform's build environment. Unset → every guarded form shows «Для отправки формы нужна проверка…» and cannot be sent.
+  - `TURNSTILE_SECRET_KEY`: server-only, never prefixed with `NEXT_PUBLIC_`. Only `src/shared/lib/turnstile/` reads it, for the contact form. Unset or malformed → every contact submit shows the failure alert and the server logs `[contact] captcha refused` with reason `config` (never the value).
+  - The auth forms' tokens are verified by Supabase Auth, which holds its own copy of the secret (dashboard; `[auth.captcha]` in `supabase/config.toml` for the local stack).
+  - Local development uses Cloudflare's published test keys, which always pass: site key `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`. Put both into `.env.local`. They are public test values; the real keys never go into the repository. After changing `[auth.captcha]`, restart the stack (`npx supabase stop && npx supabase start`).
 - Google sign-in (`google-sign-in`; ADR 0019): Supabase Auth's Google provider, configured outside the app. The app reads no new variable: it starts the flow with `signInWithOAuth` (`redirectTo` = `getSiteUrl()` + `/auth/callback?from=sign-in|sign-up`, `GOOGLE_CALLBACK_PATH` and `GOOGLE_FLOW_PARAM` in the auth feature) and finishes it at the route `/auth/callback`.
   - Google Cloud (owner, manual): APIs & Services → OAuth consent screen with the site's name, then Credentials → Create credentials → OAuth client ID, type "Web application". Its **Authorized redirect URI** is the Supabase project's own callback, `https://<project-ref>.supabase.co/auth/v1/callback`, not the site's `/auth/callback`: Google returns to Supabase, and Supabase returns to the site. For the local stack add `http://127.0.0.1:54321/auth/v1/callback` to the same client or a second one.
   - Hosted Supabase: Authentication → Providers → Google, enabled, with that client's id and secret. Authentication → URL Configuration: the Site URL equals what `getSiteUrl()` returns (the Site address section below), and Redirect URLs contain exactly the two addresses the app sends, `<site>/auth/callback?from=sign-in` and `<site>/auth/callback?from=sign-up` (in Supabase's glob a `?` matches any one character, so each still matches itself). Never a `<site>/auth/callback**` pattern: `**` matches any characters, `/` included, so it would accept almost any return address on the site, and a code sent there could leak (Supabase recommends exact redirect URLs in production).
@@ -42,7 +47,7 @@ Read before adding, renaming, or reading an environment variable.
   - Token: in Telegram, message [@BotFather](https://t.me/BotFather), send `/newbot`, and copy the token it returns (`<bot id>:<secret>`).
   - Chat id: send any message to the new bot (or add it to the group that should receive requests), then open `https://api.telegram.org/bot<token>/getUpdates` and copy `result[].message.chat.id`. A private chat has a positive id; a group or channel has a negative one.
   - Validated lazily on each send: the token must be `<digits>:<letters, digits, _ or ->` and the chat id an integer. Unset or malformed → the app still builds and runs, but every contact form submit shows the failure alert, and the server logs `[contact] send failed` with reason `config` (never the value).
-  - Deploy step: the contact form has no app-level rate limit (ADR 0007 point 5). Add a per-IP rate rule at the hosting layer (Vercel Firewall or Cloudflare) that covers Server Action POSTs.
+  - Deploy step: the contact form has no app-level rate limit (ADR 0007 point 5). It has a captcha (Bot protection above) and needs the per-IP rate rules of the Deploy checklist's Bot protection item.
   - Rotation: in @BotFather, `/revoke` the bot's token to get a new one (the old one stops working at once), then update `TELEGRAM_BOT_TOKEN` in `.env.local` and on the hosting platform.
 - Resend (the admin's warning and action emails): `RESEND_API_KEY` and `EMAIL_FROM`. Server-only: never prefix them with `NEXT_PUBLIC_`. Only `src/shared/lib/email/` reads them (every module there starts with `import "server-only"`), and no log line, error, or result holds the key, a recipient address, or a message body. The key is a server secret for one outside service, not a database key: the "only the publishable key" rule for Supabase above still holds.
   - API key: in the Resend dashboard, API Keys → Create API Key with the "Sending access" permission, and copy the `re_…` value (shown once).
@@ -227,5 +232,19 @@ git-ignored `PROGRESS.md`, so every clone sees them.
         reauthenticate to change the password.
   - [ ] "Require current password" on, if the dashboard offers it. It skips recovery sessions.
   - Leaked-password protection is not available on the Free plan; turn it on if the project moves to Pro.
+- **Bot protection** (`pre-deploy-security-hardening`; ADR 0024), in this order:
+  - [ ] In Cloudflare → Turnstile, create a widget for the site's host; note its site key and secret key.
+  - [ ] On the hosting platform set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (build and runtime) and `TURNSTILE_SECRET_KEY`.
+        Never the test keys.
+  - [ ] In Supabase, Authentication → Attack Protection: captcha protection on, provider Turnstile, the same secret
+        key. Turn it on together with the app that sends tokens: the earlier app sends none and every sign-in would
+        fail.
+  - [ ] After the deploy, check one sign-in, one sign-up, one recovery request, one contact message and one Google
+        sign-in.
+  - [ ] Vercel Firewall rate rules, per IP, counting **Server Action POSTs only** (page requests are not counted):
+        10 per minute on `/login` and `/signup`; 60 per minute on all paths.
+  - [ ] Only after the captcha works, raise Supabase's Authentication → Rate Limits, per 5 minutes: sign-ups and
+        sign-ins 300, token verifications 300, token refreshes 1800. Leave the email limits as they are.
+  - Rollback: turning Supabase's captcha protection off. The forms still send a token and still need the widget.
 - Also before a first deploy: the Supabase dashboard setup and the Contentful webhook above, and the
-  hosting-layer per-IP rate rule (Telegram section).
+  hosting-layer per-IP rate rules (the Bot protection item above).

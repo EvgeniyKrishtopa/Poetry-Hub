@@ -15,13 +15,16 @@ export async function signIn(page: Page, email: string): Promise<void> {
   await page.goto("/login");
   await waitForHydration(page);
   const main = page.getByRole("main");
+  // Exact: the Google button's name also contains the word.
+  const submit = main.getByRole("button", { name: "Войти", exact: true });
   // The sign-in form streams in its own Suspense boundary and hydrates after the body marker is set,
   // so a fill can land before it and be wiped; retry until the submit leaves /login.
   await expect(async () => {
+    // Enabled only once the form has hydrated and the captcha has passed.
+    await expect(submit).toBeEnabled();
     await main.getByLabel("Электронная почта").fill(email);
     await main.getByLabel("Пароль").fill(SEED_PASSWORD);
-    // Exact: the Google button's name also contains the word.
-    await main.getByRole("button", { name: "Войти", exact: true }).click();
+    await submit.click();
     await expect(page).not.toHaveURL(/\/login/, { timeout: SIGN_IN_ATTEMPT_TIMEOUT_MS });
   }).toPass({ timeout: SIGN_IN_TIMEOUT_MS });
 }

@@ -87,6 +87,8 @@ test.describe("password recovery screens", { tag: ["@password-recovery"] }, () =
     await waitForHydration(page);
     const main = page.getByRole("main");
     const button = main.getByRole("button", { name: OFFER_BUTTON });
+    // The captcha must have passed first: its script cannot load without a connection.
+    await expect(button).toBeEnabled();
 
     await context.setOffline(true);
     await expect(main.getByText(OFFLINE_TEXT)).toBeVisible();

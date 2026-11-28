@@ -11,3 +11,5 @@ export { SessionUnavailableAlert } from "./SessionUnavailableAlert/SessionUnavai
 export { TextAreaField } from "./TextAreaField/TextAreaField";
 export { TextField } from "./TextField/TextField";
 export { FIELD_INPUT_CLASS } from "./TextField/text-field-classes";
+export { TurnstileField } from "./TurnstileField/TurnstileField";
+export type { TurnstileFieldHandle } from "./TurnstileField/TurnstileField.types";

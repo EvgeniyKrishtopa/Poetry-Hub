@@ -68,7 +68,7 @@ export function ContactDialog({ triggerClassName }: ContactDialogProps) {
         closeLabel={CONTACT_COPY.close}
         onClose={handleClosed}
       >
-        <ContactForm key={formKey} onClose={close} onSent={handleSent} />
+        <ContactForm key={formKey} isDialogOpen={isOpen} onClose={close} onSent={handleSent} />
       </Dialog>
     </>
   );

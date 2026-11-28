@@ -4,7 +4,7 @@ import Link from "next/link";
 import { startTransition, useActionState, useRef, useState } from "react";
 
 import { SIGN_UP_PATH } from "@/shared/config/account-paths";
-import { Alert, Button, TextField } from "@/shared/ui";
+import { Alert, Button, TextField, TurnstileField, type TurnstileFieldHandle } from "@/shared/ui";
 
 import { RECOVERY_SENT_MESSAGE } from "../../model/auth-messages";
 import type { RecoveryOfferResult, RecoveryOfferState, SignInFormState } from "../../model/auth.types";
@@ -32,16 +32,22 @@ export function SignInForm({ initialError, offerOnLoad = false }: SignInFormProp
   const formRef = useRef<HTMLFormElement>(null);
   const [email, setEmail] = useState("");
   const [attempt, setAttempt] = useState(0);
+  // The captcha token of the next request, whichever of the two it is; each is used once.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<TurnstileFieldHandle>(null);
 
   // Counted at the start of every sign-in submit, so a recovery result of an earlier attempt is dropped at once.
   async function signIn(previous: SignInFormState, formData: FormData): Promise<SignInFormState> {
     setAttempt((current) => current + 1);
-    return submitSignIn(previous, formData);
+    const result = await submitSignIn(previous, formData, captchaToken ?? "");
+    captchaRef.current?.reset();
+    return result;
   }
   const [state, formAction, pending] = useActionState(signIn, INITIAL_STATE);
 
   async function requestRecovery(): Promise<RecoveryOfferState> {
-    const result = await submitRecoveryRequest(email);
+    const result = await submitRecoveryRequest(email, captchaToken ?? "");
+    captchaRef.current?.reset();
     if (result.status === "invalid") focusFormField(formRef.current, EMAIL_FIELD_NAME);
     return { attempt, result };
   }
@@ -51,6 +57,7 @@ export function SignInForm({ initialError, offerOnLoad = false }: SignInFormProp
   const view = getRecoveryView({ signIn: state, initialError, offerOnLoad, recovery });
   const fieldErrors = state.status === "invalid" ? state.fieldErrors : {};
   const busy = pending || recoveryPending;
+  const captchaReady = captchaToken !== null;
 
   function requestLetter(): void {
     startTransition(recoveryAction);
@@ -67,7 +74,14 @@ export function SignInForm({ initialError, offerOnLoad = false }: SignInFormProp
     >
       {view.alert && <Alert tone="danger">{view.alert}</Alert>}
       {view.sentNotice && <Alert tone="neutral">{RECOVERY_SENT_MESSAGE}</Alert>}
-      {view.offerVisible && <RecoveryOffer showText={!view.sentNotice} busy={busy} onRequest={requestLetter} />}
+      {view.offerVisible && (
+        <RecoveryOffer
+          showText={!view.sentNotice}
+          busy={busy}
+          captchaReady={captchaReady}
+          onRequest={requestLetter}
+        />
+      )}
       <TextField
         label="Электронная почта"
         name={EMAIL_FIELD_NAME}
@@ -84,7 +98,9 @@ export function SignInForm({ initialError, offerOnLoad = false }: SignInFormProp
         autoComplete="current-password"
         error={fieldErrors.password}
       />
-      <Button type="submit" disabled={busy}>
+      {view.captchaAlert && <Alert tone="danger">{view.captchaAlert}</Alert>}
+      <TurnstileField ref={captchaRef} onTokenChange={setCaptchaToken} />
+      <Button type="submit" disabled={busy || !captchaReady}>
         Войти
       </Button>
       <p className="text-sm text-muted">

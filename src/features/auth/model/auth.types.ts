@@ -8,6 +8,7 @@ export type AuthFailure =
   | "restricted"
   | "weak-password"
   | "same-password"
+  | "captcha"
   | "unavailable"
   | "unknown";
 
@@ -15,6 +16,9 @@ export type AuthFailure =
 export type AuthFlow = "sign-in" | "sign-up" | "recovery-request" | "update-password";
 
 type CredentialField = "email" | "password";
+
+/** The inputs an action can reject: the visible fields and the captcha token. */
+type ActionInputField = CredentialField | "captchaToken";
 
 export interface AuthFailedResult {
   readonly status: "failed";
@@ -43,7 +47,7 @@ export interface AuthActionResult<Data> {
   readonly serverError?: string;
   readonly validationErrors?: {
     readonly formErrors: readonly string[];
-    readonly fieldErrors: Readonly<Partial<Record<CredentialField, readonly string[]>>>;
+    readonly fieldErrors: Readonly<Partial<Record<ActionInputField, readonly string[]>>>;
   };
 }
 
@@ -107,10 +111,14 @@ export interface StartGoogleSignInResult {
 export type GoogleSignInButtonState = { readonly status: "idle" } | StartGoogleSignInResult;
 
 /** Why a letter request failed: the only failures the request flow can produce (password-recovery design D3). */
-export type RecoveryRequestFailure = "rate-limited" | "unavailable" | "unknown";
+export type RecoveryRequestFailure = "rate-limited" | "captcha" | "unavailable" | "unknown";
 
-/** Why a password change failed: the request failures plus the ones only the update flow has (design D5). */
-export type UpdatePasswordFailure = RecoveryRequestFailure | "link-expired" | "same-password" | "weak-password";
+/** Why a password change failed: the request failures a saved password shares, plus its own (design D5). */
+export type UpdatePasswordFailure =
+  | Exclude<RecoveryRequestFailure, "captcha">
+  | "link-expired"
+  | "same-password"
+  | "weak-password";
 
 /** `requestRecoveryAction`'s answer: `sent` whatever the address holds, never a hint about it (design D3). */
 export type RecoveryRequestResult =

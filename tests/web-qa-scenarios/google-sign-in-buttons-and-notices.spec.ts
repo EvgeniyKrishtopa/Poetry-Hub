@@ -32,6 +32,8 @@ test.describe("Google sign-in buttons and notices", { tag: ["@google-sign-in"] }
     await waitForHydration(page);
     const main = page.getByRole("main");
     const button = main.getByRole("button", { name: SIGN_IN_LABEL });
+    // The captcha must have passed first: its script cannot load without a connection.
+    await expect(main.getByRole("button", { name: "Войти", exact: true })).toBeEnabled();
 
     await context.setOffline(true);
     await expect(main.getByText(OFFLINE_TEXT)).toBeVisible();

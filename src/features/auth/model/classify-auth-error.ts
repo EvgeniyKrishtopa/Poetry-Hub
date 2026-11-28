@@ -13,6 +13,7 @@ const FAILURE_BY_CODE: ReadonlyMap<string, AuthFailure> = new Map([
   [AUTH_ERROR_CODE.overEmailSendRateLimit, "rate-limited"],
   [AUTH_ERROR_CODE.weakPassword, "weak-password"],
   [AUTH_ERROR_CODE.samePassword, "same-password"],
+  [AUTH_ERROR_CODE.captchaFailed, "captcha"],
 ]);
 
 /** Whether a sign-up error is the hook's rejection of a banned address, not any other failure. */

@@ -24,7 +24,7 @@ describe("submitRecoveryRequest", () => {
   it("answers the generic failure when the connection drops, and not a thrown page error", async () => {
     vi.mocked(requestRecoveryAction).mockRejectedValue(new TypeError("Failed to fetch"));
 
-    await expect(submitRecoveryRequest("reader@example.com")).resolves.toEqual(FAILED_UNKNOWN);
+    await expect(submitRecoveryRequest("reader@example.com", "token")).resolves.toEqual(FAILED_UNKNOWN);
   });
 
   // implements FR-2 of password-recovery
@@ -32,7 +32,7 @@ describe("submitRecoveryRequest", () => {
     const error = new Error("something else");
     vi.mocked(requestRecoveryAction).mockRejectedValue(error);
 
-    await expect(submitRecoveryRequest("reader@example.com")).rejects.toBe(error);
+    await expect(submitRecoveryRequest("reader@example.com", "token")).rejects.toBe(error);
   });
 });
 

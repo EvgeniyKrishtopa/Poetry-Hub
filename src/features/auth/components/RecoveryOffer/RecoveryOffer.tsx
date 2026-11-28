@@ -15,18 +15,20 @@ import type { RecoveryOfferProps } from "./RecoveryOffer.types";
  * would take Enter's implicit submit from the sign-in (password-recovery design D2, D7).
  */
 // implements NFR-3 of password-recovery: token utilities only, no color literals
-export function RecoveryOffer({ showText, busy, onRequest }: RecoveryOfferProps) {
+export function RecoveryOffer({ showText, busy, captchaReady, onRequest }: RecoveryOfferProps) {
   const { status, isOnline } = useConnection();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const requestedRef = useRef(false);
+  const disabled = busy || !isOnline || !captchaReady;
 
-  // A browser drops the focus of a button that is disabled while its request is pending; take it back when the
-  // request ends, unless it moved on purpose (the email field after an invalid address).
+  // A browser drops the focus of a button that is disabled while its request is pending; take it back once the button
+  // is enabled again (after the next captcha token), unless it moved on purpose (the email field after an invalid
+  // address).
   useEffect(() => {
-    if (busy || !requestedRef.current) return;
+    if (disabled || !requestedRef.current) return;
     requestedRef.current = false;
     if (document.activeElement === document.body) buttonRef.current?.focus();
-  }, [busy]);
+  }, [disabled]);
 
   function requestLetter(): void {
     requestedRef.current = true;
@@ -37,7 +39,7 @@ export function RecoveryOffer({ showText, busy, onRequest }: RecoveryOfferProps)
     <div className="flex flex-col items-start gap-3 self-stretch">
       {showText && <p className="text-sm text-muted">{RECOVERY_OFFER_TEXT}</p>}
       <ConnectionNotice status={status} />
-      <Button ref={buttonRef} type="button" variant="ghost" disabled={busy || !isOnline} onClick={requestLetter}>
+      <Button ref={buttonRef} type="button" variant="ghost" disabled={disabled} onClick={requestLetter}>
         {RECOVERY_OFFER_BUTTON_LABEL}
       </Button>
     </div>
