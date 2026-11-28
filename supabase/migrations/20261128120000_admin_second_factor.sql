@@ -2,9 +2,10 @@
 -- per-user write limit.
 --
 -- Admin power now needs a session that verified a second factor: the JWT's `aal` must be `aal2`.
--- assert_admin() (the first statement of every admin_* function), may_moderate_author() and the two admin
--- Storage policies require it. is_admin() does not: the app asks it to tell an admin who still has to enter
--- the code from a reader who is not an admin. A token without `aal` counts as not verified.
+-- is_verified_admin() is that rule, and assert_admin() (the first statement of every admin_* function),
+-- may_moderate_author() and the two admin Storage policies use it. is_admin() does not check `aal`: the app asks
+-- it to tell an admin who still has to enter the code from a reader who is not an admin. A token without `aal`
+-- counts as not verified.
 --
 -- totp_verify: 5 code attempts per 1 minute per account, counted by the app before it asks Supabase to check a
 -- code. It bounds the app's path only: a holder of the session can call Supabase Auth's verify endpoint
@@ -27,6 +28,26 @@
 --   `public.assert_admin` from 20261113170000_admin_moderation.sql, `public.may_moderate_author` from
 --   20261113180000_admin_moderation_functions.sql, and `public.consume_write_allowance` from
 --   20261125150000_password_reset_limit.sql.
+--   Last: drop function public.is_verified_admin(); comment on function public.is_admin() is null;
+
+-- The one rule of admin power: listed as an admin and the session verified a second factor. Every authorization
+-- check uses this, never is_admin() alone. Executable by authenticated, because the Storage policies evaluate it as
+-- that role; it takes no argument, so it cannot be used to probe other users.
+create function public.is_verified_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select public.is_admin() and coalesce((select auth.jwt() ->> 'aal') = 'aal2', false);
+$$;
+
+revoke execute on function public.is_verified_admin() from public, anon;
+grant execute on function public.is_verified_admin() to authenticated;
+
+comment on function public.is_admin() is
+  'Listed as an admin, verified or not: for the app to know whom to ask for a code. Never authorize with it; use is_verified_admin().';
 
 create or replace function public.assert_admin()
 returns void
@@ -36,7 +57,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if not public.is_admin() or (select auth.jwt() ->> 'aal') is distinct from 'aal2' then
+  if not public.is_verified_admin() then
     raise exception 'not an admin' using errcode = '42501';
   end if;
 end;
@@ -49,8 +70,7 @@ stable
 security definer
 set search_path = ''
 as $$
-  select public.is_admin()
-    and coalesce((select auth.jwt() ->> 'aal') = 'aal2', false)
+  select public.is_verified_admin()
     and not exists (
       select 1 from public.author_profiles ap
       where ap.id = may_moderate_author.author_profile_id
@@ -59,18 +79,10 @@ as $$
 $$;
 
 alter policy "admins read poem illustrations" on storage.objects
-  using (
-    bucket_id = 'poem-illustrations'
-    and (select public.is_admin())
-    and (select auth.jwt() ->> 'aal') = 'aal2'
-  );
+  using (bucket_id = 'poem-illustrations' and (select public.is_verified_admin()));
 
 alter policy "admins delete poem illustrations" on storage.objects
-  using (
-    bucket_id = 'poem-illustrations'
-    and (select public.is_admin())
-    and (select auth.jwt() ->> 'aal') = 'aal2'
-  );
+  using (bucket_id = 'poem-illustrations' and (select public.is_verified_admin()));
 
 alter table public.write_rate_limits drop constraint write_rate_limits_scope_check;
 alter table public.write_rate_limits add constraint write_rate_limits_scope_check

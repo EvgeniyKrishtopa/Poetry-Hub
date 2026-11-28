@@ -14,12 +14,12 @@ app authenticator (TOTP) factors on every plan, and marks a session that verifie
 
 1. **Only the admin is offered a second factor.** The screens live in `features/admin`, on `/admin/verify`.
    Regular users have no factor and no screen for one.
-2. **The database requires `aal2`.** `assert_admin()` (the first statement of every `admin_*` function),
-   `may_moderate_author()` and the two admin Storage policies check the token's `aal`
-   (`20261128120000_admin_second_factor.sql`). A token without the claim is refused. So a stolen password
-   gives no admin power even outside the app.
+2. **The database requires `aal2`.** One function, `is_verified_admin()`, is the rule: listed as an admin
+   and `aal2`. `assert_admin()` (the first statement of every `admin_*` function), `may_moderate_author()`
+   and the two admin Storage policies use it (`20261128120000_admin_second_factor.sql`). A token without the
+   claim is refused. So a stolen password gives no admin power even outside the app.
 3. **`is_admin()` does not depend on `aal`.** The app needs it to tell an admin who still has to enter the
-   code (`needs-second-factor`) from a reader who is not an admin.
+   code (`needs-second-factor`) from a reader who is not an admin. Nothing authorizes with it.
 4. **The app limits code attempts per account**: `totp_verify`, 5 per minute (ADR 0007), counted before
    Supabase is asked and failing closed.
 5. **A lost device is handled in the dashboard**, by deleting the factor. There are no recovery codes.

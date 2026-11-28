@@ -123,6 +123,17 @@ describe("AdminVerifyPageContent", () => {
   });
 });
 
+describe("AdminVerifyPageContent, signed out", () => {
+  // implements FR-8 of pre-deploy-security-hardening: a signed-out request goes to /login
+  it("lets requireSession's redirect through, reading neither the admin check nor a factor", async () => {
+    vi.mocked(requireSession).mockRejectedValue(new Error("NEXT_REDIRECT /login"));
+
+    await expect(AdminVerifyPageContent()).rejects.toThrow("NEXT_REDIRECT /login");
+    expect(checkIsAdmin).not.toHaveBeenCalled();
+    expect(readTotpFactor).not.toHaveBeenCalled();
+  });
+});
+
 describe("AdminVerifyTrail", () => {
   const slots = { enrolled: <p>enrolled trail</p>, notEnrolled: <p>setup trail</p> };
 

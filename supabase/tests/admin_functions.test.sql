@@ -8,7 +8,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(150);
+select plan(154);
 
 -- Start from empty content tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -638,11 +638,25 @@ select is_empty($$select * from public.zz_admin_calls_not_refused()$$,
 select is(public.may_moderate_author('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'), false,
   'may_moderate_author answers false to a token without aal');
 
+select is(public.is_verified_admin(), false, 'is_verified_admin() is false without aal');
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
+select is(public.is_verified_admin(), true, 'is_verified_admin() is true for an admin at aal2');
+select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated","aal":"aal2"}', true);
+select is(public.is_verified_admin(), false, 'is_verified_admin() is false for a non-admin at aal2');
+
 reset role;
 select isnt_empty(
   $$select 1 from storage.objects where bucket_id = 'poem-illustrations'
     and name = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/b3000000-0000-4000-8000-000000000009.png'$$,
   'the file the aal1 admin tried to remove is still there');
+
+-- NFR-4: the new definer function runs with an empty search_path and no execute for public or anon.
+select ok(
+  (select p.prosecdef and 'search_path=""' = any (p.proconfig) from pg_proc p
+    where p.oid = 'public.is_verified_admin()'::regprocedure)
+  and not has_function_privilege('anon', 'public.is_verified_admin()', 'execute')
+  and not has_function_privilege('public', 'public.is_verified_admin()', 'execute'),
+  'is_verified_admin() is security definer, with an empty search_path and no execute for public or anon');
 
 select * from finish();
 rollback;

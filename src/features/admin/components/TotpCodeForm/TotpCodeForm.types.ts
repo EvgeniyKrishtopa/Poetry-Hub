@@ -7,6 +7,8 @@ export interface TotpCodeFormProps {
   readonly factorId: string | null;
   /** What stands above the form. It is hidden with the form when the service is unavailable. */
   readonly children: ReactNode;
+  /** Run by «Повторить» as well, for a caller whose `factorId` may be dead: another tab can replace the factor. */
+  readonly onRetry?: () => void;
 }
 
 export type TotpCodeFormState =

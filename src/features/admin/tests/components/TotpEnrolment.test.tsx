@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { SESSION_UNAVAILABLE_MESSAGE } from "@/shared/ui/ui-messages";
 
 import { startTotpEnrolmentAction } from "../../actions/start-totp-enrolment.actions";
+import { verifyTotpCodeAction } from "../../actions/verify-totp-code.actions";
 import { TotpEnrolment } from "../../components/TotpEnrolment/TotpEnrolment";
 import { ADMIN_VERIFY_COPY } from "../../model/admin-messages";
 
@@ -62,6 +63,21 @@ describe("TotpEnrolment", () => {
     expect(await screen.findByRole("img", { name: ADMIN_VERIFY_COPY.qrAlt })).toHaveAttribute("src", ENROLMENT.qrCode);
     expect(screen.getByText("JBSW Y3DP EHPK 3PXP")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: ADMIN_VERIFY_COPY.codeLabel })).toBeEnabled();
+  });
+
+  // implements FR-7 of pre-deploy-security-hardening: another tab may have replaced the factor
+  it("goes back to the start when a code check is unavailable and retry is pressed", async () => {
+    vi.mocked(startTotpEnrolmentAction).mockResolvedValue({ data: ENROLMENT });
+    vi.mocked(verifyTotpCodeAction).mockResolvedValue({ data: { ok: false, failure: "unavailable" } });
+    render(<TotpEnrolment />);
+
+    const user = await start();
+    const field = await screen.findByRole("textbox", { name: ADMIN_VERIFY_COPY.codeLabel });
+    await user.type(field, "123456");
+    await user.click(screen.getByRole("button", { name: ADMIN_VERIFY_COPY.submitButton }));
+    await user.click(await screen.findByRole("button", { name: "Повторить" }));
+
+    expect(await screen.findByRole("button", { name: ADMIN_VERIFY_COPY.startButton })).toBeInTheDocument();
   });
 
   it.each([

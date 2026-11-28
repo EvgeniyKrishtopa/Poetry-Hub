@@ -44,7 +44,7 @@ export function TotpEnrolment() {
 
   return (
     <div aria-busy={pending} className="flex flex-col items-start gap-4 self-stretch">
-      <TotpCodeForm factorId={enrolment?.factorId ?? null}>
+      <TotpCodeForm factorId={enrolment?.factorId ?? null} onRetry={() => send("reset")}>
         {enrolment ? (
           <>
             <p>{ADMIN_VERIFY_COPY.scanIntro}</p>

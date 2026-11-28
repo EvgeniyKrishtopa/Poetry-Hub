@@ -12,9 +12,10 @@ import styles from "./TotpCodeForm.module.css";
 import type { TotpCodeFormProps, TotpCodeFormState } from "./TotpCodeForm.types";
 
 const IDLE: TotpCodeFormState = { status: "idle" };
+const NON_DIGITS = /\D/g;
 
 /** The code field and its submit, used by code entry and by enrolment. */
-export function TotpCodeForm({ factorId, children }: TotpCodeFormProps) {
+export function TotpCodeForm({ factorId, children, onRetry }: TotpCodeFormProps) {
   const [code, setCode] = useState("");
   const [state, send, pending] = useActionState(
     async (_previous: TotpCodeFormState, input: string | null): Promise<TotpCodeFormState> => {
@@ -32,9 +33,11 @@ export function TotpCodeForm({ factorId, children }: TotpCodeFormProps) {
   }, [state]);
 
   const failure = state.status === "failed" ? state.failure : undefined;
-  if (failure === "unavailable") {
-    return <SessionUnavailableAlert onRetry={() => startTransition(() => send(null))} />;
-  }
+  const retry = () => {
+    startTransition(() => send(null));
+    onRetry?.();
+  };
+  if (failure === "unavailable") return <SessionUnavailableAlert onRetry={retry} />;
 
   const disabled = pending || factorId === null;
 
@@ -60,9 +63,12 @@ export function TotpCodeForm({ factorId, children }: TotpCodeFormProps) {
             type="text"
             inputMode="numeric"
             autoComplete="one-time-code"
-            maxLength={TOTP_CODE_LENGTH}
             value={code}
-            onChange={(event) => setCode(event.target.value)}
+            // No `maxLength`: it would cut a pasted «123 456» to five digits before this sees it.
+            onChange={(event) => {
+              const digits = event.target.value.replace(NON_DIGITS, "");
+              setCode(digits.slice(0, TOTP_CODE_LENGTH));
+            }}
             disabled={disabled}
             error={failure === "wrong-code" ? ADMIN_VERIFY_COPY.wrongCode : undefined}
           />

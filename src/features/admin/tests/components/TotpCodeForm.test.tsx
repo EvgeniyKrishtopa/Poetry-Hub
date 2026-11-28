@@ -100,6 +100,17 @@ describe("TotpCodeForm", () => {
     expect(screen.getByText(INTRO)).toBeInTheDocument();
   });
 
+  // implements FR-8 of pre-deploy-security-hardening: the field takes the six digits of a pasted code
+  it("keeps only the first six digits of a pasted code", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.click(field());
+    await user.paste("123 4567");
+
+    expect(field()).toHaveValue("123456");
+  });
+
   it("disables the field and the button while there is no factor yet", () => {
     renderForm(null);
 
