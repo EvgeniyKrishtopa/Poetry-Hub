@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -169,7 +169,8 @@ describe("ContactDialog", () => {
 
     await submitValid(user);
     expect(await within(dialog()).findByRole("status")).toHaveTextContent(CONTACT_COPY.sent);
-    expect(within(dialog()).queryByText(CONTACT_COPY.intro)).not.toBeInTheDocument();
+    // The dialog learns of the success from an effect, which may run after the thank-you view is on screen.
+    await waitFor(() => expect(within(dialog()).queryByText(CONTACT_COPY.intro)).not.toBeInTheDocument());
 
     await user.click(within(dialog()).getAllByRole("button", { name: CONTACT_COPY.close })[0]);
     expect(dialog()).not.toHaveAttribute("open");

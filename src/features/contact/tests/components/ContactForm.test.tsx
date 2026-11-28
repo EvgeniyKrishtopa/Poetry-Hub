@@ -77,7 +77,8 @@ describe("ContactForm", () => {
     await fill(user, { name: "   ", email: "not-an-email" });
     await user.click(submitButton());
 
-    expect(nameInput()).toHaveAccessibleDescription(CONTACT_FIELD_ERRORS.nameRequired);
+    // The errors appear once the form's action resolves, which `click` does not wait for.
+    await waitFor(() => expect(nameInput()).toHaveAccessibleDescription(CONTACT_FIELD_ERRORS.nameRequired));
     expect(emailInput()).toHaveAccessibleDescription(CONTACT_FIELD_ERRORS.emailInvalid);
     expect(messageInput()).not.toHaveAttribute("aria-invalid");
     expect(sendContactMessageAction).not.toHaveBeenCalled();
@@ -116,7 +117,7 @@ describe("ContactForm", () => {
     await user.paste("б".repeat(MESSAGE_MAX_LENGTH + 1));
     await user.click(submitButton());
 
-    expect(nameInput()).toHaveAccessibleDescription(CONTACT_FIELD_ERRORS.nameTooLong);
+    await waitFor(() => expect(nameInput()).toHaveAccessibleDescription(CONTACT_FIELD_ERRORS.nameTooLong));
     expect(messageInput()).toHaveAttribute("aria-invalid", "true");
     expect(messageInput()).toHaveAccessibleDescription(CONTACT_FIELD_ERRORS.messageTooLong);
     expect(sendContactMessageAction).not.toHaveBeenCalled();
@@ -202,7 +203,7 @@ describe("ContactForm", () => {
     expect(onSent).toHaveBeenCalledTimes(1);
 
     const close = screen.getByRole("button", { name: CONTACT_COPY.close });
-    expect(close).toHaveFocus();
+    await waitFor(() => expect(close).toHaveFocus());
     await user.click(close);
     expect(onClose).toHaveBeenCalledTimes(1);
   });

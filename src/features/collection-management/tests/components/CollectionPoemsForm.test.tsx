@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -259,7 +259,8 @@ describe("CollectionPoemsForm: saving", () => {
 
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent(COLLECTION_POEMS_PAGE_COPY.stale);
-    expect(alert.parentElement).toHaveFocus();
+    // Focus moves in an effect, which may run after the alert is already on screen.
+    await waitFor(() => expect(alert.parentElement).toHaveFocus());
     expect(alert.compareDocumentPosition(box("Ночной вокзал")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByRole("checkbox", { name: "Осенний сад" })).toBeNull();
     expect(box("Ночной вокзал")).toBeChecked();
@@ -320,7 +321,7 @@ describe("CollectionPoemsForm: saving", () => {
 
       const alert = screen.getByRole("alert");
       expect(alert).toHaveTextContent(SAVE_COLLECTION_POEMS_FAILURE_MESSAGES[failure]);
-      expect(alert.parentElement).toHaveFocus();
+      await waitFor(() => expect(alert.parentElement).toHaveFocus());
       expect(box("Осенний сад")).toBeChecked();
       expect(saveButton()).toBeEnabled();
     },
