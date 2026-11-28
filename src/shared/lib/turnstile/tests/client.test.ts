@@ -7,6 +7,7 @@ import {
   TURNSTILE_REQUEST_TIMEOUT_MS,
   TURNSTILE_SECRET_KEY_ENV,
   TURNSTILE_SITEVERIFY_URL,
+  TURNSTILE_TOKEN_MAX_LENGTH,
 } from "../turnstile.constants";
 
 const SECRET = "0x4AAAAAAA-known_secret";
@@ -65,12 +66,27 @@ describe("verifyTurnstileToken", () => {
   ])("rejects an answer with %s", async (_case, body) => {
     respond(body);
 
-    expect(await verifyTurnstileToken(TOKEN)).toEqual({ ok: false, reason: "rejected" });
+    const result = await verifyTurnstileToken(TOKEN);
+
+    expect(result).toEqual({ ok: false, reason: "rejected" });
   });
 
-  it("rejects an empty token without a request", async () => {
-    expect(await verifyTurnstileToken("")).toEqual({ ok: false, reason: "rejected" });
+  it.each([
+    ["an empty token", ""],
+    ["a token longer than Turnstile issues", "x".repeat(TURNSTILE_TOKEN_MAX_LENGTH + 1)],
+  ])("rejects %s without a request", async (_case, token) => {
+    const result = await verifyTurnstileToken(token);
+
+    expect(result).toEqual({ ok: false, reason: "rejected" });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each(["invalid-input-secret", "missing-input-secret"])("answers config for %s", async (code) => {
+    respond(JSON.stringify({ success: false, "error-codes": [code] }));
+
+    const result = await verifyTurnstileToken(TOKEN);
+
+    expect(result).toEqual({ ok: false, reason: "config" });
   });
 
   it.each([
@@ -81,20 +97,26 @@ describe("verifyTurnstileToken", () => {
   ])("fails with reason config and sends nothing for a %s secret", async (_case, secret) => {
     vi.stubEnv(TURNSTILE_SECRET_KEY_ENV, secret);
 
-    expect(await verifyTurnstileToken(TOKEN)).toEqual({ ok: false, reason: "config" });
+    const result = await verifyTurnstileToken(TOKEN);
+
+    expect(result).toEqual({ ok: false, reason: "config" });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("answers network when the request fails", async () => {
     fetchMock.mockRejectedValueOnce(new TypeError(`fetch failed ${SECRET}`));
 
-    expect(await verifyTurnstileToken(TOKEN)).toEqual({ ok: false, reason: "network" });
+    const result = await verifyTurnstileToken(TOKEN);
+
+    expect(result).toEqual({ ok: false, reason: "network" });
   });
 
   it("answers timeout when the signal fired", async () => {
     fetchMock.mockRejectedValueOnce(new DOMException("timed out", TIMEOUT_ERROR_NAME));
 
-    expect(await verifyTurnstileToken(TOKEN)).toEqual({ ok: false, reason: "timeout" });
+    const result = await verifyTurnstileToken(TOKEN);
+
+    expect(result).toEqual({ ok: false, reason: "timeout" });
   });
 
   it.each([
@@ -103,6 +125,8 @@ describe("verifyTurnstileToken", () => {
   ])("answers http for %s", async (_case, body, status) => {
     respond(body, status);
 
-    expect(await verifyTurnstileToken(TOKEN)).toEqual({ ok: false, reason: "http" });
+    const result = await verifyTurnstileToken(TOKEN);
+
+    expect(result).toEqual({ ok: false, reason: "http" });
   });
 });

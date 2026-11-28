@@ -1,7 +1,13 @@
 import "server-only";
 
 import { readTurnstileConfig } from "./config";
-import { TIMEOUT_ERROR_NAME, TURNSTILE_REQUEST_TIMEOUT_MS, TURNSTILE_SITEVERIFY_URL } from "./turnstile.constants";
+import {
+  TIMEOUT_ERROR_NAME,
+  TURNSTILE_REQUEST_TIMEOUT_MS,
+  TURNSTILE_SECRET_ERROR_CODES,
+  TURNSTILE_SITEVERIFY_URL,
+  TURNSTILE_TOKEN_MAX_LENGTH,
+} from "./turnstile.constants";
 import type { TurnstileVerifyResult } from "./turnstile.types";
 
 /** Asks Cloudflare `siteverify` about a token. Never throws, and never logs the token or the secret. */
@@ -10,6 +16,8 @@ export async function verifyTurnstileToken(token: string): Promise<TurnstileVeri
   if (!configResult.ok) return { ok: false, reason: "config" };
   // No token is a refusal already; there is nothing to ask Cloudflare about.
   if (token === "") return { ok: false, reason: "rejected" };
+  // Checked here and not in a schema, so a filled honeypot is still answered first.
+  if (token.length > TURNSTILE_TOKEN_MAX_LENGTH) return { ok: false, reason: "rejected" };
   const { secretKey } = configResult.config;
   const body = new URLSearchParams({ secret: secretKey, response: token });
 
@@ -49,5 +57,15 @@ function readVerdict(bodyText: string): TurnstileVerifyResult {
   }
 
   const accepted = typeof body === "object" && body !== null && "success" in body && body.success === true;
-  return accepted ? { ok: true } : { ok: false, reason: "rejected" };
+  if (accepted) return { ok: true };
+
+  // A refused secret is the operator's fault: logged as `config`, so it does not read as bot traffic.
+  const secretRefused = namesSecretError(body);
+  return { ok: false, reason: secretRefused ? "config" : "rejected" };
+}
+
+function namesSecretError(body: unknown): boolean {
+  if (typeof body !== "object" || body === null || !("error-codes" in body)) return false;
+  const codes = body["error-codes"];
+  return Array.isArray(codes) && codes.some((code) => TURNSTILE_SECRET_ERROR_CODES.includes(code));
 }
