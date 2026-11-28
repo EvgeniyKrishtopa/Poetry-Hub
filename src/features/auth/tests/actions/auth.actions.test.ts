@@ -17,6 +17,7 @@ import {
 } from "../../actions/auth.actions";
 import { consumePasswordResetAllowance } from "../../dal/password-reset-allowance";
 import { checkRecoverySession } from "../../dal/recovery-check";
+import { CAPTCHA_TOKEN_MAX_LENGTH } from "../../model/auth.constants";
 import { FIELD_MESSAGES, GENERIC_SERVER_ERROR } from "../../model/auth-messages";
 import type { AuthActionResult, SignInResult, SignOutResult, SignUpResult } from "../../model/auth.types";
 
@@ -41,7 +42,11 @@ vi.mock("next/navigation", () => ({
 
 const EMAIL = "reader@example.com";
 const PASSWORD = "Secret-password-1";
-const CREDENTIALS = { email: EMAIL, password: PASSWORD };
+const CAPTCHA_TOKEN = "captcha-token-1";
+const CREDENTIALS = { email: EMAIL, password: PASSWORD, captchaToken: CAPTCHA_TOKEN };
+/** What the action hands Supabase for `CREDENTIALS`. */
+const AUTH_CREDENTIALS = { email: EMAIL, password: PASSWORD, options: { captchaToken: CAPTCHA_TOKEN } };
+const RECOVERY_INPUT = { email: EMAIL, captchaToken: CAPTCHA_TOKEN };
 
 const auth = {
   signInWithPassword: vi.fn(),
@@ -71,7 +76,8 @@ describe("auth actions", () => {
   describe("signInAction", () => {
     // implements FR-2 of add-supabase-auth
     it("returns validationErrors for invalid input without calling Supabase", async () => {
-      const result: AuthActionResult<SignInResult> = await signInAction({ email: "not-an-email", password: "" });
+      const input = { email: "not-an-email", password: "", captchaToken: CAPTCHA_TOKEN };
+      const result: AuthActionResult<SignInResult> = await signInAction(input);
 
       expect(result.validationErrors?.fieldErrors.email).toHaveLength(1);
       expect(result.validationErrors?.fieldErrors.password).toHaveLength(1);
@@ -83,8 +89,21 @@ describe("auth actions", () => {
       auth.signInWithPassword.mockResolvedValue({ data: {}, error: null });
 
       await expect(signInAction(CREDENTIALS)).rejects.toMatchObject({ digest: REDIRECT_DIGEST });
-      expect(auth.signInWithPassword).toHaveBeenCalledWith(CREDENTIALS);
+      expect(auth.signInWithPassword).toHaveBeenCalledWith(AUTH_CREDENTIALS);
       expect(redirect).toHaveBeenCalledWith("/");
+    });
+
+    // implements FR-5 of pre-deploy-security-hardening
+    it.each([
+      ["no captcha token", { email: EMAIL, password: PASSWORD }],
+      ["an empty one", { ...CREDENTIALS, captchaToken: "" }],
+      ["an oversized one", { ...CREDENTIALS, captchaToken: "x".repeat(CAPTCHA_TOKEN_MAX_LENGTH + 1) }],
+    ])("refuses a call with %s before any Supabase call", async (_case, input) => {
+      const result = await signInAction(input as typeof CREDENTIALS);
+
+      expect(result.validationErrors?.fieldErrors.captchaToken).toHaveLength(1);
+      expect(createSupabaseServerClient).not.toHaveBeenCalled();
+      expect(auth.signInWithPassword).not.toHaveBeenCalled();
     });
 
     it.each([
@@ -94,6 +113,8 @@ describe("auth actions", () => {
       ["unexpected_failure", 500, "unknown"],
       // implements FR-16 of admin-moderation
       ["user_banned", 400, "restricted"],
+      // implements FR-5 of pre-deploy-security-hardening
+      ["captcha_failed", 400, "captcha"],
     ])("returns data.failure for Supabase error %s", async (code, status, failure) => {
       auth.signInWithPassword.mockResolvedValue({ data: {}, error: authError(code, status) });
 
@@ -141,7 +162,8 @@ describe("auth actions", () => {
   describe("signUpAction", () => {
     // implements FR-4 of add-supabase-auth
     it("rejects an 11-character password without calling Supabase", async () => {
-      const result: AuthActionResult<SignUpResult> = await signUpAction({ email: EMAIL, password: "Abcdefghi1!" });
+      const input = { ...CREDENTIALS, password: "Abcdefghi1!" };
+      const result: AuthActionResult<SignUpResult> = await signUpAction(input);
 
       expect(result.validationErrors?.fieldErrors.password?.[0]).toContain("12");
       expect(auth.signUp).not.toHaveBeenCalled();
@@ -149,7 +171,8 @@ describe("auth actions", () => {
 
     // implements FR-4 of pre-deploy-security-hardening
     it("rejects a long password missing a kind of character without calling Supabase", async () => {
-      const result: AuthActionResult<SignUpResult> = await signUpAction({ email: EMAIL, password: "abcdefghij1!" });
+      const input = { ...CREDENTIALS, password: "abcdefghij1!" };
+      const result: AuthActionResult<SignUpResult> = await signUpAction(input);
 
       expect(result.validationErrors?.fieldErrors.password?.[0]).toBe(FIELD_MESSAGES.passwordTooSimple);
       expect(auth.signUp).not.toHaveBeenCalled();
@@ -160,8 +183,16 @@ describe("auth actions", () => {
 
       const result = await signUpAction(CREDENTIALS);
 
-      expect(auth.signUp).toHaveBeenCalledWith(CREDENTIALS);
+      expect(auth.signUp).toHaveBeenCalledWith(AUTH_CREDENTIALS);
       expect(result.data).toEqual({ status: "check-email", email: EMAIL });
+    });
+
+    // implements FR-5 of pre-deploy-security-hardening
+    it("refuses a call with no captcha token before any Supabase call", async () => {
+      const result = await signUpAction({ email: EMAIL, password: PASSWORD } as typeof CREDENTIALS);
+
+      expect(result.validationErrors?.fieldErrors.captchaToken).toHaveLength(1);
+      expect(auth.signUp).not.toHaveBeenCalled();
     });
 
     it("returns the same check-email for an already-registered address (empty identities)", async () => {
@@ -176,6 +207,8 @@ describe("auth actions", () => {
       ["weak_password", 422, "weak-password"],
       ["over_email_send_rate_limit", 429, "rate-limited"],
       ["unexpected_failure", 500, "unknown"],
+      // implements FR-5 of pre-deploy-security-hardening
+      ["captcha_failed", 400, "captcha"],
     ])("returns data.failure for Supabase error %s", async (code, status, failure) => {
       auth.signUp.mockResolvedValue({ data: { user: null }, error: authError(code, status) });
 
@@ -242,21 +275,29 @@ describe("auth actions", () => {
 
     // implements FR-2 of password-recovery
     it("returns validationErrors for an invalid address without calling Supabase", async () => {
-      const result = await requestRecoveryAction({ email: "not-an-email" });
+      const result = await requestRecoveryAction({ ...RECOVERY_INPUT, email: "not-an-email" });
 
       expect(result.validationErrors?.fieldErrors.email).toHaveLength(1);
       expect(createSupabaseServerClient).not.toHaveBeenCalled();
       expect(auth.resetPasswordForEmail).not.toHaveBeenCalled();
     });
 
+    // implements FR-5 of pre-deploy-security-hardening
+    it("refuses a call with no captcha token before any Supabase call", async () => {
+      const result = await requestRecoveryAction({ email: EMAIL } as typeof RECOVERY_INPUT);
+
+      expect(result.validationErrors?.fieldErrors.captchaToken).toHaveLength(1);
+      expect(auth.resetPasswordForEmail).not.toHaveBeenCalled();
+    });
+
     // implements FR-2 of password-recovery
-    it("receives the address only and sends it to resetPasswordForEmail", async () => {
+    it("receives the address and captcha token only and sends them to resetPasswordForEmail", async () => {
       auth.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
 
-      const input = { email: EMAIL, password: PASSWORD } as { email: string };
+      const input = { ...RECOVERY_INPUT, password: PASSWORD } as typeof RECOVERY_INPUT;
       const result = await requestRecoveryAction(input);
 
-      expect(auth.resetPasswordForEmail).toHaveBeenCalledExactlyOnceWith(EMAIL);
+      expect(auth.resetPasswordForEmail).toHaveBeenCalledExactlyOnceWith(EMAIL, { captchaToken: CAPTCHA_TOKEN });
       expect(result.data).toEqual(SENT);
     });
 
@@ -264,9 +305,9 @@ describe("auth actions", () => {
     it("answers the same sent for an address with an account, one without, and a blocked one", async () => {
       auth.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
 
-      const known = await requestRecoveryAction({ email: "known@example.com" });
-      const unknown = await requestRecoveryAction({ email: "stranger@example.com" });
-      const blocked = await requestRecoveryAction({ email: "blocked@example.com" });
+      const known = await requestRecoveryAction({ ...RECOVERY_INPUT, email: "known@example.com" });
+      const unknown = await requestRecoveryAction({ ...RECOVERY_INPUT, email: "stranger@example.com" });
+      const blocked = await requestRecoveryAction({ ...RECOVERY_INPUT, email: "blocked@example.com" });
 
       expect(known).toEqual({ data: SENT });
       expect(unknown).toEqual(known);
@@ -277,8 +318,8 @@ describe("auth actions", () => {
     it("answers sent again when the reader asks again", async () => {
       auth.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
 
-      await requestRecoveryAction({ email: EMAIL });
-      const again = await requestRecoveryAction({ email: EMAIL });
+      await requestRecoveryAction(RECOVERY_INPUT);
+      const again = await requestRecoveryAction(RECOVERY_INPUT);
 
       expect(auth.resetPasswordForEmail).toHaveBeenCalledTimes(2);
       expect(again.data).toEqual(SENT);
@@ -292,7 +333,7 @@ describe("auth actions", () => {
         error: authError("over_email_send_rate_limit", 429, `email rate limit exceeded for ${EMAIL}`),
       });
 
-      const result = await requestRecoveryAction({ email: EMAIL });
+      const result = await requestRecoveryAction(RECOVERY_INPUT);
 
       expect(result.data).toEqual(SENT);
       expect(warn).toHaveBeenCalledExactlyOnceWith("[auth] recovery letter refused: email send limit");
@@ -303,11 +344,13 @@ describe("auth actions", () => {
       ["over_request_rate_limit with 429", authError("over_request_rate_limit", 429), "rate-limited"],
       ["a bare 429 with no code", { status: 429, name: "AuthApiError", message: "slow down" }, "rate-limited"],
       ["an unlisted code with 429", authError("something_new", 429), "unknown"],
+      // implements FR-5 of pre-deploy-security-hardening
+      ["a rejected captcha", authError("captcha_failed", 400), "captcha"],
       ["any other error", authError("unexpected_failure", 500), "unknown"],
     ])("answers failed for %s", async (_label, error, failure) => {
       auth.resetPasswordForEmail.mockResolvedValue({ data: null, error });
 
-      const result = await requestRecoveryAction({ email: EMAIL });
+      const result = await requestRecoveryAction(RECOVERY_INPUT);
 
       expect(result.data).toEqual({ status: "failed", failure });
     });
@@ -316,7 +359,7 @@ describe("auth actions", () => {
     it("answers unavailable when the config is invalid", async () => {
       vi.mocked(createSupabaseServerClient).mockRejectedValue(new SupabaseConfigError(["NEXT_PUBLIC_SUPABASE_URL"]));
 
-      const result = await requestRecoveryAction({ email: EMAIL });
+      const result = await requestRecoveryAction(RECOVERY_INPUT);
 
       expect(result.data).toEqual({ status: "failed", failure: "unavailable" });
     });
@@ -325,7 +368,7 @@ describe("auth actions", () => {
     it("turns a throwing body into the generic serverError", async () => {
       auth.resetPasswordForEmail.mockRejectedValue(new TypeError(`fetch failed for ${EMAIL}`));
 
-      const result = await requestRecoveryAction({ email: EMAIL });
+      const result = await requestRecoveryAction(RECOVERY_INPUT);
 
       expect(result.serverError).toBe(GENERIC_SERVER_ERROR);
       expect(result.data).toBeUndefined();
@@ -335,7 +378,7 @@ describe("auth actions", () => {
     it("never counts an attempt of its own: the letter is limited by Supabase alone", async () => {
       auth.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
 
-      await requestRecoveryAction({ email: EMAIL });
+      await requestRecoveryAction(RECOVERY_INPUT);
 
       expect(consumePasswordResetAllowance).not.toHaveBeenCalled();
       expect(rpc).not.toHaveBeenCalled();
@@ -349,7 +392,7 @@ describe("auth actions", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
       auth.resetPasswordForEmail.mockResolvedValue({ data: null, error });
 
-      await requestRecoveryAction({ email: EMAIL });
+      await requestRecoveryAction(RECOVERY_INPUT);
 
       const logged = JSON.stringify([...vi.mocked(console.error).mock.calls, ...warn.mock.calls]);
       expect(logged).not.toContain(EMAIL);

@@ -79,7 +79,8 @@ export const signInAction = authActionClient
     const client = await createClientOrFailure();
     if ("failure" in client) return failed(client.failure);
 
-    const { error } = await client.supabase.auth.signInWithPassword(parsedInput);
+    const { captchaToken, ...credentials } = parsedInput;
+    const { error } = await client.supabase.auth.signInWithPassword({ ...credentials, options: { captchaToken } });
     if (error) return failed(classifyAuthError(error));
 
     // Outside every try: `redirect` throws NEXT_REDIRECT, which a catch would swallow (Gate 1 P1).
@@ -93,7 +94,8 @@ export const signUpAction = authActionClient
     const client = await createClientOrFailure();
     if ("failure" in client) return failed(client.failure);
 
-    const { error } = await client.supabase.auth.signUp(parsedInput);
+    const { captchaToken, ...credentials } = parsedInput;
+    const { error } = await client.supabase.auth.signUp({ ...credentials, options: { captchaToken } });
     // A banned address gets the same answer as any other, so a ban isn't revealed (FR-17). The refusal leaves
     // one trace for the operator: the action name only, never the address.
     if (error && isBannedSignUpRejection(error)) console.warn("[auth] sign-up refused for a banned address");
@@ -119,8 +121,9 @@ export const signOutAction = authActionClient.action(async (): Promise<SignOutRe
 const RECOVERY_SENT: RecoveryRequestResult = { status: "sent" };
 
 /**
- * Asks Supabase to send a recovery letter (password-recovery design D3). Receives the email only and answers `sent`
- * for every outcome that depends on the address. The letter has no counter of the app's own: Supabase limits it.
+ * Asks Supabase to send a recovery letter (password-recovery design D3). Receives the email and a captcha token only,
+ * and answers `sent` for every outcome that depends on the address. The letter has no counter of the app's own:
+ * Supabase limits it.
  */
 export const requestRecoveryAction = authActionClient
   .inputSchema(recoveryRequestSchema)
@@ -129,7 +132,8 @@ export const requestRecoveryAction = authActionClient
     // The only failure `createClientOrFailure` returns is a missing config.
     if ("failure" in client) return { status: "failed", failure: "unavailable" };
 
-    const { error } = await client.supabase.auth.resetPasswordForEmail(parsedInput.email);
+    const { email, captchaToken } = parsedInput;
+    const { error } = await client.supabase.auth.resetPasswordForEmail(email, { captchaToken });
     if (!error) return RECOVERY_SENT;
 
     const answer = classifyRecoveryRequestError(error);

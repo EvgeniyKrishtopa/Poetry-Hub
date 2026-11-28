@@ -45,7 +45,11 @@ export const AUTH_ERROR_CODE = {
   overEmailSendRateLimit: "over_email_send_rate_limit",
   weakPassword: "weak_password",
   samePassword: "same_password",
+  captchaFailed: "captcha_failed",
 } as const;
+
+/** The longest token Turnstile issues; anything longer is not one of its tokens. */
+export const CAPTCHA_TOKEN_MAX_LENGTH = 2048;
 
 export const HTTP_TOO_MANY_REQUESTS = 429;
 

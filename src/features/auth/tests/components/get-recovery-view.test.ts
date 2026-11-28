@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getRecoveryView } from "../../components/SignInForm/get-recovery-view";
-import { RECOVERY_FAILED_MESSAGE } from "../../model/auth-messages";
+import { CAPTCHA_FAILED_MESSAGE, RECOVERY_FAILED_MESSAGE } from "../../model/auth-messages";
 import type { RecoveryOfferResult, SignInFormState } from "../../model/auth.types";
 
 const IDLE: SignInFormState = { status: "idle", email: "" };
@@ -15,6 +15,7 @@ describe("getRecoveryView", () => {
 
     expect(view).toEqual({
       alert: "Неверный адрес электронной почты или пароль.",
+      captchaAlert: undefined,
       sentNotice: false,
       offerVisible: true,
       emailError: undefined,
@@ -68,6 +69,18 @@ describe("getRecoveryView", () => {
     const view = getRecoveryView({ signIn: WRONG, initialError: undefined, offerOnLoad: false, recovery });
 
     expect(view).toMatchObject({ offerVisible: true, ...expected });
+  });
+
+  // implements FR-5 of pre-deploy-security-hardening
+  it("puts a rejected captcha at sign-in next to the check block, with no top alert and no offer", () => {
+    const view = getRecoveryView({
+      signIn: { status: "failed", email: "", failure: "captcha" },
+      initialError: undefined,
+      offerOnLoad: false,
+      recovery: NONE,
+    });
+
+    expect(view).toMatchObject({ alert: undefined, captchaAlert: CAPTCHA_FAILED_MESSAGE, offerVisible: false });
   });
 
   // implements FR-1 of password-recovery

@@ -33,6 +33,12 @@ export const CONNECTION_NOTICE_MESSAGES = {
   [CONNECTION_STATUS.slow]: "Медленное подключение к интернету. Сохранение станет доступно, когда связь улучшится.",
 } as const;
 
+/** The captcha block's accessible name. */
+export const TURNSTILE_GROUP_LABEL = "Проверка «я не робот»";
+
+/** In place of the captcha block when no token can be had: JavaScript off, or the widget blocked or failing. */
+export const TURNSTILE_UNAVAILABLE_MESSAGE = "Для отправки формы нужна проверка. Включите JavaScript и обновите страницу.";
+
 /** A text field's counter, e.g. "12 / 1000"; it may exceed the limit. */
 export function formatCharacterCounter(length: number, maxLength: number): string {
   return `${length} / ${maxLength}`;

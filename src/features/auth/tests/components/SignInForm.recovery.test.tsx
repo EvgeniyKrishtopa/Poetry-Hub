@@ -1,11 +1,14 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { installFakeTurnstile } from "@/shared/ui/tests/fake-turnstile";
 
 import { requestRecoveryAction, signInAction } from "../../actions/auth.actions";
 import { GoogleSignInButton } from "../../components/GoogleSignInButton/GoogleSignInButton";
 import { SignInForm } from "../../components/SignInForm/SignInForm";
 import {
+  CAPTCHA_FAILED_MESSAGE,
   GOOGLE_CONNECTION_MESSAGES,
   RECOVERY_FAILED_MESSAGE,
   RECOVERY_OFFER_BUTTON_LABEL,
@@ -24,6 +27,17 @@ const connection = vi.hoisted(() => ({ status: "online" as "online" | "slow" | "
 vi.mock("@/shared/lib/network/use-connection", () => ({
   useConnection: () => ({ status: connection.status, isOnline: connection.status === "online" }),
 }));
+
+const turnstile = installFakeTurnstile();
+/** Any token: which one went out is checked where it matters. */
+const ANY_TOKEN = expect.stringMatching(/^token-\d+$/);
+
+/** The sign-in button once the check has passed; before that it is disabled. */
+async function readySignInButton(): Promise<HTMLElement> {
+  const button = screen.getByRole("button", { name: "Войти" });
+  await waitFor(() => expect(button).toBeEnabled());
+  return button;
+}
 
 type SignInResponse = Awaited<ReturnType<typeof signInAction>>;
 type RecoveryResponse = Awaited<ReturnType<typeof requestRecoveryAction>>;
@@ -48,7 +62,8 @@ async function signInWith(email = EMAIL, password = PASSWORD): Promise<void> {
   await user.clear(screen.getByLabelText("Электронная почта"));
   await user.type(screen.getByLabelText("Электронная почта"), email);
   await user.type(screen.getByLabelText("Пароль"), password);
-  await user.click(screen.getByRole("button", { name: "Войти" }));
+  const button = await readySignInButton();
+  await user.click(button);
 }
 
 function offerButton(): HTMLElement {
@@ -60,6 +75,8 @@ async function renderWithOffer(email = EMAIL): Promise<void> {
   render(<SignInForm />);
   await signInWith(email);
   await screen.findByText(RECOVERY_OFFER_TEXT);
+  // The attempt used its token: the offer works again once the next one arrives.
+  await waitFor(() => expect(offerButton()).toBeEnabled());
 }
 
 afterEach(() => {
@@ -131,14 +148,48 @@ describe("SignInForm: the recovery offer", () => {
 
 describe("SignInForm: asking for a letter", () => {
   // implements FR-2 of password-recovery
-  it("sends the address only, never the password", async () => {
+  it("sends the address and a captcha token only, never the password", async () => {
     recoveryAnswer({ data: { status: "sent" } });
     await renderWithOffer();
 
     await userEvent.click(offerButton());
 
     await screen.findByRole("status");
-    expect(requestRecoveryAction).toHaveBeenCalledExactlyOnceWith({ email: EMAIL });
+    expect(requestRecoveryAction).toHaveBeenCalledExactlyOnceWith({ email: EMAIL, captchaToken: ANY_TOKEN });
+  });
+
+  // implements FR-5 of pre-deploy-security-hardening
+  it("sends the recovery request a new token, not the one the sign-in used", async () => {
+    recoveryAnswer({ data: { status: "sent" } });
+    await renderWithOffer();
+
+    await userEvent.click(offerButton());
+
+    await screen.findByRole("status");
+    expect(signInAction).toHaveBeenCalledWith(expect.objectContaining({ captchaToken: "token-1" }));
+    expect(requestRecoveryAction).toHaveBeenCalledWith({ email: EMAIL, captchaToken: "token-2" });
+    // And that one is used up too.
+    expect(turnstile.reset).toHaveBeenCalledTimes(2);
+  });
+
+  // implements FR-5 of pre-deploy-security-hardening
+  it("disables the offer's button while there is no token, online and with nothing pending", async () => {
+    await renderWithOffer();
+
+    act(() => turnstile.options()["expired-callback"]());
+
+    expect(offerButton()).toBeDisabled();
+  });
+
+  // implements FR-5 of pre-deploy-security-hardening
+  it("shows a rejected captcha on the recovery request in the alert above the form", async () => {
+    recoveryAnswer({ data: { status: "failed", failure: "captcha" } });
+    await renderWithOffer();
+
+    await userEvent.click(offerButton());
+
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(CAPTCHA_FAILED_MESSAGE));
+    expect(screen.getByRole("alert").parentElement?.firstElementChild).toBe(screen.getByRole("alert"));
   });
 
   // implements FR-2, NFR-2 of password-recovery
@@ -201,7 +252,7 @@ describe("SignInForm: asking for a letter", () => {
     await user.click(offerButton());
 
     await screen.findByRole("status");
-    expect(requestRecoveryAction).toHaveBeenCalledExactlyOnceWith({ email: OTHER_EMAIL });
+    expect(requestRecoveryAction).toHaveBeenCalledExactlyOnceWith({ email: OTHER_EMAIL, captchaToken: ANY_TOKEN });
   });
 
   // implements FR-2 of password-recovery
@@ -318,14 +369,14 @@ describe("SignInForm: pending and offline", () => {
   it.each([
     ["offline", CONNECTION_NOTICE_MESSAGES.offline],
     ["slow", CONNECTION_NOTICE_MESSAGES.slow],
-  ] as const)("disables the offer's button and shows its own notice when %s", (status, message) => {
+  ] as const)("disables the offer's button and shows its own notice when %s", async (status, message) => {
     connection.status = status;
 
     render(<SignInForm initialError={RECOVERY_FAILED_MESSAGE} offerOnLoad />);
 
+    await readySignInButton();
     expect(offerButton()).toBeDisabled();
     expect(screen.getByText(message)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled();
   });
 
   // implements FR-7 of password-recovery
@@ -347,9 +398,10 @@ describe("SignInForm: pending and offline", () => {
   });
 
   // implements FR-7 of password-recovery
-  it("enables the button again when the connection returns", () => {
+  it("enables the button again when the connection returns", async () => {
     connection.status = "offline";
     const { rerender } = render(<SignInForm initialError={RECOVERY_FAILED_MESSAGE} offerOnLoad />);
+    await readySignInButton();
     expect(offerButton()).toBeDisabled();
 
     connection.status = "online";

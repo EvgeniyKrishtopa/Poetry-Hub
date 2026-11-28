@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useId, useRef } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 
-import { Alert, Button, FIELD_INPUT_CLASS, TextField } from "@/shared/ui";
+import { Alert, Button, FIELD_INPUT_CLASS, TextField, TurnstileField, type TurnstileFieldHandle } from "@/shared/ui";
 
 import { CONTACT_STATUS, HONEYPOT_FIELD } from "../../model/contact.constants";
 import { CONTACT_COPY } from "../../model/contact-messages";
@@ -26,25 +26,40 @@ const NO_FIELD_ERRORS: ContactFieldErrors = {};
 const FIELDSET_CLASS = "flex min-w-0 flex-col gap-4 [&_input:disabled]:opacity-50";
 
 /** The contact form and its sent view (design D5). */
-export function ContactForm({ onClose, onSent }: ContactFormProps) {
-  const [state, formAction, pending] = useActionState(submitContact, INITIAL_STATE);
+export function ContactForm({ isDialogOpen, onClose, onSent }: ContactFormProps) {
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<TurnstileFieldHandle>(null);
+  const refocusSubmitRef = useRef(false);
+
+  async function send(previous: ContactFormState, formData: FormData): Promise<ContactFormState> {
+    const result = await submitContact(previous, formData, captchaToken ?? "");
+    // A token is used once, whatever the answer was.
+    captchaRef.current?.reset();
+    return result;
+  }
+  const [state, formAction, pending] = useActionState(send, INITIAL_STATE);
   const formRef = useRef<HTMLFormElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
   const messageId = useId();
   const messageErrorId = `${messageId}-error`;
+  const canSubmit = captchaToken !== null;
 
   useEffect(() => {
     if (state.status === CONTACT_STATUS.sent) {
       onSent();
       return;
     }
-    // The disabled fieldset dropped focus while sending: give it back where the visitor acts next.
-    if (state.status === CONTACT_STATUS.failed) {
-      submitRef.current?.focus();
-      return;
-    }
+    if (state.status === CONTACT_STATUS.failed) refocusSubmitRef.current = true;
     if (state.status === CONTACT_STATUS.invalid) focusFirstInvalidField(formRef.current, state.fieldErrors);
   }, [state, onSent]);
+
+  // The disabled fieldset dropped focus while sending: give it back where the visitor acts next, once the next token
+  // has enabled the button, unless the focus has moved elsewhere in the meantime.
+  useEffect(() => {
+    if (pending || !canSubmit || !refocusSubmitRef.current) return;
+    refocusSubmitRef.current = false;
+    if (document.activeElement === document.body) submitRef.current?.focus();
+  }, [state, pending, canSubmit]);
 
   if (state.status === CONTACT_STATUS.sent) {
     return (
@@ -105,7 +120,8 @@ export function ContactForm({ onClose, onSent }: ContactFormProps) {
             </p>
           )}
         </div>
-        <Button ref={submitRef} type="submit" className="self-start">
+        {isDialogOpen && <TurnstileField ref={captchaRef} onTokenChange={setCaptchaToken} />}
+        <Button ref={submitRef} type="submit" disabled={!canSubmit} className="self-start">
           {pending ? CONTACT_COPY.submitting : CONTACT_COPY.submit}
         </Button>
       </fieldset>

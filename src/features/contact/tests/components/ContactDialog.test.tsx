@@ -2,6 +2,8 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { installFakeTurnstile } from "@/shared/ui/tests/fake-turnstile";
+
 import { sendContactMessageAction } from "../../actions/contact.actions";
 import { ContactDialog } from "../../components/ContactDialog/ContactDialog";
 import { CONTACT_COPY, CONTACT_FIELD_ERRORS } from "../../model/contact-messages";
@@ -10,6 +12,8 @@ import { SENT_AUTO_CLOSE_MS } from "../../model/contact.constants";
 vi.mock("../../actions/contact.actions", () => ({
   sendContactMessageAction: vi.fn(),
 }));
+
+const turnstile = installFakeTurnstile();
 
 type ActionResult = Awaited<ReturnType<typeof sendContactMessageAction>>;
 
@@ -52,10 +56,17 @@ async function closeWithButton(user: UserEvent) {
   await user.click(closeButtons[closeButtons.length - 1]);
 }
 
+/** Presses «Отправить» once the check has passed; before that the button is disabled. */
+async function submit(user: UserEvent) {
+  const button = within(dialog()).getByRole("button", { name: CONTACT_COPY.submit });
+  await waitFor(() => expect(button).toBeEnabled());
+  await user.click(button);
+}
+
 async function submitValid(user: UserEvent) {
   await user.type(nameInput(), NAME);
   await user.type(within(dialog()).getByLabelText(CONTACT_COPY.emailLabel), EMAIL);
-  await user.click(within(dialog()).getByRole("button", { name: CONTACT_COPY.submit }));
+  await submit(user);
 }
 
 describe("ContactDialog", () => {
@@ -71,6 +82,18 @@ describe("ContactDialog", () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  // implements FR-6 of pre-deploy-security-hardening
+  it("asks Cloudflare nothing until it is opened, and drops the check again when closed", async () => {
+    const user = renderDialog();
+    expect(turnstile.render).not.toHaveBeenCalled();
+
+    await user.click(trigger());
+    await waitFor(() => expect(turnstile.render).toHaveBeenCalledOnce());
+    await closeWithButton(user);
+
+    expect(turnstile.remove).toHaveBeenCalledOnce();
   });
 
   // implements FR-1 of add-contact-form
@@ -120,7 +143,7 @@ describe("ContactDialog", () => {
     const user = renderDialog();
     await user.click(trigger());
     await user.type(nameInput(), NAME);
-    await user.click(within(dialog()).getByRole("button", { name: CONTACT_COPY.submit }));
+    await submit(user);
     expect(within(dialog()).getByText(CONTACT_FIELD_ERRORS.emailInvalid)).toBeInTheDocument();
 
     await closeWithButton(user);
@@ -235,6 +258,8 @@ describe("ContactDialog", () => {
     }
 
     async function submitForm() {
+      // The check loads and passes in microtasks, which an async act flushes; only then is the button enabled.
+      await act(async () => {});
       await act(async () => {
         fireEvent.click(within(dialog()).getByRole("button", { name: CONTACT_COPY.submit }));
       });

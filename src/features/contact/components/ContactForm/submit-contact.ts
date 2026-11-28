@@ -9,7 +9,11 @@ import type { ContactFormState } from "../../model/contact.types";
 import { readContactValues, toContactFormState } from "../../model/form-state";
 
 /** Checks the values in the browser, then calls the action; a rejected call becomes `failed` (design D5). */
-export async function submitContact(_previous: ContactFormState, formData: FormData): Promise<ContactFormState> {
+export async function submitContact(
+  _previous: ContactFormState,
+  formData: FormData,
+  captchaToken: string,
+): Promise<ContactFormState> {
   const values = readContactValues(formData);
 
   const parsed = contactMessageSchema.safeParse(values);
@@ -19,7 +23,8 @@ export async function submitContact(_previous: ContactFormState, formData: FormD
   }
 
   try {
-    return toContactFormState(await sendContactMessageAction(values), values);
+    const result = await sendContactMessageAction({ ...values, captchaToken });
+    return toContactFormState(result, values);
   } catch (error) {
     // Without this, useActionState rethrows during render and the global error screen loses the
     // typed text. The error's type only: its message could echo what was submitted (NFR-2). The

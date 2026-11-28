@@ -18,6 +18,8 @@ export const contactMessageSchema = z.object({
   message: z.string().trim().max(MESSAGE_MAX_LENGTH, CONTACT_FIELD_ERRORS.messageTooLong),
   // Never rejected on: a filled honeypot is answered as a success by the action.
   [HONEYPOT_FIELD]: z.string().optional(),
+  // Optional here and checked by the action after the honeypot, so a bot that fills that field still gets «sent».
+  captchaToken: z.string().optional(),
 });
 
 export type ContactMessageInput = z.infer<typeof contactMessageSchema>;

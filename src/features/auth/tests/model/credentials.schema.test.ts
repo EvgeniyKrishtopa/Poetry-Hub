@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { FIELD_MESSAGES } from "../../model/auth-messages";
+import { CAPTCHA_FAILED_MESSAGE, FIELD_MESSAGES } from "../../model/auth-messages";
 import { confirmParamsSchema, recoveryParamsSchema } from "../../model/confirm-params.schema";
 import { MIN_PASSWORD_LENGTH } from "../../model/auth.constants";
 import {
@@ -11,6 +11,7 @@ import {
 } from "../../model/credentials.schema";
 
 const VALID_EMAIL = "reader@example.com";
+const TOKEN = "captcha-token";
 
 function fieldErrors(result: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } }) {
   return Object.fromEntries((result.error?.issues ?? []).map((issue) => [String(issue.path[0]), issue.message]));
@@ -19,11 +20,18 @@ function fieldErrors(result: { success: boolean; error?: { issues: { path: Prope
 describe("signInSchema", () => {
   // implements FR-2 of add-supabase-auth
   it("accepts a valid email and any non-empty password", () => {
-    expect(signInSchema.safeParse({ email: VALID_EMAIL, password: "x" }).success).toBe(true);
+    expect(signInSchema.safeParse({ email: VALID_EMAIL, password: "x", captchaToken: TOKEN }).success).toBe(true);
+  });
+
+  // implements FR-5 of pre-deploy-security-hardening
+  it.each([signInSchema, signUpSchema, recoveryRequestSchema])("requires a captcha token", (schema) => {
+    const result = schema.safeParse({ email: VALID_EMAIL, password: STRONG_PASSWORD });
+
+    expect(fieldErrors(result)).toEqual({ captchaToken: CAPTCHA_FAILED_MESSAGE });
   });
 
   it("rejects an invalid email and an empty password with their field messages", () => {
-    const result = signInSchema.safeParse({ email: "not-an-email", password: "" });
+    const result = signInSchema.safeParse({ email: "not-an-email", password: "", captchaToken: TOKEN });
 
     expect(result.success).toBe(false);
     expect(fieldErrors(result)).toEqual({
@@ -33,7 +41,7 @@ describe("signInSchema", () => {
   });
 
   it("rejects missing fields with the same messages", () => {
-    expect(fieldErrors(signInSchema.safeParse({}))).toEqual({
+    expect(fieldErrors(signInSchema.safeParse({ captchaToken: TOKEN }))).toEqual({
       email: FIELD_MESSAGES.emailInvalid,
       password: FIELD_MESSAGES.passwordRequired,
     });
@@ -61,38 +69,43 @@ describe("signUpSchema", () => {
     ["a special character", "Abcdefghijk1"],
     ["Latin letters", "Пароль-Пароль-1!"],
   ])("refuses a long password without %s, naming what it needs", (_label, password) => {
-    const result = signUpSchema.safeParse({ email: VALID_EMAIL, password });
+    const result = signUpSchema.safeParse({ email: VALID_EMAIL, password, captchaToken: TOKEN });
 
     expect(fieldErrors(result)).toEqual({ password: FIELD_MESSAGES.passwordTooSimple });
   });
 
   // implements FR-4 of pre-deploy-security-hardening
   it.each(["-", "\\", "]", "[", "`", "~", '"', "'"])("counts %s as a special character", (symbol) => {
-    const result = signUpSchema.safeParse({ email: VALID_EMAIL, password: `Abcdefghij1${symbol}` });
+    const input = { email: VALID_EMAIL, password: `Abcdefghij1${symbol}`, captchaToken: TOKEN };
+    const result = signUpSchema.safeParse(input);
 
     expect(result.success).toBe(true);
   });
 
   // implements FR-4 of pre-deploy-security-hardening
   it("allows other characters besides the required ones", () => {
-    expect(signUpSchema.safeParse({ email: VALID_EMAIL, password: "Мой стих Ab1!" }).success).toBe(true);
+    const input = { email: VALID_EMAIL, password: "Мой стих Ab1!", captchaToken: TOKEN };
+
+    expect(signUpSchema.safeParse(input).success).toBe(true);
   });
 
   it(`accepts a password of exactly ${MIN_PASSWORD_LENGTH} characters`, () => {
-    expect(signUpSchema.safeParse({ email: VALID_EMAIL, password: longEnough }).success).toBe(true);
+    const input = { email: VALID_EMAIL, password: longEnough, captchaToken: TOKEN };
+
+    expect(signUpSchema.safeParse(input).success).toBe(true);
   });
 
   it("rejects a password one character short with a message naming the minimum", () => {
-    const result = signUpSchema.safeParse({ email: VALID_EMAIL, password: tooShort });
+    const result = signUpSchema.safeParse({ email: VALID_EMAIL, password: tooShort, captchaToken: TOKEN });
 
     expect(result.success).toBe(false);
     expect(fieldErrors(result).password).toContain(String(MIN_PASSWORD_LENGTH));
   });
 
   it("rejects an invalid email", () => {
-    expect(fieldErrors(signUpSchema.safeParse({ email: "nope", password: longEnough }))).toEqual({
-      email: FIELD_MESSAGES.emailInvalid,
-    });
+    const result = signUpSchema.safeParse({ email: "nope", password: longEnough, captchaToken: TOKEN });
+
+    expect(fieldErrors(result)).toEqual({ email: FIELD_MESSAGES.emailInvalid });
   });
 });
 
@@ -114,11 +127,12 @@ describe("confirmParamsSchema", () => {
 
 describe("recoveryRequestSchema", () => {
   // implements FR-2 of password-recovery
-  it("accepts a valid email and keeps only it", () => {
-    const result = recoveryRequestSchema.safeParse({ email: VALID_EMAIL, password: "typed-but-ignored" });
+  it("accepts a valid email and token and keeps only them", () => {
+    const input = { email: VALID_EMAIL, password: "typed-but-ignored", captchaToken: TOKEN };
+    const result = recoveryRequestSchema.safeParse(input);
 
     expect(result.success).toBe(true);
-    expect(result.data).toEqual({ email: VALID_EMAIL });
+    expect(result.data).toEqual({ email: VALID_EMAIL, captchaToken: TOKEN });
   });
 
   it.each([
@@ -126,7 +140,7 @@ describe("recoveryRequestSchema", () => {
     ["an empty address", { email: "" }],
     ["a missing address", {}],
   ])("rejects %s with the email field message", (_label, input) => {
-    const result = recoveryRequestSchema.safeParse(input);
+    const result = recoveryRequestSchema.safeParse({ ...input, captchaToken: TOKEN });
 
     expect(result.success).toBe(false);
     expect(fieldErrors(result)).toEqual({ email: FIELD_MESSAGES.emailInvalid });

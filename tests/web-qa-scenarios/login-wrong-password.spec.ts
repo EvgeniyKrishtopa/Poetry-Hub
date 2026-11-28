@@ -10,11 +10,13 @@ test(
   { tag: ["@add-contact-form", "@google-sign-in"] },
   async ({ page }) => {
     const email = "nobody-qa@example.com";
-    // Wait for hydration: a submit before it hits the form's inert placeholder action.
-    await page.goto("/login", { waitUntil: "networkidle" });
+    await page.goto("/login");
     // Scoped to main: the footer's contact dialog holds a form of its own on every page,
     // with an email field under the same label.
     const main = page.getByRole("main");
+    // Enabled only once the form has hydrated and the captcha has passed. (`networkidle` never comes: the widget
+    // keeps the network busy.)
+    await expect(main.getByRole("button", { name: "Войти", exact: true })).toBeEnabled();
     // One password form, never a doubled one; the Google button is a form of its own beside it.
     await expect(main.locator("form").filter({ has: page.getByLabel("Пароль") })).toHaveCount(1);
 

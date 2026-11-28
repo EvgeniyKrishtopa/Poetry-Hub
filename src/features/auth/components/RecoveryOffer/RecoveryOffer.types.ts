@@ -3,6 +3,8 @@ export interface RecoveryOfferProps {
   readonly showText: boolean;
   /** A sign-in or a recovery request is pending: the button waits for it. */
   readonly busy: boolean;
+  /** The form holds an unused captcha token; a request needs one. */
+  readonly captchaReady: boolean;
   /** Asks for a letter for the form's current email; the form owns the action and its result. */
   readonly onRequest: () => void;
 }

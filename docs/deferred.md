@@ -251,3 +251,15 @@ Archived at `openspec/changes/archive/2026-11-24-home-contentful-content/`.
 - **Verified instead:** the contrast test proves white text over the 50% scrim and `#ececec` meets 4.5:1 body and 3:1 large text in both themes; the style tests prove the scrim value and the stacking order. The photo itself and the overlay are checked by hand.
 - **Decision:** owner, 2026-11-23.
 - **Status:** open. To close it: the owner looks at the hero on `/` in both themes and at 360, 768 and 1280 px and confirms the text reads clearly; replace or darken the photo if not. Record the result here and set this entry to `resolved`. A measuring test can be added later if the project gets an image decoder.
+
+## pre-deploy-security-hardening
+
+### pre-deploy-security-hardening · 4.5 — refresh of a Google session not checked with captcha on
+
+- **State:** skipped
+- **Requirement:** FR-5
+- **What is missing:** a token refresh of a session opened by Google, with Auth captcha on.
+- **Why:** it needs the owner's Google session to reach its expiry, and an automated Google sign-in is not practical.
+- **Verified instead:** the owner signed in with Google with captcha on and stayed signed in after a reload; a password session's refresh grant succeeds without a token on the local stack. Per the design, captcha guards neither the refresh nor the PKCE grant.
+- **Decision:** owner, 2026-11-28.
+- **Status:** open

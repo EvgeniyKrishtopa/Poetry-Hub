@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { siteConfig } from "@/shared/config/site";
 import { sendTelegramMessage, type TelegramSendResult } from "@/shared/lib/telegram";
+import { verifyTurnstileToken, type TurnstileVerifyResult } from "@/shared/lib/turnstile";
 
 import { sendContactMessageAction } from "../../actions/contact.actions";
 import { HONEYPOT_FIELD } from "../../model/contact.constants";
@@ -13,6 +14,7 @@ import { CONTACT_COPY } from "../../model/contact-messages";
 import { formatContactMessage } from "../../model/format-contact-message";
 
 vi.mock("@/shared/lib/telegram", () => ({ sendTelegramMessage: vi.fn() }));
+vi.mock("@/shared/lib/turnstile", () => ({ verifyTurnstileToken: vi.fn() }));
 
 const NAME = "Анна Секретова";
 const EMAIL = "anna.secret@example.com";
@@ -36,6 +38,7 @@ function expectNoSubmittedValueLogged() {
 describe("sendContactMessageAction", () => {
   beforeEach(() => {
     vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(verifyTurnstileToken).mockResolvedValue({ ok: true });
   });
 
   afterEach(() => {
@@ -55,13 +58,60 @@ describe("sendContactMessageAction", () => {
     expect(console.error).not.toHaveBeenCalled();
   });
 
-  // implements FR-10 of add-contact-form
-  it("answers sent for a filled honeypot without sending or logging anything", async () => {
-    const result = await sendContactMessageAction({ ...INPUT, [HONEYPOT_FIELD]: "http://spam.example" });
+  // implements FR-10 of add-contact-form and FR-6 of pre-deploy-security-hardening
+  it.each([
+    ["with a token", "captcha-token"],
+    ["without one", undefined],
+  ])("answers sent for a filled honeypot %s, verifying, sending and logging nothing", async (_case, captchaToken) => {
+    const input = { ...INPUT, [HONEYPOT_FIELD]: "http://spam.example", captchaToken };
+
+    const result = await sendContactMessageAction(input);
 
     expect(result.data).toEqual({ status: "sent" });
+    expect(verifyTurnstileToken).not.toHaveBeenCalled();
     expect(sendTelegramMessage).not.toHaveBeenCalled();
     expect(console.error).not.toHaveBeenCalled();
+  });
+
+  // implements FR-6 of pre-deploy-security-hardening
+  it("verifies the token before it sends", async () => {
+    vi.mocked(sendTelegramMessage).mockResolvedValue({ ok: true });
+
+    await sendContactMessageAction({ ...INPUT, captchaToken: "captcha-token" });
+
+    expect(verifyTurnstileToken).toHaveBeenCalledExactlyOnceWith("captcha-token");
+    expect(sendTelegramMessage).toHaveBeenCalledOnce();
+    expect(verifyTurnstileToken).toHaveBeenCalledBefore(vi.mocked(sendTelegramMessage));
+  });
+
+  // implements FR-6, NFR-2 of pre-deploy-security-hardening
+  it.each<[string, TurnstileVerifyResult]>([
+    ["a rejected token", { ok: false, reason: "rejected" }],
+    ["a missing secret", { ok: false, reason: "config" }],
+    ["an unreachable verifier", { ok: false, reason: "network" }],
+    ["a slow verifier", { ok: false, reason: "timeout" }],
+  ])("sends nothing for %s, answering failed with one line naming the reason only", async (_case, verdict) => {
+    vi.mocked(verifyTurnstileToken).mockResolvedValue(verdict);
+
+    const result = await sendContactMessageAction({ ...INPUT, captchaToken: "captcha-token" });
+
+    expect(result.data).toEqual({ status: "failed" });
+    expect(sendTelegramMessage).not.toHaveBeenCalled();
+    const reason = verdict.ok ? undefined : verdict.reason;
+    expect(console.error).toHaveBeenCalledExactlyOnceWith("[contact] captcha refused", { reason });
+    expect(loggedText()).not.toContain("captcha-token");
+    expectNoSubmittedValueLogged();
+  });
+
+  // implements FR-6 of pre-deploy-security-hardening
+  it("asks the verifier about an empty token when the call carries none", async () => {
+    vi.mocked(verifyTurnstileToken).mockResolvedValue({ ok: false, reason: "rejected" });
+
+    const result = await sendContactMessageAction(INPUT);
+
+    expect(verifyTurnstileToken).toHaveBeenCalledExactlyOnceWith("");
+    expect(result.data).toEqual({ status: "failed" });
+    expect(sendTelegramMessage).not.toHaveBeenCalled();
   });
 
   // implements FR-9, NFR-2 of add-contact-form

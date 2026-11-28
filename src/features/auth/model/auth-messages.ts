@@ -115,6 +115,8 @@ const WEAK_PASSWORD_MESSAGE = "Придумайте пароль надёжне�
 
 const RECOVERY_UNAVAILABLE_MESSAGE = "Восстановление пароля сейчас недоступно.";
 
+export const CAPTCHA_FAILED_MESSAGE = "Не удалось пройти проверку. Попробуйте ещё раз.";
+
 export const FIELD_MESSAGES = {
   emailInvalid: "Введите корректный адрес электронной почты.",
   passwordRequired: "Введите пароль.",
@@ -137,14 +139,17 @@ const FAILURE_MESSAGES: Readonly<
     // Says that the account is blocked, never why (FR-16).
     restricted: "Аккаунт заблокирован.",
     unavailable: "Вход сейчас недоступен.",
+    captcha: CAPTCHA_FAILED_MESSAGE,
   },
   "sign-up": {
     "rate-limited": RATE_LIMITED_MESSAGE,
     "weak-password": WEAK_PASSWORD_MESSAGE,
     unavailable: "Регистрация сейчас недоступна.",
+    captcha: CAPTCHA_FAILED_MESSAGE,
   },
   "recovery-request": {
     "rate-limited": RATE_LIMITED_MESSAGE,
+    captcha: CAPTCHA_FAILED_MESSAGE,
     unavailable: RECOVERY_UNAVAILABLE_MESSAGE,
   },
   "update-password": {

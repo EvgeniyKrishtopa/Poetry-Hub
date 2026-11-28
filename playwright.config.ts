@@ -18,6 +18,9 @@ const HOME_LIST_PROJECT_PREFIX = "home-lists-";
 const ALL_RESTRICTED_SCENARIOS = [...RESTRICTING_SCENARIOS, ...HOME_LIST_SCENARIOS];
 const BASE_URL = "http://localhost:3000";
 const DEV_SERVER_STARTUP_TIMEOUT_MS = 120_000;
+// Cloudflare's published always-pass test keys, matching the local stack's `[auth.captcha]` secret: not secrets.
+const TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA";
+const TURNSTILE_TEST_SECRET_KEY = "1x0000000000000000000000000000000AA";
 
 export default defineConfig({
   testDir: SCENARIOS_DIR,
@@ -45,8 +48,13 @@ export default defineConfig({
     command: "npm run dev",
     url: BASE_URL,
     // An empty key makes every send fail as `config`, so no scenario mails a seed address (`*.example.test`) for real.
-    // It only applies when Playwright starts the server: an already-running dev server keeps its own environment.
-    env: { RESEND_API_KEY: "" },
+    // The Turnstile test keys let the forms pass their check whatever `.env.local` holds.
+    // All of it applies only when Playwright starts the server: an already-running dev server keeps its own environment.
+    env: {
+      RESEND_API_KEY: "",
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: TURNSTILE_TEST_SITE_KEY,
+      TURNSTILE_SECRET_KEY: TURNSTILE_TEST_SECRET_KEY,
+    },
     reuseExistingServer: true,
     timeout: DEV_SERVER_STARTUP_TIMEOUT_MS,
   },

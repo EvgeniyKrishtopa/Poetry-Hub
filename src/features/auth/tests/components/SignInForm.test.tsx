@@ -1,15 +1,19 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { installFakeTurnstile } from "@/shared/ui/tests/fake-turnstile";
+
 import { signInAction } from "../../actions/auth.actions";
 import { SignInForm } from "../../components/SignInForm/SignInForm";
-import { CONFIRM_FAILED_MESSAGE } from "../../model/auth-messages";
+import { CAPTCHA_FAILED_MESSAGE, CONFIRM_FAILED_MESSAGE } from "../../model/auth-messages";
 import type { AuthFailure } from "../../model/auth.types";
 
 vi.mock("../../actions/auth.actions", () => ({
   signInAction: vi.fn(),
 }));
+
+const turnstile = installFakeTurnstile();
 
 const EMAIL = "reader@example.com";
 const PASSWORD = "secret-password-1";
@@ -24,6 +28,8 @@ async function submit(email = EMAIL, password = PASSWORD) {
   const user = userEvent.setup();
   if (email) await user.type(screen.getByLabelText("Электронная почта"), email);
   if (password) await user.type(screen.getByLabelText("Пароль"), password);
+  // Disabled until the check passes and gives a token.
+  await waitFor(() => expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled());
   await user.click(screen.getByRole("button", { name: "Войти" }));
 }
 
@@ -34,7 +40,7 @@ describe("SignInForm", () => {
 
   // implements FR-1 of add-supabase-auth
   // implements NFR-3 of add-supabase-auth
-  it("renders labelled inputs with the right autocomplete, a submit button, and a sign-up link", () => {
+  it("renders labelled inputs with the right autocomplete, a submit button, and a sign-up link", async () => {
     render(<SignInForm />);
 
     const email = screen.getByRole("textbox", { name: "Электронная почта" });
@@ -43,7 +49,7 @@ describe("SignInForm", () => {
     const password = screen.getByLabelText("Пароль");
     expect(password).toHaveAttribute("type", "password");
     expect(password).toHaveAttribute("autocomplete", "current-password");
-    expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled());
     expect(screen.getByRole("link", { name: "Создать аккаунт" })).toHaveAttribute("href", "/signup");
     expect(email.closest("form")).toHaveAttribute("novalidate");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -56,7 +62,51 @@ describe("SignInForm", () => {
 
     await submit();
 
-    expect(signInAction).toHaveBeenCalledWith({ email: EMAIL, password: PASSWORD });
+    expect(signInAction).toHaveBeenCalledWith({ email: EMAIL, password: PASSWORD, captchaToken: "token-1" });
+  });
+
+  // implements FR-5 of pre-deploy-security-hardening
+  it("keeps the submit button disabled until the check passes", () => {
+    render(<SignInForm />);
+
+    expect(screen.getByRole("button", { name: "Войти" })).toBeDisabled();
+  });
+
+  // implements FR-5 of pre-deploy-security-hardening
+  it("disables the submit button when the token expires", async () => {
+    render(<SignInForm />);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled());
+
+    act(() => turnstile.options()["expired-callback"]());
+
+    expect(screen.getByRole("button", { name: "Войти" })).toBeDisabled();
+  });
+
+  // implements FR-5 of pre-deploy-security-hardening
+  it("resets the check after a submission and sends a new token next time", async () => {
+    mockResult({ data: { status: "failed", failure: "invalid-credentials" } });
+    render(<SignInForm />);
+
+    await submit();
+    await screen.findByRole("alert");
+
+    expect(turnstile.reset).toHaveBeenCalledOnce();
+    // Nothing retyped: userEvent keeps its own copy of a value the form reset cleared.
+    await submit("", "");
+    await waitFor(() => expect(signInAction).toHaveBeenCalledTimes(2));
+    expect(signInAction).toHaveBeenLastCalledWith(expect.objectContaining({ captchaToken: "token-2" }));
+  });
+
+  // implements FR-5 of pre-deploy-security-hardening
+  it("shows a rejected captcha in a danger alert directly above the check block", async () => {
+    mockResult({ data: { status: "failed", failure: "captcha" } });
+    render(<SignInForm />);
+
+    await submit();
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(CAPTCHA_FAILED_MESSAGE);
+    expect(alert.nextElementSibling).toBe(screen.getByRole("group"));
   });
 
   // implements NFR-3 of add-supabase-auth
@@ -121,7 +171,7 @@ describe("SignInForm", () => {
     expect(screen.getByRole("button", { name: "Войти" })).toBeDisabled();
     resolve({ data: { status: "failed", failure: "unknown" } });
     expect(await screen.findByRole("alert")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled());
   });
 
   // implements FR-5 of add-supabase-auth

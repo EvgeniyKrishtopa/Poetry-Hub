@@ -34,8 +34,8 @@ One row per acceptance criterion. Scenarios of a MODIFIED requirement that did n
 | FR-5 no token | each auth action refuses without calling Supabase | unit |
 | FR-5 rejected token | each of the three flows shows the captcha notice | unit |
 | FR-5 second attempt | widget reset; recovery offer sends a new token | unit |
-| FR-5 direct API call | password grant without a token against the local stack | integration |
-| FR-5 Google sign-in | Google sign-in and a later refresh with captcha on | end-to-end |
+| FR-5 direct API call | manual: password grant, sign-up and recovery without a token against the local stack (task 4.5) | integration |
+| FR-5 Google sign-in | manual: Google sign-in with captcha on; refresh checked on a password session (task 4.5; Google refresh deferred) | end-to-end |
 | FR-6 dialog closed | widget not mounted until the dialog opens | unit |
 | FR-6 valid token | one Telegram send | unit |
 | FR-6 missing or rejected token | no send, values kept | unit |
