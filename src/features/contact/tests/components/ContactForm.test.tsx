@@ -16,7 +16,7 @@ vi.mock("../../actions/contact.actions", () => ({
 
 const turnstile = installFakeTurnstile();
 
-type ActionResult =Awaited<ReturnType<typeof sendContactMessageAction>>;
+type ActionResult = Awaited<ReturnType<typeof sendContactMessageAction>>;
 
 const NAME = "Анна";
 const EMAIL = "anna@example.com";

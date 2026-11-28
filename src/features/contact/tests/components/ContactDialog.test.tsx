@@ -15,7 +15,7 @@ vi.mock("../../actions/contact.actions", () => ({
 
 const turnstile = installFakeTurnstile();
 
-type ActionResult =Awaited<ReturnType<typeof sendContactMessageAction>>;
+type ActionResult = Awaited<ReturnType<typeof sendContactMessageAction>>;
 
 const TRIGGER_CLASS = "footer-link-class";
 const NAME = "Анна";
