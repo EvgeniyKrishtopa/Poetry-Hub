@@ -95,7 +95,7 @@ describe("SignUpForm", () => {
   // implements NFR-3 of add-supabase-auth
   it("shows a server validation error on the password field", async () => {
     mockResult({
-      validationErrors: { formErrors: [], fieldErrors: { password: ["Не менее 8 символов."] } },
+      validationErrors: { formErrors: [], fieldErrors: { password: ["Не менее 12 символов."] } },
     });
     render(<SignUpForm />);
 
@@ -103,7 +103,7 @@ describe("SignUpForm", () => {
 
     const password = await screen.findByLabelText("Пароль");
     expect(password).toHaveAttribute("aria-invalid", "true");
-    expect(password).toHaveAccessibleDescription("Не менее 8 символов.");
+    expect(password).toHaveAccessibleDescription("Не менее 12 символов.");
     expect(screen.getByLabelText("Электронная почта")).not.toHaveAttribute("aria-invalid");
   });
 

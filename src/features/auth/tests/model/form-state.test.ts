@@ -72,8 +72,8 @@ describe("toSignUpFormState", () => {
   it.each<[string, AuthActionResult<SignUpResult>, SignUpFormState]>([
     [
       "validationErrors",
-      { validationErrors: { formErrors: [], fieldErrors: { password: ["Не менее 8 символов."] } } },
-      { status: "invalid", email: EMAIL, fieldErrors: { password: "Не менее 8 символов." } },
+      { validationErrors: { formErrors: [], fieldErrors: { password: ["Не менее 12 символов."] } } },
+      { status: "invalid", email: EMAIL, fieldErrors: { password: "Не менее 12 символов." } },
     ],
     ["serverError", { serverError: "Что-то пошло не так. Попробуйте ещё раз." }, { status: "failed", email: EMAIL, failure: "unknown" }],
     ["check-email", { data: { status: "check-email", email: EMAIL } }, { status: "check-email", email: EMAIL }],
@@ -127,7 +127,7 @@ describe("toRecoveryRequestResult", () => {
 });
 
 describe("toResetPasswordFormState and readNewPassword", () => {
-  const SHORT = "Не менее 8 символов.";
+  const SHORT = "Не менее 12 символов.";
 
   // implements FR-5, FR-8 of password-recovery
   it.each<[string, AuthActionResult<UpdatePasswordResult>, ResetPasswordFormState]>([

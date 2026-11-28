@@ -67,8 +67,8 @@ describe("ResetPasswordForm", () => {
   it.each<[string, Response, string]>([
     [
       "short",
-      { validationErrors: { formErrors: [], fieldErrors: { password: ["Не менее 8 символов."] } } },
-      "Не менее 8 символов.",
+      { validationErrors: { formErrors: [], fieldErrors: { password: ["Не менее 12 символов."] } } },
+      "Не менее 12 символов.",
     ],
     ["weak", { data: { status: "failed", failure: "weak-password" } }, "Придумайте пароль надёжнее."],
     [
