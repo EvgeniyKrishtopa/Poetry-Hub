@@ -1,8 +1,9 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
-import { createRef } from "react";
+import { Activity, createRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { TURNSTILE_SCRIPT_TIMEOUT_MS } from "../TurnstileField/load-turnstile-script";
 import { TurnstileField } from "../TurnstileField/TurnstileField";
 import type { TurnstileFieldHandle } from "../TurnstileField/TurnstileField.types";
 import { TURNSTILE_GROUP_LABEL, TURNSTILE_UNAVAILABLE_MESSAGE } from "../ui-messages";
@@ -82,6 +83,27 @@ describe("TurnstileField", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(TURNSTILE_UNAVAILABLE_MESSAGE);
   });
 
+  it("shows the block again when a failed page is hidden and revealed", async () => {
+    const onTokenChange = vi.fn<(token: string | null) => void>();
+    const page = (mode: "visible" | "hidden") => (
+      <Activity mode={mode}>
+        <TurnstileField onTokenChange={onTokenChange} />
+      </Activity>
+    );
+    const view = render(page("visible"));
+    await waitFor(() => expect(turnstile.render).toHaveBeenCalled());
+    act(() => {
+      turnstile.options()["error-callback"]();
+    });
+
+    view.rerender(page("hidden"));
+    view.rerender(page("visible"));
+
+    await waitFor(() => expect(turnstile.render).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(block()).not.toHaveAttribute("hidden");
+  });
+
   it("removes the widget and its token on unmount", async () => {
     const { onTokenChange, view } = await renderWidget();
 
@@ -147,6 +169,23 @@ describe("TurnstileField without Cloudflare's script", () => {
     });
     // Loaded, yet no `window.turnstile`: still no way to a token.
     expect(await screen.findByRole("alert")).toHaveTextContent(TURNSTILE_UNAVAILABLE_MESSAGE);
+  });
+
+  it("shows the notice when the script neither loads nor errors in time", async () => {
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", FAKE_SITE_KEY);
+    vi.useFakeTimers();
+    try {
+      render(<TurnstileField onTokenChange={vi.fn()} />);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(TURNSTILE_SCRIPT_TIMEOUT_MS);
+      });
+
+      expect(screen.getByRole("alert")).toHaveTextContent(TURNSTILE_UNAVAILABLE_MESSAGE);
+      expect(scripts()).toHaveLength(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("loads the script once for two widgets and renders both when it arrives", async () => {

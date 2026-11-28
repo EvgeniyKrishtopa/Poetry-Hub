@@ -20,7 +20,6 @@ interface RenderedWidget {
  * The captcha block of the sign-in, sign-up and contact forms. It loads Cloudflare's script when mounted, so a form
  * mounts it only while it is in use. When no token can be had, a danger alert stands in place of the block.
  */
-// implements NFR-6 of pre-deploy-security-hardening: token utilities only, no color literals
 export function TurnstileField({ onTokenChange, ref }: TurnstileFieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<RenderedWidget | null>(null);
@@ -94,6 +93,8 @@ export function TurnstileField({ onTokenChange, ref }: TurnstileFieldProps) {
       if (widget !== null) widget.api.remove(widget.widgetId);
       // A removed widget's token must not stay in the form.
       dropToken();
+      // A page kept by Activity runs the effect again: the next widget must not render into a block still hidden.
+      setFailed(false);
     };
   }, []);
 
