@@ -34,7 +34,7 @@ function loggedText(): string {
 
 describe("deletePoemAction", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     vi.mocked(deleteOwnPoem).mockResolvedValue(DELETED);
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -114,7 +114,7 @@ describe("deletePoemAction", () => {
   // implements FR-7 of delete-poem
   it("deletes as usual for a session the proxy already refreshed", async () => {
     // The proxy renewed the access token before the action ran, so the session reads as signed in.
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
 
     const result = await deletePoemAction({ poemId: POEM_ID });
 

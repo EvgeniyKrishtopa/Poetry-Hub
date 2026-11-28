@@ -12,8 +12,6 @@
     "src/features/work-ordering/**",
     // Temporary, pre-deploy-security-hardening scaffold: the new stubs have no importer until their tasks wire or test
     // them. The group that wires or tests a path removes its entry; task 8.4 checks none is left.
-    "src/features/auth/model/recovery-session.ts",
-    "src/features/auth/dal/recovery-check.ts",
     "src/shared/lib/turnstile/**",
     "src/shared/ui/TurnstileField/**",
     "src/features/admin/model/totp.types.ts",
@@ -26,11 +24,10 @@
     "src/shared/lib/security-log/**",
     "src/shared/lib/error-reporting/**"
   ],
-  // Temporary, pre-deploy-security-hardening scaffold: these two types are used only by the ignored stubs above.
-  // The groups of tasks 3.2 and 6.2 remove their entries.
+  // Temporary, pre-deploy-security-hardening scaffold: this type is used only by the ignored stubs above.
+  // The group of task 6.2 removes its entry.
   "ignoreIssues": {
-    "src/shared/lib/image-file/image-file.types.ts": ["types"],
-    "src/shared/lib/supabase/claims.ts": ["types"]
+    "src/shared/lib/image-file/image-file.types.ts": ["types"]
   },
   "ignoreDependencies": [
     // OpenSpec CLI, invoked only as `npx openspec` by the spec workflow, never imported or referenced in a script.

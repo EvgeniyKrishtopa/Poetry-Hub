@@ -21,7 +21,7 @@ const INPUT = { collectionId: COLLECTION_ID } as const;
 
 describe("checkCollectionPoemsAction", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     vi.mocked(getOwnCollection).mockResolvedValue({
       ok: true,
       collection: { id: COLLECTION_ID, title: "Осенний цикл", description: null },

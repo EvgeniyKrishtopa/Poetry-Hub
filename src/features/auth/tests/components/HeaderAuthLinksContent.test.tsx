@@ -12,7 +12,7 @@ const USER_ID = "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b";
 describe("HeaderAuthLinksContent", () => {
   // implements FR-3 of remove-browser-session-read
   it("renders Sign out when the server reports a signed-in reader, with no user id in the output", async () => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
 
     const { container } = render(await HeaderAuthLinksContent());
 

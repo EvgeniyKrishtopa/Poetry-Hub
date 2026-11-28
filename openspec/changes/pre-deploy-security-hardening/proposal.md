@@ -10,7 +10,7 @@ Nine groups, in this order.
 
 1. **Quick fixes.** Remove the stale `GHSA-fc5q-39xc-vjpf` entry from `scripts/audit-allowlist.json` [A03-3]; stop sending `X-Powered-By` [A02-6]; `supabase/seed.sql` aborts on a database that holds an account outside `example.test` [A04-3]; record what a wrong password on a banned account shows [A07-5].
 2. **Session cookies and a baseline CSP.** Auth cookies become `HttpOnly`, `SameSite=Lax`, `Secure` in production; responses carry a `Content-Security-Policy` with the directives that need no nonce [A02-1 partly, A02-2, A04-2].
-3. **BREAKING: password change only from a recovery link.** `/reset-password` and its action accept only a recently opened recovery session; `secure_password_change` on; leaked-password protection, or a 12-character minimum [A07-1, A07-3].
+3. **BREAKING: password change only from a recovery link.** `/reset-password` and its action accept only a recently opened recovery session; `secure_password_change` on; a new password needs 12 characters with lowercase, uppercase, digit and symbol [A07-1, A07-3].
 4. **BREAKING: bot protection** (UI). Cloudflare Turnstile on sign-in, sign-up, the recovery request and the contact form; Vercel Firewall rules [A06-1, A06-2, A07-4]. All of them already require JavaScript, so no reader loses a way in.
 5. **BREAKING: admin TOTP second factor** (UI, migration). Admin tools and `admin_*` functions need an `aal2` session [A07-2].
 6. **Safe image uploads** (migration). Every uploaded image is re-encoded without metadata; the number of objects per author folder is capped in the database [A01-1, A06-3, A08-3].
@@ -29,7 +29,7 @@ Groups 4 and 5 have user-facing screens and wait for an approved Claude Design l
 | FR-1 | Auth cookies are not readable by page scripts | 2 |
 | FR-2 | Responses carry the baseline CSP | 2 |
 | FR-3 | The app sets a new password only for a recent recovery session (Supabase's own endpoint is bounded by FR-4) | 3 |
-| FR-4 | Hardened password policy (reauthentication; leaked-password protection or 12 characters) | 3 |
+| FR-4 | Hardened password policy (reauthentication; 12 characters and composition rules) | 3 |
 | FR-5 | Sign-in, sign-up and the recovery request need a valid captcha token | 4 |
 | FR-6 | The contact form needs a valid captcha token | 4 |
 | FR-7 | The admin enrols a TOTP factor | 5 |
@@ -100,7 +100,7 @@ Approved Claude Design canvas: https://claude.ai/artifact/GCN2BZQF5eG454fA1PZG8z
 
 The owner delegated the technical forks on 2026-11-27: the safest option is taken and recorded here or in `design.md` and the specs.
 
-- Leaked-password protection if the Supabase plan has it, otherwise a 12-character minimum. No plan is bought for it.
+- The plan is Free, so no leaked-password protection and no plan is bought for it. Owner, 2026-11-28: a 12-character minimum plus composition rules (lowercase, uppercase, digit, symbol; Latin letters, as Supabase counts them).
 - No client IP in security event logs.
 - Firewall, per IP, Server Action POSTs only: 10 per minute on `/login` and `/signup`, 60 per minute overall.
 - Object cap: author photos 5 per folder; illustrations the author's poem count plus 20.

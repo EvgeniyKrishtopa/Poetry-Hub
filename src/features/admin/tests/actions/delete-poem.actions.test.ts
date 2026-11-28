@@ -51,7 +51,7 @@ function expectNothingDone(): void {
 
 describe("deletePoemAction", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID, aal: "aal1", amr: [] });
     vi.mocked(deletePoemAsAdmin).mockResolvedValue(DELETED);
     vi.mocked(removeIllustration).mockResolvedValue(undefined);
     vi.mocked(sendActionNotice).mockResolvedValue(SENT);

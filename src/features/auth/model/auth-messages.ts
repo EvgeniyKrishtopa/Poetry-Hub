@@ -118,8 +118,9 @@ const RECOVERY_UNAVAILABLE_MESSAGE = "Восстановление пароля 
 export const FIELD_MESSAGES = {
   emailInvalid: "Введите корректный адрес электронной почты.",
   passwordRequired: "Введите пароль.",
-  // The noun's plural form fits MIN_PASSWORD_LENGTH (8); a length of 1-4 or 21+ needs another form.
+  // The noun's plural form fits MIN_PASSWORD_LENGTH (12); a length of 1-4 or 21+ needs another form.
   passwordTooShort: (minLength: number) => `Не менее ${minLength} символов.`,
+  passwordTooSimple: "Добавьте строчную и заглавную латинские буквы, цифру и спецсимвол.",
 } as const;
 
 /**

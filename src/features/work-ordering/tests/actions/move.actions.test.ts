@@ -46,7 +46,7 @@ function expectNothingChanged(): void {
 
 describe.each(ACTIONS)("%s", (_name, run, write) => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     vi.mocked(consumeMoveAllowance).mockResolvedValue({ ok: true });
     vi.mocked(write).mockResolvedValue({ ok: true, status: "moved", authorId: AUTHOR_ID });
   });
@@ -168,7 +168,7 @@ describe.each(ACTIONS)("%s", (_name, run, write) => {
 
 describe("the ids guard", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     vi.mocked(consumeMoveAllowance).mockResolvedValue({ ok: true });
   });
 

@@ -33,7 +33,7 @@ async function renderContent() {
 }
 
 beforeEach(() => {
-  vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+  vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
   vi.mocked(getOwnPublicAuthor).mockResolvedValue({ ok: true, status: "public", authorId: AUTHOR_ID });
   vi.mocked(listPoemGenres).mockResolvedValue({ ok: true, genres: GENRES });
 });

@@ -80,7 +80,7 @@ function expectCachesUntouched(): void {
 }
 
 beforeEach(() => {
-  vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
+  vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID, aal: "aal1", amr: [] });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "info").mockImplementation(() => {});
 });

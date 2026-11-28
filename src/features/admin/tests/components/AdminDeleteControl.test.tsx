@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 vi.mock("../../actions/delete-poem.actions", () => ({ deletePoemAction: vi.fn() }));
 vi.mock("../../actions/delete-collection.actions", () => ({ deleteCollectionAction: vi.fn() }));
 
-const SIGNED_IN = { state: "signed-in", userId: "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b" } as const;
+const SIGNED_IN = { state: "signed-in", userId: "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b", aal: "aal1", amr: [] } as const;
 const AUTHOR_ID = "11111111-2222-4333-8444-555555555555";
 
 const PROPS = {

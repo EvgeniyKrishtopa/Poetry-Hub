@@ -99,7 +99,7 @@ describe("AccountAuthorSection", () => {
   // implements FR-1, FR-18 of add-author-profiles
   it("renders the «Профиль автора» section over the links for the read's result", async () => {
     const result: MyProfileResult = { ok: false, failure: "unavailable" };
-    vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     vi.mocked(getMyAuthorProfile).mockResolvedValue(result);
 
     render(await AccountAuthorSection());

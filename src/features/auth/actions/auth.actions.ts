@@ -5,14 +5,13 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { RESET_PASSWORD_PATH } from "@/shared/config/account-paths";
-import { SESSION_STATE } from "@/shared/config/constants";
 import { getSiteUrl } from "@/shared/lib/seo";
 import { SupabaseConfigError } from "@/shared/lib/supabase";
 import { describeAuthError } from "@/shared/lib/supabase/claims";
 import { createSupabaseServerClient } from "@/shared/lib/supabase/server";
 
-import { getSessionState } from "../dal/current-user";
 import { consumePasswordResetAllowance } from "../dal/password-reset-allowance";
+import { checkRecoverySession } from "../dal/recovery-check";
 import { GOOGLE_FLOW_PARAM, RESET_STATUS, RESET_STATUS_PARAM } from "../model/auth.constants";
 import type {
   AuthFailedResult,
@@ -166,16 +165,17 @@ const RESET_UPDATED_TARGET = `${RESET_PASSWORD_PATH}?${RESET_STATUS_PARAM}=${RES
 const RESET_SIGN_OUT_FAILED_TARGET = `${RESET_PASSWORD_PATH}?${RESET_STATUS_PARAM}=${RESET_STATUS.updatedSignOutFailed}`;
 
 /**
- * Sets the recovery session's new password (password-recovery design D5): schema, session, allowance, update,
+ * Sets the recovery session's new password (password-recovery design D5): schema, recovery check, allowance, update,
  * global sign-out, then a redirect to `/reset-password?status=…`. Success never returns; failures are values.
  * No `refresh()`: the page after the change must not need the session the sign-out just ended.
  */
 export const updatePasswordAction = authActionClient
   .inputSchema(newPasswordSchema)
   .action(async ({ parsedInput }): Promise<UpdatePasswordResult> => {
-    const session = await getSessionState();
-    if (session.state === SESSION_STATE.signedOut) return updatePasswordFailed("link-expired");
-    if (session.state === SESSION_STATE.unknown) return updatePasswordFailed("unavailable");
+    // Before the allowance: a session that may not change the password spends none of it.
+    const recovery = await checkRecoverySession();
+    if (recovery === "not-recovery") return updatePasswordFailed("link-expired");
+    if (recovery === "unknown") return updatePasswordFailed("unavailable");
 
     const allowance = await consumePasswordResetAllowance();
     if (allowance === "refused") return updatePasswordFailed("rate-limited");

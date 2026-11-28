@@ -10,7 +10,27 @@ export const RESET_STATUS_PARAM = "status";
 /** What `updatePasswordAction` tells `/reset-password` after a change: the old sessions ended, or not (design D5). */
 export const RESET_STATUS = { updated: "updated", updatedSignOutFailed: "updated-sign-out-failed" } as const;
 
-export const MIN_PASSWORD_LENGTH = 8;
+export const MIN_PASSWORD_LENGTH = 12;
+
+/**
+ * What a new password must hold one of each (docs/decisions/0028). The same sets as Supabase's
+ * `lower_upper_letters_digits_symbols`, so the form and Auth cannot disagree: Latin letters only.
+ */
+export const PASSWORD_REQUIRED_CHARACTER_SETS: readonly RegExp[] = [
+  /[a-z]/,
+  /[A-Z]/,
+  /[0-9]/,
+  /[!@#$%^&*()_+\-=[\]{};'\\:"|<>?,./`~]/,
+];
+
+/** How long after the recovery link a session may still set a new password. */
+export const RECOVERY_SESSION_WINDOW_SECONDS = 900;
+
+/**
+ * The `amr` methods that open a recovery session. The local stack answers `otp` for a recovery link, and for an email
+ * confirmation too (accepted residual); `recovery` is the other method Auth may name it by.
+ */
+export const RECOVERY_AMR_METHODS: ReadonlySet<string> = new Set(["otp", "recovery"]);
 
 /**
  * The `code` values of Supabase Auth errors the forms and the recovery flow tell apart, recorded on the local stack

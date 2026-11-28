@@ -98,7 +98,7 @@ describe("current user", () => {
     it("returns the signed-in session without redirecting", async () => {
       getClaims.mockResolvedValue({ data: { claims: { sub: USER_ID } }, error: null });
 
-      await expect(requireSession()).resolves.toEqual({ state: "signed-in", userId: USER_ID });
+      await expect(requireSession()).resolves.toMatchObject({ state: "signed-in", userId: USER_ID });
       expect(redirect).not.toHaveBeenCalled();
     });
 

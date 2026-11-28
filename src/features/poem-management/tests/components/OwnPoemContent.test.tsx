@@ -47,7 +47,7 @@ async function content(): Promise<ContentElement> {
 }
 
 beforeEach(() => {
-  vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+  vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
 });
 
 afterEach(() => {

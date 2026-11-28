@@ -68,7 +68,7 @@ function expectNoRpcCalled(): void {
 
 describe.each(ACTIONS)("$name", ({ action, dal, answer, shown }) => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID, aal: "aal1", amr: [] });
     dal.mockResolvedValue(answer);
     vi.mocked(sendActionNotice).mockResolvedValue(SENT);
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -174,7 +174,7 @@ describe.each(ACTIONS)("$name", ({ action, dal, answer, shown }) => {
 // implements FR-6 of admin-moderation
 describe("revokeSessionsAction, nothing to revoke", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID, aal: "aal1", amr: [] });
   });
 
   afterEach(() => {
@@ -192,7 +192,7 @@ describe("revokeSessionsAction, nothing to revoke", () => {
 
 describe("the standard email after a restriction", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID, aal: "aal1", amr: [] });
     vi.mocked(sendActionNotice).mockResolvedValue(SENT);
     vi.spyOn(console, "error").mockImplementation(() => {});
   });

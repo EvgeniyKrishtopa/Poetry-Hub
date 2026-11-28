@@ -25,7 +25,7 @@ test(
     await expect(email).toHaveAttribute("aria-invalid", "true");
     await expect(email).toHaveAccessibleDescription("Введите корректный адрес электронной почты.");
     await expect(password).toHaveAttribute("aria-invalid", "true");
-    await expect(password).toHaveAccessibleDescription("Не менее 8 символов.");
+    await expect(password).toHaveAccessibleDescription("Не менее 12 символов.");
     await expect(email).toHaveValue("not-an-email");
     await expect(password).toHaveValue("");
   },

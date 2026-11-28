@@ -37,7 +37,7 @@ const DELETED = {
 
 describe("deleteCollectionAction", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID, aal: "aal1", amr: [] });
     vi.mocked(deleteCollectionAsAdmin).mockResolvedValue(DELETED);
     vi.mocked(sendActionNotice).mockResolvedValue(SENT);
     vi.spyOn(console, "error").mockImplementation(() => {});

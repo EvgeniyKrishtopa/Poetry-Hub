@@ -42,7 +42,30 @@ describe("readClaimsState", () => {
   });
 
   it("carries the user id only when signed in", () => {
-    expect(readClaimsState({ data: CLAIMS, error: null })).toEqual({ state: "signed-in", userId: USER_ID });
+    const signedIn = readClaimsState({ data: CLAIMS, error: null });
+
+    expect(signedIn).toEqual({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     expect(readClaimsState({ data: null, error: null })).toEqual({ state: "signed-out" });
+  });
+
+  // implements FR-3 of pre-deploy-security-hardening
+  it("carries the assurance level and how the session was opened", () => {
+    const amr = [{ method: "totp", timestamp: 1_800_000_000 }];
+
+    const session = readClaimsState({ data: { claims: { sub: USER_ID, aal: "aal2", amr } }, error: null });
+
+    expect(session).toEqual({ state: "signed-in", userId: USER_ID, aal: "aal2", amr });
+  });
+
+  // implements FR-3 of pre-deploy-security-hardening
+  it.each<[string, unknown, unknown]>([
+    ["missing", undefined, undefined],
+    ["of the wrong type", 2, "otp"],
+    ["unknown values", "aal3", ["otp"]],
+    ["half-formed", null, [{ method: "otp" }]],
+  ])("stays signed in as the weakest session when aal and amr are %s", (_label, aal, amr) => {
+    const session = readClaimsState({ data: { claims: { sub: USER_ID, aal, amr } }, error: null });
+
+    expect(session).toEqual({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
   });
 });

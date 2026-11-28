@@ -40,20 +40,49 @@ describe("signInSchema", () => {
   });
 });
 
-describe("signUpSchema", () => {
-  const tooShort = "a".repeat(MIN_PASSWORD_LENGTH - 1);
-  const longEnough = "a".repeat(MIN_PASSWORD_LENGTH);
+/** Holds one of each required kind and is exactly the minimum long. */
+const STRONG_PASSWORD = "Abcdefghij1!";
 
-  // implements FR-4 of add-supabase-auth
-  it("uses an 8-character minimum", () => {
-    expect(MIN_PASSWORD_LENGTH).toBe(8);
+describe("signUpSchema", () => {
+  const tooShort = STRONG_PASSWORD.slice(1);
+  const longEnough = STRONG_PASSWORD;
+
+  // implements FR-4 of pre-deploy-security-hardening
+  it("uses a 12-character minimum", () => {
+    expect(MIN_PASSWORD_LENGTH).toBe(12);
+    expect(STRONG_PASSWORD).toHaveLength(MIN_PASSWORD_LENGTH);
+  });
+
+  // implements FR-4 of pre-deploy-security-hardening
+  it.each([
+    ["a lowercase letter", "ABCDEFGHIJ1!"],
+    ["an uppercase letter", "abcdefghij1!"],
+    ["a digit", "Abcdefghijk!"],
+    ["a special character", "Abcdefghijk1"],
+    ["Latin letters", "Пароль-Пароль-1!"],
+  ])("refuses a long password without %s, naming what it needs", (_label, password) => {
+    const result = signUpSchema.safeParse({ email: VALID_EMAIL, password });
+
+    expect(fieldErrors(result)).toEqual({ password: FIELD_MESSAGES.passwordTooSimple });
+  });
+
+  // implements FR-4 of pre-deploy-security-hardening
+  it.each(["-", "\\", "]", "[", "`", "~", '"', "'"])("counts %s as a special character", (symbol) => {
+    const result = signUpSchema.safeParse({ email: VALID_EMAIL, password: `Abcdefghij1${symbol}` });
+
+    expect(result.success).toBe(true);
+  });
+
+  // implements FR-4 of pre-deploy-security-hardening
+  it("allows other characters besides the required ones", () => {
+    expect(signUpSchema.safeParse({ email: VALID_EMAIL, password: "Мой стих Ab1!" }).success).toBe(true);
   });
 
   it(`accepts a password of exactly ${MIN_PASSWORD_LENGTH} characters`, () => {
     expect(signUpSchema.safeParse({ email: VALID_EMAIL, password: longEnough }).success).toBe(true);
   });
 
-  it(`rejects a ${MIN_PASSWORD_LENGTH - 1}-character password with a message naming the minimum`, () => {
+  it("rejects a password one character short with a message naming the minimum", () => {
     const result = signUpSchema.safeParse({ email: VALID_EMAIL, password: tooShort });
 
     expect(result.success).toBe(false);
@@ -105,8 +134,8 @@ describe("recoveryRequestSchema", () => {
 });
 
 describe("newPasswordSchema", () => {
-  const tooShort = "a".repeat(MIN_PASSWORD_LENGTH - 1);
-  const longEnough = "a".repeat(MIN_PASSWORD_LENGTH);
+  const tooShort = STRONG_PASSWORD.slice(1);
+  const longEnough = STRONG_PASSWORD;
 
   // implements FR-5 of password-recovery
   it(`accepts a password of exactly ${MIN_PASSWORD_LENGTH} characters`, () => {

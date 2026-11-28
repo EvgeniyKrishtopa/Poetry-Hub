@@ -32,7 +32,7 @@ describe("getSessionState", () => {
   it("is signed in when claims come back", async () => {
     getClaims.mockResolvedValue({ data: { claims: { sub: "user-1" } }, error: null });
 
-    await expect(getSessionState()).resolves.toEqual({ state: "signed-in", userId: "user-1" });
+    await expect(getSessionState()).resolves.toMatchObject({ state: "signed-in", userId: "user-1" });
   });
 
   it("is signed out without logging when the result carries no data at all", async () => {

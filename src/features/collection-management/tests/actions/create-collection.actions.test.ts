@@ -22,7 +22,7 @@ const TITLE = "Осенний цикл";
 
 describe("createCollectionAction", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     vi.mocked(createOwnCollection).mockResolvedValue({ ok: true, status: "created", id: COLLECTION_ID });
   });
 
