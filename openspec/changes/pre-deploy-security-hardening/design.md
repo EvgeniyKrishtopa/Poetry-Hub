@@ -201,7 +201,7 @@ sequenceDiagram
 
 ### D9. Observability
 
-- `shared/lib/security-log/`: one server-only function that writes one JSON line `{ "kind": "security", "event", "source" }` with `console.warn`; events are a closed union: `sign-in-failed`, `captcha-refused`, `rate-limited`, `admin-refused`. No free-text field, so no input can reach it.
+- `shared/lib/security-log/`: one server-only function that writes one JSON line `{ "kind": "security", "event", "source" }` with `console.warn`; events are a closed union: `sign-in-failed`, `captcha-refused`, `rate-limited`, `admin-refused`, `password-change-refused` (added in group 3's review, 2026-11-28). No free-text field, so no input can reach it.
 - Sentry (owner's choice): `src/instrumentation.ts`, `src/instrumentation-client.ts`, DSN from `NEXT_PUBLIC_SENTRY_DSN`; unset means off. Errors only: tracing and Session Replay stay off.
 - Server Actions never reach Next's `onRequestError`: `createActionClient`'s `handleServerError` swallows the throw. A server-only reporter in `shared/lib/error-reporting/` (a no-op without a DSN) is called from there. Render errors caught by `app/error.tsx` are reported from it, and a `global-error.tsx` does the same for the root layout.
 - Scrubbing: `sendDefaultPii: false`, and a `beforeSend` that removes cookies, headers, user, request bodies, query strings (breadcrumb URLs included; `/auth/confirm` carries a token hash) and every exception message, which can carry reader data; the error's name and stack stay. "Prevent storing IP addresses" is switched on in the Sentry project (Deploy checklist), since the app cannot strip what the service adds on receipt.
