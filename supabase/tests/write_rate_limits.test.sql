@@ -7,19 +7,21 @@
 -- implements FR-10 of add-poem-collections
 -- implements FR-7 of add-poems-to-collections
 -- implements FR-9 of password-recovery
+-- implements FR-7 of pre-deploy-security-hardening: the totp_verify scope
 -- Run against the local stack: npx supabase test db
 begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(37);
+select plan(40);
 
 -- Fixtures, written as the superuser.
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'a@example.test'),
   ('22222222-2222-4222-8222-222222222222', 'b@example.test'),
   ('33333333-3333-4333-8333-333333333333', 'c@example.test'),
-  ('44444444-4444-4444-8444-444444444444', 'd@example.test');
+  ('44444444-4444-4444-8444-444444444444', 'd@example.test'),
+  ('55555555-5555-4555-8555-555555555555', 'e@example.test');
 
 -- ---------- anon ----------
 set local role anon;
@@ -295,6 +297,29 @@ select throws_ok(
   '23514', null,
   'a counter row with an unknown scope is rejected by the constraint'
 );
+
+-- ---------- signed in as E: the totp_verify scope ----------
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated"}', true);
+
+select ok(
+  (select bool_and(public.consume_write_allowance('totp_verify')) from generate_series(1, 5)),
+  'totp_verify: calls 1-5 are allowed'
+);
+
+select is(
+  public.consume_write_allowance('totp_verify'),
+  false,
+  'totp_verify: the 6th call in the window is refused'
+);
+
+select is(
+  public.consume_write_allowance('password_reset'),
+  true,
+  'a spent totp_verify limit leaves password_reset allowed'
+);
+
+reset role;
 
 select * from finish();
 rollback;

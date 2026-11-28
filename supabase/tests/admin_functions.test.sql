@@ -8,7 +8,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(141);
+select plan(157);
 
 -- Start from empty content tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -132,7 +132,7 @@ select is(
 
 -- A block never replaces a ban (FR-4): the second writer of a race must not turn `banned` into `blocked`
 -- (debug record concurrent-block-downgrades-a-ban). BAN is banned in the fixtures above.
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select public.apply_restriction('44444444-4444-4444-8444-444444444444', 'blocked');
 select is(
   (select kind from public.account_restrictions where user_id = '44444444-4444-4444-8444-444444444444'),
@@ -227,7 +227,7 @@ select is_empty(
   'a non-admin removes nothing of another author''s illustration');
 
 -- ---------- ADM: the admin ----------
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select set_config('storage.allow_delete_query', 'true', true);
 
 -- Storage (FR-8, design D11).
@@ -361,7 +361,7 @@ select is(
   'the log row names the admin, the action and the user');
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 -- Unblock (FR-4).
 select is((select public.admin_unblock_user('22222222-2222-4222-8222-222222222222') ->> 'status'), 'unblocked',
@@ -383,7 +383,7 @@ select is((select kind from public.account_restrictions where user_id = '4444444
 select is((select count(*)::int from public.moderation_log), 2, 'the unblock was logged and the no-ops were not');
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 -- Ban (FR-5, FR-7).
 select is((select public.admin_ban_user('33333333-3333-4333-8333-333333333333') ->> 'status'), 'banned',
@@ -425,7 +425,7 @@ select is((select count(*)::int from public.moderation_log where action = 'ban')
 select is((select count(*)::int from public.moderation_log), 4, 'no no-op ban was logged');
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 -- Revoke (FR-6, FR-7).
 select is((select public.admin_revoke_sessions('55555555-5555-4555-8555-555555555555') ->> 'status'), 'revoked',
@@ -450,7 +450,7 @@ select is((select count(*)::int from public.moderation_log where action = 'revok
   'the revoke was logged once and the no-ops were not');
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 -- Delete a collection (FR-9): its two poems become free poems, placed first among the author's free poems.
 select is(
@@ -474,7 +474,7 @@ select is(
   'both poems are free and sit before the author''s other free poems (positions 3 and 4, before 5)');
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(
   (select public.admin_delete_collection('b1000000-0000-4000-8000-000000000001')), '{"status": "not-found"}'::jsonb,
@@ -524,7 +524,7 @@ select is((select count(*)::int from public.moderation_log), 7, 'the whole run w
 
 -- The log is closed to clients (FR-11).
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select throws_ok('select * from public.moderation_log', '42501', null, 'an admin cannot read the log through the API');
 select throws_ok(
   $$insert into public.moderation_log (admin_id, action, target_user_id, target_kind, target_id)
@@ -576,6 +576,106 @@ select is(
   '{}'::jsonb,
   'the hook allows when its lookup fails');
 alter table public.banned_emails_hidden rename to banned_emails;
+
+-- ---------- The second factor (pre-deploy-security-hardening FR-9) ----------
+-- implements FR-9 and NFR-4 of pre-deploy-security-hardening
+
+insert into storage.objects (bucket_id, name) values
+  ('poem-illustrations', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/b3000000-0000-4000-8000-000000000009.png');
+
+-- Calls every admin_* function with null arguments and returns the ones that did not answer 42501. A function
+-- added later is covered without naming it here. assert_admin() is each one's first statement, so no argument
+-- is looked at before the refusal.
+create function public.zz_admin_calls_not_refused() returns setof text
+language plpgsql set search_path = '' as $$
+declare
+  target record;
+begin
+  for target in
+    select p.proname,
+      coalesce((select string_agg(format('null::%s', format_type(a.type_id, null)), ', ' order by a.position)
+        from unnest(p.proargtypes::oid[]) with ordinality a(type_id, position)), '') as arguments
+    from pg_catalog.pg_proc p
+    join pg_catalog.pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname like 'admin\_%'
+  loop
+    begin
+      execute format('select * from public.%I(%s)', target.proname, target.arguments);
+      return next target.proname;
+    exception
+      when insufficient_privilege then null;
+      when others then return next target.proname;
+    end;
+  end loop;
+end;
+$$;
+grant execute on function public.zz_admin_calls_not_refused() to authenticated;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal1"}', true);
+select set_config('storage.allow_delete_query', 'true', true);
+
+select is_empty($$select * from public.zz_admin_calls_not_refused()$$,
+  'every admin function answers 42501 to an admin at aal1');
+select throws_ok($$select public.admin_block_user('55555555-5555-4555-8555-555555555555')$$, '42501', 'not an admin',
+  'an admin at aal1 gets the same refusal as a non-admin');
+select is(public.is_admin(), true, 'is_admin() does not depend on aal');
+select is(public.may_moderate_author('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'), false,
+  'may_moderate_author answers false at aal1');
+select is_empty(
+  $$select 1 from storage.objects where bucket_id = 'poem-illustrations'
+    and name = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/b3000000-0000-4000-8000-000000000009.png'$$,
+  'an admin at aal1 does not see another author''s illustration');
+select is_empty(
+  $$delete from storage.objects where bucket_id = 'poem-illustrations'
+    and name = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/b3000000-0000-4000-8000-000000000009.png' returning name$$,
+  'an admin at aal1 removes nothing of another author''s illustration');
+
+-- A token without the claim is not a verified one.
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select is_empty($$select * from public.zz_admin_calls_not_refused()$$,
+  'every admin function answers 42501 to a token without aal');
+select is(public.may_moderate_author('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'), false,
+  'may_moderate_author answers false to a token without aal');
+
+select is(public.is_verified_admin(), false, 'is_verified_admin() is false without aal');
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
+select is(public.is_verified_admin(), true, 'is_verified_admin() is true for an admin at aal2');
+select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated","aal":"aal2"}', true);
+select is(public.is_verified_admin(), false, 'is_verified_admin() is false for a non-admin at aal2');
+
+reset role;
+select isnt_empty(
+  $$select 1 from storage.objects where bucket_id = 'poem-illustrations'
+    and name = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/b3000000-0000-4000-8000-000000000009.png'$$,
+  'the file the aal1 admin tried to remove is still there');
+
+-- NFR-4: the new definer function runs with an empty search_path and no execute for public or anon.
+select ok(
+  (select p.prosecdef and 'search_path=""' = any (p.proconfig) from pg_proc p
+    where p.oid = 'public.is_verified_admin()'::regprocedure)
+  and not has_function_privilege('anon', 'public.is_verified_admin()', 'execute')
+  and not has_function_privilege('public', 'public.is_verified_admin()', 'execute'),
+  'is_verified_admin() is security definer, with an empty search_path and no execute for public or anon');
+
+-- Only an admin can get a factor (FR-9).
+select throws_ok(
+  $$insert into auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at)
+    values ('f0000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222', '', 'totp',
+      'unverified', now(), now())$$,
+  '42501', 'only an admin can have a second factor', 'a non-admin gets no factor');
+select lives_ok(
+  $$insert into auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at)
+    values ('f0000000-0000-4000-8000-000000000002', '11111111-1111-4111-8111-111111111111', '', 'totp',
+      'unverified', now(), now())$$,
+  'an admin gets a factor');
+select ok(
+  (select p.prosecdef and 'search_path=""' = any (p.proconfig) from pg_proc p
+    where p.oid = 'public.refuse_factor_for_non_admin()'::regprocedure)
+  and not has_function_privilege('anon', 'public.refuse_factor_for_non_admin()', 'execute')
+  and not has_function_privilege('authenticated', 'public.refuse_factor_for_non_admin()', 'execute')
+  and not has_function_privilege('public', 'public.refuse_factor_for_non_admin()', 'execute'),
+  'the trigger function is security definer, with an empty search_path and executable by no client role');
 
 select * from finish();
 rollback;

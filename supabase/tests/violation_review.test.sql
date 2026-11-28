@@ -184,7 +184,7 @@ select is((select count(*)::int from public.moderation_log), 0, 'the refused cal
 -- ---------- ADM: add a case (task 1.2; FR-1) ----------
 -- implements FR-1 of admin-violations-feedback
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(
   public.admin_add_violation_case('22222222-2222-4222-8222-222222222222', 'harmful-content', null, null) ->> 'status',
@@ -316,7 +316,7 @@ update public.violation_cases set created_at = case user_id
     '88888888-8888-4888-8888-888888888888');
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(
   array(select user_id from public.admin_list_violation_cases()),
@@ -338,7 +338,7 @@ reset role;
 update public.violation_cases set created_at = '2099-01-15 00:00:00+00'
   where user_id = '77777777-7777-4777-8777-777777777777';
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(
   (select user_email || '/' || coalesce(author_name, '-') || '/' || coalesce(author_profile_id::text, '-') || '/'
@@ -350,7 +350,7 @@ select is(
 reset role;
 delete from public.poems where id = 'c0000000-0000-4000-8000-000000000001';
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(
   (select coalesce(content_title, '-') || '/' || content_id
@@ -368,7 +368,7 @@ insert into public.violation_cases (user_id, ground, added_by, created_at)
   select u.id, 'malicious-activity', '11111111-1111-4111-8111-111111111111', u.created_at
   from auth.users u where u.email like 'bulk%@example.test';
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is((select count(*)::int from public.admin_list_violation_cases()), 101,
   'with more than 100 open cases the list returns 101 rows, one more than the page shows');
@@ -379,7 +379,7 @@ select is(
 reset role;
 delete from auth.users where email like 'bulk%@example.test';
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is((select count(*)::int from public.admin_list_violation_cases()), 4,
   'the list holds the four real open cases once the bulk ones are gone');
@@ -390,7 +390,7 @@ reset role;
 select set_config('test.act_case', (select id::text from public.violation_cases where user_id = '22222222-2222-4222-8222-222222222222'), true);
 select set_config('test.pro_case', (select id::text from public.violation_cases where user_id = '88888888-8888-4888-8888-888888888888'), true);
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(
   public.admin_start_warning(current_setting('test.act_case')::uuid),
@@ -414,7 +414,7 @@ create temp table warned_before as
 -- Switching the ground changes only the ground (FR-7).
 -- implements FR-7 of admin-violations-feedback
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(public.admin_set_case_ground(current_setting('test.act_case')::uuid, 'malicious-activity') ->> 'status',
   'ground-changed', 'an admin switches a case to the other ground');
@@ -442,7 +442,7 @@ select is((select count(*)::int from public.moderation_log where action = 'set-c
 
 -- The other answers of the warning checks.
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(public.admin_start_warning(current_setting('test.pro_case')::uuid) ->> 'status', 'wrong-ground',
   'a case that was added as malicious-activity answers wrong-ground');
@@ -461,7 +461,7 @@ reset role;
 insert into public.account_restrictions (user_id, kind, created_by) values
   ('1a1a1a1a-1a1a-41a1-81a1-1a1a1a1a1a1a', 'blocked', '11111111-1111-4111-8111-111111111111');
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(
   public.admin_start_warning((select id from public.admin_list_violation_cases()
@@ -494,7 +494,7 @@ select is((select count(*)::int from public.moderation_log where action = 'remov
 
 -- A removed case can be reopened.
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select is(
   public.admin_add_violation_case('88888888-8888-4888-8888-888888888888', 'malicious-activity', null, null) ->> 'status',
   'added', 'a user whose case was removed can be added again');
@@ -508,7 +508,7 @@ select is(
 -- ---------- Block and ban close the case and carry the notice data (task 1.4; FR-9, FR-10) ----------
 -- implements FR-9 and FR-10 of admin-violations-feedback, FR-4 and FR-5 of admin-moderation
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(
   public.admin_block_user('33333333-3333-4333-8333-333333333333'),
@@ -576,7 +576,7 @@ select is((select kind from public.account_restrictions where user_id = '7777777
 
 -- ---------- The admin deletes carry the notice data (task 1.4; FR-9) ----------
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(
   public.admin_delete_poem('b0000000-0000-4000-8000-000000000001'),
@@ -604,7 +604,7 @@ select is(
 -- ---------- The notice outcome (task 1.4; FR-12) ----------
 -- implements FR-12 of admin-violations-feedback
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select lives_ok(
   $$select public.admin_log_notice('22222222-2222-4222-8222-222222222222', 'block', 'sent')$$,

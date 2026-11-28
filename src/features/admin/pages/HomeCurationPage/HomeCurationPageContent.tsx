@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { requireSession } from "@/features/auth";
+import { ADMIN_VERIFY_PATH } from "@/shared/config/account-paths";
 import { Alert, SessionUnavailableAlert } from "@/shared/ui";
 
 import { HomeConnectionNotice } from "../../components/HomeConnectionNotice/HomeConnectionNotice";
@@ -16,9 +17,10 @@ import { ADMIN_HOME_PAGE_COPY } from "../../model/admin-messages";
  */
 export async function HomeCurationPageContent() {
   const session = await requireSession();
-  const access = await readAdminAccess(session.state);
+  const access = await readAdminAccess(session);
   if (access === "unavailable") return <SessionUnavailableAlert />;
   if (access === "not-admin") notFound();
+  if (access === "needs-second-factor") redirect(ADMIN_VERIFY_PATH);
 
   const result = await listHomeEntries();
 

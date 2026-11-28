@@ -2,10 +2,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { waitForHydration } from "./support/hydration";
-import { signIn } from "./support/sign-in";
+import { signInAsAdmin } from "./support/sign-in-as-admin";
 
-/** `draft-author@example.test`: the seeded admin. */
-const ADMIN_EMAIL = "draft-author@example.test";
 /** Two seed readers who are active and own no scenario of their own, so the list is theirs for the run. */
 const BUTTON_USER = "author2@example.test";
 const DROPPED_USER = "author3@example.test";
@@ -46,7 +44,7 @@ test(
   "an admin adds users to the review list by button and by drop, switches a ground and clears the list",
   { tag: ["@admin-violations-feedback"] },
   async ({ page }) => {
-    await signIn(page, ADMIN_EMAIL);
+    await signInAsAdmin(page);
     await page.goto("/admin");
     await waitForHydration(page);
     const main = page.getByRole("main");

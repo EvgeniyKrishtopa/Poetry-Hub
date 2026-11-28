@@ -48,4 +48,16 @@ describe("SessionUnavailableAlert", () => {
 
     expect(screen.getByRole("button", { name: "Повторить" })).toBeEnabled();
   });
+
+  // implements FR-7 of pre-deploy-security-hardening: retry after a client request's failure
+  it("calls the caller's retry instead of refreshing the route, when given one", async () => {
+    const onRetry = vi.fn();
+    const user = userEvent.setup();
+    render(<SessionUnavailableAlert onRetry={onRetry} />);
+
+    await user.click(screen.getByRole("button", { name: "Повторить" }));
+
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(refresh).not.toHaveBeenCalled();
+  });
 });

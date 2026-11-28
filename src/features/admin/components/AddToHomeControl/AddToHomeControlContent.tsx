@@ -12,10 +12,10 @@ import type { AddToHomeControlProps } from "./AddToHomeControl.types";
  * admin's own content, and this control must show there too (FR-8). An unreadable session or answer shows nothing.
  */
 export async function AddToHomeControlContent({ id, kind }: AddToHomeControlProps) {
-  const { state } = await getSessionState();
-  if (state === SESSION_STATE.signedOut) return null;
+  const session = await getSessionState();
+  if (session.state === SESSION_STATE.signedOut) return null;
 
-  const access = await readAdminAccess(state);
+  const access = await readAdminAccess(session);
   if (access !== "admin") return null;
 
   return <AddToHomeButton id={id} kind={kind} />;

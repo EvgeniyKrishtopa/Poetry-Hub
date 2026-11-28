@@ -14,7 +14,12 @@ import type { ViolationCase } from "../../model/violation.types";
 const notFound = vi.fn(() => {
   throw new Error("NEXT_NOT_FOUND");
 });
-vi.mock("next/navigation", () => ({ notFound: () => notFound() }));
+const redirect = vi.hoisted(() =>
+  vi.fn((path: string) => {
+    throw new Error(`NEXT_REDIRECT ${path}`);
+  }),
+);
+vi.mock("next/navigation", () => ({ notFound: () => notFound(), redirect }));
 vi.mock("@/features/auth", () => ({ requireSession: vi.fn() }));
 vi.mock("../../dal/admin-check", () => ({ checkIsAdmin: vi.fn() }));
 vi.mock("../../dal/violation-rpc", () => ({ listViolationCases: vi.fn() }));
@@ -35,7 +40,8 @@ vi.mock("@/shared/ui", async (importOriginal) => ({
 
 afterEach(() => vi.clearAllMocks());
 
-const SIGNED_IN = { state: "signed-in", userId: "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b", aal: "aal1", amr: [] } as const;
+const SIGNED_IN = { state: "signed-in", userId: "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b", aal: "aal2", amr: [] } as const;
+const PASSWORD_ONLY = { ...SIGNED_IN, aal: "aal1" } as const;
 
 function violationCase(n: number): ViolationCase {
   return {
@@ -134,6 +140,15 @@ describe("ViolationReviewPageContent", () => {
     expect(screen.getByRole("heading", { name: VIOLATIONS_PAGE_COPY.title })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent(VIOLATIONS_PAGE_COPY.loadFailed);
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
+  });
+
+  // implements FR-8 of pre-deploy-security-hardening
+  it("redirects an admin without the second factor to /admin/verify, reading no case", async () => {
+    vi.mocked(requireSession).mockResolvedValue(PASSWORD_ONLY);
+    vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: true });
+
+    await expect(ViolationReviewPageContent()).rejects.toThrow("NEXT_REDIRECT /admin/verify");
+    expect(listViolationCases).not.toHaveBeenCalled();
   });
 
   // implements FR-4 of admin-violations-feedback

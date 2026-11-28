@@ -27,8 +27,16 @@ describe("AddToHomeControlContent", () => {
 
     render(await AddToHomeControlContent({ kind: "poem", id: POEM_ID }));
 
-    expect(readAdminAccess).toHaveBeenCalledExactlyOnceWith("signed-in");
+    expect(readAdminAccess).toHaveBeenCalledExactlyOnceWith(SIGNED_IN);
     expect(screen.getByRole("button", { name: ADD_TO_HOME_COPY.button })).toBeInTheDocument();
+  });
+
+  // implements FR-8 of pre-deploy-security-hardening; FR-8 of home-page-sections
+  it("renders nothing for an admin who has not verified the second factor", async () => {
+    vi.mocked(getSessionState).mockResolvedValue(SIGNED_IN);
+    vi.mocked(readAdminAccess).mockResolvedValue("needs-second-factor");
+
+    expect(await AddToHomeControlContent({ kind: "poem", id: POEM_ID })).toBeNull();
   });
 
   // implements FR-8 of home-page-sections
@@ -78,6 +86,6 @@ describe("AddToHomeControlContent", () => {
     vi.mocked(readAdminAccess).mockResolvedValue("unavailable");
 
     expect(await AddToHomeControlContent({ kind: "poem", id: POEM_ID })).toBeNull();
-    expect(readAdminAccess).toHaveBeenCalledExactlyOnceWith("unknown");
+    expect(readAdminAccess).toHaveBeenCalledExactlyOnceWith({ state: "unknown" });
   });
 });

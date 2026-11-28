@@ -2,10 +2,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { waitForHydration } from "./support/hydration";
-import { signIn } from "./support/sign-in";
+import { signInAsAdmin } from "./support/sign-in-as-admin";
 
-/** `draft-author@example.test`: the seeded admin. */
-const ADMIN_EMAIL = "draft-author@example.test";
 /** author5 owns four seeded poems (`supabase/seed.sql`); the first one is chosen for the featured section. */
 const AUTHOR_ID = "10000000-0000-4000-8000-000000000005";
 const POEM_ID = "30000000-0000-4000-8000-000000000051";
@@ -79,7 +77,7 @@ test(
   "the home page shows six sections to a guest and five to a signed-in admin, without sideways scrolling",
   { tag: ["@home-page-sections"] },
   async ({ page, browser, baseURL }) => {
-    await signIn(page, ADMIN_EMAIL);
+    await signInAsAdmin(page);
     await clearLists(page);
 
     try {

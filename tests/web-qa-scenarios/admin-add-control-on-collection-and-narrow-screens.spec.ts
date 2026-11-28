@@ -3,13 +3,12 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { waitForHydration } from "./support/hydration";
 import { signIn } from "./support/sign-in";
+import { signInAsAdmin } from "./support/sign-in-as-admin";
 
 /** `author5@example.test` in `supabase/seed.sql`: a public author; its poem and collection here are created and deleted again. */
 const AUTHOR_EMAIL = "author5@example.test";
 /** author5's profile id in `supabase/seed.sql`. */
 const AUTHOR_PROFILE_ID = "10000000-0000-4000-8000-000000000005";
-/** `draft-author@example.test`: the seeded admin. */
-const ADMIN_EMAIL = "draft-author@example.test";
 const POEM_TEXT = "Строка для проверки кнопки в список нарушителей.";
 const NO_GENRE_LABEL = "Без жанра";
 const SECTION_NAME = "Сборники произведений";
@@ -144,7 +143,7 @@ test(
       // The admin, wide then narrow: the control next to the delete button, fitting the screen.
       const adminContext = await browser.newContext({ baseURL: origin, viewport: WIDE_VIEWPORT });
       const adminPage = await adminContext.newPage();
-      await signIn(adminPage, ADMIN_EMAIL);
+      await signInAsAdmin(adminPage);
       const adminMain = adminPage.getByRole("main");
       const targets = [
         { path: collectionPath, deleteName: DELETE_COLLECTION_BUTTON },

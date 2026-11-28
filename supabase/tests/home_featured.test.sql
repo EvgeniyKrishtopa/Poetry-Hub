@@ -189,7 +189,7 @@ select is((select count(*)::int from public.home_featured_authors), 0, 'the refu
 -- ---------- ADM: add poems (task 1.3; FR-8, FR-10) ----------
 -- implements FR-8 and FR-10 of home-page-sections
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(public.admin_add_home_poem('b0000000-0000-4000-8000-000000000001') ->> 'status', 'added',
   'an admin adds a first poem');
@@ -250,7 +250,7 @@ select is(
   'deleting a chosen poem leaves a gap in the stored positions and renumbers nothing');
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select is(
   (select array_agg(entry_position order by entry_position) from public.admin_list_home_entries() where kind = 'poem'),
@@ -263,7 +263,7 @@ select is(
   (select array_agg(position order by position) from public.home_featured_poems), array[1, 2, 3, 4]::smallint[],
   'the add compacted the stored positions to 1 to 4');
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 -- ---------- Move (task 1.3; FR-9) ----------
 -- implements FR-9 of home-page-sections
@@ -318,7 +318,7 @@ select is(
   (select array_agg(position order by position) from public.home_featured_poems), array[1, 2, 3, 4]::smallint[],
   'the stored positions are 1 to 4 after the moves');
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 -- ---------- Remove (task 1.3; FR-9, FR-11) ----------
 select is(public.admin_remove_home_entry('poem', 'b0000000-0000-4000-8000-000000000003') ->> 'status', 'removed',
@@ -341,7 +341,7 @@ select is(
   (select array_agg(position order by position) from public.home_featured_poems), array[1, 2, 3, 4]::smallint[],
   'the stored positions are 1 to 4 after the remove and the add');
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 -- ---------- The author list works the same way ----------
 select is(public.admin_add_home_author('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb') ->> 'status', 'added', 'an admin adds an author');
@@ -416,7 +416,7 @@ select is(
 
 reset role;
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select is(
   (select label || '/' || shown::text from public.admin_list_home_entries()
     where kind = 'author' and id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
@@ -446,7 +446,7 @@ reset role;
 delete from public.author_profiles where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select is(
   (select count(*)::int from public.admin_list_home_entries()
     where id in ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd0000000-0000-4000-8000-000000000007')),
@@ -471,7 +471,7 @@ select is(
 -- The list is P1, P5, P6, P4. The admin's moderation delete and the author's own delete both go through the
 -- foreign key, so the entry leaves with the poem and the next add finds no gap.
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select is(public.admin_delete_poem('b0000000-0000-4000-8000-000000000005') ->> 'status', 'deleted',
   'an admin deletes a chosen poem as moderation');
 select is(
@@ -482,7 +482,7 @@ select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-2222222
 select is(public.delete_my_poem('b0000000-0000-4000-8000-000000000001') ->> 'status', 'deleted',
   'an author deletes their own chosen poem');
 
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select is(
   array(select label from public.admin_list_home_entries() where kind = 'poem' order by entry_position),
   array['P6', 'P4'], 'the poem the author deleted left the list');

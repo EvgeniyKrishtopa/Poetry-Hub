@@ -3,13 +3,12 @@ import { expect, test } from "@playwright/test";
 
 import { waitForHydration } from "./support/hydration";
 import { signIn } from "./support/sign-in";
+import { signInAsAdmin } from "./support/sign-in-as-admin";
 
 /** `author1@example.test` in `supabase/seed.sql`: a public author with no seeded poems. */
 const AUTHOR_EMAIL = "author1@example.test";
 /** author1's profile id in `supabase/seed.sql`. */
 const AUTHOR_PROFILE_ID = "10000000-0000-4000-8000-000000000001";
-/** `draft-author@example.test`: the seeded admin. */
-const ADMIN_EMAIL = "draft-author@example.test";
 const POEM_TEXT = "Строка для проверки удаления администратором.";
 const NO_GENRE_LABEL = "Без жанра";
 const ADMIN_DELETE_BUTTON = "Удалить произведение (админ)";
@@ -51,7 +50,7 @@ test(
     // The admin sees it, cancels once, then confirms.
     const adminContext = await browser.newContext();
     const adminPage = await adminContext.newPage();
-    await signIn(adminPage, ADMIN_EMAIL);
+    await signInAsAdmin(adminPage);
     await adminPage.goto(poemPath);
     await waitForHydration(adminPage);
     await adminPage.getByRole("button", { name: ADMIN_DELETE_BUTTON }).click();

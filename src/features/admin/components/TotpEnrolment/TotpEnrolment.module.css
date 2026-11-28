@@ -1,0 +1,11 @@
+/* White in both themes, so a scanner reads the black code. */
+.qr {
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--qr-background);
+}
+
+.qr img {
+  display: block;
+}

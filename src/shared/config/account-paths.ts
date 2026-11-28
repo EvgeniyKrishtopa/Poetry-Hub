@@ -25,6 +25,9 @@ export const POEM_MANAGEMENT_PATH = "/account/poems";
  */
 export const ADMIN_PATH = "/admin";
 
+/** Where an admin enters or sets up the second factor; here for the same reason as `ADMIN_PATH`. */
+export const ADMIN_VERIFY_PATH = `${ADMIN_PATH}/verify`;
+
 /** The review list under the admin page (admin-violations-feedback design D7); here for the same reason as `ADMIN_PATH`. */
 export const ADMIN_VIOLATIONS_PATH = `${ADMIN_PATH}/violations`;
 

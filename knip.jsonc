@@ -12,12 +12,6 @@
     "src/features/work-ordering/**",
     // Temporary, pre-deploy-security-hardening scaffold: the new stubs have no importer until their tasks wire or test
     // them. The group that wires or tests a path removes its entry; task 8.4 checks none is left.
-    "src/features/admin/model/totp.types.ts",
-    "src/features/admin/dal/totp.ts",
-    "src/features/admin/dal/totp-verify-allowance.ts",
-    "src/features/admin/pages/AdminVerifyPage/**",
-    "src/features/admin/components/TotpEnrolment/**",
-    "src/features/admin/components/TotpCodeForm/**",
     "src/shared/lib/image-file/reencode-image.ts",
     "src/shared/lib/security-log/**",
     "src/shared/lib/error-reporting/**"
