@@ -12,10 +12,11 @@ Groups 4 and 5 have user-facing screens: they start only with an approved Claude
 
 ## 2. HttpOnly session cookies and the baseline CSP <!-- judgement-heavy -->
 
-- [ ] 2.1 (FR-1, design D1) One function for the cookie options in `shared/lib/supabase/`, passed as `cookieOptions` to both `createServerClient` calls. Tests: the options for production and not, and both clients passing them.
-- [ ] 2.2 (FR-2, design D2) Add `Content-Security-Policy` to the headers `src/proxy.ts` sets, with the Supabase origin from the config and the fallback without it. Tests: the directives, the invalid-config case, no `script-src`.
-- [ ] 2.3 (FR-1, FR-2) On the running app verify: password sign-in; Google sign-in with JavaScript on and off with no CSP violation; every `sb-*` cookie `HttpOnly`; session refresh after the access token expires.
-- [ ] 2.4 (NFR-5) ADR `0023`: the baseline CSP and why `script-src` waits.
+- [x] 2.1 (FR-1, design D1) One function for the cookie options in `shared/lib/supabase/`, passed as `cookieOptions` to both `createServerClient` calls. Tests: the options for production and not, and both clients passing them.
+- [x] 2.2 (FR-2, design D2) Add `Content-Security-Policy` to the headers `src/proxy.ts` sets, with the Supabase origin from the config and the fallback without it. Tests: the directives, the invalid-config case, no `script-src`.
+- [x] 2.3 (FR-1, FR-2) On the running app verify: password sign-in; Google sign-in with no CSP violation; every `sb-*` cookie `HttpOnly`; session refresh after the access token expires.
+  - Result (2026-11-27, production build on `localhost:3000`, local stack): password sign-in leads to `/`; `sb-*` cookies are `HttpOnly`, `SameSite=Lax`, `Secure`, and `document.cookie` holds none; refresh rotated the refresh token and rewrote the cookie with the same attributes (expiry simulated by moving the cookie's `expires_at` into the past, not by waiting for the token to expire); Google sign-in reaches Google with no CSP violation (test browser), and the owner completed it (a Google session exists in the local database). `/login` and `/signup` stay partially prerendered. With JavaScript off the Google button never worked (see `proposal.md`, Decisions).
+- [x] 2.4 (NFR-5) ADR `0023`: the baseline CSP and why `script-src` waits.
 
 ## 3. Password change only from a recovery link <!-- judgement-heavy -->
 

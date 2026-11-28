@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 import { getSupabaseConfig } from "./config";
+import { getSessionCookieOptions } from "./cookie-options";
 
 /**
  * Start of the error `cookies().set` throws outside a Server Action or Route Handler.
@@ -23,8 +24,10 @@ function isReadOnlyCookiesError(error: unknown): boolean {
 export async function createSupabaseServerClient(): Promise<SupabaseClient> {
   const { url, publishableKey } = getSupabaseConfig();
   const cookieStore = await cookies();
+  const cookieOptions = getSessionCookieOptions();
 
   return createServerClient(url, publishableKey, {
+    cookieOptions,
     cookies: {
       getAll() {
         return cookieStore.getAll();

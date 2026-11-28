@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { getSessionCookieOptions } from "../cookie-options";
 import { SupabaseConfigError } from "../errors";
 import { createSupabaseServerClient } from "../server";
 
@@ -54,6 +55,15 @@ describe("createSupabaseServerClient", () => {
     expect(cookieMethods().getAll()).toEqual([
       { name: SESSION_COOKIE.name, value: SESSION_COOKIE.value },
     ]);
+  });
+
+  // implements FR-1 of pre-deploy-security-hardening
+  it("writes auth cookies with the shared options", async () => {
+    await createSupabaseServerClient();
+
+    const options = vi.mocked(createServerClient).mock.calls.at(-1)?.[2];
+    expect(options?.cookieOptions).toEqual(getSessionCookieOptions());
+    expect(options?.cookieOptions).toMatchObject({ httpOnly: true, sameSite: "lax" });
   });
 
   it("writes cookies through the cookie store", async () => {

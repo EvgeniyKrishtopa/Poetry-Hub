@@ -25,7 +25,7 @@ A function in `shared/lib/supabase/` returns `{ httpOnly: true, sameSite: "lax",
 
 ### D2. CSP built in the proxy
 
-The proxy sets `Content-Security-Policy` together with `SECURITY_HEADERS`; the value is built per request, not part of that static map: `object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self' <Supabase origin> https://accounts.google.com`. The origin comes from `getSupabaseConfig().url`; on an invalid config the policy omits it and keeps the rest, since the proxy never throws. No `script-src`, `frame-src` or `connect-src`, so Turnstile and Sentry need no allowance yet. `form-action` is checked by hand with JavaScript on and off, because Chrome applies it to the redirects after a form post. Alternative, `headers()` in `next.config.ts`, rejected: a second place for security headers.
+The proxy sets `Content-Security-Policy` together with `SECURITY_HEADERS`; the value is built per request, not part of that static map: `object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self' <Supabase origin> https://accounts.google.com`. The origin comes from `getSupabaseConfig().url`; on an invalid config the policy omits it and keeps the rest, since the proxy never throws. No `script-src`, `frame-src` or `connect-src`, so Turnstile and Sentry need no allowance yet. `form-action` is checked by hand with JavaScript on (the sign-in forms need it), because Chrome applies it to the redirects after a form post. Alternative, `headers()` in `next.config.ts`, rejected: a second place for security headers.
 
 ### D3. What counts as a recovery session
 
@@ -249,7 +249,7 @@ sequenceDiagram
 
 ## Risks / Trade-offs
 
-- [Captcha breaks JavaScript-free password sign-in] → accepted (proposal, Decisions); Google sign-in keeps working.
+- [Captcha needs JavaScript] → no change for readers: every sign-in path, Google included, already needs it (proposal, Decisions).
 - [Cloudflare outage blocks sign-in, sign-up and contact] → fail closed; the owner can turn Auth captcha off in the dashboard.
 - [Turnstile test keys need network access in local scenarios] → accepted; unit tests mock the widget and verifier.
 - [A single-use token reused after a failed submit] → reset after every submission, covered by tests.

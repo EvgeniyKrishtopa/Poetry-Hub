@@ -11,7 +11,7 @@ Nine groups, in this order.
 1. **Quick fixes.** Remove the stale `GHSA-fc5q-39xc-vjpf` entry from `scripts/audit-allowlist.json` [A03-3]; stop sending `X-Powered-By` [A02-6]; `supabase/seed.sql` aborts on a database that holds an account outside `example.test` [A04-3]; record what a wrong password on a banned account shows [A07-5].
 2. **Session cookies and a baseline CSP.** Auth cookies become `HttpOnly`, `SameSite=Lax`, `Secure` in production; responses carry a `Content-Security-Policy` with the directives that need no nonce [A02-1 partly, A02-2, A04-2].
 3. **BREAKING: password change only from a recovery link.** `/reset-password` and its action accept only a recently opened recovery session; `secure_password_change` on; leaked-password protection, or a 12-character minimum [A07-1, A07-3].
-4. **BREAKING: bot protection** (UI). Cloudflare Turnstile on sign-in, sign-up, the recovery request and the contact form; Vercel Firewall rules [A06-1, A06-2, A07-4]. Password sign-in, sign-up, recovery and contact then require JavaScript.
+4. **BREAKING: bot protection** (UI). Cloudflare Turnstile on sign-in, sign-up, the recovery request and the contact form; Vercel Firewall rules [A06-1, A06-2, A07-4]. All of them already require JavaScript, so no reader loses a way in.
 5. **BREAKING: admin TOTP second factor** (UI, migration). Admin tools and `admin_*` functions need an `aal2` session [A07-2].
 6. **Safe image uploads** (migration). Every uploaded image is re-encoded without metadata; the number of objects per author folder is capped in the database [A01-1, A06-3, A08-3].
 7. **Observability.** Server and browser errors reach an error tracker without personal data; security events are structured log lines [A09-1, A09-2].
@@ -106,7 +106,7 @@ The owner delegated the technical forks on 2026-11-27: the safest option is take
 - Object cap: author photos 5 per folder; illustrations the author's poem count plus 20.
 - Recovery window 15 minutes. Any `otp` or `recovery` entry inside it counts, so a session that just confirmed a new account can also set a password.
 - The admin cannot use the recovery flow once enrolled: the path is to delete the factor in the dashboard, recover and enrol again.
-- Password sign-in, sign-up, recovery and contact need JavaScript because of the captcha; Google sign-in does not.
+- Every sign-in path needs JavaScript, Google included: the forms are submitted by client functions, so they already did before this change (found in task 2.3, 2026-11-27; owner chose to correct the plan, not to rebuild the Google button). The captcha adds no new requirement.
 - "Require current password" is turned on in the hosted project whenever the dashboard offers it.
 - The local seed gives the seeded admin a verified factor with a throwaway secret, so recorded scenarios can run; enrolment is checked by hand after deleting it.
 - Errors go to Sentry (owner, 2026-11-27), not a log drain. The privacy policy names Sentry and Cloudflare (Turnstile) and the transfer of data abroad; the owner writes it in Contentful before the deploy (task 7.6).

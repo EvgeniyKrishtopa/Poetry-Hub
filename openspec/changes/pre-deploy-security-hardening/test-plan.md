@@ -10,7 +10,7 @@ One row per acceptance criterion. Scenarios of a MODIFIED requirement that did n
 | FR-1 production build | cookie options with `NODE_ENV` production and not; both server clients pass them | unit |
 | FR-2 page response | proxy sets the four directives, no `script-src` | unit |
 | FR-2 invalid configuration | proxy without a Supabase URL keeps the rest and answers | unit |
-| FR-2 Google under the policy | manual run, JavaScript on and off, no violation in the console | end-to-end |
+| FR-2 Google under the policy | manual run, no violation in the console | end-to-end |
 | FR-3 stolen password session | action refuses; no allowance, no `updateUser` | unit |
 | FR-3 recovery session | action changes the password and redirects | unit |
 | FR-3 window passed | action answers link-expired for a stale entry | unit |

@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getSupabaseConfig } from "../config";
+import { getSessionCookieOptions } from "../cookie-options";
 import { refreshSession } from "../session";
 
 vi.mock("@supabase/ssr", () => ({
@@ -78,6 +79,34 @@ describe("refreshSession", () => {
     expect(response.cookies.get(COOKIE_NAME)?.value).toBe("fresh");
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     expect(response.headers.get("Pragma")).toBe("no-cache");
+  });
+
+  // implements FR-1 of pre-deploy-security-hardening
+  it("refreshes with the shared cookie options", async () => {
+    mockClient(async () => ({ data: null, error: null }));
+
+    await refreshSession(makeRequest());
+
+    const options = vi.mocked(createServerClient).mock.calls.at(-1)?.[2];
+    expect(options?.cookieOptions).toEqual(getSessionCookieOptions());
+    expect(options?.cookieOptions).toMatchObject({ httpOnly: true, sameSite: "lax" });
+  });
+
+  // implements FR-1 of pre-deploy-security-hardening
+  it("keeps the attributes on the refreshed cookie it puts on the response", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const options = { ...getSessionCookieOptions(), path: "/" };
+    mockClient(async (cookies) => {
+      cookies.setAll([{ name: COOKIE_NAME, value: "fresh", options }], {});
+      return { data: { claims: {} }, error: null };
+    });
+
+    const { response } = await refreshSession(makeRequest(`${COOKIE_NAME}=stale`));
+
+    const setCookie = response.headers.get("set-cookie") ?? "";
+    expect(setCookie).toContain("HttpOnly");
+    expect(setCookie).toContain("Secure");
+    expect(setCookie).toMatch(/SameSite=lax/i);
   });
 
   it("keeps the library's cache headers across a second write", async () => {

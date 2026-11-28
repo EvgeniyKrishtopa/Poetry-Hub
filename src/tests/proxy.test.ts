@@ -6,9 +6,16 @@ import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 import { NextRequest, NextResponse } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { getSupabaseConfig } from "@/shared/lib/supabase/config";
 import { refreshSession } from "@/shared/lib/supabase/session";
 
 import { applySecurityHeaders, config, proxy, SECURITY_HEADERS } from "../proxy";
+
+// The real config by default; a single test swaps in an unexpected (non-config) failure.
+vi.mock("@/shared/lib/supabase/config", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/shared/lib/supabase/config")>();
+  return { getSupabaseConfig: vi.fn(actual.getSupabaseConfig) };
+});
 
 vi.mock("@/shared/lib/supabase/session", () => ({ refreshSession: vi.fn(), SESSION_CACHE_CONTROL: "private, no-store" }));
 
@@ -38,6 +45,61 @@ afterEach(() => {
 describe("applySecurityHeaders", () => {
   it("sets all four security headers with their exact values", () => {
     expectSecurityHeaders(applySecurityHeaders(NextResponse.next()));
+  });
+});
+
+// implements FR-2 of pre-deploy-security-hardening
+describe("content security policy", () => {
+  const SUPABASE_URL = "https://abc.supabase.co/some/path";
+  const BASE_DIRECTIVES = ["object-src 'none'", "base-uri 'none'", "frame-ancestors 'none'"];
+
+  function readDirectives(response: NextResponse): string[] {
+    const policy = response.headers.get("Content-Security-Policy") ?? "";
+    return policy.split("; ");
+  }
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("sends exactly the four directives, with the configured Supabase origin", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", SUPABASE_URL);
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "sb_publishable_known-key");
+    vi.mocked(refreshSession).mockResolvedValue({ response: NextResponse.next(), session: "signed-out" });
+
+    const response = await proxy(new NextRequest(REQUEST_URL));
+
+    const formAction = "form-action 'self' https://abc.supabase.co https://accounts.google.com";
+    expect(readDirectives(response)).toEqual([...BASE_DIRECTIVES, formAction]);
+  });
+
+  it("omits only the Supabase origin on an invalid configuration, and still answers", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", undefined);
+    vi.mocked(refreshSession).mockResolvedValue({ response: NextResponse.next(), session: "unknown" });
+
+    const response = await proxy(new NextRequest(REQUEST_URL));
+
+    const formAction = "form-action 'self' https://accounts.google.com";
+    expect(readDirectives(response)).toEqual([...BASE_DIRECTIVES, formAction]);
+  });
+
+  it("lets a failure that is not a config error surface", () => {
+    const failure = new TypeError("unexpected");
+    vi.mocked(getSupabaseConfig).mockImplementationOnce(() => {
+      throw failure;
+    });
+
+    expect(() => applySecurityHeaders(NextResponse.next())).toThrow(failure);
+  });
+
+  it("is on the sign-in redirect too", async () => {
+    vi.mocked(refreshSession).mockResolvedValue({ response: NextResponse.next(), session: "signed-out" });
+    const accountRequest = new NextRequest(`${REQUEST_URL}account`);
+
+    const response = await proxy(accountRequest);
+
+    expect(response.status).toBe(307);
+    expect(readDirectives(response)).toEqual(expect.arrayContaining(BASE_DIRECTIVES));
   });
 });
 

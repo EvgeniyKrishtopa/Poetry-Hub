@@ -7,6 +7,7 @@ import { SESSION_STATE } from "@/shared/config/constants";
 
 import { describeAuthError, readClaimsState, type SessionState } from "./claims";
 import { getSupabaseConfig } from "./config";
+import { getSessionCookieOptions } from "./cookie-options";
 import { SupabaseConfigError } from "./errors";
 
 /** A response that sets a session cookie, or depends on the session, must never be shared by a cache. */
@@ -39,7 +40,9 @@ export async function refreshSession(request: NextRequest): Promise<SessionRefre
   let wroteCookies = false;
   const cacheHeaders: Record<string, string> = {};
 
+  const cookieOptions = getSessionCookieOptions();
   const supabase = createServerClient(config.url, config.publishableKey, {
+    cookieOptions,
     cookies: {
       getAll() {
         return request.cookies.getAll();

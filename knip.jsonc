@@ -12,7 +12,6 @@
     "src/features/work-ordering/**",
     // Temporary, pre-deploy-security-hardening scaffold: the new stubs have no importer until their tasks wire or test
     // them. The group that wires or tests a path removes its entry; task 8.4 checks none is left.
-    "src/shared/lib/supabase/cookie-options.ts",
     "src/features/auth/model/recovery-session.ts",
     "src/features/auth/dal/recovery-check.ts",
     "src/shared/lib/turnstile/**",

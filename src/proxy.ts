@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { isAccountPath, SIGN_IN_PATH } from "@/shared/config/account-paths";
 import { SESSION_STATE } from "@/shared/config/constants";
+import { SupabaseConfigError } from "@/shared/lib/supabase";
+import { getSupabaseConfig } from "@/shared/lib/supabase/config";
 import { refreshSession, SESSION_CACHE_CONTROL } from "@/shared/lib/supabase/session";
 
 export const SECURITY_HEADERS = {
@@ -11,6 +13,35 @@ export const SECURITY_HEADERS = {
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
 } as const;
 
+const CONTENT_SECURITY_POLICY_HEADER = "Content-Security-Policy";
+
+/** Google sign-in's destination, allowed (with Supabase) should its start ever become a native form post. */
+const GOOGLE_ACCOUNTS_ORIGIN = "https://accounts.google.com";
+
+/** `null` on an invalid configuration, which `refreshSession` already logs. */
+function readSupabaseOrigin(): string | null {
+  try {
+    const { url } = getSupabaseConfig();
+    return new URL(url).origin;
+  } catch (error) {
+    if (!(error instanceof SupabaseConfigError)) throw error;
+    return null;
+  }
+}
+
+/**
+ * The baseline policy: only the directives that need no nonce (docs/decisions/0023). Today's forms are
+ * submitted by client functions, so `form-action` governs only a native post, an injected form included.
+ */
+function buildContentSecurityPolicy(): string {
+  const supabaseOrigin = readSupabaseOrigin();
+  const formTargets = ["'self'", supabaseOrigin, GOOGLE_ACCOUNTS_ORIGIN].filter((target) => target !== null);
+  const formAction = `form-action ${formTargets.join(" ")}`;
+  const directives = ["object-src 'none'", "base-uri 'none'", "frame-ancestors 'none'", formAction];
+
+  return directives.join("; ");
+}
+
 /** Page requests; a Server Action is a POST to the page's path. */
 const PAGE_REQUEST_METHODS: ReadonlySet<string> = new Set(["GET", "HEAD"]);
 
@@ -19,11 +50,13 @@ const SERVER_ACTION_HEADER = "Next-Action";
 
 const TEMPORARY_REDIRECT = 307;
 
-/** Sets SECURITY_HEADERS on the response and returns it. */
+/** Sets SECURITY_HEADERS and the content security policy on the response and returns it. */
 export function applySecurityHeaders(response: NextResponse): NextResponse {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
     response.headers.set(name, value);
   }
+  const contentSecurityPolicy = buildContentSecurityPolicy();
+  response.headers.set(CONTENT_SECURITY_POLICY_HEADER, contentSecurityPolicy);
   return response;
 }
 
