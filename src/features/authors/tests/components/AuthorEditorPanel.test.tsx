@@ -36,7 +36,7 @@ describe("AuthorEditorLoader", () => {
 
   // implements FR-18 of add-author-profiles
   it("shows the load-failure alert and no field editor when the read fails", async () => {
-    vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     vi.mocked(getMyAuthorProfile).mockResolvedValue({ ok: false, failure: "unavailable" });
 
     render(await AuthorEditorLoader());
@@ -59,7 +59,7 @@ describe("AuthorEditorLoader", () => {
 
   // implements FR-2 of add-author-profiles
   it("renders the editor for the own profile", async () => {
-    vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     vi.mocked(getMyAuthorProfile).mockResolvedValue({ ok: true, profile: null });
 
     render(await AuthorEditorLoader());

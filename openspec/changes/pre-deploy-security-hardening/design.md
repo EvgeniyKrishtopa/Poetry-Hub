@@ -29,7 +29,7 @@ The proxy sets `Content-Security-Policy` together with `SECURITY_HEADERS`; the v
 
 ### D3. What counts as a recovery session
 
-`readClaimsState` stays the one reading of a session (ADR 0006): the signed-in variant of `ClaimsState` gains `aal` and `amr`, parsed there, so no feature reads the claims a second time and an outage keeps one meaning (`unknown`). A missing or malformed `amr` or `aal` never changes the state: the session stays signed in, `amr` parses as empty (not a recovery session) and `aal` as `aal1` (no second factor). A pure function in `auth/model/` reads that `amr`: true when an entry with method `otp` or `recovery` has a timestamp no older than `RECOVERY_SESSION_WINDOW_SECONDS` (900). A server-only DAL function feeds it from `getSessionState()` and answers `recovery | not-recovery | unknown`; it is read by `ResetPasswordContent` and `updatePasswordAction`. The action's order becomes: schema, session, recovery check, allowance, update, sign-out. `not-recovery` answers the existing `link-expired` failure (the page redirects to `/login?error=recovery-failed`); `unknown` fails closed as `unavailable`.
+`readClaimsState` stays the one reading of a session (ADR 0006): the signed-in variant of `ClaimsState` gains `aal` and `amr`, parsed there, so no feature reads the claims a second time and an outage keeps one meaning (`unknown`). A missing or malformed `amr` or `aal` never changes the state: the session stays signed in, `amr` parses as empty (not a recovery session) and `aal` as `aal1` (no second factor). A pure function in `auth/model/` reads that `amr`: true when an entry with method `otp` or `recovery` has a timestamp no older than `RECOVERY_SESSION_WINDOW_SECONDS` (900). A server-only DAL function feeds it from `getSessionState()` and answers `recovery | not-recovery | unknown`; it is read by `ResetPasswordContent` and `updatePasswordAction`. The check covers the session step too (signed out is `not-recovery`), so the action and the page read the session once. The action's order becomes: schema, recovery check, allowance, update, sign-out. `not-recovery` answers the existing `link-expired` failure (the page redirects to `/login?error=recovery-failed`); `unknown` fails closed as `unavailable`.
 
 Alternatives: an app-set marker cookie at `/auth/confirm` (a new signing secret, rejected); a table of recovery session ids written by a function (any session could call it, rejected). The residual: an email-confirmation session also carries `otp` (accepted, proposal Decisions).
 
@@ -61,7 +61,7 @@ This check bounds the app's path only. `secure_password_change = true` makes Sup
 
 ### D4. Password policy
 
-`secure_password_change = true` in `config.toml` and hosted. Leaked-password protection is a hosted setting. Only if the plan lacks it: `MIN_PASSWORD_LENGTH` 8 → 12 in `auth.constants.ts` (which the schema and the messages read), `minimum_password_length` in `config.toml` and hosted. Sign-in's schema never enforces a minimum, so no existing password is locked out. No character-class rules.
+`secure_password_change = true` in `config.toml` and hosted. The plan is Free, without leaked-password protection, so the owner chose (2026-11-28) length and composition rules: `MIN_PASSWORD_LENGTH` 8 → 12, plus one lowercase, one uppercase, one digit and one symbol, in the schema, in `config.toml` (`minimum_password_length`, `password_requirements = "lower_upper_letters_digits_symbols"`) and hosted. The app uses Supabase's own character sets, so the form and Auth cannot disagree. Sign-in's schema enforces none of it, so no existing password is locked out. See `docs/decisions/0028`.
 
 ### D5. Turnstile: one widget, two verifiers
 
@@ -201,7 +201,7 @@ sequenceDiagram
 
 ### D9. Observability
 
-- `shared/lib/security-log/`: one server-only function that writes one JSON line `{ "kind": "security", "event", "source" }` with `console.warn`; events are a closed union: `sign-in-failed`, `captcha-refused`, `rate-limited`, `admin-refused`. No free-text field, so no input can reach it.
+- `shared/lib/security-log/`: one server-only function that writes one JSON line `{ "kind": "security", "event", "source" }` with `console.warn`; events are a closed union: `sign-in-failed`, `captcha-refused`, `rate-limited`, `admin-refused`, `password-change-refused` (added in group 3's review, 2026-11-28). No free-text field, so no input can reach it.
 - Sentry (owner's choice): `src/instrumentation.ts`, `src/instrumentation-client.ts`, DSN from `NEXT_PUBLIC_SENTRY_DSN`; unset means off. Errors only: tracing and Session Replay stay off.
 - Server Actions never reach Next's `onRequestError`: `createActionClient`'s `handleServerError` swallows the throw. A server-only reporter in `shared/lib/error-reporting/` (a no-op without a DSN) is called from there. Render errors caught by `app/error.tsx` are reported from it, and a `global-error.tsx` does the same for the root layout.
 - Scrubbing: `sendDefaultPii: false`, and a `beforeSend` that removes cookies, headers, user, request bodies, query strings (breadcrumb URLs included; `/auth/confirm` carries a token hash) and every exception message, which can carry reader data; the error's name and stack stay. "Prevent storing IP addresses" is switched on in the Sentry project (Deploy checklist), since the app cannot strip what the service adds on receipt.
@@ -224,7 +224,7 @@ sequenceDiagram
 
 ### D10. Hosted check script
 
-`scripts/check-hosted-config.mjs` with a pure comparison module beside it. Reads `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF` and the expected site address from the shell. Runs `supabase migration list --linked`, reads `GET /v1/projects/{ref}/config/auth`, and exits non-zero listing each mismatch. The password choice is a named constant in the script, so it checks leaked-password protection or the length of 12, whichever applies. Redirect URLs and migrations are compared for equality. Anything unreadable or unparseable is a failure, never a pass.
+`scripts/check-hosted-config.mjs` with a pure comparison module beside it. Reads `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF` and the expected site address from the shell. Runs `supabase migration list --linked`, reads `GET /v1/projects/{ref}/config/auth`, and exits non-zero listing each mismatch. It checks the minimum length of 12 and the required characters (D4). Redirect URLs and migrations are compared for equality. Anything unreadable or unparseable is a failure, never a pass.
 
 Two guards: it fails when the CLI's linked project differs from `SUPABASE_PROJECT_REF`, so migrations and settings are read from one project; and it fails when the hosted project holds any `example.test` account (one read-only count through the Management API), so a seeded admin, whose password and TOTP secret are public, cannot pass the gate. The comparison module and its tests live under `scripts/`, and `vitest.config.mts` includes `scripts/tests/**` so CI runs them.
 

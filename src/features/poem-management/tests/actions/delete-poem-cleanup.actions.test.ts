@@ -24,7 +24,7 @@ describe("deletePoemAction with the real file cleanup", () => {
   const remove = vi.fn<(paths: string[]) => Promise<{ data: unknown; error: unknown }>>();
 
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     vi.mocked(deleteOwnPoem).mockResolvedValue({
       ok: true,
       status: "deleted",

@@ -15,16 +15,16 @@ import {
   startGoogleSignInAction,
   updatePasswordAction,
 } from "../../actions/auth.actions";
-import { getSessionState } from "../../dal/current-user";
 import { consumePasswordResetAllowance } from "../../dal/password-reset-allowance";
-import { GENERIC_SERVER_ERROR } from "../../model/auth-messages";
+import { checkRecoverySession } from "../../dal/recovery-check";
+import { FIELD_MESSAGES, GENERIC_SERVER_ERROR } from "../../model/auth-messages";
 import type { AuthActionResult, SignInResult, SignOutResult, SignUpResult } from "../../model/auth.types";
 
 vi.mock("@/shared/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(),
 }));
 
-vi.mock("../../dal/current-user", () => ({ getSessionState: vi.fn() }));
+vi.mock("../../dal/recovery-check", () => ({ checkRecoverySession: vi.fn() }));
 
 vi.mock("../../dal/password-reset-allowance", () => ({ consumePasswordResetAllowance: vi.fn() }));
 
@@ -40,7 +40,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 const EMAIL = "reader@example.com";
-const PASSWORD = "secret-password-1";
+const PASSWORD = "Secret-password-1";
 const CREDENTIALS = { email: EMAIL, password: PASSWORD };
 
 const auth = {
@@ -140,10 +140,18 @@ describe("auth actions", () => {
 
   describe("signUpAction", () => {
     // implements FR-4 of add-supabase-auth
-    it("rejects a 7-character password without calling Supabase", async () => {
-      const result: AuthActionResult<SignUpResult> = await signUpAction({ email: EMAIL, password: "1234567" });
+    it("rejects an 11-character password without calling Supabase", async () => {
+      const result: AuthActionResult<SignUpResult> = await signUpAction({ email: EMAIL, password: "Abcdefghi1!" });
 
-      expect(result.validationErrors?.fieldErrors.password?.[0]).toContain("8");
+      expect(result.validationErrors?.fieldErrors.password?.[0]).toContain("12");
+      expect(auth.signUp).not.toHaveBeenCalled();
+    });
+
+    // implements FR-4 of pre-deploy-security-hardening
+    it("rejects a long password missing a kind of character without calling Supabase", async () => {
+      const result: AuthActionResult<SignUpResult> = await signUpAction({ email: EMAIL, password: "abcdefghij1!" });
+
+      expect(result.validationErrors?.fieldErrors.password?.[0]).toBe(FIELD_MESSAGES.passwordTooSimple);
       expect(auth.signUp).not.toHaveBeenCalled();
     });
 
@@ -349,34 +357,43 @@ describe("auth actions", () => {
   });
 
   describe("updatePasswordAction", () => {
-    const NEW_PASSWORD = "correct-horse-battery";
-    const SIGNED_IN = { state: "signed-in", userId: "3f8a1c52-0000-4000-8000-000000000001" } as const;
+    const NEW_PASSWORD = "Correct-horse-battery-1";
     const UPDATED_TARGET = "/reset-password?status=updated";
     const SIGN_OUT_FAILED_TARGET = "/reset-password?status=updated-sign-out-failed";
 
     beforeEach(() => {
-      vi.mocked(getSessionState).mockResolvedValue(SIGNED_IN);
+      vi.mocked(checkRecoverySession).mockResolvedValue("recovery");
       vi.mocked(consumePasswordResetAllowance).mockResolvedValue("allowed");
       auth.updateUser.mockResolvedValue({ data: {}, error: null });
       auth.signOut.mockResolvedValue({ error: null });
+    });
+
+    // implements FR-4 of pre-deploy-security-hardening
+    it("returns validationErrors for a missing kind of character before the session or Supabase", async () => {
+      const result = await updatePasswordAction({ password: "abcdefghij1!" });
+
+      expect(result.validationErrors?.fieldErrors.password?.[0]).toBe(FIELD_MESSAGES.passwordTooSimple);
+      expect(checkRecoverySession).not.toHaveBeenCalled();
+      expect(consumePasswordResetAllowance).not.toHaveBeenCalled();
+      expect(auth.updateUser).not.toHaveBeenCalled();
     });
 
     // implements FR-5 of password-recovery
     it("returns validationErrors for a short password before the session, the allowance or Supabase", async () => {
       const result = await updatePasswordAction({ password: "abc" });
 
-      expect(result.validationErrors?.fieldErrors.password?.[0]).toContain("8");
-      expect(getSessionState).not.toHaveBeenCalled();
+      expect(result.validationErrors?.fieldErrors.password?.[0]).toContain("12");
+      expect(checkRecoverySession).not.toHaveBeenCalled();
       expect(consumePasswordResetAllowance).not.toHaveBeenCalled();
       expect(auth.updateUser).not.toHaveBeenCalled();
     });
 
     // implements FR-5, FR-6 of password-recovery
-    it("runs session, allowance, update and global sign-out in that order, then redirects", async () => {
+    it("runs recovery check, allowance, update and global sign-out in that order, then redirects", async () => {
       const order: string[] = [];
-      vi.mocked(getSessionState).mockImplementation(async () => {
-        order.push("session");
-        return SIGNED_IN;
+      vi.mocked(checkRecoverySession).mockImplementation(async () => {
+        order.push("recovery check");
+        return "recovery";
       });
       vi.mocked(consumePasswordResetAllowance).mockImplementation(async () => {
         order.push("allowance");
@@ -393,7 +410,7 @@ describe("auth actions", () => {
 
       await expect(updatePasswordAction({ password: NEW_PASSWORD })).rejects.toMatchObject({ digest: REDIRECT_DIGEST });
 
-      expect(order).toEqual(["session", "allowance", "updateUser", "signOut"]);
+      expect(order).toEqual(["recovery check", "allowance", "updateUser", "signOut"]);
       expect(auth.updateUser).toHaveBeenCalledExactlyOnceWith({ password: NEW_PASSWORD });
       expect(auth.signOut).toHaveBeenCalledExactlyOnceWith({ scope: "global" });
       expect(redirect).toHaveBeenCalledExactlyOnceWith(UPDATED_TARGET);
@@ -424,9 +441,9 @@ describe("auth actions", () => {
       expect(logged).not.toContain(NEW_PASSWORD);
     });
 
-    // implements FR-4, FR-8 of password-recovery
-    it("returns link-expired for a signed-out request with no allowance and no update", async () => {
-      vi.mocked(getSessionState).mockResolvedValue({ state: "signed-out" });
+    // implements FR-4, FR-8 of password-recovery and FR-3 of pre-deploy-security-hardening
+    it("returns link-expired for anything but a recent recovery session, with no allowance and no update", async () => {
+      vi.mocked(checkRecoverySession).mockResolvedValue("not-recovery");
 
       const result = await updatePasswordAction({ password: NEW_PASSWORD });
 
@@ -437,8 +454,8 @@ describe("auth actions", () => {
     });
 
     // implements FR-8 of password-recovery
-    it("returns unavailable when the session check cannot tell, with no allowance and no update", async () => {
-      vi.mocked(getSessionState).mockResolvedValue({ state: "unknown" });
+    it("returns unavailable when the recovery check cannot tell, with no allowance and no update", async () => {
+      vi.mocked(checkRecoverySession).mockResolvedValue("unknown");
 
       const result = await updatePasswordAction({ password: NEW_PASSWORD });
 
@@ -515,7 +532,7 @@ describe("auth actions", () => {
         "an updateUser error",
         () => auth.updateUser.mockResolvedValue({ data: null, error: authError("unexpected_failure", 500, NEW_PASSWORD) }),
       ],
-      ["a signed-out request", () => vi.mocked(getSessionState).mockResolvedValue({ state: "signed-out" })],
+      ["a refused session", () => vi.mocked(checkRecoverySession).mockResolvedValue("not-recovery")],
     ])("logs nothing that holds the password after %s", async (_label, arrange) => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
       arrange();

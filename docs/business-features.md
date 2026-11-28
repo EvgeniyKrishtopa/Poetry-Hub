@@ -28,8 +28,8 @@ about page, privacy policy, genre list) live in Contentful; everything users cre
 
 Specs: `auth`, `google-sign-in`, `password-recovery`, `reader-account`.
 
-- **Sign-up with email and password** (`/signup`): the password has at least 8 characters. The form is replaced
-  by a "check your email" message; the account is usable after the reader follows the confirmation link
+- **Sign-up with email and password** (`/signup`): the password has at least 12 characters with a lowercase and
+  an uppercase Latin letter, a digit and a symbol. The form is replaced by a "check your email" message; the account is usable after the reader follows the confirmation link
   (`GET /auth/confirm`).
 - **Sign-in** (`/login`): wrong credentials show one error, and a recovery offer. A session that expired during
   a write sends the reader to `/login` with a one-time "session expired" notice.
@@ -38,7 +38,7 @@ Specs: `auth`, `google-sign-in`, `password-recovery`, `reader-account`.
   already has an account signs them in and says so once. Redirect targets are fixed, never read from a request.
 - **Password recovery**: after a wrong-credentials sign-in the form offers to email a recovery link. The answer is
   identical whether or not the address has an account (no account enumeration). The link opens `/reset-password`
-  with a session; a new password is validated, limited to 5 attempts per minute per account, and on success all
+  with a session that may set a password for 15 minutes; a new password is validated, limited to 5 attempts per minute per account, and on success all
   the account's sessions on every device end and the reader is sent to sign in again. Invalid, expired or reused
   links go back to `/login` with a notice.
 - **Sign-out** from the header. While an edit form holds unsaved changes, sign-out asks first.
@@ -230,7 +230,7 @@ Specs: `page-metadata`, `crawler-discovery`.
 
 | Rule | Value |
 | --- | --- |
-| Password length | at least 8 |
+| New password | at least 12; lowercase, uppercase, digit, symbol |
 | Profile name fields | 1 to 60 each |
 | About | 1 to 1000 |
 | Photo / illustration | PNG or JPEG, up to 5 MB, by content |

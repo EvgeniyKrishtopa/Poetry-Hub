@@ -15,7 +15,7 @@ describe("checkSession", () => {
 
   // implements FR-12 of admin-moderation
   it.each([
-    ["a signed-in session may act", { state: "signed-in", userId: ADMIN_USER_ID }, { ok: true }],
+    ["a signed-in session may act", { state: "signed-in", userId: ADMIN_USER_ID, aal: "aal1", amr: [] }, { ok: true }],
     ["a gone session is unauthenticated", { state: "signed-out" }, { ok: false, failure: "unauthenticated" }],
     ["an unreadable session is unavailable, never expired", { state: "unknown" }, { ok: false, failure: "unavailable" }],
   ] as const)("%s", async (_case, session, expected) => {

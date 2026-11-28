@@ -39,7 +39,7 @@ function expectNothingSensitiveLogged(): void {
 
 describe("sendWarningAction", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID, aal: "aal1", amr: [] });
     vi.mocked(startWarning).mockResolvedValue(READY);
     vi.mocked(sendEmail).mockResolvedValue({ ok: true });
     vi.mocked(markWarned).mockResolvedValue({ ok: true, status: "warned" });

@@ -23,7 +23,7 @@ Read before adding, renaming, or reading an environment variable.
 - Supabase dashboard setup (manual; see the Migration Plan in `openspec/changes/add-supabase-auth/design.md`, or its archived copy):
   1. Authentication → URL Configuration: Site URL `http://localhost:3000` for dev (the deployed URL at deploy time); add both to Redirect URLs.
   2. Authentication → Emails → "Confirm sign up": the link `href` becomes `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`.
-  3. Authentication → Providers → Email: "Confirm email" on; minimum password length 8.
+  3. Authentication → Providers → Email: "Confirm email" on; minimum password length 12 and required characters "lowercase, uppercase letters, digits and symbols" (ADR 0028).
   4. Authentication → Rate Limits: raise "sign-ups and sign-ins" above the default 30 per 5 minutes. Every sign-in and sign-up runs in a Server Action, so they all reach Supabase from the server's IP and share one per-IP budget; forwarding each reader's IP would need a secret key, which this project does not use.
 - Google sign-in (`google-sign-in`; ADR 0019): Supabase Auth's Google provider, configured outside the app. The app reads no new variable: it starts the flow with `signInWithOAuth` (`redirectTo` = `getSiteUrl()` + `/auth/callback?from=sign-in|sign-up`, `GOOGLE_CALLBACK_PATH` and `GOOGLE_FLOW_PARAM` in the auth feature) and finishes it at the route `/auth/callback`.
   - Google Cloud (owner, manual): APIs & Services → OAuth consent screen with the site's name, then Credentials → Create credentials → OAuth client ID, type "Web application". Its **Authorized redirect URI** is the Supabase project's own callback, `https://<project-ref>.supabase.co/auth/v1/callback`, not the site's `/auth/callback`: Google returns to Supabase, and Supabase returns to the site. For the local stack add `http://127.0.0.1:54321/auth/v1/callback` to the same client or a second one.
@@ -219,5 +219,13 @@ git-ignored `PROGRESS.md`, so every clone sees them.
        asymmetric keys): it decides which save-time check catches a held session (design D8).
   5. After the deploy, run one real recovery on the production address: a wrong password, the offer, the letter,
      the link, a new password, then sign in with it.
+- **Password policy** (`pre-deploy-security-hardening`; ADR 0028): hosted settings only, no migration. In
+  Supabase, Authentication → Providers → Email (the local stack's values are in `supabase/config.toml`):
+  - [ ] Minimum password length 12.
+  - [ ] Required characters: lowercase and uppercase letters, digits and symbols. The app checks the same sets.
+  - [ ] "Secure password change" on (`secure_password_change`): a session older than 24 hours must
+        reauthenticate to change the password.
+  - [ ] "Require current password" on, if the dashboard offers it. It skips recovery sessions.
+  - Leaked-password protection is not available on the Free plan; turn it on if the project moves to Pro.
 - Also before a first deploy: the Supabase dashboard setup and the Contentful webhook above, and the
   hosting-layer per-IP rate rule (Telegram section).

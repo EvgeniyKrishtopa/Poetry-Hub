@@ -94,7 +94,7 @@ function expectNoRpcCalled(): void {
 
 describe.each(ACTIONS)("$name", ({ action, dal, input, badInputs, success, successAnswer }) => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID, aal: "aal1", amr: [] });
     dal.mockResolvedValue({ ok: true, status: successAnswer });
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -172,7 +172,7 @@ describe.each(ACTIONS)("$name", ({ action, dal, input, badInputs, success, succe
 
 describe("addViolationCaseAction and addViolationCaseForAuthorAction, answers", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID, aal: "aal1", amr: [] });
   });
 
   afterEach(() => {
@@ -203,7 +203,7 @@ describe("addViolationCaseAction and addViolationCaseForAuthorAction, answers", 
 
 describe("setCaseGroundAction and removeViolationCaseAction, answers", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: ADMIN_USER_ID, aal: "aal1", amr: [] });
   });
 
   afterEach(() => {

@@ -44,7 +44,7 @@ async function renderContent() {
 }
 
 beforeEach(() => {
-  vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+  vi.mocked(requireSession).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
   vi.mocked(getOwnCollection).mockResolvedValue({ ok: true, collection: COLLECTION });
   vi.mocked(getCollectionPoemChoices).mockResolvedValue({ ok: true, choices: CHOICES });
 });

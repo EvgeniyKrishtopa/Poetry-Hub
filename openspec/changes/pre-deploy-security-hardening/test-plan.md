@@ -22,8 +22,9 @@ One row per acceptance criterion. Scenarios of a MODIFIED requirement that did n
 | password-recovery FR-2 captcha rejected | `captcha_failed` answers the captcha message, any address | unit |
 | password-recovery FR-2 password never reaches the action | action receives address and token only | unit |
 | password-recovery FR-2 other scenarios | existing, with a token added to inputs | unit |
+| FR-13 password change refused | one line for a refused session, none for an unavailable check | unit |
 | auth FR-4 reauthentication on | recovery on the local stack with `secure_password_change` | integration |
-| auth FR-4 fallback minimum (only without leaked-password protection) | schema and message at 12 | unit |
+| auth FR-4 short password, missing kind of character | schema and messages: 11 characters, each missing kind, Cyrillic letters | unit |
 | auth FR-4 existing shorter password | sign-in schema accepts 8 characters | unit |
 | auth FR-2 captcha rejected | message shown, no recovery offer | unit |
 | auth FR-4 sign-up captcha rejected | message shown, no account | unit |

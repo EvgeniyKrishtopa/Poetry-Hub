@@ -48,12 +48,12 @@ The sign-in form SHALL call `signInAction`. The action SHALL validate input on t
 - **THEN** the alert reads the captcha failure message and the password recovery offer is not shown
 
 ### Requirement: Sign-up submission (FR-4)
-The sign-up form SHALL call `signUpAction`. The action SHALL validate on the server against `signUpSchema` (a valid email, a password of at least 8 characters, `MIN_PASSWORD_LENGTH`, and a non-empty captcha token). Valid input SHALL call Supabase `signUp` with the token as `captchaToken`; Auth's `captcha_failed` SHALL show the captcha failure message as a form-level message. Success SHALL replace the form with a "Проверьте почту" message naming the address, and the message SHALL be identical whether or not the address was already registered. A `weak_password` error SHALL show on the password field. Rate limit, missing config, other failures, and server errors SHALL show form-level messages.
+The sign-up form SHALL call `signUpAction`. The action SHALL validate on the server against `signUpSchema` (a valid email, a password that meets the password rules of «Hardened password policy», and a non-empty captcha token). Valid input SHALL call Supabase `signUp` with the token as `captchaToken`; Auth's `captcha_failed` SHALL show the captcha failure message as a form-level message. Success SHALL replace the form with a "Проверьте почту" message naming the address, and the message SHALL be identical whether or not the address was already registered. A `weak_password` error SHALL show on the password field. Rate limit, missing config, other failures, and server errors SHALL show form-level messages.
 
 #### Scenario: Short password is rejected on the server
-- **GIVEN** `signUpAction` is called with a valid email and a 7-character password
+- **GIVEN** `signUpAction` is called with a valid email and an 11-character password
 - **WHEN** it runs
-- **THEN** the result has a password `validationErrors` entry mentioning the 8-character minimum
+- **THEN** the result has a password `validationErrors` entry mentioning the 12-character minimum
 - **AND** `signUp` has not been called
 
 #### Scenario: Successful sign-up
@@ -90,19 +90,24 @@ The sign-up form SHALL call `signUpAction`. The action SHALL validate on the ser
 ## ADDED Requirements
 
 ### Requirement: Hardened password policy (pre-deploy-security-hardening FR-4)
-Supabase Auth SHALL require reauthentication for a password change on a session older than 24 hours (`secure_password_change`), locally and hosted. Leaked-password protection SHALL be on in the hosted project; when the plan does not offer it, the minimum password length SHALL instead be 12 in the app's schema, its messages, the local stack and the hosted project. No character-class rule SHALL be added. Sign-in SHALL keep accepting a password of any length.
+Supabase Auth SHALL require reauthentication for a password change on a session older than 24 hours (`secure_password_change`), locally and hosted. The hosted plan (Free) has no leaked-password protection, so a new password (sign-up and recovery) SHALL have at least 12 characters (`MIN_PASSWORD_LENGTH`) and at least one lowercase Latin letter, one uppercase Latin letter, one digit and one special character from Supabase's set ``!@#$%^&*()_+-=[]{};'\:"|<>?,./`~``. Other characters, Cyrillic and spaces included, MAY appear besides these. The same rules SHALL apply in the app's schema, the local stack (`minimum_password_length`, `password_requirements`) and the hosted project. A short password SHALL show «Не менее 12 символов.»; a long enough password missing a required kind SHALL show «Добавьте строчную и заглавную латинские буквы, цифру и спецсимвол.» Sign-in SHALL keep accepting any password.
 
 #### Scenario: Recovery still works with reauthentication on
 - **GIVEN** `secure_password_change` is on
 - **WHEN** a reader sets a new password from a fresh recovery link
 - **THEN** the password changes
 
-#### Scenario: Fallback minimum
-- **GIVEN** the plan has no leaked-password protection
+#### Scenario: Short password
+- **GIVEN** the sign-up form
 - **WHEN** a visitor signs up with an 11-character password
 - **THEN** the field shows «Не менее 12 символов.» and no account is created
 
-#### Scenario: Existing shorter password
+#### Scenario: A required kind of character is missing
+- **GIVEN** the sign-up or new-password form
+- **WHEN** a 12-character password lacks a lowercase letter, an uppercase letter, a digit or a special character
+- **THEN** the field shows the composition message and Supabase is not called
+
+#### Scenario: Existing weaker password
 - **GIVEN** an account with an 8-character password
 - **WHEN** its owner signs in
 - **THEN** the sign-in succeeds

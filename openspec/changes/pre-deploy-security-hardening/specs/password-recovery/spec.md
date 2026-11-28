@@ -119,6 +119,30 @@
 - **WHEN** `/reset-password?status=updated` is requested
 - **THEN** the done notice is shown and the response is not a redirect
 
+### Requirement: New-password validation (FR-5)
+`updatePasswordAction` SHALL validate the password on the server against the sign-up password schema (the rules of `auth` «Hardened password policy») before any limit check or Supabase call, and return a field error: «Не менее 12 символов.» for a short or empty password, «Добавьте строчную и заглавную латинские буквы, цифру и спецсимвол.» for a missing kind of character. A password Supabase refuses as weak (`weak_password`) SHALL show «Придумайте пароль надёжнее.» under the field. A password equal to the current one (`same_password`) SHALL show «Новый пароль должен отличаться от прежнего.» under the field. A password that passes these SHALL be saved with `updateUser`.
+
+#### Scenario: Short password
+- **GIVEN** the form holds the password "abc"
+- **WHEN** the reader presses «Сохранить пароль»
+- **THEN** the field shows «Не менее 12 символов.»
+- **AND** no allowance is consumed and `updateUser` has not been called
+
+#### Scenario: Weak password
+- **GIVEN** `updateUser` returns error code `weak_password`
+- **WHEN** the reader presses «Сохранить пароль» with a password that meets the rules
+- **THEN** the field shows «Придумайте пароль надёжнее.»
+
+#### Scenario: Same as the current password
+- **GIVEN** `updateUser` returns error code `same_password`
+- **WHEN** the reader presses «Сохранить пароль»
+- **THEN** the field shows «Новый пароль должен отличаться от прежнего.»
+
+#### Scenario: Valid password
+- **GIVEN** `updateUser` resolves without error
+- **WHEN** the reader presses «Сохранить пароль» with a password that meets the rules
+- **THEN** the action redirects to the success page of FR-6
+
 ## ADDED Requirements
 
 ### Requirement: The password action needs a recovery session (pre-deploy-security-hardening FR-3)

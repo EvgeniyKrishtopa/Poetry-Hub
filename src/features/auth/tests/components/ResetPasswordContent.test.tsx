@@ -3,9 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense, type ReactElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { SESSION_STATE } from "@/shared/config/constants";
-
-import { getSessionState } from "../../dal/current-user";
+import { checkRecoverySession } from "../../dal/recovery-check";
 import { checkRestriction } from "../../dal/restriction-check";
 import { ResetPasswordContent } from "../../components/ResetPasswordContent/ResetPasswordContent";
 import { ResetPasswordPage } from "../../components/ResetPasswordPage/ResetPasswordPage";
@@ -20,7 +18,7 @@ import type { RestrictionCheck } from "../../model/auth.types";
 
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("../../actions/auth.actions", () => ({ updatePasswordAction: vi.fn() }));
-vi.mock("../../dal/current-user", () => ({ getSessionState: vi.fn() }));
+vi.mock("../../dal/recovery-check", () => ({ checkRecoverySession: vi.fn() }));
 vi.mock("../../dal/restriction-check", () => ({ checkRestriction: vi.fn() }));
 
 const RECOVERY_FAILED_TARGET = "/login?error=recovery-failed";
@@ -34,8 +32,8 @@ function redirectThrows(): void {
   });
 }
 
-function signedIn(restriction: RestrictionCheck): void {
-  vi.mocked(getSessionState).mockResolvedValue({ state: SESSION_STATE.signedIn, userId: "user-1" } as never);
+function recoverySession(restriction: RestrictionCheck): void {
+  vi.mocked(checkRecoverySession).mockResolvedValue("recovery");
   vi.mocked(checkRestriction).mockResolvedValue(restriction);
 }
 
@@ -49,8 +47,8 @@ afterEach(() => {
 
 describe("ResetPasswordContent", () => {
   // implements FR-4 of password-recovery
-  it("shows the form to a signed-in, unrestricted session", async () => {
-    signedIn("allowed");
+  it("shows the form to a recovery, unrestricted session", async () => {
+    recoverySession("allowed");
 
     await renderContent();
 
@@ -59,10 +57,10 @@ describe("ResetPasswordContent", () => {
     expect(redirect).not.toHaveBeenCalled();
   });
 
-  // implements FR-4 of password-recovery
-  it("redirects a signed-out request to the dead-link notice", async () => {
+  // implements FR-4 of password-recovery and FR-3 of pre-deploy-security-hardening
+  it("redirects anything but a recent recovery session, signed out included, to the dead-link notice", async () => {
     redirectThrows();
-    vi.mocked(getSessionState).mockResolvedValue({ state: SESSION_STATE.signedOut });
+    vi.mocked(checkRecoverySession).mockResolvedValue("not-recovery");
 
     await expect(renderContent()).rejects.toThrow(REDIRECT_SENTINEL);
 
@@ -75,7 +73,7 @@ describe("ResetPasswordContent", () => {
     "redirects a session whose restriction check says %s exactly like a signed-out request",
     async (restriction) => {
       redirectThrows();
-      signedIn(restriction);
+      recoverySession(restriction);
 
       await expect(renderContent()).rejects.toThrow(REDIRECT_SENTINEL);
 
@@ -85,7 +83,7 @@ describe("ResetPasswordContent", () => {
 
   // implements FR-4, FR-10 of password-recovery
   it("shows the unavailable alert and no form when the restriction check cannot tell", async () => {
-    signedIn("unknown");
+    recoverySession("unknown");
 
     await renderContent();
 
@@ -95,8 +93,8 @@ describe("ResetPasswordContent", () => {
   });
 
   // implements FR-4 of password-recovery
-  it("shows the unavailable alert and no form when the session check cannot tell", async () => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: SESSION_STATE.unknown });
+  it("shows the unavailable alert and no form when the recovery check cannot tell", async () => {
+    vi.mocked(checkRecoverySession).mockResolvedValue("unknown");
 
     await renderContent();
 
@@ -114,14 +112,14 @@ describe("ResetPasswordContent", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent(message);
     expect(screen.getByRole("link", { name: BACK_TO_SIGN_IN_LABEL })).toHaveAttribute("href", "/login");
-    expect(getSessionState).not.toHaveBeenCalled();
+    expect(checkRecoverySession).not.toHaveBeenCalled();
     expect(redirect).not.toHaveBeenCalled();
   });
 
   // implements FR-4 of password-recovery
   it.each([["something-else"], [["updated", "updated"]]])("treats the status %j as no status", async (status) => {
     redirectThrows();
-    vi.mocked(getSessionState).mockResolvedValue({ state: SESSION_STATE.signedOut });
+    vi.mocked(checkRecoverySession).mockResolvedValue("not-recovery");
 
     await expect(renderContent(status)).rejects.toThrow(REDIRECT_SENTINEL);
   });

@@ -1,4 +1,5 @@
 import { isAuthRetryableFetchError } from "@supabase/supabase-js";
+import { z } from "zod";
 
 import { SESSION_STATE } from "@/shared/config/constants";
 
@@ -16,16 +17,30 @@ export interface AmrEntry {
   readonly timestamp: number;
 }
 
+/** The session's assurance level: `aal2` once a second factor was verified. */
+type AssuranceLevel = "aal1" | "aal2";
+
 export type ClaimsState =
-  | { readonly state: typeof SESSION_STATE.signedIn; readonly userId: string }
+  | {
+      readonly state: typeof SESSION_STATE.signedIn;
+      readonly userId: string;
+      readonly aal: AssuranceLevel;
+      readonly amr: readonly AmrEntry[];
+    }
   | { readonly state: typeof SESSION_STATE.signedOut }
   | { readonly state: typeof SESSION_STATE.unknown };
 
 /** The parts of a `getClaims()` result this reading looks at. */
 export interface ClaimsResult {
-  readonly data: { readonly claims?: { readonly sub?: unknown } | null } | null;
+  readonly data: {
+    readonly claims?: { readonly sub?: unknown; readonly aal?: unknown; readonly amr?: unknown } | null;
+  } | null;
   readonly error: unknown;
 }
+
+// A missing or malformed claim never signs the reader out: it reads as the weakest session.
+const assuranceLevelSchema = z.enum(["aal1", "aal2"]).catch("aal1");
+const amrSchema = z.array(z.object({ method: z.string(), timestamp: z.number() })).catch([]);
 
 /** supabase-js returns a network or outage failure rather than throwing it. */
 function isOutage(error: unknown): boolean {
@@ -49,7 +64,11 @@ export function readClaimsState({ data, error }: ClaimsResult): ClaimsState {
   if (isOutage(error)) return { state: SESSION_STATE.unknown };
   // An expired or invalid token: whatever claims came with it, there is no session.
   if (error) return { state: SESSION_STATE.signedOut };
-  const sub = data?.claims?.sub;
-  if (typeof sub === "string" && sub !== "") return { state: SESSION_STATE.signedIn, userId: sub };
-  return { state: SESSION_STATE.signedOut };
+  const claims = data?.claims;
+  const sub = claims?.sub;
+  if (typeof sub !== "string" || sub === "") return { state: SESSION_STATE.signedOut };
+
+  const aal = assuranceLevelSchema.parse(claims?.aal);
+  const amr = amrSchema.parse(claims?.amr);
+  return { state: SESSION_STATE.signedIn, userId: sub, aal, amr };
 }

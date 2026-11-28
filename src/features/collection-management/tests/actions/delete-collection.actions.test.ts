@@ -21,7 +21,7 @@ const DELETED = { ok: true, status: "deleted", title: STORED_TITLE, authorId: AU
 
 describe("deleteCollectionAction", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     vi.mocked(deleteOwnCollection).mockResolvedValue(DELETED);
   });
 

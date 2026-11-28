@@ -48,7 +48,7 @@ function file(bytes: readonly number[], name: string, type: string): File {
 
 describe("author profile actions", () => {
   beforeEach(() => {
-    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID });
+    vi.mocked(getSessionState).mockResolvedValue({ state: "signed-in", userId: USER_ID, aal: "aal1", amr: [] });
     for (const write of [writeOwnProfile, clearProfileField, replacePhoto, removePhoto]) {
       vi.mocked(write).mockResolvedValue({ ok: true, profile: PROFILE });
     }

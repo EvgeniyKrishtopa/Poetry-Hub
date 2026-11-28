@@ -12,6 +12,8 @@ vi.mock("../../dal/admin-check", () => ({ checkIsAdmin: vi.fn() }));
 const SIGNED_IN = {
   state: "signed-in",
   userId: "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b",
+  aal: "aal1",
+  amr: [],
 } as const;
 
 const CHILD_TEXT = "admin only content";
