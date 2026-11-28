@@ -8,7 +8,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(154);
+select plan(157);
 
 -- Start from empty content tables, so the checks below see only these fixtures and not the local seed. The whole
 -- file runs in one transaction that is rolled back, so the seed survives.
@@ -657,6 +657,25 @@ select ok(
   and not has_function_privilege('anon', 'public.is_verified_admin()', 'execute')
   and not has_function_privilege('public', 'public.is_verified_admin()', 'execute'),
   'is_verified_admin() is security definer, with an empty search_path and no execute for public or anon');
+
+-- Only an admin can get a factor (FR-9).
+select throws_ok(
+  $$insert into auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at)
+    values ('f0000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222', '', 'totp',
+      'unverified', now(), now())$$,
+  '42501', 'only an admin can have a second factor', 'a non-admin gets no factor');
+select lives_ok(
+  $$insert into auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at)
+    values ('f0000000-0000-4000-8000-000000000002', '11111111-1111-4111-8111-111111111111', '', 'totp',
+      'unverified', now(), now())$$,
+  'an admin gets a factor');
+select ok(
+  (select p.prosecdef and 'search_path=""' = any (p.proconfig) from pg_proc p
+    where p.oid = 'public.refuse_factor_for_non_admin()'::regprocedure)
+  and not has_function_privilege('anon', 'public.refuse_factor_for_non_admin()', 'execute')
+  and not has_function_privilege('authenticated', 'public.refuse_factor_for_non_admin()', 'execute')
+  and not has_function_privilege('public', 'public.refuse_factor_for_non_admin()', 'execute'),
+  'the trigger function is security definer, with an empty search_path and executable by no client role');
 
 select * from finish();
 rollback;

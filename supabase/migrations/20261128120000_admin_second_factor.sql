@@ -29,6 +29,7 @@
 --   20261113180000_admin_moderation_functions.sql, and `public.consume_write_allowance` from
 --   20261125150000_password_reset_limit.sql.
 --   Last: drop function public.is_verified_admin(); comment on function public.is_admin() is null;
+--   drop trigger only_admins_get_a_factor on auth.mfa_factors; drop function public.refuse_factor_for_non_admin();
 
 -- The one rule of admin power: listed as an admin and the session verified a second factor. Every authorization
 -- check uses this, never is_admin() alone. Executable by authenticated, because the Storage policies evaluate it as
@@ -62,6 +63,30 @@ begin
   end if;
 end;
 $$;
+
+-- Only an admin can get a second factor. Auth lets any signed-in account enrol one, and a factor makes Auth refuse a
+-- password change below `aal2`: whoever knows a reader's password could add a factor and lock the reader out of
+-- recovery. The function lives in public and runs as its owner, so Auth's role needs no right on public.admins; a
+-- trigger needs no execute grant to fire.
+create function public.refuse_factor_for_non_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not exists (select 1 from public.admins a where a.user_id = new.user_id) then
+    raise exception 'only an admin can have a second factor' using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+revoke execute on function public.refuse_factor_for_non_admin() from public, anon, authenticated;
+
+create trigger only_admins_get_a_factor
+  before insert on auth.mfa_factors
+  for each row execute function public.refuse_factor_for_non_admin();
 
 create or replace function public.may_moderate_author(author_profile_id uuid)
 returns boolean

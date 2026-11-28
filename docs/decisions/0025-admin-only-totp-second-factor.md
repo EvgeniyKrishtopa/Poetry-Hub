@@ -12,8 +12,12 @@ app authenticator (TOTP) factors on every plan, and marks a session that verifie
 
 ## Decision
 
-1. **Only the admin is offered a second factor.** The screens live in `features/admin`, on `/admin/verify`.
-   Regular users have no factor and no screen for one.
+1. **Only the admin can have a second factor.** The screens live in `features/admin`, on `/admin/verify`.
+   Regular users have no screen for one, and the database refuses them a factor: Auth would let any account
+   enrol, and an account with a factor cannot change its password below `aal2`, so someone holding a
+   reader's password could lock the reader out of recovery. A `before insert` trigger on `auth.mfa_factors`
+   checks `public.admins`. Switching hosted enrolment off between admin enrolments was rejected (a manual
+   step that can be forgotten), and so was only recording the risk.
 2. **The database requires `aal2`.** One function, `is_verified_admin()`, is the rule: listed as an admin
    and `aal2`. `assert_admin()` (the first statement of every `admin_*` function), `may_moderate_author()`
    and the two admin Storage policies use it (`20261128120000_admin_second_factor.sql`). A token without the

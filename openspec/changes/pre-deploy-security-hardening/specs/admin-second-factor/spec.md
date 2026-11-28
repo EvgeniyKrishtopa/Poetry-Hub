@@ -68,3 +68,16 @@ Every `admin_*` function SHALL answer `42501` for a session whose `aal` is not `
 - **GIVEN** an admin with an `aal1` token
 - **WHEN** `is_admin()` is called
 - **THEN** it answers true
+
+### Requirement: Only an admin can get a factor (pre-deploy-security-hardening FR-9, added by defect fix)
+The database SHALL refuse a new second factor for an account that is not listed as an admin, however it is requested, Supabase Auth's own endpoint included. Otherwise someone holding a reader's password could add a factor of their own, after which the reader could no longer recover the password.
+
+#### Scenario: A reader enrols through Auth directly
+- **GIVEN** a signed-in account that is not an admin
+- **WHEN** it asks Supabase Auth to enrol a factor
+- **THEN** the request fails and no factor is stored
+
+#### Scenario: An admin enrols
+- **GIVEN** an account listed as an admin
+- **WHEN** a factor is enrolled
+- **THEN** it is stored

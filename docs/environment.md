@@ -258,7 +258,10 @@ git-ignored `PROGRESS.md`, so every clone sees them.
         Rollback: revert the app first, then the down migration in the file's header.
   - [ ] In Supabase, Authentication → Multi-Factor: app authenticator (TOTP) enabled for enrolment and
         verification (the hosted default).
-  - [ ] Right after the owner is added to `public.admins`, sign in as the owner, open `/admin/verify` and enrol.
+  - [ ] Check that the push created the trigger `only_admins_get_a_factor` on `auth.mfa_factors` (SQL editor:
+        `select tgname from pg_trigger where tgrelid = 'auth.mfa_factors'::regclass and not tgisinternal;`).
+        Without it any account can enrol a factor and then block its own password recovery.
+  - [ ] Right after the owner is added to `public.admins` (a factor is refused before that), sign in as the owner, open `/admin/verify` and enrol.
         Until a factor is verified, whoever holds the owner's password can enrol their own.
 - Also before a first deploy: the Supabase dashboard setup and the Contentful webhook above, and the
   hosting-layer per-IP rate rules (the Bot protection item above).

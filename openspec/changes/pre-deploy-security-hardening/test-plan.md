@@ -60,6 +60,7 @@ One row per acceptance criterion. Scenarios of a MODIFIED requirement that did n
 | FR-9 admin function at aal2 | existing admin tests with `aal2` claims | integration |
 | FR-9 Storage delete at aal1 | policy refuses | integration |
 | FR-9 is_admin at aal1 | answers true; `may_moderate_author` false | integration |
+| FR-9 only an admin can get a factor | pgTAP: insert refused for a non-admin, allowed for an admin; manual: a reader's enrolment through Auth fails | integration |
 | FR-10 JPEG with GPS | re-encode drops EXIF; upload receives that body | unit |
 | FR-10 GPS on the stack | stored object has no EXIF | end-to-end |
 | FR-10 rotated photo | pixels upright, no orientation tag | unit |
