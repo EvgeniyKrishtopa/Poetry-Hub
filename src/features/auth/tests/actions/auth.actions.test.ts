@@ -17,7 +17,7 @@ import {
 } from "../../actions/auth.actions";
 import { consumePasswordResetAllowance } from "../../dal/password-reset-allowance";
 import { checkRecoverySession } from "../../dal/recovery-check";
-import { GENERIC_SERVER_ERROR } from "../../model/auth-messages";
+import { FIELD_MESSAGES, GENERIC_SERVER_ERROR } from "../../model/auth-messages";
 import type { AuthActionResult, SignInResult, SignOutResult, SignUpResult } from "../../model/auth.types";
 
 vi.mock("@/shared/lib/supabase/server", () => ({
@@ -144,6 +144,14 @@ describe("auth actions", () => {
       const result: AuthActionResult<SignUpResult> = await signUpAction({ email: EMAIL, password: "Abcdefghi1!" });
 
       expect(result.validationErrors?.fieldErrors.password?.[0]).toContain("12");
+      expect(auth.signUp).not.toHaveBeenCalled();
+    });
+
+    // implements FR-4 of pre-deploy-security-hardening
+    it("rejects a long password missing a kind of character without calling Supabase", async () => {
+      const result: AuthActionResult<SignUpResult> = await signUpAction({ email: EMAIL, password: "abcdefghij1!" });
+
+      expect(result.validationErrors?.fieldErrors.password?.[0]).toBe(FIELD_MESSAGES.passwordTooSimple);
       expect(auth.signUp).not.toHaveBeenCalled();
     });
 
@@ -358,6 +366,16 @@ describe("auth actions", () => {
       vi.mocked(consumePasswordResetAllowance).mockResolvedValue("allowed");
       auth.updateUser.mockResolvedValue({ data: {}, error: null });
       auth.signOut.mockResolvedValue({ error: null });
+    });
+
+    // implements FR-4 of pre-deploy-security-hardening
+    it("returns validationErrors for a missing kind of character before the session or Supabase", async () => {
+      const result = await updatePasswordAction({ password: "abcdefghij1!" });
+
+      expect(result.validationErrors?.fieldErrors.password?.[0]).toBe(FIELD_MESSAGES.passwordTooSimple);
+      expect(checkRecoverySession).not.toHaveBeenCalled();
+      expect(consumePasswordResetAllowance).not.toHaveBeenCalled();
+      expect(auth.updateUser).not.toHaveBeenCalled();
     });
 
     // implements FR-5 of password-recovery
