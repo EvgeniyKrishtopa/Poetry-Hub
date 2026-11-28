@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { requireSession } from "@/features/auth";
+import { ADMIN_VERIFY_PATH } from "@/shared/config/account-paths";
 import { Alert, SessionUnavailableAlert } from "@/shared/ui";
 
 import { readAdminAccess } from "../../dal/admin-access";
@@ -16,9 +17,10 @@ import { ViolationsConnectionNotice } from "../../components/ViolationsConnectio
  */
 export async function ViolationReviewPageContent() {
   const session = await requireSession();
-  const access = await readAdminAccess(session.state);
+  const access = await readAdminAccess(session);
   if (access === "unavailable") return <SessionUnavailableAlert />;
   if (access === "not-admin") notFound();
+  if (access === "needs-second-factor") redirect(ADMIN_VERIFY_PATH);
 
   const result = await listViolationCases();
   // After the reads above: a clock read before request data is not allowed under Cache Components.

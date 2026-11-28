@@ -1,7 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { requireSession } from "@/features/auth";
+import { ADMIN_VERIFY_PATH } from "@/shared/config/account-paths";
 import { SessionUnavailableAlert } from "@/shared/ui";
 
 import { readAdminAccess } from "../../dal/admin-access";
@@ -20,9 +21,10 @@ import type { UserModerationPageContentProps } from "./UserModerationPageContent
  */
 export async function UserModerationPageContent({ query }: UserModerationPageContentProps) {
   const session = await requireSession();
-  const access = await readAdminAccess(session.state);
+  const access = await readAdminAccess(session);
   if (access === "unavailable") return <SessionUnavailableAlert />;
   if (access === "not-admin") notFound();
+  if (access === "needs-second-factor") redirect(ADMIN_VERIFY_PATH);
 
   const rawQuery = await query;
   const listQuery = readListQuery(rawQuery);

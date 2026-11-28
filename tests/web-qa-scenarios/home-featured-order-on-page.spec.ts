@@ -2,10 +2,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { waitForHydration } from "./support/hydration";
-import { signIn } from "./support/sign-in";
+import { signInAsAdmin } from "./support/sign-in-as-admin";
 
-/** `draft-author@example.test`: the seeded admin. */
-const ADMIN_EMAIL = "draft-author@example.test";
 const FIRST_AUTHOR = { id: "10000000-0000-4000-8000-000000000005", name: "Ольга Северина" } as const;
 const SECOND_AUTHOR = { id: "10000000-0000-4000-8000-000000000004", name: "Пётр Ласточкин" } as const;
 
@@ -101,7 +99,7 @@ test(
   { tag: ["@home-featured-order-on-page"] },
   async ({ page, browser, baseURL }) => {
     test.setTimeout(SCENARIO_TIMEOUT_MS);
-    await signIn(page, ADMIN_EMAIL);
+    await signInAsAdmin(page);
     await clearLists(page);
     const guestContext = await browser.newContext({ baseURL, viewport: VIEWPORT });
     const guest = await guestContext.newPage();

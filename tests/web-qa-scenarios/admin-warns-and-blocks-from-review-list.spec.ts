@@ -2,10 +2,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { waitForHydration } from "./support/hydration";
-import { signIn } from "./support/sign-in";
+import { signInAsAdmin } from "./support/sign-in-as-admin";
 
-/** `draft-author@example.test`: the seeded admin. */
-const ADMIN_EMAIL = "draft-author@example.test";
 /** A seed reader other scenarios sign in as too: this one is blocked and unblocked again, so playwright.config.ts runs it alone, after them. */
 const USER_EMAIL = "author4@example.test";
 
@@ -40,7 +38,7 @@ test(
   "an admin checks a warning, loses the connection, meets a case removed in another tab, then blocks early",
   { tag: ["@admin-violations-feedback"] },
   async ({ page, context }) => {
-    await signIn(page, ADMIN_EMAIL);
+    await signInAsAdmin(page);
     await addToReviewList(page, USER_EMAIL);
 
     await page.goto("/admin/violations");

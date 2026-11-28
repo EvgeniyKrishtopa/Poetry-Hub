@@ -12,9 +12,10 @@ vi.mock("../../dal/admin-check", () => ({ checkIsAdmin: vi.fn() }));
 const SIGNED_IN = {
   state: "signed-in",
   userId: "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b",
-  aal: "aal1",
+  aal: "aal2",
   amr: [],
 } as const;
+const PASSWORD_ONLY = { ...SIGNED_IN, aal: "aal1" } as const;
 
 const CHILD_TEXT = "admin only content";
 const child = <p>{CHILD_TEXT}</p>;
@@ -29,6 +30,17 @@ describe("AdminOnlyContent", () => {
 
     render(await AdminOnlyContent({ children: child }));
 
+    expect(screen.getByText(CHILD_TEXT)).toBeInTheDocument();
+  });
+
+  // implements FR-8 of pre-deploy-security-hardening
+  it("hides its children from an admin without the second factor, unless the caller asks to include them", async () => {
+    vi.mocked(getSessionState).mockResolvedValue(PASSWORD_ONLY);
+    vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: true });
+
+    expect(await AdminOnlyContent({ children: child })).toBeNull();
+
+    render(await AdminOnlyContent({ children: child, includeBeforeSecondFactor: true }));
     expect(screen.getByText(CHILD_TEXT)).toBeInTheDocument();
   });
 

@@ -9,7 +9,11 @@ const GATE_TEST_ID = "admin-gate";
 // The gate has its own tests (AdminOnly.test.tsx); here it is a visible wrapper that lets everything through, so the
 // test can tell a link inside the gate from one moved out of it.
 vi.mock("../../components/AdminOnly/AdminOnly", () => ({
-  AdminOnly: ({ children }: { children: ReactNode }) => <div data-testid="admin-gate">{children}</div>,
+  AdminOnly: ({ children, includeBeforeSecondFactor }: { children: ReactNode; includeBeforeSecondFactor?: boolean }) => (
+    <div data-testid="admin-gate" data-before-second-factor={String(includeBeforeSecondFactor === true)}>
+      {children}
+    </div>
+  ),
 }));
 
 afterEach(() => vi.clearAllMocks());
@@ -22,5 +26,12 @@ describe("AdminNavLink", () => {
     const link = within(screen.getByTestId(GATE_TEST_ID)).getByRole("link", { name: "Админка" });
     expect(link).toHaveAttribute("href", "/admin");
     expect(screen.getAllByRole("link")).toHaveLength(1);
+  });
+
+  // implements FR-8 of pre-deploy-security-hardening
+  it("asks the gate to show it before the second factor too, since it leads to the code", () => {
+    render(<AdminNavLink />);
+
+    expect(screen.getByTestId(GATE_TEST_ID)).toHaveAttribute("data-before-second-factor", "true");
   });
 });

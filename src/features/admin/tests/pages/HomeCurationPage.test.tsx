@@ -14,7 +14,12 @@ import { HomeCurationPageContent } from "../../pages/HomeCurationPage/HomeCurati
 const notFound = vi.fn(() => {
   throw new Error("NEXT_NOT_FOUND");
 });
-vi.mock("next/navigation", () => ({ notFound: () => notFound() }));
+const redirect = vi.hoisted(() =>
+  vi.fn((path: string) => {
+    throw new Error(`NEXT_REDIRECT ${path}`);
+  }),
+);
+vi.mock("next/navigation", () => ({ notFound: () => notFound(), redirect }));
 vi.mock("@/features/auth", () => ({ requireSession: vi.fn() }));
 vi.mock("../../dal/admin-check", () => ({ checkIsAdmin: vi.fn() }));
 vi.mock("../../dal/home-rpc", () => ({ listHomeEntries: vi.fn() }));
@@ -35,7 +40,8 @@ vi.mock("@/shared/ui", async (importOriginal) => ({
 
 afterEach(() => vi.clearAllMocks());
 
-const SIGNED_IN = { state: "signed-in", userId: "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b", aal: "aal1", amr: [] } as const;
+const SIGNED_IN = { state: "signed-in", userId: "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b", aal: "aal2", amr: [] } as const;
+const PASSWORD_ONLY = { ...SIGNED_IN, aal: "aal1" } as const;
 
 function entry(kind: HomeEntry["kind"], position: number, label: string): HomeEntry {
   return { kind, id: `${kind}-${position}`, position, shown: true, label, authorName: null };
@@ -105,6 +111,16 @@ describe("HomeCurationPageContent", () => {
     vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: false });
 
     await expect(HomeCurationPageContent()).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(listHomeEntries).not.toHaveBeenCalled();
+  });
+
+  // implements FR-9 of home-page-sections
+  // implements FR-8 of pre-deploy-security-hardening
+  it("redirects an admin without the second factor to /admin/verify, reading no entry", async () => {
+    vi.mocked(requireSession).mockResolvedValue(PASSWORD_ONLY);
+    vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: true });
+
+    await expect(HomeCurationPageContent()).rejects.toThrow("NEXT_REDIRECT /admin/verify");
     expect(listHomeEntries).not.toHaveBeenCalled();
   });
 

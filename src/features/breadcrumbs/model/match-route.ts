@@ -13,6 +13,7 @@ import {
   ACCOUNT_PATH,
   ADMIN_HOME_PATH,
   ADMIN_PATH,
+  ADMIN_VERIFY_PATH,
   ADMIN_VIOLATIONS_PATH,
   POEM_MANAGEMENT_PATH,
   RESET_PASSWORD_PATH,
@@ -27,6 +28,8 @@ import { BREADCRUMB_LABELS } from "./breadcrumbs-messages";
 interface RouteRow {
   readonly path: string;
   readonly label: string;
+  /** The trail goes from home straight to this page: no row above it by path is its parent. */
+  readonly standalone?: boolean;
 }
 
 /**
@@ -49,6 +52,9 @@ export const STATIC_ROUTES: readonly RouteRow[] = [
   { path: ADMIN_PATH, label: BREADCRUMB_LABELS.admin },
   { path: ADMIN_VIOLATIONS_PATH, label: BREADCRUMB_LABELS.adminViolations },
   { path: ADMIN_HOME_PATH, label: BREADCRUMB_LABELS.adminHome },
+  { path: ADMIN_VERIFY_PATH, label: BREADCRUMB_LABELS.adminVerifyCode, standalone: true },
+  // Not a URL: the label of the same page before a factor exists, picked by the slot.
+  { path: `${ADMIN_VERIFY_PATH}/setup`, label: BREADCRUMB_LABELS.adminVerifySetup, standalone: true },
 ];
 
 const AUTHOR_PAGE_PREFIX = `${AUTHORS_PATH}/`;
@@ -128,9 +134,8 @@ export function matchRoute(segments: readonly string[]): RouteMatch {
 
   const row = STATIC_ROUTES.find((route) => route.path === path);
   if (row !== undefined) {
-    const parents: BreadcrumbItem[] = STATIC_ROUTES.filter((route) => isParentPath(route.path, path)).map(
-      (route) => ({ kind: "link", label: route.label, href: route.path }),
-    );
+    const parentRows = row.standalone ? [] : STATIC_ROUTES.filter((route) => isParentPath(route.path, path));
+    const parents: BreadcrumbItem[] = parentRows.map((route) => ({ kind: "link", label: route.label, href: route.path }));
     return { kind: "static", items: [...parents, { kind: "current", label: row.label }] };
   }
 

@@ -51,3 +51,6 @@ export const DELETE_OPERATION = {
   poem: "delete poem",
   collection: "delete collection",
 } as const;
+
+/** The digits of a TOTP code. */
+export const TOTP_CODE_LENGTH = 6;

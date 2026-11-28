@@ -7,6 +7,7 @@ import {
   ACCOUNT_PATH,
   ADMIN_HOME_PATH,
   ADMIN_PATH,
+  ADMIN_VERIFY_PATH,
   ADMIN_VIOLATIONS_PATH,
   POEM_MANAGEMENT_PATH,
   RESET_PASSWORD_PATH,
@@ -119,7 +120,17 @@ describe("matchRoute", () => {
       ADMIN_PATH,
       ADMIN_VIOLATIONS_PATH,
       ADMIN_HOME_PATH,
+      ADMIN_VERIFY_PATH,
+      `${ADMIN_VERIFY_PATH}/setup`,
     ]);
+  });
+
+  // implements FR-8 of pre-deploy-security-hardening: no «Админка» step above the second factor page
+  it.each([
+    [["admin", "verify"], "Подтверждение входа"],
+    [["admin", "verify", "setup"], "Второй код"],
+  ])("maps %j straight under «Главная» to «%s»", (segments, label) => {
+    expect(matchRoute(segments)).toEqual({ kind: "static", items: [{ kind: "current", label }] });
   });
 
   // implements FR-4 of admin-violations-feedback

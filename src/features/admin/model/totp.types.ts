@@ -11,3 +11,11 @@ export type TotpVerifyResult =
   { readonly ok: true } | { readonly ok: false; readonly failure: "wrong-code" | "unavailable" };
 
 export type TotpVerifyAllowance = "allowed" | "refused" | "failed";
+
+/** What the code form can show after a send. A correct code never answers: the action redirects. */
+export type TotpCodeFailure = "wrong-code" | "limited" | "unavailable";
+
+export interface TotpCodeActionResult {
+  readonly ok: false;
+  readonly failure: TotpCodeFailure;
+}

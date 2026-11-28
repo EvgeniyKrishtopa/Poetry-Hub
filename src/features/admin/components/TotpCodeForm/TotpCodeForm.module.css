@@ -1,0 +1,5 @@
+/* `TextField` takes no class for its input, so the code's look is set from the wrapper. */
+.code input {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.3em;
+}

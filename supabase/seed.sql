@@ -166,6 +166,17 @@ join seed_poems p on p.position = ap.position;
 insert into public.admins (user_id)
 select user_id from seed_readers where email = 'draft-author@example.test';
 
+-- The seeded admin's second factor, already verified, so the recorded scenarios can pass `/admin/verify`
+-- (tests/web-qa-scenarios/support/totp.ts computes the codes from the same secret). The secret is public: it works
+-- on the local stack only, and the seed refuses a database with real accounts. To check enrolment by hand, delete
+-- this row (docs/environment.md).
+-- `friendly_name` must be a string: Auth fails every sign-in of a user whose factor holds NULL there.
+insert into auth.mfa_factors (id, user_id, friendly_name, factor_type, status, secret, created_at, updated_at)
+select
+  '40000000-0000-4000-8000-000000000001', user_id, '', 'totp', 'verified', 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP',
+  now(), now()
+from seed_readers where email = 'draft-author@example.test';
+
 drop table seed_author_poems;
 drop table seed_poems;
 drop table seed_readers;

@@ -29,6 +29,11 @@ limit bounds only the attempts made through this app. A holder of the session (i
 script) can call Supabase Auth's own endpoint directly and skip it, so it is a guard on the app's path and
 defence in depth, not a security boundary; Supabase's own limits and the single-use link bound the rest.
 
+Scope added by `pre-deploy-security-hardening` (2026-11-28): `totp_verify`, 5 per minute, one attempt per
+code sent on `/admin/verify`, counted before the app asks Supabase to check it
+(`20261128120000_admin_second_factor.sql`; ADR 0025). Like `password_reset` it bounds only the app's path:
+a holder of the session can call Supabase Auth's verify endpoint directly.
+
 ## Context
 
 ADR 0005 made every reader write a Server Action that, on success, expires the public pages'

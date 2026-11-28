@@ -2,6 +2,7 @@
 import { expect, test } from "@playwright/test";
 
 import { signIn } from "./support/sign-in";
+import { signInAsAdmin } from "./support/sign-in-as-admin";
 
 /** `author1@example.test` in `supabase/seed.sql`: a signed-in reader who is not an admin. */
 const READER_EMAIL = "author1@example.test";
@@ -31,9 +32,24 @@ test("a signed-in non-admin gets the not-found page, no admin link and no trail"
   await expect(page.getByRole("navigation", { name: TRAIL_LABEL })).toHaveCount(0);
 });
 
-// implements FR-2, FR-20, FR-21, FR-3 of admin-moderation
-test("the admin sees the header link, the trail and the user list without any admin", { tag: ["@admin-moderation"] }, async ({ page }) => {
+// implements FR-8 of pre-deploy-security-hardening: the password alone opens the code page, never the list
+test("an admin who signed in with the password is asked for the code", { tag: ["@pre-deploy-security-hardening"] }, async ({ page }) => {
   await signIn(page, ADMIN_EMAIL);
+  await page.getByRole("banner").getByRole("link", { name: ADMIN_LINK }).click();
+  await expect(page).toHaveURL(/\/admin\/verify$/);
+
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { name: "Подтверждение входа" })).toBeVisible();
+  await expect(main.getByText(READER_EMAIL, { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: TRAIL_LABEL }).getByText("Подтверждение входа")).toBeVisible();
+
+  await page.goto("/admin/violations");
+  await expect(page).toHaveURL(/\/admin\/verify$/);
+});
+
+// implements FR-2, FR-20, FR-21, FR-3 of admin-moderation; FR-8 of pre-deploy-security-hardening: the correct code
+test("the admin sees the header link, the trail and the user list without any admin", { tag: ["@admin-moderation"] }, async ({ page }) => {
+  await signInAsAdmin(page);
   await page.getByRole("banner").getByRole("link", { name: ADMIN_LINK }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("main").getByText(READER_EMAIL, { exact: true })).toBeVisible();

@@ -13,6 +13,8 @@ export const BREADCRUMB_LABELS = {
   admin: "Админка",
   adminViolations: "Список нарушителей",
   adminHome: "Главная страница",
+  adminVerifyCode: "Подтверждение входа",
+  adminVerifySetup: "Второй код",
   authorFallback: "Автор",
 } as const;
 

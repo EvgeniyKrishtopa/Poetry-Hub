@@ -22,6 +22,8 @@ const PUBLIC_API = [
   "AdminDeleteControl",
   "AdminNavLink",
   "AdminOnly",
+  "AdminVerifyPage",
+  "AdminVerifyTrail",
   "HomeCurationPage",
   "UserModerationPage",
   "ViolationReviewPage",

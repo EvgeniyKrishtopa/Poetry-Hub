@@ -2,10 +2,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { waitForHydration } from "./support/hydration";
-import { signIn } from "./support/sign-in";
+import { signInAsAdmin } from "./support/sign-in-as-admin";
 
-/** `draft-author@example.test`: the seeded admin. */
-const ADMIN_EMAIL = "draft-author@example.test";
 /** author5 owns four seeded poems (`supabase/seed.sql`), enough to fill the list of four. */
 const FULL_LIST_AUTHOR_ID = "10000000-0000-4000-8000-000000000005";
 /** author4's first seeded poem: the fifth one, which the full list refuses. */
@@ -83,7 +81,7 @@ test(
   "an admin fills the home page's poem list, is refused a fifth, reorders by mouse and keyboard, and removes entries",
   { tag: ["@home-page-sections"] },
   async ({ page }) => {
-    await signIn(page, ADMIN_EMAIL);
+    await signInAsAdmin(page);
     await clearLists(page);
 
     // FR-8: four poems go in, each one a success line; the fifth is refused with the limit text and writes nothing.

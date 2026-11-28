@@ -12,7 +12,12 @@ import { ADMIN_LIST_COPY } from "../../model/admin-messages";
 const notFound = vi.fn(() => {
   throw new Error("NEXT_NOT_FOUND");
 });
-vi.mock("next/navigation", () => ({ notFound: () => notFound() }));
+const redirect = vi.hoisted(() =>
+  vi.fn((path: string) => {
+    throw new Error(`NEXT_REDIRECT ${path}`);
+  }),
+);
+vi.mock("next/navigation", () => ({ notFound: () => notFound(), redirect }));
 vi.mock("@/features/auth", () => ({ requireSession: vi.fn() }));
 vi.mock("../../dal/admin-check", () => ({ checkIsAdmin: vi.fn() }));
 const userList = vi.hoisted(() => vi.fn());
@@ -35,9 +40,10 @@ afterEach(() => vi.clearAllMocks());
 const SIGNED_IN = {
   state: "signed-in",
   userId: "8f14e45f-ceea-4e67-a1b2-3c4d5e6f7a8b",
-  aal: "aal1",
+  aal: "aal2",
   amr: [],
 } as const;
+const PASSWORD_ONLY = { ...SIGNED_IN, aal: "aal1" } as const;
 const QUERY = Promise.resolve({});
 
 describe("UserModerationPage", () => {
@@ -103,6 +109,15 @@ describe("UserModerationPageContent", () => {
     render(await UserModerationPageContent({ query: QUERY }));
     expect(checkIsAdmin).toHaveBeenCalledTimes(1);
     expect(notFound).not.toHaveBeenCalled();
+  });
+
+  // implements FR-8 of pre-deploy-security-hardening; FR-2 of admin-moderation
+  it("redirects an admin without the second factor to /admin/verify, reading no user", async () => {
+    vi.mocked(requireSession).mockResolvedValue(PASSWORD_ONLY);
+    vi.mocked(checkIsAdmin).mockResolvedValue({ ok: true, isAdmin: true });
+
+    await expect(UserModerationPageContent({ query: QUERY })).rejects.toThrow("NEXT_REDIRECT /admin/verify");
+    expect(userList).not.toHaveBeenCalled();
   });
 
   // implements FR-2 of admin-moderation

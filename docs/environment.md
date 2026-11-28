@@ -31,6 +31,10 @@ Read before adding, renaming, or reading an environment variable.
   - The auth forms' tokens are verified by Supabase Auth, which holds its own copy of the secret (dashboard; `[auth.captcha]` in `supabase/config.toml` for the local stack).
   - **Never run `npx supabase config push`** against a hosted project: `supabase/config.toml` configures the local stack, and pushing it would carry the always-pass test captcha secret (switching the hosted captcha off without any sign) and the localhost addresses. Schema changes go through `db push` only. Before turning on Supabase Branching, add a `[remotes.<branch>.auth.captcha]` override.
   - Local development uses Cloudflare's published test keys, which always pass: site key `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`. Put both into `.env.local`. They are public test values; the real keys never go into the repository. After changing `[auth.captcha]`, restart the stack (`npx supabase stop && npx supabase start`).
+- Admin second factor (`pre-deploy-security-hardening`; ADR 0025): the admin tools need a TOTP code from an authenticator app after sign-in. The admin enrols and enters codes on `/admin/verify`; regular users are offered nothing. No new variable.
+  - Lost device: delete the factor in the dashboard's SQL editor, `delete from auth.mfa_factors where user_id = (select id from auth.users where email = '<admin email>');`, check that it deleted one row, then sign in and enrol again at once.
+  - Password recovery for an enrolled admin does not work: Supabase refuses a password change at `aal1` when a factor is verified. Delete the factor as above, recover the password, sign in and enrol again.
+  - Local stack: `[auth.mfa.totp]` is on in `supabase/config.toml` (restart the stack after changing it), and the seed gives the seeded admin a verified factor with the secret `JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP`, public and local only. To check enrolment by hand, delete that user's row in `auth.mfa_factors`; `npx supabase db reset` brings it back.
 - Google sign-in (`google-sign-in`; ADR 0019): Supabase Auth's Google provider, configured outside the app. The app reads no new variable: it starts the flow with `signInWithOAuth` (`redirectTo` = `getSiteUrl()` + `/auth/callback?from=sign-in|sign-up`, `GOOGLE_CALLBACK_PATH` and `GOOGLE_FLOW_PARAM` in the auth feature) and finishes it at the route `/auth/callback`.
   - Google Cloud (owner, manual): APIs & Services → OAuth consent screen with the site's name, then Credentials → Create credentials → OAuth client ID, type "Web application". Its **Authorized redirect URI** is the Supabase project's own callback, `https://<project-ref>.supabase.co/auth/v1/callback`, not the site's `/auth/callback`: Google returns to Supabase, and Supabase returns to the site. For the local stack add `http://127.0.0.1:54321/auth/v1/callback` to the same client or a second one.
   - Hosted Supabase: Authentication → Providers → Google, enabled, with that client's id and secret. Authentication → URL Configuration: the Site URL equals what `getSiteUrl()` returns (the Site address section below), and Redirect URLs contain exactly the two addresses the app sends, `<site>/auth/callback?from=sign-in` and `<site>/auth/callback?from=sign-up` (in Supabase's glob a `?` matches any one character, so each still matches itself). Never a `<site>/auth/callback**` pattern: `**` matches any characters, `/` included, so it would accept almost any return address on the site, and a code sent there could leak (Supabase recommends exact redirect URLs in production).
@@ -247,5 +251,14 @@ git-ignored `PROGRESS.md`, so every clone sees them.
   - [ ] Only after the captcha works, raise Supabase's Authentication → Rate Limits, per 5 minutes: sign-ups and
         sign-ins 300, token verifications 300, token refreshes 1800. Leave the email limits as they are.
   - Rollback: turning Supabase's captcha protection off. The forms still send a token and still need the widget.
+- **Admin second factor** (`pre-deploy-security-hardening`; ADR 0025), in this order:
+  - [ ] `npx supabase db push` applies `20261128120000_admin_second_factor.sql` (`assert_admin()`,
+        `may_moderate_author()` and the admin Storage policies need `aal2`; the `totp_verify` limit). Push it
+        together with the app: without the app an admin has no way to reach `aal2`, so every admin tool is refused.
+        Rollback: revert the app first, then the down migration in the file's header.
+  - [ ] In Supabase, Authentication → Multi-Factor: app authenticator (TOTP) enabled for enrolment and
+        verification (the hosted default).
+  - [ ] Right after the owner is added to `public.admins`, sign in as the owner, open `/admin/verify` and enrol.
+        Until a factor is verified, whoever holds the owner's password can enrol their own.
 - Also before a first deploy: the Supabase dashboard setup and the Contentful webhook above, and the
   hosting-layer per-IP rate rules (the Bot protection item above).
