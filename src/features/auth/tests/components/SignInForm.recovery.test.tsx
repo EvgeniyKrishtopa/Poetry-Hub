@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -170,6 +170,15 @@ describe("SignInForm: asking for a letter", () => {
     expect(requestRecoveryAction).toHaveBeenCalledWith({ email: EMAIL, captchaToken: "token-2" });
     // And that one is used up too.
     expect(turnstile.reset).toHaveBeenCalledTimes(2);
+  });
+
+  // implements FR-5 of pre-deploy-security-hardening
+  it("disables the offer's button while there is no token, online and with nothing pending", async () => {
+    await renderWithOffer();
+
+    act(() => turnstile.options()["expired-callback"]());
+
+    expect(offerButton()).toBeDisabled();
   });
 
   // implements FR-5 of pre-deploy-security-hardening

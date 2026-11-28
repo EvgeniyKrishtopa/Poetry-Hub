@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -97,6 +97,18 @@ describe("SignUpForm", () => {
     expect(status).toHaveTextContent(EMAIL);
     expect(screen.queryByRole("button", { name: "Зарегистрироваться" })).not.toBeInTheDocument();
     expect(signUpAction).toHaveBeenCalledWith({ email: EMAIL, password: PASSWORD, captchaToken: "token-1" });
+  });
+
+  // implements FR-5 of pre-deploy-security-hardening
+  it("keeps the submit button disabled until the check passes, and again once the token expires", async () => {
+    render(<SignUpForm />);
+    const button = screen.getByRole("button", { name: "Зарегистрироваться" });
+    expect(button).toBeDisabled();
+    await waitFor(() => expect(button).toBeEnabled());
+
+    act(() => turnstile.options()["expired-callback"]());
+
+    expect(button).toBeDisabled();
   });
 
   // implements FR-5 of pre-deploy-security-hardening
